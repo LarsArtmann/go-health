@@ -99,6 +99,14 @@ func provideCounting(i do.Injector, name string) *countingService {
 	return svc
 }
 
+func mustStart(t *testing.T, probe *health.Probe, ctx context.Context) {
+	t.Helper()
+
+	if err := probe.Start(ctx); err != nil {
+		t.Fatalf("probe.Start: %v", err)
+	}
+}
+
 func invoke[T any](t *testing.T, i do.Injector, name string) T {
 	t.Helper()
 
@@ -331,7 +339,7 @@ func TestReadiness_MarkShuttingDown_DoesNotStopBackgroundLoop(t *testing.T) {
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
 
-	probe.Start(t.Context())
+	mustStart(t, probe, t.Context())
 	probe.MarkShuttingDown()
 
 	// Give the loop time to prove it is still running.
@@ -372,7 +380,7 @@ func TestReadiness_CachedMode_ServesFromCache(t *testing.T) {
 	)
 
 	// Manually populate cache via Start.
-	probe.Start(t.Context())
+	mustStart(t, probe, t.Context())
 	defer probe.Shutdown()
 
 	// Wait for initial evaluation.
@@ -783,6 +791,46 @@ func TestResponse_NoCacheHeader(t *testing.T) {
 	}
 }
 
+func TestReadiness_JSONChecksAreSortedAlphabetically(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	provideUnhealthy(injector, "zebra", "down")
+	provideHealthy(injector, "alpha")
+	provideUnhealthy(injector, "mongo", "slow")
+	invoke[*unhealthyService](t, injector, "zebra")
+	invoke[*healthyService](t, injector, "alpha")
+	invoke[*unhealthyService](t, injector, "mongo")
+
+	probe := health.New(injector, health.WithRefreshInterval(0))
+
+	// Run multiple requests and verify identical JSON output each time.
+	first := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
+
+	for range 5 {
+		body := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
+		if body != first {
+			t.Fatalf("JSON output is not deterministic:\nfirst:  %s\nlater:  %s", first, body)
+		}
+	}
+
+	// Verify alphabetical ordering by checking that "alpha" appears before "mongo" before "zebra".
+	var indices []int
+	for _, name := range []string{"alpha", "mongo", "zebra"} {
+		idx := strings.Index(first, "\""+name+"\"")
+		if idx < 0 {
+			t.Fatalf("service %q missing from JSON output: %s", name, first)
+		}
+
+		indices = append(indices, idx)
+	}
+
+	if indices[0] >= indices[1] || indices[1] >= indices[2] {
+		t.Errorf("checks are not alphabetically sorted in JSON: positions alpha=%d, mongo=%d, zebra=%d",
+			indices[0], indices[1], indices[2])
+	}
+}
+
 // --- HealthRecorder integration tests ---.
 
 func TestWithHealthRecorder_DelegatesChecks(t *testing.T) {
@@ -841,7 +889,7 @@ func TestStart_PerformsImmediateEvaluation(t *testing.T) {
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
 
-	probe.Start(t.Context())
+	mustStart(t, probe, t.Context())
 
 	// Cache should be populated immediately, before any tick.
 	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
@@ -858,7 +906,7 @@ func TestShutdown_StopsBackgroundLoop(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector, health.WithRefreshInterval(10*time.Millisecond))
 
-	probe.Start(t.Context())
+	mustStart(t, probe, t.Context())
 	probe.Shutdown()
 
 	// Should not panic or hang.
@@ -874,8 +922,8 @@ func TestStart_CalledTwice_IsNoOp(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector, health.WithRefreshInterval(10*time.Millisecond))
 
-	probe.Start(t.Context())
-	probe.Start(t.Context()) // should not panic or start a second loop
+	mustStart(t, probe, t.Context())
+	mustStart(t, probe, t.Context()) // should not panic or start a second loop
 	probe.Shutdown()
 }
 
@@ -1014,7 +1062,7 @@ func TestReadiness_ConcurrentAccess_AllSucceed(t *testing.T) {
 	invoke[*healthyService](t, injector, "db")
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
-	probe.Start(t.Context())
+	mustStart(t, probe, t.Context())
 
 	defer probe.Shutdown()
 
@@ -1095,7 +1143,7 @@ func TestShutdown_Idempotent(t *testing.T) {
 	invoke[*healthyService](t, injector, "db")
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
-	probe.Start(t.Context())
+	mustStart(t, probe, t.Context())
 
 	probe.Shutdown()
 	probe.Shutdown() // must not panic or hang
@@ -1148,7 +1196,9 @@ func BenchmarkReadinessHandler_CacheHit(b *testing.B) {
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
 
-	probe.Start(context.Background())
+	if err := probe.Start(context.Background()); err != nil {
+		b.Fatal(err)
+	}
 	defer probe.Shutdown()
 
 	handler := probe.ReadinessHandler()

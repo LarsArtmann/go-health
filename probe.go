@@ -243,19 +243,28 @@ func (p *Probe) Validate() error {
 	return nil
 }
 
-// Start launches the background cache refresh loop (when RefreshInterval > 0)
-// and performs an immediate evaluation so the cache is populated before the
-// first request arrives. Calling Start more than once is a no-op.
+// Start validates the Probe configuration and, if valid, launches the
+// background cache refresh loop (when RefreshInterval > 0) and performs an
+// immediate evaluation so the cache is populated before the first request
+// arrives. Calling Start more than once is a no-op.
+//
+// Returns [ErrInvalidTimeout] or [ErrInvalidRefreshInterval] if the
+// configuration is unusable. Call [Probe.Validate] separately to check
+// configuration before starting.
 //
 // The provided ctx controls the lifetime of the background goroutine. Call
 // [Probe.Shutdown] to stop the loop and mark the probe as shutting down.
-func (p *Probe) Start(ctx context.Context) {
+func (p *Probe) Start(ctx context.Context) error {
+	if err := p.Validate(); err != nil {
+		return err
+	}
+
 	p.mu.Lock()
 
 	if p.cancel != nil {
 		p.mu.Unlock()
 
-		return
+		return nil
 	}
 
 	runCtx := ctx
@@ -273,6 +282,8 @@ func (p *Probe) Start(ctx context.Context) {
 
 		go p.refreshLoop(runCtx)
 	}
+
+	return nil
 }
 
 // refreshLoop runs the periodic cache refresh until the start context is cancelled.

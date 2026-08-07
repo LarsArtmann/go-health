@@ -20,7 +20,9 @@
 //	    health.WithVersion("1.0.0"),
 //	)
 //
-//	probe.Start(ctx)
+//	if err := probe.Start(ctx); err != nil {
+//	    log.Fatal(err)
+//	}
 //	defer probe.Shutdown()
 //
 //	mux := http.NewServeMux()

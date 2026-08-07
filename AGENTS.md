@@ -40,6 +40,7 @@ handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoute
 - **GET-only enforcement** — `WithGETOnly()` wraps all handlers to reject non-GET with 405 + `Allow: GET` header. Off by default.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly.
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down).
+- **Stdlib errors by design** — sentinels (`ErrInvalidTimeout`, `ErrInvalidRefreshInterval`) use `errors.New`; `Validate()` wraps them with `fmt.Errorf("%w: ...")` to include the offending value and remediation. No error library (samber/oops, go-error-family, cockroachdb/errors) is adopted: this is a single-dependency library whose only Go-level errors are config-validation sentinels matched via `errors.Is`, not errors at an HTTP/CLI boundary that need classification. HTTP failures are communicated via status codes, not error returns.
 - **Injector resolved at construction** — `New` captures the health-check capability (and optional recorder) into a `healthCheckFunc` at construction time. The Probe never stores `do.Injector` as a field, avoiding the injector-in-service anti-pattern (DO-6).
 
 ### Decoupling from samber-do-auditlog
@@ -78,3 +79,4 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 - **Three-state classify** — `classify` returns `pass`/`warn`/`fail`. The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
 - **Config validation** — `Probe.Validate()` checks `timeout > 0` and `refreshInterval >= 0`. Not enforced in `New()` (no API change); callers call it explicitly for early misconfiguration detection.
 - **No GOEXPERIMENT=jsonv2 needed** — this package only depends on `samber/do/v2` + stdlib. No templ, no go-output, no SSE infrastructure.
+- **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.

@@ -804,22 +804,16 @@ func TestReadiness_JSONChecksAreSortedAlphabetically(t *testing.T) {
 
 	probe := health.New(injector, health.WithRefreshInterval(0))
 
-	// Run multiple requests and verify identical JSON output each time.
-	first := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
+	// Verify alphabetical ordering: "alpha" must appear before "mongo" before "zebra"
+	// in the raw JSON body. Go's json.Marshal sorts map[string]K keys, so this is
+	// guaranteed by the standard library — the test locks the property in.
+	body := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
 
-	for range 5 {
-		body := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
-		if body != first {
-			t.Fatalf("JSON output is not deterministic:\nfirst:  %s\nlater:  %s", first, body)
-		}
-	}
-
-	// Verify alphabetical ordering by checking that "alpha" appears before "mongo" before "zebra".
 	var indices []int
 	for _, name := range []string{"alpha", "mongo", "zebra"} {
-		idx := strings.Index(first, "\""+name+"\"")
+		idx := strings.Index(body, `"`+name+`"`)
 		if idx < 0 {
-			t.Fatalf("service %q missing from JSON output: %s", name, first)
+			t.Fatalf("service %q missing from JSON output: %s", name, body)
 		}
 
 		indices = append(indices, idx)
@@ -898,6 +892,54 @@ func TestStart_PerformsImmediateEvaluation(t *testing.T) {
 	}
 
 	probe.Shutdown()
+}
+
+func TestStart_InvalidTimeout_ReturnsError(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithTimeout(0))
+
+	err := probe.Start(t.Context())
+	if !errors.Is(err, health.ErrInvalidTimeout) {
+		t.Fatalf("Start with zero timeout: want ErrInvalidTimeout, got %v", err)
+	}
+}
+
+func TestStart_InvalidRefreshInterval_ReturnsError(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithRefreshInterval(-1))
+
+	err := probe.Start(t.Context())
+	if !errors.Is(err, health.ErrInvalidRefreshInterval) {
+		t.Fatalf("Start with negative refresh interval: want ErrInvalidRefreshInterval, got %v", err)
+	}
+}
+
+func TestRefreshLoop_TickerFiresBeforeShutdown(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	svc := provideCounting(injector, "db")
+	invoke[*countingService](t, injector, "db")
+
+	probe := health.New(injector,
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(5*time.Millisecond),
+	)
+
+	mustStart(t, probe, t.Context())
+
+	// Wait long enough for at least 3 ticker cycles.
+	time.Sleep(50 * time.Millisecond)
+
+	probe.Shutdown()
+
+	// The initial evaluation + at least one ticker-driven refresh should
+	// have called HealthCheck more than once.
+	if calls := svc.calls.Load(); calls < 2 {
+		t.Errorf("expected at least 2 health-check calls (initial + ticker), got %d", calls)
+	}
 }
 
 func TestShutdown_StopsBackgroundLoop(t *testing.T) {

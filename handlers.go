@@ -164,6 +164,9 @@ func writeResponse(w http.ResponseWriter, code int, resp Response) {
 
 	payload, err := json.Marshal(resp)
 	if err != nil {
+		// Defensive: Response only contains basic types (string, bool, int64,
+		// map[string]Check) so json.Marshal cannot fail today. This branch
+		// guards against future fields that might introduce marshal errors.
 		http.Error(w, "health: failed to encode response", http.StatusInternalServerError)
 
 		return

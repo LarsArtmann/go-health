@@ -33,11 +33,11 @@ probe.RegisterRoutes(mux, health.DefaultRoutes())
 
 ## Three Probes
 
-| Endpoint     | Purpose                          | Returns 503 when...                          |
-| ------------ | -------------------------------- | -------------------------------------------- |
-| `/healthz`   | Liveness — process alive?        | Never (always 200 unless process is dead)   |
-| `/readyz`    | Readiness — can serve traffic?   | Any critical service fails or shutting down  |
-| `/startupz`  | Startup — done booting?          | Not all critical services have passed yet   |
+| Endpoint    | Purpose                        | Returns 503 when...                         |
+| ----------- | ------------------------------ | ------------------------------------------- |
+| `/healthz`  | Liveness — process alive?      | Never (always 200 unless process is dead)   |
+| `/readyz`   | Readiness — can serve traffic? | Any critical service fails or shutting down |
+| `/startupz` | Startup — done booting?        | Not all critical services have passed yet   |
 
 ## Key Features
 

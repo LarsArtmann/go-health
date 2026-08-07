@@ -8,12 +8,12 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 
 ## Commands
 
-| Command               | Purpose                                         |
-| --------------------- | ----------------------------------------------- |
-| `go test ./...`       | Run all tests                                   |
-| `go test -race ./...` | Run all tests with race detector                |
-| `go vet ./...`        | Static analysis                                 |
-| `go mod tidy`         | Sync go.sum                                     |
+| Command               | Purpose                          |
+| --------------------- | -------------------------------- |
+| `go test ./...`       | Run all tests                    |
+| `go test -race ./...` | Run all tests with race detector |
+| `go vet ./...`        | Static analysis                  |
+| `go mod tidy`         | Sync go.sum                      |
 
 No Makefile, no justfile, no flake.nix (yet). Single dependency: `github.com/samber/do/v2 v2.1.0`.
 

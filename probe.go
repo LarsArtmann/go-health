@@ -51,9 +51,7 @@ type healthCheckFunc func(ctx context.Context) map[string]error
 // Probe is safe for concurrent use by multiple goroutines.
 type Probe struct {
 	healthCheck healthCheckFunc
-	recorder    HealthRecorder // construction-only; nil after New resolves it
-
-	critical map[string]struct{}
+	critical    map[string]struct{}
 
 	shuttingDown  atomic.Bool
 	startupPassed atomic.Bool
@@ -71,12 +69,25 @@ type Probe struct {
 	wg     sync.WaitGroup
 }
 
-// Option configures a [Probe].
-type Option func(*Probe)
+// config holds construction-only configuration. It is populated by [Option]
+// functions and consumed by [New]; the resulting [Probe] never carries a
+// reference to it.
+type config struct {
+	version         string
+	critical        map[string]struct{}
+	recorder        HealthRecorder
+	bootTime        time.Time
+	refreshInterval time.Duration
+	timeout         time.Duration
+	getOnly         bool
+}
+
+// Option configures a [Probe]. Use the With* functions to create options.
+type Option func(*config)
 
 // WithVersion sets the application version included in health responses.
 func WithVersion(v string) Option {
-	return func(p *Probe) { p.version = v }
+	return func(c *config) { c.version = v }
 }
 
 // WithCriticalServices marks the named services as critical: if any of them
@@ -84,9 +95,9 @@ func WithVersion(v string) Option {
 // non-critical; their failures appear in the response body but do not change
 // the HTTP status code.
 func WithCriticalServices(names ...string) Option {
-	return func(p *Probe) {
+	return func(c *config) {
 		for _, name := range names {
-			p.critical[name] = struct{}{}
+			c.critical[name] = struct{}{}
 		}
 	}
 }
@@ -99,7 +110,7 @@ func WithCriticalServices(names ...string) Option {
 //
 //	probe := health.New(injector, health.WithHealthRecorder(plugin))
 func WithHealthRecorder(r HealthRecorder) Option {
-	return func(probe *Probe) { probe.recorder = r }
+	return func(c *config) { c.recorder = r }
 }
 
 // WithRefreshInterval sets the background cache refresh cadence. When greater
@@ -111,7 +122,7 @@ func WithHealthRecorder(r HealthRecorder) Option {
 // overwhelm downstream dependencies. Use live evaluation for low-traffic or
 // development scenarios.
 func WithRefreshInterval(d time.Duration) Option {
-	return func(p *Probe) { p.refreshInterval = d }
+	return func(c *config) { c.refreshInterval = d }
 }
 
 // WithTimeout sets the batch-level context deadline shared across ALL services
@@ -126,20 +137,20 @@ func WithRefreshInterval(d time.Duration) Option {
 // This library does not override that setting; it only controls the outer
 // batch deadline.
 func WithTimeout(d time.Duration) Option {
-	return func(p *Probe) { p.timeout = d }
+	return func(c *config) { c.timeout = d }
 }
 
 // WithBootTime overrides the boot timestamp used to compute uptime. Defaults
 // to the time [New] was called.
 func WithBootTime(t time.Time) Option {
-	return func(p *Probe) { p.bootTime = t }
+	return func(c *config) { c.bootTime = t }
 }
 
 // WithGETOnly wraps all handlers so they reject non-GET requests with 405
 // Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces
 // misconfigurations (e.g. a load balancer sending HEAD or POST) early.
 func WithGETOnly() Option {
-	return func(p *Probe) { p.getOnly = true }
+	return func(c *config) { c.getOnly = true }
 }
 
 // guard wraps a handler with GET-only enforcement when WithGETOnly is active.
@@ -167,7 +178,7 @@ func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 // resolved here at construction time, so the returned Probe holds only the
 // resolved function — never the container itself.
 func New(injector do.Injector, opts ...Option) *Probe {
-	probe := &Probe{
+	cfg := config{
 		critical:        make(map[string]struct{}),
 		bootTime:        time.Now(),
 		timeout:         defaultTimeout,
@@ -175,13 +186,18 @@ func New(injector do.Injector, opts ...Option) *Probe {
 	}
 
 	for _, opt := range opts {
-		opt(probe)
+		opt(&cfg)
 	}
 
-	probe.healthCheck = resolveHealthCheck(probe.recorder, injector)
-	probe.recorder = nil // resolved into healthCheck closure; no longer needed
-
-	return probe
+	return &Probe{
+		healthCheck:     resolveHealthCheck(cfg.recorder, injector),
+		critical:        cfg.critical,
+		bootTime:        cfg.bootTime,
+		version:         cfg.version,
+		getOnly:         cfg.getOnly,
+		refreshInterval: cfg.refreshInterval,
+		timeout:         cfg.timeout,
+	}
 }
 
 // resolveHealthCheck captures the health-check capability at construction

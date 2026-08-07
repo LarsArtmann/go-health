@@ -41,6 +41,14 @@ probe.RegisterRoutes(mux, health.DefaultRoutes())
 | `/readyz`   | Readiness — can serve traffic? | Any critical service fails or shutting down |
 | `/startupz` | Startup — done booting?        | Not all critical services have passed yet   |
 
+### Why three probes?
+
+A single `/health` endpoint conflates "process alive" with "dependencies reachable." When a dependency blips, the endpoint returns 503, the kubelet restarts the pod, and a restart cascade follows — even though the process itself is fine. Splitting probes breaks this coupling:
+
+- **Liveness** never checks dependencies. Only a deadlocked or crashed process fails.
+- **Readiness** checks dependencies but only returns 503 for critical failures. Non-critical failures (e.g. metrics exporter) appear in the response body without removing the pod from rotation.
+- **Startup** lets slow-booting apps use a generous kubelet `failureThreshold` without affecting liveness/readiness sensitivity.
+
 ## Key Features
 
 - **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
@@ -49,17 +57,118 @@ probe.RegisterRoutes(mux, health.DefaultRoutes())
 - **Background caching** (1s default) — kubelet/LB polling doesn't hammer dependencies.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
 - **GET-only enforcement** — `WithGETOnly()` rejects non-GET with 405.
+- **Panic-proof** — panics from misbehaving recorders or services are recovered and reported as failed checks, never crashing your process.
+- **Config validation** — `Start()` validates configuration and returns an error on invalid settings (zero/negative timeout, negative refresh interval).
 - **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch.
+
+## Configuration Reference
+
+### `WithCriticalServices(names ...string)`
+
+Marks services as critical. If any fails its health check, readiness returns 503. Services not listed are non-critical — their failures appear in the response body but do not change the HTTP status code.
+
+```go
+health.WithCriticalServices("database", "redis")
+```
+
+### `WithVersion(v string)`
+
+Sets the application version string included in health responses.
+
+### `WithTimeout(d time.Duration)`
+
+Sets the **batch-level** context deadline shared across ALL services in a single evaluation (default: 5s). All checks run concurrently against the same deadline — a slow dependency can silently steal time from every other check.
+
+For **per-service** timeout isolation, configure samber/do's native option at injector creation time:
+
+```go
+injector := do.NewWithOpts(do.WithHealthCheckTimeout(2 * time.Second))
+```
+
+This library does not override that setting; it only controls the outer batch deadline. See [docs/timeout-design.md](docs/timeout-design.md) for the full analysis.
+
+### `WithRefreshInterval(d time.Duration)`
+
+Controls background cache refresh cadence (default: 1s):
+
+- **Greater than zero** — launches a goroutine that re-evaluates health checks on this interval. Readiness handlers serve the cached result for O(1) response time.
+- **Zero** — readiness handlers evaluate live on every request. Use for low-traffic or development scenarios.
+
+```go
+health.WithRefreshInterval(0) // live mode
+```
+
+### `WithBootTime(t time.Time)`
+
+Overrides the boot timestamp used to compute uptime. Defaults to the time `New()` was called. Useful for testing.
+
+### `WithGETOnly()`
+
+Wraps all handlers to reject non-GET requests with 405 Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces misconfigurations (e.g. a load balancer sending HEAD or POST) early.
+
+### `WithHealthRecorder(r HealthRecorder)`
+
+Wires a `HealthRecorder` so every health-check batch is observable by an external system. When nil (the default), checks run against the raw injector.
+
+## Shutdown Awareness
+
+Call `Shutdown()` during your server's graceful-drain path. Readiness immediately returns 503 so load balancers stop sending traffic before connections close. Liveness stays 200 because the process is still alive.
+
+For **two-phase** graceful shutdown, call `MarkShuttingDown()` first (starts draining), then `Shutdown()` after a grace period (stops the refresh loop):
+
+```go
+// Phase 1: signal load balancers to drain
+probe.MarkShuttingDown()
+
+// ... wait for connections to drain ...
+
+// Phase 2: stop background loop
+probe.Shutdown()
+```
 
 ## Audit Integration
 
-When a `HealthRecorder` is provided via `WithHealthRecorder`, every health-check batch is delegated to the recorder. [`samber-do-auditlog`](https://github.com/larsartmann/samber-do-auditlog)'s `*Plugin` satisfies the interface implicitly:
+When a `HealthRecorder` is provided via `WithHealthRecorder`, every health-check batch is delegated to the recorder instead of the raw injector. [`samber-do-auditlog`](https://github.com/larsartmann/samber-do-auditlog)'s `*Plugin` satisfies the interface implicitly:
 
 ```go
 plugin, _ := auditlog.New(auditlog.Config{Enabled: true})
 injector := do.NewWithOpts(plugin.Opts())
 
 probe := health.New(injector, health.WithHealthRecorder(plugin))
+```
+
+## Troubleshooting
+
+### Startup probe always returns 200 immediately
+
+samber/do v2.1.0 reports never-invoked lazy services as healthy (nil error) in `HealthCheckWithContext`. Eagerly invoke critical services at boot so their `HealthCheck` methods are actually exercised:
+
+```go
+// Force instantiation so HealthCheck is called
+do.MustInvokeNamed[*Database](injector, "database")
+```
+
+### Readiness returns 503 but my service is fine
+
+Check whether the failing service is marked as critical. Non-critical failures return 200 (degraded), not 503. Only critical service failures or shutdown state produce 503.
+
+### Health checks timing out
+
+The default timeout is 5 seconds shared across ALL services. If one service is slow, it steals time from every other check. Either increase the batch timeout via `WithTimeout`, or configure per-service timeouts via `do.WithHealthCheckTimeout` at injector creation time.
+
+## Development
+
+This project uses Nix for reproducible builds:
+
+```bash
+nix develop                    # Enter dev shell
+nix run .#test                 # Run tests
+nix run .#test-race            # Run tests with race detector
+nix run .#lint                 # Run golangci-lint
+nix run .#coverage             # Run tests with coverage report
+nix run .#vulncheck            # Run govulncheck
+nix run .#security             # Run gosec
+nix fmt                        # Format code
 ```
 
 ## License

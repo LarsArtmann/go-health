@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -648,8 +649,13 @@ func TestValidate_ZeroTimeout_ReturnsError(t *testing.T) {
 
 	probe := health.New(do.New(), health.WithTimeout(0))
 
-	if err := probe.Validate(); !errors.Is(err, health.ErrInvalidTimeout) {
+	err := probe.Validate()
+	if !errors.Is(err, health.ErrInvalidTimeout) {
 		t.Errorf("zero timeout: want ErrInvalidTimeout, got %v", err)
+	}
+
+	if msg := err.Error(); !strings.Contains(msg, "0s") || !strings.Contains(msg, "WithTimeout") {
+		t.Errorf("zero timeout: error should include the offending value and remediation, got %q", msg)
 	}
 }
 
@@ -658,8 +664,13 @@ func TestValidate_NegativeTimeout_ReturnsError(t *testing.T) {
 
 	probe := health.New(do.New(), health.WithTimeout(-1*time.Second))
 
-	if err := probe.Validate(); !errors.Is(err, health.ErrInvalidTimeout) {
+	err := probe.Validate()
+	if !errors.Is(err, health.ErrInvalidTimeout) {
 		t.Errorf("negative timeout: want ErrInvalidTimeout, got %v", err)
+	}
+
+	if msg := err.Error(); !strings.Contains(msg, "-1s") || !strings.Contains(msg, "WithTimeout") {
+		t.Errorf("negative timeout: error should include the offending value and remediation, got %q", msg)
 	}
 }
 
@@ -668,8 +679,13 @@ func TestValidate_NegativeRefreshInterval_ReturnsError(t *testing.T) {
 
 	probe := health.New(do.New(), health.WithRefreshInterval(-1))
 
-	if err := probe.Validate(); !errors.Is(err, health.ErrInvalidRefreshInterval) {
+	err := probe.Validate()
+	if !errors.Is(err, health.ErrInvalidRefreshInterval) {
 		t.Errorf("negative refresh interval: want ErrInvalidRefreshInterval, got %v", err)
+	}
+
+	if msg := err.Error(); !strings.Contains(msg, "-1ns") || !strings.Contains(msg, "WithRefreshInterval") {
+		t.Errorf("negative refresh interval: error should include the offending value and remediation, got %q", msg)
 	}
 }
 

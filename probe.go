@@ -3,6 +3,7 @@ package health
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -142,7 +143,7 @@ func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.Header().Set("Allow", "GET")
-			w.WriteHeader(http.StatusMethodNotAllowed)
+			http.Error(w, "health probes only accept GET", http.StatusMethodNotAllowed)
 
 			return
 		}
@@ -209,11 +210,12 @@ var ErrInvalidRefreshInterval = errors.New("health: refresh interval must not be
 //     but callers likely intended a positive interval.
 func (p *Probe) Validate() error {
 	if p.timeout <= 0 {
-		return ErrInvalidTimeout
+		return fmt.Errorf("%w: got %s (configure via WithTimeout)", ErrInvalidTimeout, p.timeout)
 	}
 
 	if p.refreshInterval < 0 {
-		return ErrInvalidRefreshInterval
+		return fmt.Errorf("%w: got %s (use WithRefreshInterval(0) for live mode or a positive duration)",
+			ErrInvalidRefreshInterval, p.refreshInterval)
 	}
 
 	return nil

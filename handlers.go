@@ -3,6 +3,7 @@ package health
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -164,11 +165,17 @@ func writeResponse(w http.ResponseWriter, code int, resp Response) {
 
 	payload, err := json.Marshal(resp)
 	if err != nil {
-		http.Error(w, "marshal health response", http.StatusInternalServerError)
+		http.Error(w, "health: failed to encode response", http.StatusInternalServerError)
 
 		return
 	}
 
 	w.WriteHeader(code)
-	_, _ = w.Write(payload)
+
+	if _, err := w.Write(payload); err != nil {
+		// Client disconnected or the connection broke mid-write. The status
+		// line is already committed so there is nothing to recover; log at
+		// debug so operators can surface broken connections when needed.
+		slog.Debug("health: failed to write response body", "error", err)
+	}
 }

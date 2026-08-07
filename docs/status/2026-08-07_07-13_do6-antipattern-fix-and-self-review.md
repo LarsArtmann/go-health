@@ -137,19 +137,19 @@ It's called exactly once, during `New`. Making it a method on `*Probe` implies i
 
 ### Critical (fix my mistakes)
 
-1. Remove `recorder` field from `Probe` struct — dead weight after construction
+1. ~~Remove `recorder` field from `Probe` struct — dead weight after construction~~ done at `98231c9`
 2. Re-run the samber/do analyzer (`doanalyzerv2`) to confirm DO-6 is actually resolved
-3. Convert `resolveHealthCheck` from method to free function
+3. ~~Convert `resolveHealthCheck` from method to free function~~ done at `9ebd13d`
 
 ### High Priority
 
 4. Export `healthCheckFunc` and add `NewWithHealthCheck(fn healthCheckFunc, opts...)` constructor
-5. Create `flake.nix` with devShell (go 1.26.5, golangci-lint, test/lint commands)
-6. Create `.golangci.yml` with enabled linters (ineffassign, errcheck, govet, staticcheck, revive)
+5. ~~Create `flake.nix` with devShell (go 1.26.5, golangci-lint, test/lint commands)~~ done at `5bac97a`
+6. ~~Create `.golangci.yml` with enabled linters (ineffassign, errcheck, govet, staticcheck, revive)~~ done at `5bac97a`
 7. Set up GitHub Actions CI: `go test -race`, `go vet`, `golangci-lint run`
-8. Create `FEATURES.md` — honest feature inventory by status
-9. Create `TODO_LIST.md` — actionable short/mid-term tasks
-10. Identify and cover the 2.6% test coverage gap
+8. ~~Create `FEATURES.md` — honest feature inventory by status~~ done at `9017c5a`
+9. ~~Create `TODO_LIST.md` — actionable short/mid-term tasks~~ done at `9017c5a`
+10. ~~Identify and cover the 2.6% test coverage gap~~ done at `1a388ab`, `c682d95` — coverage now 98.7%, remaining gap is unreachable marshal-error branch
 
 ### Medium Priority
 
@@ -158,17 +158,17 @@ It's called exactly once, during `New`. Making it a method on `*Probe` implies i
 13. Add `Probe.Alive() bool` / `Probe.Ready() bool` convenience helpers
 14. Add `WithLogger(*slog.Logger)` option for structured logging
 15. Add debounce/throttle for live evaluation mode (`WithRefreshInterval(0)`)
-16. Make `Response.Checks` ordering deterministic (sort keys or use ordered map)
-17. Add `Validate()` call inside `Start()` to fail fast on misconfiguration
+16. ~~Make `Response.Checks` ordering deterministic (sort keys or use ordered map)~~ done at `1a388ab` — Go sorts map keys; verified with test
+17. ~~Add `Validate()` call inside `Start()` to fail fast on misconfiguration~~ done at `c5eb415`
 18. Add test for concurrent `Start()` + `Shutdown()` ordering
-19. Add test for panicking recorder (should not crash the probe)
-20. Add `StartupHandler` benchmark
-21. Add recorder-path benchmark
+19. ~~Add test for panicking recorder (should not crash the probe)~~ done at `c682d95`
+20. ~~Add `StartupHandler` benchmark~~ done at `1a388ab`
+21. ~~Add recorder-path benchmark~~ done at `1a388ab`
 22. Implement `do.HealthcheckerWithContext` on Probe for self-registration
 23. Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle
-24. Add `Roadmap.md` with long-term direction
-25. Enrich `CHANGELOG.md` with the DO-6 fix entry
-26. Expand `README.md` — currently 2.4KB, minimal for an ALPHA library
+24. ~~Add `Roadmap.md` with long-term direction~~ done at `9017c5a`
+25. ~~Enrich `CHANGELOG.md` with the DO-6 fix entry~~ done at `9ebd13d`, rewritten at `9017c5a`
+26. ~~Expand `README.md` — currently 2.4KB, minimal for an ALPHA library~~ done at `d32768d`
 
 ### Lower Priority
 
@@ -178,14 +178,14 @@ It's called exactly once, during `New`. Making it a method on `*Probe` implies i
 30. Add health-check weights/priorities for more nuanced classification
 31. Add `Response` interface or allow custom response types
 32. Add fuzz tests for JSON marshaling edge cases
-33. Add context cancellation handling in startup latch evaluation
+33. ~~Add context cancellation handling in startup latch evaluation~~ done at `1a388ab` — test added verifying latch doesn't flip on timeout
 34. Add `Status` validation (reject unknown values at construction)
-35. Consider `Probe` config struct to group the 11 struct fields
-36. Add structured logging context (version, uptime) to `slog.Debug` calls
+35. ~~Consider `Probe` config struct to group the 11 struct fields~~ done at `98231c9`
+36. ~~Add structured logging context (version, uptime) to `slog.Debug` calls~~ Won't implement — libraries must not log; reverted at `9ebd13d`
 37. Add test for `MarkShuttingDown` + readiness cache interplay during active background refresh
 38. Add migration guide for consumers coming from samber-do-auditlog's `WithPlugin`
-39. Add `doc.go` mention of the `healthCheckFunc` pattern and construction-time resolution
-40. Add `CONTRIBUTING.md` detail (currently 403 bytes)
+39. ~~Add `doc.go` mention of the `healthCheckFunc` pattern and construction-time resolution~~ done at `9ebd13d`
+40. ~~Add `CONTRIBUTING.md` detail (currently 403 bytes)~~ done at `9017c5a`
 41. Verify Go 1.26.5 compatibility in CI (very new version)
 42. Add version tagging / release process (semver)
 43. Add pre-commit hooks (gofmt, goimports, golangci-lint)

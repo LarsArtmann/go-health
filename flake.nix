@@ -114,13 +114,10 @@
               gosec ./...
             '';
 
-            clean =
-              mkApp "clean"
-                [ goPkg pkgs.trash-cli ]
-                ''
-                  trash-put coverage.out 2>/dev/null || true
-                  go clean -testcache
-                '';
+            clean = mkApp "clean" [ goPkg pkgs.trash-cli ] ''
+              trash-put coverage.out 2>/dev/null || true
+              go clean -testcache
+            '';
           };
         };
     };

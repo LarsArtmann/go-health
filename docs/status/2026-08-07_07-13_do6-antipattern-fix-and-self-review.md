@@ -111,12 +111,12 @@ After `New()` returns, **`p.recorder` is never read again.** The recorder is cap
 
 ### Architectural Issues I Noticed (pre-existing, not introduced)
 
-5. **`HealthRecorder` interface leaks `do.Injector`** — `RecordHealthCheckWithContext(ctx, injector do.Injector)` forces consumers to know about the container. After decoupling Probe from the injector, this interface still drags it back in.
-6. **`Probe` doesn't implement `do.HealthcheckerWithContext` or `do.ShutdownerWithError`** — can't self-register in the container it monitors. Not necessarily wrong, but limits composability.
-7. **`Response.Checks` is `map[string]Check`** — non-deterministic JSON key ordering. May matter for API consumers doing string comparison or golden-file testing.
-8. **No DOS protection on live evaluation** — `WithRefreshInterval(0)` + high traffic = hammering dependencies. No debounce/throttle.
-9. **`Status` is a `string` type with no validation** — consumers could construct invalid `Response{Status: "bogus"}`.
-10. **`Evaluate` doesn't respect context cancellation for the startup latch** — if the context expires mid-evaluation, incomplete results could still flip the latch.
+5. **`HealthRecorder` interface leaks `do.Injector`** — `RecordHealthCheckWithContext(ctx, injector do.Injector)` forces consumers to know about the container. After decoupling Probe from the injector, this interface still drags it back in. → ROADMAP (Theme 4: Container & Ecosystem Integration)
+6. **`Probe` doesn't implement `do.HealthcheckerWithContext` or `do.ShutdownerWithError`** — can't self-register in the container it monitors. Not necessarily wrong, but limits composability. → ROADMAP (Theme 4)
+7. ~~**`Response.Checks` is `map[string]Check`** — non-deterministic JSON key ordering. May matter for API consumers doing string comparison or golden-file testing.~~ done at `1a388ab` — Go sorts map keys; verified with test
+8. **No DOS protection on live evaluation** — `WithRefreshInterval(0)` + high traffic = hammering dependencies. No debounce/throttle. → ROADMAP (Theme 3: Operational Hardening)
+9. **`Status` is a `string` type with no validation** — consumers could construct invalid `Response{Status: "bogus"}`. → ROADMAP (Theme 5: Protocol & Format Flexibility)
+10. ~~**`Evaluate` doesn't respect context cancellation for the startup latch** — if the context expires mid-evaluation, incomplete results could still flip the latch.~~ done at `1a388ab` — test added verifying latch doesn't flip on timeout
 
 ### Error Handling
 

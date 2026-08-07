@@ -8,18 +8,18 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 
 ## Commands
 
-| Command                  | Purpose                          |
-| ------------------------ | -------------------------------- |
-| `nix run .#test`         | Run all tests                    |
-| `nix run .#test-race`    | Run all tests with race detector |
-| `nix run .#lint`         | Run golangci-lint                |
-| `nix run .#vet`          | Run go vet                       |
-| `nix run .#coverage`     | Run tests with coverage report   |
-| `nix run .#vulncheck`    | Run govulncheck                  |
-| `nix run .#security`     | Run gosec                        |
-| `nix run .#build`        | Build all packages               |
-| `nix fmt`                | Format code (gofumpt, goimports) |
-| `nix flake check`        | Validate flake + formatting      |
+| Command               | Purpose                          |
+| --------------------- | -------------------------------- |
+| `nix run .#test`      | Run all tests                    |
+| `nix run .#test-race` | Run all tests with race detector |
+| `nix run .#lint`      | Run golangci-lint                |
+| `nix run .#vet`       | Run go vet                       |
+| `nix run .#coverage`  | Run tests with coverage report   |
+| `nix run .#vulncheck` | Run govulncheck                  |
+| `nix run .#security`  | Run gosec                        |
+| `nix run .#build`     | Build all packages               |
+| `nix fmt`             | Format code (gofumpt, goimports) |
+| `nix flake check`     | Validate flake + formatting      |
 
 Uses `flake.nix` with `flake-parts` + `treefmt-nix`. Single dependency: `github.com/samber/do/v2 v2.1.0`.
 
@@ -78,7 +78,7 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 - Standard `testing.T` + table-driven tests. No ginkgo/testify.
 - Each test creates its own `do.Injector` — no shared state.
 - `mockRecorder` type replaces the old auditlog integration tests.
-
+- Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `Evaluate`.
 
 ---
 
@@ -90,3 +90,17 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 - **No GOEXPERIMENT=jsonv2 needed** — this package only depends on `samber/do/v2` + stdlib. No templ, no go-output, no SSE infrastructure.
 - **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.
 - **`WithTimeout` is batch-level, not per-service** — the deadline is shared across all services in one evaluation. A slow dependency steals time from every other check. samber/do exposes `HealthCheckTimeout` (per-service) via `InjectorOpts` at injector creation time. See [docs/timeout-design.md](docs/timeout-design.md) for the full analysis, including why HTTP query-param timeout overrides are rejected (DoS amplifier + breaks caching).
+
+---
+
+## Project Documentation
+
+| File                                               | Purpose                                                     |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| [FEATURES.md](FEATURES.md)                         | Honest feature inventory by status                          |
+| [TODO_LIST.md](TODO_LIST.md)                       | Short-term actionable tasks                                 |
+| [ROADMAP.md](ROADMAP.md)                           | Long-term direction and raw ideas                           |
+| [CHANGELOG.md](CHANGELOG.md)                       | What changed in each version                                |
+| [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md) | Domain terms (liveness, readiness, startup, critical, etc.) |
+| [docs/timeout-design.md](docs/timeout-design.md)   | Batch-level vs per-service timeout analysis                 |
+| [docs/status/](docs/status/)                       | Historical session reports (point-in-time snapshots)        |

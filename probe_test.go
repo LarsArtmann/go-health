@@ -69,7 +69,10 @@ type mockRecorder struct {
 	result map[string]error
 }
 
-func (m *mockRecorder) RecordHealthCheckWithContext(_ context.Context, _ do.Injector) map[string]error {
+func (m *mockRecorder) RecordHealthCheckWithContext(
+	_ context.Context,
+	_ do.Injector,
+) map[string]error {
 	m.calls.Add(1)
 
 	return m.result
@@ -78,7 +81,10 @@ func (m *mockRecorder) RecordHealthCheckWithContext(_ context.Context, _ do.Inje
 // panicRecorder simulates a misbehaving recorder that panics during health checks.
 type panicRecorder struct{}
 
-func (panicRecorder) RecordHealthCheckWithContext(_ context.Context, _ do.Injector) map[string]error {
+func (panicRecorder) RecordHealthCheckWithContext(
+	_ context.Context,
+	_ do.Injector,
+) map[string]error {
 	panic("recorder exploded")
 }
 
@@ -183,7 +189,10 @@ func TestLiveness_PerformsNoDependencyChecks(t *testing.T) {
 	}
 
 	if calls := svc.calls.Load(); calls != 0 {
-		t.Errorf("liveness should not check dependencies, but HealthCheck was called %d times", calls)
+		t.Errorf(
+			"liveness should not check dependencies, but HealthCheck was called %d times",
+			calls,
+		)
 	}
 }
 
@@ -272,7 +281,10 @@ func TestReadiness_CriticalFailure_Returns503(t *testing.T) {
 	}
 
 	if dbCheck.Error != "service unhealthy: connection refused" {
-		t.Errorf("db check error: want 'service unhealthy: connection refused', got %q", dbCheck.Error)
+		t.Errorf(
+			"db check error: want 'service unhealthy: connection refused', got %q",
+			dbCheck.Error,
+		)
 	}
 }
 
@@ -307,7 +319,10 @@ func TestReadiness_NonCriticalFailure_Returns200(t *testing.T) {
 	}
 
 	if metricsCheck.Status != health.StatusWarn {
-		t.Errorf("metrics check status: want warn (non-critical failure), got %s", metricsCheck.Status)
+		t.Errorf(
+			"metrics check status: want warn (non-critical failure), got %s",
+			metricsCheck.Status,
+		)
 	}
 }
 
@@ -404,7 +419,11 @@ func TestReadiness_CachedMode_ServesFromCache(t *testing.T) {
 	}
 
 	if calls := svc.calls.Load(); calls != initialCalls {
-		t.Errorf("cached readiness should not call HealthCheck, initial=%d, after=%d", initialCalls, calls)
+		t.Errorf(
+			"cached readiness should not call HealthCheck, initial=%d, after=%d",
+			initialCalls,
+			calls,
+		)
 	}
 }
 
@@ -458,11 +477,16 @@ func TestStartup_NeverInvokedService_AppearsHealthyInSamberDo(t *testing.T) {
 	w := doRequest(t, probe.StartupHandler(), "/startupz")
 
 	if w.Code != http.StatusOK {
-		t.Fatalf("startup with never-invoked service: want 200 (samber/do reports healthy), got %d", w.Code)
+		t.Fatalf(
+			"startup with never-invoked service: want 200 (samber/do reports healthy), got %d",
+			w.Code,
+		)
 	}
 
 	if !probe.StartupComplete() {
-		t.Error("StartupComplete should be true (samber/do v2.1.0 reports never-invoked as healthy)")
+		t.Error(
+			"StartupComplete should be true (samber/do v2.1.0 reports never-invoked as healthy)",
+		)
 	}
 }
 
@@ -698,7 +722,10 @@ func TestValidate_ZeroTimeout_ReturnsError(t *testing.T) {
 	}
 
 	if msg := err.Error(); !strings.Contains(msg, "0s") || !strings.Contains(msg, "WithTimeout") {
-		t.Errorf("zero timeout: error should include the offending value and remediation, got %q", msg)
+		t.Errorf(
+			"zero timeout: error should include the offending value and remediation, got %q",
+			msg,
+		)
 	}
 }
 
@@ -713,7 +740,10 @@ func TestValidate_NegativeTimeout_ReturnsError(t *testing.T) {
 	}
 
 	if msg := err.Error(); !strings.Contains(msg, "-1s") || !strings.Contains(msg, "WithTimeout") {
-		t.Errorf("negative timeout: error should include the offending value and remediation, got %q", msg)
+		t.Errorf(
+			"negative timeout: error should include the offending value and remediation, got %q",
+			msg,
+		)
 	}
 }
 
@@ -727,8 +757,12 @@ func TestValidate_NegativeRefreshInterval_ReturnsError(t *testing.T) {
 		t.Errorf("negative refresh interval: want ErrInvalidRefreshInterval, got %v", err)
 	}
 
-	if msg := err.Error(); !strings.Contains(msg, "-1ns") || !strings.Contains(msg, "WithRefreshInterval") {
-		t.Errorf("negative refresh interval: error should include the offending value and remediation, got %q", msg)
+	if msg := err.Error(); !strings.Contains(msg, "-1ns") ||
+		!strings.Contains(msg, "WithRefreshInterval") {
+		t.Errorf(
+			"negative refresh interval: error should include the offending value and remediation, got %q",
+			msg,
+		)
 	}
 }
 
@@ -845,6 +879,7 @@ func TestReadiness_JSONChecksAreSortedAlphabetically(t *testing.T) {
 	body := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
 
 	var indices []int
+
 	for _, name := range []string{"alpha", "mongo", "zebra"} {
 		idx := strings.Index(body, `"`+name+`"`)
 		if idx < 0 {
@@ -855,8 +890,12 @@ func TestReadiness_JSONChecksAreSortedAlphabetically(t *testing.T) {
 	}
 
 	if indices[0] >= indices[1] || indices[1] >= indices[2] {
-		t.Errorf("checks are not alphabetically sorted in JSON: positions alpha=%d, mongo=%d, zebra=%d",
-			indices[0], indices[1], indices[2])
+		t.Errorf(
+			"checks are not alphabetically sorted in JSON: positions alpha=%d, mongo=%d, zebra=%d",
+			indices[0],
+			indices[1],
+			indices[2],
+		)
 	}
 }
 
@@ -983,7 +1022,10 @@ func TestStart_InvalidRefreshInterval_ReturnsError(t *testing.T) {
 
 	err := probe.Start(t.Context())
 	if !errors.Is(err, health.ErrInvalidRefreshInterval) {
-		t.Fatalf("Start with negative refresh interval: want ErrInvalidRefreshInterval, got %v", err)
+		t.Fatalf(
+			"Start with negative refresh interval: want ErrInvalidRefreshInterval, got %v",
+			err,
+		)
 	}
 }
 
@@ -1195,7 +1237,12 @@ func TestReadiness_ConcurrentAccess_AllSucceed(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/readyz", nil)
+			r, err := http.NewRequestWithContext(
+				context.Background(),
+				http.MethodGet,
+				"/readyz",
+				nil,
+			)
 			if err != nil {
 				failures.Add(1)
 

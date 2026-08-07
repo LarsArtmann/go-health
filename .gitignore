@@ -53,4 +53,10 @@ vendor/
 go.work
 go.work.sum
 /go-health
+
+## Nix
+result
+result-*
+.envrc
+.direnv/
 # <<< buildflow-managed (.gitignore) <<<

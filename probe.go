@@ -236,8 +236,11 @@ func (p *Probe) Validate() error {
 	}
 
 	if p.refreshInterval < 0 {
-		return fmt.Errorf("%w: got %s (use WithRefreshInterval(0) for live mode or a positive duration)",
-			ErrInvalidRefreshInterval, p.refreshInterval)
+		return fmt.Errorf(
+			"%w: got %s (use WithRefreshInterval(0) for live mode or a positive duration)",
+			ErrInvalidRefreshInterval,
+			p.refreshInterval,
+		)
 	}
 
 	return nil

@@ -1,6 +1,6 @@
-// Package health provides a production-ready health-probe SDK for samber/do v2
-// containers. It turns the three-probe Kubernetes pattern (liveness, readiness,
-// startup) into a single [Probe] type with sensible defaults.
+// Package health provides a health-probe SDK for samber/do v2 containers. It
+// turns the three-probe Kubernetes pattern (liveness, readiness, startup) into
+// a single [Probe] type with sensible defaults.
 //
 // The package separates three distinct concerns that are often wrongly
 // conflated into a single /health endpoint:

@@ -1,8 +1,44 @@
 # go-health
 
-Production-ready Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 containers.
+[![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-health.svg)](https://pkg.go.dev/github.com/larsartmann/go-health)
+[![Go Report Card](https://goreportcard.com/badge/github.com/larsartmann/go-health)](https://goreportcard.com/report/github.com/larsartmann/go-health)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 containers.
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
+
+> **Stability:** v0.0.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+
+---
+
+## Table of Contents
+
+- [Why three probes?](#why-three-probes)
+- [Install](#install)
+- [Quick Start](#quick-start)
+- [Sample Responses](#sample-responses)
+- [Three Probes](#three-probes)
+- [Key Features](#key-features)
+- [Configuration Reference](#configuration-reference)
+- [Shutdown Awareness](#shutdown-awareness)
+- [Audit Integration](#audit-integration)
+- [Kubernetes Wiring](#kubernetes-wiring)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Why three probes?
+
+A single `/health` endpoint conflates "process alive" with "dependencies reachable." When a dependency blips, the endpoint returns 503, the kubelet restarts the pod, and a restart cascade follows, even though the process itself is fine.
+
+Splitting probes breaks this coupling:
+
+- **Liveness** never checks dependencies. Only a deadlocked or crashed process fails.
+- **Readiness** checks dependencies but only returns 503 for critical failures. Non-critical failures (e.g. metrics exporter) appear in the response body without removing the pod from rotation.
+- **Startup** lets slow-booting apps use a generous kubelet `failureThreshold` without affecting liveness/readiness sensitivity.
 
 ## Install
 
@@ -10,44 +46,99 @@ Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a s
 go get github.com/larsartmann/go-health
 ```
 
+**Requirements:** Go 1.26+. Single dependency: `github.com/samber/do/v2`.
+
 ## Quick Start
 
 ```go
-import "github.com/larsartmann/go-health"
+package main
 
-injector := do.New()
+import (
+    "context"
+    "log"
+    "net/http"
 
-// ... register and invoke services ...
-
-probe := health.New(injector,
-    health.WithCriticalServices("database", "redis"),
-    health.WithVersion("1.0.0"),
+    "github.com/larsartmann/go-health"
+    "github.com/samber/do/v2"
 )
 
-if err := probe.Start(ctx); err != nil {
-    log.Fatal(err)
-}
-defer probe.Shutdown()
+func main() {
+    injector := do.New()
 
-mux := http.NewServeMux()
-probe.RegisterRoutes(mux, health.DefaultRoutes())
+    // ... register and eagerly invoke services ...
+
+    probe := health.New(injector,
+        health.WithCriticalServices("database", "redis"),
+        health.WithVersion("1.0.0"),
+    )
+
+    if err := probe.Start(context.Background()); err != nil {
+        log.Fatal(err)
+    }
+    defer probe.Shutdown()
+
+    mux := http.NewServeMux()
+    probe.RegisterRoutes(mux, health.DefaultRoutes())
+
+    log.Fatal(http.ListenAndServe(":8080", mux))
+}
+```
+
+## Sample Responses
+
+**Healthy (200):**
+
+```json
+{
+  "status": "pass",
+  "version": "1.0.0",
+  "uptime": "5m32s",
+  "total_latency_ms": 12,
+  "checks": {
+    "database": { "status": "pass" },
+    "redis": { "status": "pass" }
+  }
+}
+```
+
+**Degraded, non-critical failure (200):**
+
+```json
+{
+  "status": "warn",
+  "version": "1.0.0",
+  "uptime": "5m32s",
+  "total_latency_ms": 15,
+  "checks": {
+    "database": { "status": "pass" },
+    "redis": { "status": "pass" },
+    "metrics-exporter": { "status": "warn", "error": "connection refused" }
+  }
+}
+```
+
+**Critical failure (503):**
+
+```json
+{
+  "status": "fail",
+  "version": "1.0.0",
+  "uptime": "5m32s",
+  "total_latency_ms": 5004,
+  "checks": {
+    "database": { "status": "fail", "error": "context deadline exceeded" },
+    "redis": { "status": "pass" }
+  }
+}
 ```
 
 ## Three Probes
 
 | Endpoint    | Purpose                        | Returns 503 when...                         |
 | ----------- | ------------------------------ | ------------------------------------------- |
-| `/healthz`  | Liveness — process alive?      | Never (always 200 unless process is dead)   |
-| `/readyz`   | Readiness — can serve traffic? | Any critical service fails or shutting down |
-| `/startupz` | Startup — done booting?        | Not all critical services have passed yet   |
-
-### Why three probes?
-
-A single `/health` endpoint conflates "process alive" with "dependencies reachable." When a dependency blips, the endpoint returns 503, the kubelet restarts the pod, and a restart cascade follows — even though the process itself is fine. Splitting probes breaks this coupling:
-
-- **Liveness** never checks dependencies. Only a deadlocked or crashed process fails.
-- **Readiness** checks dependencies but only returns 503 for critical failures. Non-critical failures (e.g. metrics exporter) appear in the response body without removing the pod from rotation.
-- **Startup** lets slow-booting apps use a generous kubelet `failureThreshold` without affecting liveness/readiness sensitivity.
+| `/healthz`  | Liveness, process alive?       | Never (always 200 unless process is dead)   |
+| `/readyz`   | Readiness, can serve traffic?  | Any critical service fails or shutting down |
+| `/startupz` | Startup, done booting?         | Not all critical services have passed yet   |
 
 ## Key Features
 
@@ -137,6 +228,36 @@ injector := do.NewWithOpts(plugin.Opts())
 probe := health.New(injector, health.WithHealthRecorder(plugin))
 ```
 
+## Kubernetes Wiring
+
+Wire the three probes in your Deployment manifest:
+
+```yaml
+spec:
+  containers:
+    - name: app
+      ports:
+        - containerPort: 8080
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8080
+        periodSeconds: 10
+      readinessProbe:
+        httpGet:
+          path: /readyz
+          port: 8080
+        periodSeconds: 5
+      startupProbe:
+        httpGet:
+          path: /startupz
+          port: 8080
+        failureThreshold: 30
+        periodSeconds: 10
+```
+
+With `failureThreshold: 30` and `periodSeconds: 10`, the startup probe allows up to 5 minutes for slow-booting applications before the kubelet kills the container. Liveness and readiness probes only activate after startup succeeds.
+
 ## Troubleshooting
 
 ### Startup probe always returns 200 immediately
@@ -156,19 +277,15 @@ Check whether the failing service is marked as critical. Non-critical failures r
 
 The default timeout is 5 seconds shared across ALL services. If one service is slow, it steals time from every other check. Either increase the batch timeout via `WithTimeout`, or configure per-service timeouts via `do.WithHealthCheckTimeout` at injector creation time.
 
-## Development
+## Contributing
 
-This project uses Nix for reproducible builds:
+This project uses Nix for reproducible builds. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code conventions, and PR process.
 
 ```bash
-nix develop                    # Enter dev shell
-nix run .#test                 # Run tests
-nix run .#test-race            # Run tests with race detector
-nix run .#lint                 # Run golangci-lint
-nix run .#coverage             # Run tests with coverage report
-nix run .#vulncheck            # Run govulncheck
-nix run .#security             # Run gosec
-nix fmt                        # Format code
+nix develop          # Enter dev shell
+nix run .#test       # Run tests
+nix run .#test-race  # Run tests with race detector
+nix run .#lint       # Run golangci-lint
 ```
 
 ## License

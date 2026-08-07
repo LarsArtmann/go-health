@@ -81,7 +81,7 @@
 
 | Feature                         | Status               | Notes                                                                                                              |
 | ------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Nix devShell (`flake.nix`)      | PARTIALLY_FUNCTIONAL | Written but unverified: `nix develop` and `nix flake check` never run. May have hash or config issues. `flake.nix` |
-| Linter config (`.golangci.yml`) | FULLY_FUNCTIONAL     | 40+ linters enabled. `golangci-lint run ./...` reports 0 issues.                                                   |
+| Nix devShell (`flake.nix`)      | FULLY_FUNCTIONAL     | Verified: `nix flake check` passes. devShell + treefmt + all Nix apps working. `flake.nix` |
+| Linter config (`.golangci.yml`) | FULLY_FUNCTIONAL     | 0 issues. Curated for this project: varnamelen accepts idiomatic `w`/`r`/`wg`, tagliatelle enforces snake_case JSON, panic recovery gets targeted nolint. |
 | CI pipeline                     | PLANNED              | No GitHub Actions workflow.                                                                                        |
 | Security scanning               | FULLY_FUNCTIONAL     | `govulncheck` (0 vulns) and `gosec` (0 issues) verified manually. Not wired into CI.                               |

@@ -25,6 +25,7 @@
 ### Concurrent Work (NOT mine — committed by auto-git daemon or another agent)
 
 Commit `9303509` added error-reporting improvements I did NOT make:
+
 - `Validate()` errors now wrap with `fmt.Errorf` including the offending value + remediation hint
 - `guard()` now uses `http.Error` instead of bare `WriteHeader` for 405
 - `writeResponse` adds `slog.Debug` for write failures and namespaced error messages
@@ -78,11 +79,13 @@ Line 184:     recorder := p.recorder       ← captured into closure
 ```
 
 After `New()` returns, **`p.recorder` is never read again.** The recorder is captured in the closure returned by `resolveHealthCheck`. The field:
+
 - Holds a reference to the recorder for the Probe's entire lifetime (prevents GC)
 - Is misleading — it implies the recorder is used at runtime, but it's not
 - Contradicts the very anti-pattern I was fixing (storing something that should be resolved)
 
 **The fix I should have done**: Remove the `recorder` field entirely. The `WithHealthRecorder` option should be consumed during construction only. Either:
+
 1. Store the recorder in a construction-only intermediate struct, OR
 2. Have `WithHealthRecorder` accept the injector too and build the closure directly, OR
 3. Accept the field exists for option-wiring simplicity but zero it out after resolution

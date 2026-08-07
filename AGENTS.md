@@ -26,7 +26,7 @@ Single-package library (`health`) with these source files:
 ```
 doc.go      — Package doc comment (quick start, three-probe rationale, caching, shutdown)
 types.go    — Status enum (pass/fail/warn), Check, Response data model
-probe.go    — Probe struct, 7 Option functional options, HealthRecorder interface, New(), Validate(), lifecycle (Start/Shutdown/MarkShuttingDown), Evaluate, classify (three-state), evaluateStartup, buildChecks
+probe.go    — Probe struct, 7 Option functional options, HealthRecorder interface, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start/Shutdown/MarkShuttingDown), Evaluate, classify (three-state), evaluateStartup, buildChecks
 handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, writeResponse
 ```
 
@@ -41,7 +41,8 @@ handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoute
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly.
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down).
 - **Stdlib errors by design** — sentinels (`ErrInvalidTimeout`, `ErrInvalidRefreshInterval`) use `errors.New`; `Validate()` wraps them with `fmt.Errorf("%w: ...")` to include the offending value and remediation. No error library (samber/oops, go-error-family, cockroachdb/errors) is adopted: this is a single-dependency library whose only Go-level errors are config-validation sentinels matched via `errors.Is`, not errors at an HTTP/CLI boundary that need classification. HTTP failures are communicated via status codes, not error returns.
-- **Injector resolved at construction** — `New` captures the health-check capability (and optional recorder) into a `healthCheckFunc` at construction time. The Probe never stores `do.Injector` as a field, avoiding the injector-in-service anti-pattern (DO-6).
+- **Injector resolved at construction** — `New` captures the health-check capability into a `healthCheckFunc` via the `resolveHealthCheck` free function. The `recorder` field is nil after construction; the recorder reference lives only in the closure. The Probe never stores `do.Injector` as a field, avoiding the injector-in-service anti-pattern (DO-6).
+- **Zero logging coupling** — the library does not import `log/slog` or any logging package. HTTP write failures (client disconnect) are silently swallowed. A library must not make logging decisions for the host application.
 
 ### Decoupling from samber-do-auditlog
 
@@ -52,7 +53,7 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 1. User creates `Probe` via `New(injector, opts...)`
 2. `Start(ctx)` optionally launches background cache refresh loop
 3. HTTP handlers serve cached or live health-check results
-4. Readiness/startup delegate to `runHealthChecks`, which calls the `healthCheckFunc` resolved at construction (recorder or raw injector)
+4. Readiness/startup delegate to `runHealthChecks`, which calls the `healthCheckFunc` resolved by the `resolveHealthCheck` free function at construction (recorder or raw injector)
 5. `Shutdown()` marks probe as shutting down (readiness → 503, liveness stays 200)
 
 ### Concurrency Model

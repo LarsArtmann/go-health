@@ -961,6 +961,29 @@ func TestGETOnly_AllowsGET(t *testing.T) {
 	}
 }
 
+func TestGETOnly_405BodyContainsMessage(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector,
+		health.WithGETOnly(),
+		health.WithRefreshInterval(0),
+	)
+
+	w := httptest.NewRecorder()
+
+	r, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/healthz", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	probe.LivenessHandler()(w, r)
+
+	if !strings.Contains(w.Body.String(), "health probes only accept GET") {
+		t.Errorf("405 body should contain actionable message, got %q", w.Body.String())
+	}
+}
+
 func TestDefault_AllowsNonGETWithoutGuard(t *testing.T) {
 	t.Parallel()
 
@@ -1080,6 +1103,21 @@ func TestShutdown_Idempotent(t *testing.T) {
 	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 	if w.Code != http.StatusServiceUnavailable {
 		t.Errorf("post-shutdown readiness: want 503, got %d", w.Code)
+	}
+}
+
+func TestShutdown_WithoutStart_DoesNotPanic(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector, health.WithCriticalServices("db"))
+
+	// Must not panic or hang when Start was never called.
+	probe.Shutdown()
+
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("readiness after Shutdown-without-Start: want 503, got %d", w.Code)
 	}
 }
 

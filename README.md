@@ -90,14 +90,14 @@ func main() {
 
 ```json
 {
-  "status": "pass",
-  "version": "1.0.0",
-  "uptime": "5m32s",
-  "total_latency_ms": 12,
-  "checks": {
-    "database": { "status": "pass" },
-    "redis": { "status": "pass" }
-  }
+	"status": "pass",
+	"version": "1.0.0",
+	"uptime": "5m32s",
+	"total_latency_ms": 12,
+	"checks": {
+		"database": { "status": "pass" },
+		"redis": { "status": "pass" }
+	}
 }
 ```
 
@@ -105,15 +105,15 @@ func main() {
 
 ```json
 {
-  "status": "warn",
-  "version": "1.0.0",
-  "uptime": "5m32s",
-  "total_latency_ms": 15,
-  "checks": {
-    "database": { "status": "pass" },
-    "redis": { "status": "pass" },
-    "metrics-exporter": { "status": "warn", "error": "connection refused" }
-  }
+	"status": "warn",
+	"version": "1.0.0",
+	"uptime": "5m32s",
+	"total_latency_ms": 15,
+	"checks": {
+		"database": { "status": "pass" },
+		"redis": { "status": "pass" },
+		"metrics-exporter": { "status": "warn", "error": "connection refused" }
+	}
 }
 ```
 
@@ -121,24 +121,24 @@ func main() {
 
 ```json
 {
-  "status": "fail",
-  "version": "1.0.0",
-  "uptime": "5m32s",
-  "total_latency_ms": 5004,
-  "checks": {
-    "database": { "status": "fail", "error": "context deadline exceeded" },
-    "redis": { "status": "pass" }
-  }
+	"status": "fail",
+	"version": "1.0.0",
+	"uptime": "5m32s",
+	"total_latency_ms": 5004,
+	"checks": {
+		"database": { "status": "fail", "error": "context deadline exceeded" },
+		"redis": { "status": "pass" }
+	}
 }
 ```
 
 ## Three Probes
 
-| Endpoint    | Purpose                        | Returns 503 when...                         |
-| ----------- | ------------------------------ | ------------------------------------------- |
-| `/healthz`  | Liveness, process alive?       | Never (always 200 unless process is dead)   |
-| `/readyz`   | Readiness, can serve traffic?  | Any critical service fails or shutting down |
-| `/startupz` | Startup, done booting?         | Not all critical services have passed yet   |
+| Endpoint    | Purpose                       | Returns 503 when...                         |
+| ----------- | ----------------------------- | ------------------------------------------- |
+| `/healthz`  | Liveness, process alive?      | Never (always 200 unless process is dead)   |
+| `/readyz`   | Readiness, can serve traffic? | Any critical service fails or shutting down |
+| `/startupz` | Startup, done booting?        | Not all critical services have passed yet   |
 
 ## Key Features
 

@@ -15,10 +15,10 @@
 
 ## High Impact
 
-| Task                                          | Status  | Impact | Effort | Evidence                                                                                                                                                          |
-| --------------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Set up GitHub Actions CI pipeline             | TODO    | High   | 1h     | No `.github/workflows/`. CI should run: `go test -race`, `go vet`, `golangci-lint`, `govulncheck`, `gosec`                                                        |
-| Run `doanalyzerv2` to verify DO-6 fix         | BLOCKED | High   | 15min  | DO-6 anti-pattern fix is architecturally sound but unverified by the analyzer. Not in nixpkgs; `go install` blocked by sandbox. `probe.go:52` (no injector field) |
+| Task                                  | Status  | Impact | Effort | Evidence                                                                                                                                                          |
+| ------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Set up GitHub Actions CI pipeline     | TODO    | High   | 1h     | No `.github/workflows/`. CI should run: `go test -race`, `go vet`, `golangci-lint`, `govulncheck`, `gosec`                                                        |
+| Run `doanalyzerv2` to verify DO-6 fix | BLOCKED | High   | 15min  | DO-6 anti-pattern fix is architecturally sound but unverified by the analyzer. Not in nixpkgs; `go install` blocked by sandbox. `probe.go:52` (no injector field) |
 
 ## Medium Impact
 

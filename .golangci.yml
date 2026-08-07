@@ -196,7 +196,14 @@ linters:
         - a
         - b
         - v
+        - w
+        - r
+        - wg
       ignore-type-assert-ok: true
+    tagliatelle:
+      case:
+        rules:
+          json: snake
     wrapcheck:
       ignore-sigs:
         - .Errorf(

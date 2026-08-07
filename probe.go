@@ -377,10 +377,13 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 // A panic from the health-check function (e.g. a misbehaving recorder or a
 // service with a nil-pointer dereference) is recovered and returned as a
 // synthetic error so it never crashes the process or the HTTP handler.
+//
+//nolint:nonamedreturns // named return is required for recover() to assign the synthetic error
 func (p *Probe) runHealthChecks(ctx context.Context) (results map[string]error) {
 	defer func() {
 		if r := recover(); r != nil {
 			results = map[string]error{
+				//nolint:err113 // panic value is inherently dynamic; cannot be a pre-defined static error
 				"health-check": fmt.Errorf("health: panic during health check: %v", r),
 			}
 		}

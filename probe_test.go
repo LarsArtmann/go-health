@@ -878,7 +878,7 @@ func TestReadiness_JSONChecksAreSortedAlphabetically(t *testing.T) {
 	// guaranteed by the standard library — the test locks the property in.
 	body := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
 
-	var indices []int
+	indices := make([]int, 0, 3)
 
 	for _, name := range []string{"alpha", "mongo", "zebra"} {
 		idx := strings.Index(body, `"`+name+`"`)

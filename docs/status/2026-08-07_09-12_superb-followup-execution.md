@@ -188,17 +188,17 @@ I enabled 40+ linters by copying the `go-sse` pattern. But `go-sse` is a larger 
 
 1. Run `doanalyzerv2` — the DO-6 fix is still unverified by the tool that flagged it. Find a way to install it (build from source outside the sandbox, ask the user to run it, or use a nix overlay).
 2. Verify `flake.nix` builds: `nix develop -c bash -c "go test ./..."` and `nix flake check`.
-3. Fix or delete `write_response_internal_test.go` — it tests nothing useful (the failing writer doesn't actually fail).
+3. ~~Fix or delete `write_response_internal_test.go` — it tests nothing useful (the failing writer doesn't actually fail).~~ done at `897b571` — deleted
 4. Curate `.golangci.yml` for this project — don't just copy `go-sse`. Remove linters that don't add value for a 4-file library.
 
 ### High Priority
 
 5. Set up GitHub Actions CI: `go test -race`, `go vet`, `golangci-lint run`, `govulncheck`, `gosec`, `nix flake check`.
-6. Create `TODO_LIST.md` with actionable short/mid-term tasks.
-7. Create `FEATURES.md` with honest feature inventory by status.
-8. Create `ROADMAP.md` with long-term direction.
-9. Expand `CONTRIBUTING.md` with real development setup.
-10. Create `docs/DOMAIN_LANGUAGE.md`.
+6. ~~Create `TODO_LIST.md` with actionable short/mid-term tasks.~~ done at `9017c5a`
+7. ~~Create `FEATURES.md` with honest feature inventory by status.~~ done at `9017c5a`
+8. ~~Create `ROADMAP.md` with long-term direction.~~ done at `9017c5a`
+9. ~~Expand `CONTRIBUTING.md` with real development setup.~~ done at `9017c5a`
+10. ~~Create `docs/DOMAIN_LANGUAGE.md`.~~ done at `9017c5a`
 11. Add migration guide from `WithPlugin` to `WithHealthRecorder`.
 12. Add `go.mod` toolchain directive.
 13. Consider whether the panic recovery in `runHealthChecks` should respect critical service classification (a panicking critical service should arguably produce StatusFail, not StatusWarn).
@@ -215,7 +215,7 @@ I enabled 40+ linters by copying the `go-sse` pattern. But `go-sse` is a larger 
 21. Consider a "starting" `Status` (distinct from pass/warn/fail).
 22. Implement `do.HealthcheckerWithContext` on Probe for self-registration.
 23. Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle.
-24. Add `WithLogger(*slog.Logger)` option (only if observability is genuinely desired).
+24. ~~Add `WithLogger(*slog.Logger)` option (only if observability is genuinely desired).~~ Won't implement — non-goal: libraries must not log
 25. Add `WithShutdownGracePeriod` for automatic two-phase shutdown.
 26. Add `Probe.AwaitReady(ctx)` blocking helper for startup orchestration.
 27. Add HTTP middleware support for auth/rate-limiting on probe endpoints.

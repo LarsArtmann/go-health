@@ -142,35 +142,35 @@ The prior session (`07-19`) flagged this exact decision as one the user should o
 ### Critical (fix my mistakes / verify my claims)
 
 1. Run `doanalyzerv2` to confirm DO-6 is actually resolved (not just assumed)
-2. Run `gosec ./...` and fix findings
-3. Run `govulncheck ./...` and fix findings
+2. ~~Run `gosec ./...` and fix findings~~ done — 0 issues, verified in 09-12 session
+3. ~~Run `govulncheck ./...` and fix findings~~ done — No vulnerabilities found, verified in 09-12 session
 
 ### High Priority
 
-4. Eliminate the `recorder` field entirely — use a construction-only config struct so the Probe never carries dead weight
-5. Create `flake.nix` with devShell (go 1.26.5, golangci-lint, test/lint commands)
-6. Create `.golangci.yml` with enabled linters (ineffassign, errcheck, govet, staticcheck, revive)
+4. ~~Eliminate the `recorder` field entirely — use a construction-only config struct so the Probe never carries dead weight~~ done at `98231c9`
+5. ~~Create `flake.nix` with devShell (go 1.26.5, golangci-lint, test/lint commands)~~ done at `5bac97a`
+6. ~~Create `.golangci.yml` with enabled linters (ineffassign, errcheck, govet, staticcheck, revive)~~ done at `5bac97a`
 7. Set up GitHub Actions CI: `go test -race`, `go vet`, `golangci-lint run`, `gosec`, `govulncheck`
-8. Cover the `writeResponse` error branches (marshal failure + write failure)
-9. Add test for panicking recorder (should not crash the probe)
-10. Add `StartupHandler` benchmark
-11. Add recorder-path benchmark
+8. ~~Cover the `writeResponse` error branches (marshal failure + write failure)~~ NOT-DO — marshal branch genuinely unreachable; write-failure test created at `1a388ab` but deleted at `897b571` as it tested nothing useful
+9. ~~Add test for panicking recorder (should not crash the probe)~~ done at `c682d95`
+10. ~~Add `StartupHandler` benchmark~~ done at `1a388ab`
+11. ~~Add recorder-path benchmark~~ done at `1a388ab`
 
 ### Medium Priority
 
-12. Make `Response.Checks` ordering deterministic (sort keys)
-13. Add context cancellation protection in startup latch evaluation
-14. Wire `Validate()` into `Start()` for fail-fast misconfiguration detection
-15. Create `FEATURES.md` — honest feature inventory by status
-16. Create `TODO_LIST.md` — actionable short/mid-term tasks
-17. Create `ROADMAP.md` — long-term direction
+12. ~~Make `Response.Checks` ordering deterministic (sort keys)~~ done at `1a388ab` — Go sorts map keys; verified with test
+13. ~~Add context cancellation protection in startup latch evaluation~~ done at `1a388ab` — test added verifying latch doesn't flip on timeout
+14. ~~Wire `Validate()` into `Start()` for fail-fast misconfiguration detection~~ done at `c5eb415`
+15. ~~Create `FEATURES.md` — honest feature inventory by status~~ done at `9017c5a`
+16. ~~Create `TODO_LIST.md` — actionable short/mid-term tasks~~ done at `9017c5a`
+17. ~~Create `ROADMAP.md` — long-term direction~~ done at `9017c5a`
 18. Consider removing `do.Injector` from `HealthRecorder` interface signature
 19. Add `Probe.Status() Status` method for programmatic health check without HTTP
-20. Add `WithLogger(*slog.Logger)` option (only if observability is genuinely desired)
+20. ~~Add `WithLogger(*slog.Logger)` option (only if observability is genuinely desired)~~ Won't implement — non-goal: libraries must not log
 21. Add debounce/throttle for live evaluation mode
-22. Expand `README.md` — add timeout semantics, configuration reference, troubleshooting
-23. Expand `CONTRIBUTING.md` with real development setup
-24. Add `docs/DOMAIN_LANGUAGE.md` — define liveness/readiness/startup/critical/non-critical
+22. ~~Expand `README.md` — add timeout semantics, configuration reference, troubleshooting~~ done at `d32768d`
+23. ~~Expand `CONTRIBUTING.md` with real development setup~~ done at `9017c5a`
+24. ~~Add `docs/DOMAIN_LANGUAGE.md` — define liveness/readiness/startup/critical/non-critical~~ done at `9017c5a`
 25. Add migration guide for consumers coming from samber-do-auditlog's `WithPlugin`
 
 ### Lower Priority

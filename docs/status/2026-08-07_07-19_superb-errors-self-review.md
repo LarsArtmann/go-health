@@ -55,11 +55,11 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Revert or rework the `slog` addition** — either restore the silent swallow (correct for a library) or add `WithLogger(*slog.Logger) Option` so the host controls logging. Do NOT leave the library making logging decisions for the application.
-2. **Test the error paths** — marshal failure, write failure, 405 body content. These are the branches I touched and left untested.
-3. **Run `gosec` + `govulncheck`** — mandated by the Go skill, never run on this project.
-4. **Decide the error-library question explicitly** — adopt `go-error-family` project-wide (even for sentinels) OR formally accept stdlib-by-design. Don't leave it ambiguous.
-5. **Benchmark the `writeResponse` change** — it's on every request hot path; verify the `slog.Debug` call (if kept) has no allocation cost on the success path.
+1. ~~**Revert or rework the `slog` addition** — either restore the silent swallow (correct for a library) or add `WithLogger(*slog.Logger) Option` so the host controls logging. Do NOT leave the library making logging decisions for the application.~~ done at `9ebd13d` — reverted to silent swallow
+2. **Test the error paths** — marshal failure, write failure, 405 body content. These are the branches I touched and left untested. ← partially done: 405 body test added at `9ebd13d`; marshal/write-failure branches are unreachable by design (see NOT-DO on f.2/f.3 below)
+3. ~~**Run `gosec` + `govulncheck`** — mandated by the Go skill, never run on this project.~~ done — both verified clean in 09-12 session
+4. **Decide the error-library question explicitly** — adopt `go-error-family` project-wide (even for sentinels) OR formally accept stdlib-by-design. Don't leave it ambiguous. ← decided: stdlib-by-design, documented in AGENTS.md
+5. ~~**Benchmark the `writeResponse` change** — it's on every request hot path; verify the `slog.Debug` call (if kept) has no allocation cost on the success path.~~ No longer relevant — `slog` reverted at `9ebd13d`
 
 ---
 
@@ -78,36 +78,36 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 
 ### Testing Gaps
 
-9. Add property-based test for `classify` (pass/warn/fail across all possible result maps)
-10. Add test for `evaluateStartup` with empty critical set (returns true — edge case)
-11. Add test for concurrent `Evaluate` + `Shutdown` race conditions (beyond basic concurrency test)
-12. Add test for `MarkShuttingDown` + `Shutdown` two-phase sequence
-13. Add integration test with a real `do.Injector` health check that fails
-14. Add test for `Start` called twice (no-op behavior)
+9. Add property-based test for `classify` (pass/warn/fail across all possible result maps) → TODO_LIST (Low Impact)
+10. Add test for `evaluateStartup` with empty critical set (returns true — edge case) → TODO_LIST (Low Impact)
+11. Add test for concurrent `Evaluate` + `Shutdown` race conditions (beyond basic concurrency test) → TODO_LIST (Low Impact)
+12. Add test for `MarkShuttingDown` + `Shutdown` two-phase sequence → TODO_LIST (Low Impact)
+13. Add integration test with a real `do.Injector` health check that fails → TODO_LIST (Low Impact)
+14. Add test for `Start` called twice (no-op behavior) → TODO_LIST (Low Impact)
 15. ~~Add test for `Shutdown` called without `Start` (should not panic)~~ done at `9ebd13d`
-16. Add test for `readinessResponse` cache-miss → live-eval → cache-populate flow
-17. Snapshot test for full readiness JSON response shape (go-snaps)
+16. Add test for `readinessResponse` cache-miss → live-eval → cache-populate flow → TODO_LIST (Low Impact)
+17. Snapshot test for full readiness JSON response shape (go-snaps) → TODO_LIST (Low Impact)
 18. ~~Increase coverage to 100% (currently ~97.4%)~~ done at `1a388ab`, `c682d95` — now 98.7%, remaining gap is unreachable marshal-error branch
 
 ### Architecture / Design
 
 19. ~~Add `WithLogger(*slog.Logger) Option` if observability is desired (proper DI, not global logger)~~ Won't implement — libraries must not log; rejected as anti-pattern in ROADMAP non-goals
-20. Consider `WithNowFunc(func() time.Time)` for testable uptime calculations
-21. Consider exposing `Evaluate` results as structured errors, not just `map[string]error`
-22. Review whether `Response.TotalLatencyMs` should be `float64` for sub-ms precision
-23. Consider adding a `Status` for "starting" (distinct from pass/warn/fail)
-24. Evaluate whether `Check` should include latency per-service, not just status + error
-25. Add OpenTelemetry spans to `Evaluate` and individual health checks
-26. Consider circuit-breaker pattern for flapping dependencies (failsafe-go)
+20. Consider `WithNowFunc(func() time.Time)` for testable uptime calculations → ROADMAP (Theme 6)
+21. Consider exposing `Evaluate` results as structured errors, not just `map[string]error` → ROADMAP (Theme 2)
+22. Review whether `Response.TotalLatencyMs` should be `float64` for sub-ms precision → ROADMAP (Theme 2)
+23. Consider adding a `Status` for "starting" (distinct from pass/warn/fail) → ROADMAP (Theme 5)
+24. Evaluate whether `Check` should include latency per-service, not just status + error → ROADMAP (Theme 2)
+25. Add OpenTelemetry spans to `Evaluate` and individual health checks → ROADMAP (Theme 2)
+26. Consider circuit-breaker pattern for flapping dependencies (failsafe-go) → ROADMAP (Theme 3)
 
 ### Build / CI
 
 27. ~~Create `flake.nix` with devShell, build, test, lint automation~~ done at `5bac97a`
-28. Add GitHub Actions CI: `go test -race`, `go vet`, `gosec`, `govulncheck`, `erraudit`
+28. Add GitHub Actions CI: `go test -race`, `go vet`, `gosec`, `govulncheck`, `erraudit` → TODO_LIST (High Impact)
 29. ~~Add `golangci-lint` configuration~~ done at `5bac97a`
-30. Add `go-arch-lint` to enforce package boundaries
-31. Add pre-commit hooks (goimports, go vet, erraudit)
-32. Add release/tagging workflow (goreleaser or equivalent)
+30. Add `go-arch-lint` to enforce package boundaries → ROADMAP (not yet scoped)
+31. Add pre-commit hooks (goimports, go vet, erraudit) → ROADMAP (not yet scoped)
+32. Add release/tagging workflow (goreleaser or equivalent) → TODO_LIST (Low Impact)
 
 ### Documentation
 
@@ -117,31 +117,31 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 36. ~~Add `CHANGELOG.md` — track changes across versions~~ done at `9ebd13d`, rewritten at `9017c5a`
 37. ~~Add `ROADMAP.md` — long-term direction~~ done at `9017c5a`
 38. ~~Add `docs/DOMAIN_LANGUAGE.md` — define liveness/readiness/startup/critical/non-critical precisely~~ done at `9017c5a`
-39. Add API reference (pkg.go.dev will auto-generate; ensure doc comments are complete)
-40. Add examples for: custom HealthRecorder, two-phase shutdown, live vs cached mode
+39. Add API reference (pkg.go.dev will auto-generate; ensure doc comments are complete) → ROADMAP (not yet scoped)
+40. Add examples for: custom HealthRecorder, two-phase shutdown, live vs cached mode → ROADMAP (Theme 1)
 
 ### Code Quality
 
-41. Run `erraudit --format sarif` and integrate into CI
-42. Add `erraudit` baseline check to CI (regression prevention)
-43. Review all exported types for naming quality (naming-review skill)
-44. Run deduplicate-code skill (art-dupl) to check for clones
-45. Add `//go:build` constraints if needed for jsonv2 compatibility
-46. Review `types.go` for JSON tag consistency (`omitempty` strategy)
-47. Consider whether `Status` should be a typed enum (govalid) instead of a string
+41. Run `erraudit --format sarif` and integrate into CI → ROADMAP (not yet scoped)
+42. Add `erraudit` baseline check to CI (regression prevention) → TODO_LIST (covered by CI pipeline task)
+43. Review all exported types for naming quality (naming-review skill) → ROADMAP (not yet scoped)
+44. Run deduplicate-code skill (art-dupl) to check for clones → ROADMAP (not yet scoped)
+45. Add `//go:build` constraints if needed for jsonv2 compatibility → Won't implement — no jsonv2 dependency
+46. Review `types.go` for JSON tag consistency (`omitempty` strategy) → ROADMAP (Theme 5)
+47. Consider whether `Status` should be a typed enum (govalid) instead of a string → ROADMAP (Theme 5)
 
 ### Observability
 
-48. Add structured logging to background refresh loop (cache refresh, errors)
-49. Add metrics: health check count, latency histogram, status gauge
-50. Add trace propagation from HTTP request through `Evaluate` to individual checks
+48. Add structured logging to background refresh loop (cache refresh, errors) → Won't implement — non-goal: libraries must not log
+49. Add metrics: health check count, latency histogram, status gauge → ROADMAP (Theme 2)
+50. Add trace propagation from HTTP request through `Evaluate` to individual checks → ROADMAP (Theme 2)
 
 ---
 
 ## g) Questions I Cannot Answer Myself
 
-1. **Should `writeResponse` log the `w.Write` failure at all?** I added `slog.Debug` but a library logging directly is an anti-pattern. Options: (a) revert to silent swallow [my recommendation], (b) add `WithLogger` option, (c) keep `slog.Debug` as-is. This is a design-philosophy call about whether this library should have ANY observability coupling.
+1. ~~**Should `writeResponse` log the `w.Write` failure at all?**~~ Resolved — reverted to silent swallow at `9ebd13d`. Libraries must not log (ROADMAP non-goal).
 
-2. **Should this project adopt `go-error-family` (your own library) for its sentinels?** It would add a dependency for marginal classification value on config-validation errors, but might be worth it for ecosystem consistency across all your Go projects. I defaulted to stdlib but this is your call.
+2. ~~**Should this project adopt `go-error-family` (your own library) for its sentinels?**~~ Decided: stdlib-by-design. Documented in AGENTS.md. No external error library adopted.
 
-3. **Is the `erraudit` enforcement (`--enforce-samber-oops` / `--enforce-go-error-family`) something you run deliberately against this project, or was it copy-pasted from another project's command?** The paste suggested intent to enforce, but the project has never adopted either library. If you DO want enforcement, I need to know which library to adopt.
+3. ~~**Is the `erraudit` enforcement (`--enforce-samber-oops` / `--enforce-go-error-family`) something you run deliberately against this project, or was it copy-pasted from another project's command?**~~ Decided: the flags are opt-in for projects that already adopted those libraries. This project uses stdlib errors. Documented in AGENTS.md Gotchas.

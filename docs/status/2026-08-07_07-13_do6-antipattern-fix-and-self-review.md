@@ -48,8 +48,8 @@ Commit `9303509` added error-reporting improvements I did NOT make:
 
 ## b) PARTIALLY DONE
 
-- **`AGENTS.md` documentation**: Updated the design decisions and data flow, but the `probe.go` line in the source-file inventory still says "Probe struct, 7 Option functional options" — the internal architecture description doesn't mention `healthCheckFunc` or `resolveHealthCheck`.
-- **Public API stability**: The refactor preserves the public API completely, but I didn't verify downstream consumers (samber-do-auditlog) still compile against this.
+- ~~**`AGENTS.md` documentation**: Updated the design decisions and data flow, but the `probe.go` line in the source-file inventory still says "Probe struct, 7 Option functional options" — the internal architecture description doesn't mention `healthCheckFunc` or `resolveHealthCheck`.~~ done — AGENTS.md rewritten across sessions, now reflects config struct pattern.
+- **Public API stability**: The refactor preserves the public API completely, but I didn't verify downstream consumers (samber-do-auditlog) still compile against this. ← still open — no consumer verification done
 
 ---
 
@@ -67,9 +67,9 @@ Commit `9303509` added error-reporting improvements I did NOT make:
 
 ## d) TOTALLY FUCKED UP
 
-### The `recorder` field is dead weight — I left it on the struct.
+### ~~The `recorder` field is dead weight — I left it on the struct.~~
 
-This is the #1 thing I missed. After my refactor:
+~~This is the #1 thing I missed.~~ Resolved at `98231c9` — recorder field eliminated entirely via construction-only `config` struct. The code block below shows the original state before the fix.
 
 ```
 Line 54:  recorder    HealthRecorder       ← FIELD DECLARATION
@@ -92,11 +92,11 @@ After `New()` returns, **`p.recorder` is never read again.** The recorder is cap
 
 ### I never re-ran the analyzer that flagged the issue.
 
-I ran `go build`, `go vet`, and `go test`, but I **never ran the actual samber/do analyzer** (`doanalyzerv2`) that produced the original DO-6 finding. I assumed my fix would pass. This is unverified.
+~~I ran `go build`, `go vet`, and `go test`, but I **never ran the actual samber/do analyzer** (`doanalyzerv2`) that produced the original DO-6 finding. I assumed my fix would pass. This is unverified.~~ Still open — `doanalyzerv2` not in nixpkgs, `go install` blocked by sandbox. Tracked in TODO_LIST as BLOCKED.
 
-### `resolveHealthCheck` is a method but should be a free function.
+### ~~`resolveHealthCheck` is a method but should be a free function.~~
 
-It's called exactly once, during `New`. Making it a method on `*Probe` implies it's part of the Probe's ongoing behavior. It should be a package-level function or a closure inside `New`.
+~~It's called exactly once, during `New`. Making it a method on `*Probe` implies it's part of the Probe's ongoing behavior. It should be a package-level function or a closure inside `New`.~~ done at `9ebd13d` — converted to free function.
 
 ---
 
@@ -104,10 +104,10 @@ It's called exactly once, during `New`. Making it a method on `*Probe` implies i
 
 ### Code Quality (from this session's work)
 
-1. **Remove the `recorder` field** — dead weight after construction
-2. **Make `resolveHealthCheck` a free function** — it's not ongoing behavior
-3. **Consider exporting `healthCheckFunc`** — enables testing without an injector
-4. **Add `NewWithHealthCheck(fn)` constructor** — bypass injector entirely for testing/custom use
+1. ~~**Remove the `recorder` field** — dead weight after construction~~ done at `98231c9`
+2. ~~**Make `resolveHealthCheck` a free function** — it's not ongoing behavior~~ done at `9ebd13d`
+3. **Consider exporting `healthCheckFunc`** — enables testing without an injector → ROADMAP (Theme 1: Programmatic Health API)
+4. **Add `NewWithHealthCheck(fn)` constructor** — bypass injector entirely for testing/custom use → ROADMAP (Theme 1)
 
 ### Architectural Issues I Noticed (pre-existing, not introduced)
 
@@ -120,16 +120,16 @@ It's called exactly once, during `New`. Making it a method on `*Probe` implies i
 
 ### Error Handling
 
-11. **`writeResponse` JSON marshal error is opaque** — `"health: failed to encode response"` doesn't say what failed (which field, what type error).
-12. **No structured logging context in `slog.Debug`** — doesn't include probe version or uptime for correlation.
+11. **`writeResponse` JSON marshal error is opaque** — `"health: failed to encode response"` doesn't say what failed (which field, what type error). → TODO_LIST (Low Impact)
+12. ~~**No structured logging context in `slog.Debug`** — doesn't include probe version or uptime for correlation.~~ Won't implement — `slog` reverted at `9ebd13d`; libraries must not log (ROADMAP non-goal)
 
 ### Testing Gaps
 
-13. **2.6% coverage gap** — identify what's uncovered (likely error paths in `writeResponse`).
-14. **No test for concurrent `Start()` + `Shutdown()`** — mutex protects `cancel`, but is the ordering race-free?
-15. **No test for panicking recorder** — what if `RecordHealthCheckWithContext` panics?
-16. **No benchmark for `StartupHandler`** — only liveness and readiness are benchmarked.
-17. **No benchmark for recorder code path** — only raw injector path is benchmarked.
+13. ~~**2.6% coverage gap** — identify what's uncovered (likely error paths in `writeResponse`).~~ done at `1a388ab`, `c682d95` — coverage now 98.7%, remaining gap is unreachable marshal-error branch
+14. **No test for concurrent `Start()` + `Shutdown()`** — mutex protects `cancel`, but is the ordering race-free? → TODO_LIST (Low Impact)
+15. ~~**No test for panicking recorder** — what if `RecordHealthCheckWithContext` panics?~~ done at `c682d95`
+16. ~~**No benchmark for `StartupHandler`** — only liveness and readiness are benchmarked.~~ done at `1a388ab`
+17. ~~**No benchmark for recorder code path** — only raw injector path is benchmarked.~~ done at `1a388ab`
 
 ---
 
@@ -153,49 +153,49 @@ It's called exactly once, during `New`. Making it a method on `*Probe` implies i
 
 ### Medium Priority
 
-11. Consider removing `do.Injector` from `HealthRecorder` interface signature (breaks auditlog compat — needs design decision)
-12. Add `Probe.Status() Status` method for programmatic health check without HTTP
-13. Add `Probe.Alive() bool` / `Probe.Ready() bool` convenience helpers
-14. Add `WithLogger(*slog.Logger)` option for structured logging
-15. Add debounce/throttle for live evaluation mode (`WithRefreshInterval(0)`)
+11. Consider removing `do.Injector` from `HealthRecorder` interface signature (breaks auditlog compat — needs design decision) → ROADMAP (Theme 4)
+12. Add `Probe.Status() Status` method for programmatic health check without HTTP → ROADMAP (Theme 1)
+13. Add `Probe.Alive() bool` / `Probe.Ready() bool` convenience helpers → ROADMAP (Theme 1)
+14. ~~Add `WithLogger(*slog.Logger)` option for structured logging~~ Won't implement — non-goal: libraries must not log
+15. Add debounce/throttle for live evaluation mode (`WithRefreshInterval(0)`) → ROADMAP (Theme 3)
 16. ~~Make `Response.Checks` ordering deterministic (sort keys or use ordered map)~~ done at `1a388ab` — Go sorts map keys; verified with test
 17. ~~Add `Validate()` call inside `Start()` to fail fast on misconfiguration~~ done at `c5eb415`
-18. Add test for concurrent `Start()` + `Shutdown()` ordering
+18. Add test for concurrent `Start()` + `Shutdown()` ordering → TODO_LIST (Low Impact)
 19. ~~Add test for panicking recorder (should not crash the probe)~~ done at `c682d95`
 20. ~~Add `StartupHandler` benchmark~~ done at `1a388ab`
 21. ~~Add recorder-path benchmark~~ done at `1a388ab`
-22. Implement `do.HealthcheckerWithContext` on Probe for self-registration
-23. Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle
+22. Implement `do.HealthcheckerWithContext` on Probe for self-registration → ROADMAP (Theme 4)
+23. Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle → ROADMAP (Theme 4)
 24. ~~Add `Roadmap.md` with long-term direction~~ done at `9017c5a`
 25. ~~Enrich `CHANGELOG.md` with the DO-6 fix entry~~ done at `9ebd13d`, rewritten at `9017c5a`
 26. ~~Expand `README.md` — currently 2.4KB, minimal for an ALPHA library~~ done at `d32768d`
 
 ### Lower Priority
 
-27. Add `Probe.Healthz()` convenience handler (single combined endpoint)
-28. Consider `WithAllowedMethods(...string)` instead of boolean `WithGETOnly()`
-29. Add custom response format support (e.g., Prometheus exposition format)
-30. Add health-check weights/priorities for more nuanced classification
-31. Add `Response` interface or allow custom response types
-32. Add fuzz tests for JSON marshaling edge cases
+27. Add `Probe.Healthz()` convenience handler (single combined endpoint) → ROADMAP (Theme 1)
+28. Consider `WithAllowedMethods(...string)` instead of boolean `WithGETOnly()` → ROADMAP (Theme 6)
+29. Add custom response format support (e.g., Prometheus exposition format) → ROADMAP (Theme 5)
+30. Add health-check weights/priorities for more nuanced classification → ROADMAP (Theme 2)
+31. Add `Response` interface or allow custom response types → ROADMAP (Theme 5)
+32. Add fuzz tests for JSON marshaling edge cases → TODO_LIST (Low Impact)
 33. ~~Add context cancellation handling in startup latch evaluation~~ done at `1a388ab` — test added verifying latch doesn't flip on timeout
-34. Add `Status` validation (reject unknown values at construction)
+34. Add `Status` validation (reject unknown values at construction) → ROADMAP (Theme 5)
 35. ~~Consider `Probe` config struct to group the 11 struct fields~~ done at `98231c9`
 36. ~~Add structured logging context (version, uptime) to `slog.Debug` calls~~ Won't implement — libraries must not log; reverted at `9ebd13d`
-37. Add test for `MarkShuttingDown` + readiness cache interplay during active background refresh
-38. Add migration guide for consumers coming from samber-do-auditlog's `WithPlugin`
+37. Add test for `MarkShuttingDown` + readiness cache interplay during active background refresh → TODO_LIST (Low Impact)
+38. Add migration guide for consumers coming from samber-do-auditlog's `WithPlugin` → TODO_LIST (Medium Impact)
 39. ~~Add `doc.go` mention of the `healthCheckFunc` pattern and construction-time resolution~~ done at `9ebd13d`
 40. ~~Add `CONTRIBUTING.md` detail (currently 403 bytes)~~ done at `9017c5a`
-41. Verify Go 1.26.5 compatibility in CI (very new version)
-42. Add version tagging / release process (semver)
-43. Add pre-commit hooks (gofmt, goimports, golangci-lint)
-44. Add `go.mod` `toolchain` directive for reproducibility
-45. Consider child-scope isolation for multi-tenant health checks
-46. Add `WithShutdownGracePeriod` for automatic two-phase shutdown
-47. Add metrics integration hooks (Prometheus, OpenTelemetry)
-48. Add `Probe.AwaitReady(ctx)` blocking helper for startup orchestration
-49. Add HTTP middleware support for auth/rate-limiting on probe endpoints
-50. Consider extracting `classify` and `evaluateStartup` into a separate `classifier` type for testability
+41. Verify Go 1.26.5 compatibility in CI (very new version) → TODO_LIST (covered by CI pipeline task)
+42. Add version tagging / release process (semver) → TODO_LIST (Low Impact)
+43. Add pre-commit hooks (gofmt, goimports, golangci-lint) → ROADMAP (not yet scoped)
+44. Add `go.mod` `toolchain` directive for reproducibility → TODO_LIST (Medium Impact)
+45. Consider child-scope isolation for multi-tenant health checks → ROADMAP (Theme 4)
+46. Add `WithShutdownGracePeriod` for automatic two-phase shutdown → ROADMAP (Theme 3)
+47. Add metrics integration hooks (Prometheus, OpenTelemetry) → ROADMAP (Theme 2)
+48. Add `Probe.AwaitReady(ctx)` blocking helper for startup orchestration → ROADMAP (Theme 1)
+49. Add HTTP middleware support for auth/rate-limiting on probe endpoints → ROADMAP (Theme 6)
+50. Consider extracting `classify` and `evaluateStartup` into a separate `classifier` type for testability → ROADMAP (Theme 6)
 
 ---
 

@@ -40,6 +40,7 @@ handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoute
 - **GET-only enforcement** — `WithGETOnly()` wraps all handlers to reject non-GET with 405 + `Allow: GET` header. Off by default.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly.
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down).
+- **Injector resolved at construction** — `New` captures the health-check capability (and optional recorder) into a `healthCheckFunc` at construction time. The Probe never stores `do.Injector` as a field, avoiding the injector-in-service anti-pattern (DO-6).
 
 ### Decoupling from samber-do-auditlog
 
@@ -50,7 +51,7 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 1. User creates `Probe` via `New(injector, opts...)`
 2. `Start(ctx)` optionally launches background cache refresh loop
 3. HTTP handlers serve cached or live health-check results
-4. Readiness/startup delegate to `runHealthChecks` which uses `HealthRecorder` when available, raw injector otherwise
+4. Readiness/startup delegate to `runHealthChecks`, which calls the `healthCheckFunc` resolved at construction (recorder or raw injector)
 5. `Shutdown()` marks probe as shutting down (readiness → 503, liveness stays 200)
 
 ### Concurrency Model

@@ -32,19 +32,25 @@ const (
 	uptimeResolution = time.Second
 )
 
+// healthCheckFunc runs a single health-check batch and returns the per-service
+// results. It is resolved once at construction time (see [New]) so the Probe
+// holds the resolved capability rather than the injector container itself.
+type healthCheckFunc func(ctx context.Context) map[string]error
+
 // Probe orchestrates health checks against a samber/do v2 injector and exposes
 // three distinct HTTP endpoints: liveness, readiness, and startup.
 //
-// A Probe holds a reference to the root [do.Injector] (a container-level
-// operation, not the service-locator anti-pattern) and classifies registered
-// services into critical and non-critical. Only critical service failures
-// cause readiness to return 503; non-critical failures are surfaced as
-// individual check entries but do not affect the HTTP status code.
+// The health-check capability is resolved once at construction time (see
+// [New]) so the Probe holds a resolved function value, never the injector
+// itself. Probe classifies registered services into critical and non-critical:
+// only critical service failures cause readiness to return 503; non-critical
+// failures are surfaced as individual check entries but do not affect the
+// HTTP status code.
 //
 // Probe is safe for concurrent use by multiple goroutines.
 type Probe struct {
-	injector do.Injector
-	recorder HealthRecorder
+	healthCheck healthCheckFunc
+	recorder    HealthRecorder
 
 	critical map[string]struct{}
 
@@ -147,12 +153,12 @@ func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 
 // New creates a [Probe] wired to the given injector.
 //
-// The injector must be the root container created via [do.NewWithOpts].
-// Holding the root injector is correct here: HealthCheck is a container-level
-// operation, not business logic resolved ad-hoc per request (DO-1).
+// The injector must be the root container created via [do.NewWithOpts]. The
+// health-check capability (and, when configured, the [HealthRecorder]) is
+// resolved here at construction time, so the returned Probe holds only the
+// resolved function — never the container itself.
 func New(injector do.Injector, opts ...Option) *Probe {
 	probe := &Probe{
-		injector:        injector,
 		critical:        make(map[string]struct{}),
 		bootTime:        time.Now(),
 		timeout:         defaultTimeout,
@@ -163,7 +169,25 @@ func New(injector do.Injector, opts ...Option) *Probe {
 		opt(probe)
 	}
 
+	probe.healthCheck = probe.resolveHealthCheck(injector)
+
 	return probe
+}
+
+// resolveHealthCheck captures the health-check capability at construction
+// time so the Probe never stores the injector as a field. When a recorder is
+// configured, checks delegate through it; otherwise they call the injector's
+// HealthCheckWithContext directly.
+func (p *Probe) resolveHealthCheck(injector do.Injector) healthCheckFunc {
+	if p.recorder != nil {
+		recorder := p.recorder
+
+		return func(ctx context.Context) map[string]error {
+			return recorder.RecordHealthCheckWithContext(ctx, injector)
+		}
+	}
+
+	return injector.HealthCheckWithContext
 }
 
 // ErrInvalidTimeout is returned by [Probe.Validate] when the configured timeout
@@ -308,14 +332,11 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 	return resp
 }
 
-// runHealthChecks delegates to the recorder when available, falling back to
-// the raw injector otherwise.
+// runHealthChecks invokes the health-check function resolved at construction
+// time. The recorder-versus-injector decision was already made in [New], so
+// this is a single function call.
 func (p *Probe) runHealthChecks(ctx context.Context) map[string]error {
-	if p.recorder != nil {
-		return p.recorder.RecordHealthCheckWithContext(ctx, p.injector)
-	}
-
-	return p.injector.HealthCheckWithContext(ctx)
+	return p.healthCheck(ctx)
 }
 
 // classify computes the roll-up status from health-check results:

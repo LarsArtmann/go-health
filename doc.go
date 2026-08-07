@@ -73,4 +73,16 @@
 // shutdown) during your server's graceful-drain path. Readiness immediately
 // returns 503 so load balancers stop sending traffic before connections close.
 // Liveness stays 200 because the process is still alive.
+//
+// # Timeouts
+//
+// [WithTimeout] sets a batch-level deadline: all services in one evaluation
+// share the same context. A slow dependency can starve faster ones of their
+// time budget. For per-service isolation, configure samber/do's native option
+// at injector creation time:
+//
+//	injector := do.NewWithOpts(do.WithHealthCheckTimeout(2 * time.Second))
+//
+// This library does not override that setting; it only controls the outer batch
+// deadline (default: 5 seconds).
 package health

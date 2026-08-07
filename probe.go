@@ -51,7 +51,7 @@ type healthCheckFunc func(ctx context.Context) map[string]error
 // Probe is safe for concurrent use by multiple goroutines.
 type Probe struct {
 	healthCheck healthCheckFunc
-	recorder    HealthRecorder
+	recorder    HealthRecorder // construction-only; nil after New resolves it
 
 	critical map[string]struct{}
 
@@ -114,9 +114,17 @@ func WithRefreshInterval(d time.Duration) Option {
 	return func(p *Probe) { p.refreshInterval = d }
 }
 
-// WithTimeout sets the per-evaluation context deadline. This bounds how long
-// a single health-check batch can run before individual services are timed out
-// by samber/do's own per-service and global health-check timeouts.
+// WithTimeout sets the batch-level context deadline shared across ALL services
+// in a single health-check evaluation. All checks run concurrently against the
+// same deadline — a slow dependency silently steals time from every other check.
+//
+// For per-service isolation, configure samber/do's native option at injector
+// creation time:
+//
+//	injector := do.NewWithOpts(do.WithHealthCheckTimeout(2 * time.Second))
+//
+// This library does not override that setting; it only controls the outer
+// batch deadline.
 func WithTimeout(d time.Duration) Option {
 	return func(p *Probe) { p.timeout = d }
 }
@@ -170,19 +178,17 @@ func New(injector do.Injector, opts ...Option) *Probe {
 		opt(probe)
 	}
 
-	probe.healthCheck = probe.resolveHealthCheck(injector)
+	probe.healthCheck = resolveHealthCheck(probe.recorder, injector)
+	probe.recorder = nil // resolved into healthCheck closure; no longer needed
 
 	return probe
 }
 
 // resolveHealthCheck captures the health-check capability at construction
-// time so the Probe never stores the injector as a field. When a recorder is
-// configured, checks delegate through it; otherwise they call the injector's
-// HealthCheckWithContext directly.
-func (p *Probe) resolveHealthCheck(injector do.Injector) healthCheckFunc {
-	if p.recorder != nil {
-		recorder := p.recorder
-
+// time. When a recorder is configured, checks delegate through it; otherwise
+// they call the injector's HealthCheckWithContext directly.
+func resolveHealthCheck(recorder HealthRecorder, injector do.Injector) healthCheckFunc {
+	if recorder != nil {
 		return func(ctx context.Context) map[string]error {
 			return recorder.RecordHealthCheckWithContext(ctx, injector)
 		}

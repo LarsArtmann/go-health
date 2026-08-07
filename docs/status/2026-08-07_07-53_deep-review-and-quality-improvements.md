@@ -88,7 +88,7 @@ When removing the `recorder` field, I tried to use a local `var recorder HealthR
 
 ### 2. I did NOT run the samber/do analyzer (`doanalyzerv2`).
 
-The prior session (`07-13`) flagged this same gap: the DO-6 fix was never verified with the actual analyzer that produced the original finding. I inherited this gap and did not close it either. I ran `go build`, `go vet`, and `go test -race` — but never `doanalyzerv2`. The fix *should* pass (the injector is no longer a field), but this is unverified.
+The prior session (`07-13`) flagged this same gap: the DO-6 fix was never verified with the actual analyzer that produced the original finding. I inherited this gap and did not close it either. I ran `go build`, `go vet`, and `go test -race` — but never `doanalyzerv2`. The fix _should_ pass (the injector is no longer a field), but this is unverified.
 
 ### 3. I did not run `gosec` or `govulncheck`.
 

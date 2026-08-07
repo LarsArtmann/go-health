@@ -50,7 +50,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 
 ## d) TOTALLY FUCKED UP
 
-- **Introduced `log/slog` to a library that has zero logging coupling by design.** This is my biggest mistake this session. The library's entire design philosophy is "eliminate the transitive dependency cost." While `slog` is stdlib (no new module), the *behavioral* coupling is the real problem: **libraries should not log directly.** The library now emits `slog.Debug` calls to the default logger that the host application never asked for and may not have configured. The original `_, _ = w.Write(payload)` was actually **idiomatic and correct** for an HTTP handler where the write failure is genuinely unrecoverable (client disconnected mid-write). I "fixed" something that wasn't broken. **This should be reverted to the silent swallow, OR a logger should be injected via an Option if observability of write failures is genuinely desired.**
+- **Introduced `log/slog` to a library that has zero logging coupling by design.** This is my biggest mistake this session. The library's entire design philosophy is "eliminate the transitive dependency cost." While `slog` is stdlib (no new module), the _behavioral_ coupling is the real problem: **libraries should not log directly.** The library now emits `slog.Debug` calls to the default logger that the host application never asked for and may not have configured. The original `_, _ = w.Write(payload)` was actually **idiomatic and correct** for an HTTP handler where the write failure is genuinely unrecoverable (client disconnected mid-write). I "fixed" something that wasn't broken. **This should be reverted to the silent swallow, OR a logger should be injected via an Option if observability of write failures is genuinely desired.**
 - **Unilateral architecture decision** on oops/error-family — I dismissed adoption and documented my reasoning, but this is a cross-project consistency question that the user should own, not me. I should have flagged it as a question rather than deciding and documenting.
 
 ## e) WHAT WE SHOULD IMPROVE
@@ -66,6 +66,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 ## f) Up to 50 Things to Do Next
 
 ### Error Handling (this session's theme)
+
 1. Revert `slog.Debug` in `writeResponse` OR add `WithLogger` option — **highest priority**
 2. Add test for `writeResponse` marshal-failure branch (inject a Response field that fails to marshal)
 3. Add test for `writeResponse` write-failure branch (use a failing `http.ResponseWriter` mock)
@@ -76,6 +77,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 8. Make explicit go/no-go decision on adopting `go-error-family` across all LarsArtmann Go projects
 
 ### Testing Gaps
+
 9. Add property-based test for `classify` (pass/warn/fail across all possible result maps)
 10. Add test for `evaluateStartup` with empty critical set (returns true — edge case)
 11. Add test for concurrent `Evaluate` + `Shutdown` race conditions (beyond basic concurrency test)
@@ -88,6 +90,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 18. Increase coverage to 100% (currently ~97.4%)
 
 ### Architecture / Design
+
 19. Add `WithLogger(*slog.Logger) Option` if observability is desired (proper DI, not global logger)
 20. Consider `WithNowFunc(func() time.Time)` for testable uptime calculations
 21. Consider exposing `Evaluate` results as structured errors, not just `map[string]error`
@@ -98,6 +101,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 26. Consider circuit-breaker pattern for flapping dependencies (failsafe-go)
 
 ### Build / CI
+
 27. Create `flake.nix` with devShell, build, test, lint automation
 28. Add GitHub Actions CI: `go test -race`, `go vet`, `gosec`, `govulncheck`, `erraudit`
 29. Add `golangci-lint` configuration
@@ -106,6 +110,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 32. Add release/tagging workflow (goreleaser or equivalent)
 
 ### Documentation
+
 33. Add `README.md` — currently missing (AGENTS.md is for AI sessions, README is for users)
 34. Add `FEATURES.md` — honest feature inventory by status
 35. Add `TODO_LIST.md` — short/mid-term actionable tasks
@@ -116,6 +121,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 40. Add examples for: custom HealthRecorder, two-phase shutdown, live vs cached mode
 
 ### Code Quality
+
 41. Run `erraudit --format sarif` and integrate into CI
 42. Add `erraudit` baseline check to CI (regression prevention)
 43. Review all exported types for naming quality (naming-review skill)
@@ -125,6 +131,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 47. Consider whether `Status` should be a typed enum (govalid) instead of a string
 
 ### Observability
+
 48. Add structured logging to background refresh loop (cache refresh, errors)
 49. Add metrics: health check count, latency histogram, status gauge
 50. Add trace propagation from HTTP request through `Evaluate` to individual checks

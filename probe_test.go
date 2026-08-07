@@ -75,6 +75,13 @@ func (m *mockRecorder) RecordHealthCheckWithContext(_ context.Context, _ do.Inje
 	return m.result
 }
 
+// panicRecorder simulates a misbehaving recorder that panics during health checks.
+type panicRecorder struct{}
+
+func (panicRecorder) RecordHealthCheckWithContext(_ context.Context, _ do.Injector) map[string]error {
+	panic("recorder exploded")
+}
+
 // --- Test helpers ---.
 
 func provideHealthy(i do.Injector, name string) {
@@ -495,6 +502,34 @@ func TestStartup_NoCriticalServices_ImmediatelyPasses(t *testing.T) {
 	}
 }
 
+func TestStartup_SlowCriticalService_TimesOut_DoesNotLatch(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	do.ProvideNamed(injector, "slow", func(_ do.Injector) (*slowService, error) {
+		return &slowService{delay: 200 * time.Millisecond}, nil
+	})
+	invoke[*slowService](t, injector, "slow")
+
+	// 1ms timeout — the slow service cannot complete in time.
+	probe := health.New(injector,
+		health.WithCriticalServices("slow"),
+		health.WithTimeout(1*time.Millisecond),
+		health.WithRefreshInterval(0),
+	)
+
+	w := doRequest(t, probe.StartupHandler(), "/startupz")
+
+	// The startup probe must not latch when critical services time out.
+	if probe.StartupComplete() {
+		t.Error("StartupComplete should be false when critical service timed out")
+	}
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("startup with timed-out critical service: want 503, got %d", w.Code)
+	}
+}
+
 // --- Evaluate tests ---.
 
 func TestEvaluate_ReturnsCorrectClassification(t *testing.T) {
@@ -869,6 +904,42 @@ func TestWithHealthRecorder_NilRecorder_FallsBackToInjector(t *testing.T) {
 
 	if len(resp.Checks) != 1 {
 		t.Errorf("checks count: want 1, got %d", len(resp.Checks))
+	}
+}
+
+func TestWithHealthRecorder_PanicRecovered_DoesNotCrash(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(),
+		health.WithHealthRecorder(panicRecorder{}),
+		health.WithRefreshInterval(0),
+	)
+
+	// Evaluate must not panic — the recorder panic is recovered and reported
+	// as a synthetic error.
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("Evaluate panicked with misbehaving recorder: %v", r)
+		}
+	}()
+
+	resp := probe.Evaluate(context.Background())
+
+	if resp.Status != health.StatusWarn {
+		t.Errorf("status: want warn (non-critical panic), got %s", resp.Status)
+	}
+
+	panicCheck, ok := resp.Checks["health-check"]
+	if !ok {
+		t.Fatal("expected 'health-check' entry for recovered panic")
+	}
+
+	if panicCheck.Error == "" {
+		t.Error("panic check error should contain the panic message")
+	}
+
+	if !strings.Contains(panicCheck.Error, "recorder exploded") {
+		t.Errorf("panic check error should contain panic message, got %q", panicCheck.Error)
 	}
 }
 
@@ -1297,5 +1368,54 @@ func BenchmarkEvaluate(b *testing.B) {
 
 	for b.Loop() {
 		_ = probe.Evaluate(ctx)
+	}
+}
+
+func BenchmarkStartupHandler_Unlatched(b *testing.B) {
+	injector := do.New()
+	provideHealthy(injector, "db")
+	do.MustInvokeNamed[*healthyService](injector, "db")
+
+	probe := health.New(injector,
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
+
+	handler := probe.StartupHandler()
+
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/startupz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		w := httptest.NewRecorder()
+		handler(w, r)
+	}
+}
+
+func BenchmarkReadinessHandler_RecorderPath(b *testing.B) {
+	recorder := &mockRecorder{result: map[string]error{"db": nil}}
+
+	probe := health.New(do.New(),
+		health.WithHealthRecorder(recorder),
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
+
+	handler := probe.ReadinessHandler()
+
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/readyz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		w := httptest.NewRecorder()
+		handler(w, r)
 	}
 }

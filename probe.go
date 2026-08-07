@@ -370,7 +370,19 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 // runHealthChecks invokes the health-check function resolved at construction
 // time. The recorder-versus-injector decision was already made in [New], so
 // this is a single function call.
-func (p *Probe) runHealthChecks(ctx context.Context) map[string]error {
+//
+// A panic from the health-check function (e.g. a misbehaving recorder or a
+// service with a nil-pointer dereference) is recovered and returned as a
+// synthetic error so it never crashes the process or the HTTP handler.
+func (p *Probe) runHealthChecks(ctx context.Context) (results map[string]error) {
+	defer func() {
+		if r := recover(); r != nil {
+			results = map[string]error{
+				"health-check": fmt.Errorf("health: panic during health check: %v", r),
+			}
+		}
+	}()
+
 	return p.healthCheck(ctx)
 }
 

@@ -1477,6 +1477,7 @@ func TestCachedResponse_ReturnsCachedValue_WhenAvailable(t *testing.T) {
 	invoke[*healthyService](t, injector, "db")
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
+
 	mustStart(t, probe, t.Context())
 	defer probe.Shutdown()
 

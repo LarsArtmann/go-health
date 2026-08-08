@@ -32,7 +32,7 @@ Single-package library (`health`) with these source files:
 ```
 doc.go      — Package doc comment (quick start, three-probe rationale, caching, shutdown)
 types.go    — Status enum (pass/fail/warn), Check, Response data model
-probe.go    — Probe struct, config struct, 7 Option functional options (write to config), HealthRecorder interface, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start returns error/Shutdown/MarkShuttingDown), Evaluate, runHealthChecks (with panic recovery), classify (three-state), evaluateStartup, buildChecks
+probe.go    — Probe struct, config struct, 7 Option functional options (write to config), HealthRecorder interface, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start returns error/Shutdown/MarkShuttingDown), Evaluate, CachedResponse (lock-free cache read + shutdown overlay), RefreshInterval accessor, runHealthChecks (with panic recovery), classify (three-state), evaluateStartup, buildChecks
 handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, writeResponse
 ```
 

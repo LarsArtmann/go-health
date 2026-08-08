@@ -452,7 +452,14 @@ func (p *Probe) CachedResponse() Response {
 		return resp
 	}
 
-	return Response{Status: StatusPass, Checks: map[string]Check{}}
+	resp := Response{Status: StatusPass, Checks: map[string]Check{}}
+
+	if p.shuttingDown.Load() {
+		resp.ShuttingDown = true
+		resp.Status = StatusFail
+	}
+
+	return resp
 }
 
 // RefreshInterval returns the configured background cache refresh interval.

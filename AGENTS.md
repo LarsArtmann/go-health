@@ -95,13 +95,13 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 
 ## Project Documentation
 
-| File                                                                     | Purpose                                                              |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| [FEATURES.md](FEATURES.md)                                               | Honest feature inventory by status                                   |
-| [TODO_LIST.md](TODO_LIST.md)                                             | Short-term actionable tasks                                          |
-| [ROADMAP.md](ROADMAP.md)                                                 | Long-term direction and raw ideas                                    |
-| [CHANGELOG.md](CHANGELOG.md)                                             | What changed in each version                                         |
-| [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                       | Domain terms (liveness, readiness, startup, critical, etc.)          |
-| [docs/timeout-design.md](docs/timeout-design.md)                         | Batch-level vs per-service timeout analysis                          |
+| File                                                                     | Purpose                                                                           |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| [FEATURES.md](FEATURES.md)                                               | Honest feature inventory by status                                                |
+| [TODO_LIST.md](TODO_LIST.md)                                             | Short-term actionable tasks                                                       |
+| [ROADMAP.md](ROADMAP.md)                                                 | Long-term direction and raw ideas                                                 |
+| [CHANGELOG.md](CHANGELOG.md)                                             | What changed in each version                                                      |
+| [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                       | Domain terms (liveness, readiness, startup, critical, etc.)                       |
+| [docs/timeout-design.md](docs/timeout-design.md)                         | Batch-level vs per-service timeout analysis                                       |
 | [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
-| [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots)                 |
+| [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots)                              |

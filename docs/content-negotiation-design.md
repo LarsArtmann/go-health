@@ -38,11 +38,11 @@ flat map of checks).
 go-health's value proposition is being a **single-dependency** library
 (`samber/do/v2` only). Content negotiation with HTML rendering requires:
 
-| Dependency | Why | Pulled in by |
-|---|---|---|
-| `a-h/templ` | templ runtime | templ-components |
+| Dependency          | Why           | Pulled in by     |
+| ------------------- | ------------- | ---------------- |
+| `a-h/templ`         | templ runtime | templ-components |
 | `tailwind-merge-go` | class merging | templ-components |
-| `go-error-family` | error types | templ-components |
+| `go-error-family`   | error types   | templ-components |
 
 Every consumer of go-health would transitively depend on a templ runtime,
 Tailwind tooling, and CSS infrastructure — even if they only use JSON probes
@@ -75,7 +75,7 @@ caching layer for HTML output that doesn't exist today.
 Proper content negotiation is non-trivial:
 
 - Accept-header parsing with quality values (`text/html;q=0.9,
-  application/json;q=0.8`)
+application/json;q=0.8`)
 - Fallback ordering when no match
 - Wildcard handling (`*/*`, `text/*`)
 - Testing matrix across representations
@@ -136,14 +136,14 @@ If a composition layer were built using
 [`github.com/larsartmann/templ-components`](https://github.com/larsartmann/templ-components),
 the mapping is nearly one-to-one:
 
-| go-health concept | templ-components component | Notes |
-|---|---|---|
-| `Response.Status` (pass/warn/fail) | `feedback.Alert` | Full-width banner: "All systems operational" or "2 checks failing" |
-| `Response.Checks` map | `display.Table` | One row per check, with status badge in each row |
-| `StatusPass` / `StatusWarn` / `StatusFail` | `display.StatusBadge` | Built-in `statusToBadgeMap` already maps "healthy"→green, "degraded"→yellow, "unhealthy"→red |
-| Version, uptime, latency | `display.StatCard` | Metrics row at top of dashboard |
-| Critical vs non-critical grouping | `display.Card` | Group checks into cards by classification |
-| Auto-refresh | `htmx.PolledRegion` | Hit the JSON endpoint on interval, re-render dashboard region |
+| go-health concept                          | templ-components component | Notes                                                                                        |
+| ------------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------------- |
+| `Response.Status` (pass/warn/fail)         | `feedback.Alert`           | Full-width banner: "All systems operational" or "2 checks failing"                           |
+| `Response.Checks` map                      | `display.Table`            | One row per check, with status badge in each row                                             |
+| `StatusPass` / `StatusWarn` / `StatusFail` | `display.StatusBadge`      | Built-in `statusToBadgeMap` already maps "healthy"→green, "degraded"→yellow, "unhealthy"→red |
+| Version, uptime, latency                   | `display.StatCard`         | Metrics row at top of dashboard                                                              |
+| Critical vs non-critical grouping          | `display.Card`             | Group checks into cards by classification                                                    |
+| Auto-refresh                               | `htmx.PolledRegion`        | Hit the JSON endpoint on interval, re-render dashboard region                                |
 
 `display.StatusBadge` in particular has a built-in mapping that already
 recognizes health-domain vocabulary:
@@ -178,16 +178,16 @@ This is **also not worth adding to go-health** because:
 
 ## Decision
 
-| Option | Verdict | Rationale |
-|---|---|---|
-| Add content negotiation to go-health | **Rejected** | Breaks single-dependency principle, adds complexity for zero production benefit |
-| Add HTML rendering to go-health | **Rejected** | Couples health-checking with presentation; forces transitive deps |
-| Add `text/plain` to go-health | **Rejected** | Status code already communicates this; not worth the negotiation cost |
-| HTMX polling in composition layer | **Default** | Zero SSE deps, cache-backed reads, covers 95% of dashboard use cases |
-| go-datastar SSE push in composition layer | **Optional** | Sub-second push for NOC monitors; go-datastar (not raw go-sse) for templ integration |
-| go-sse raw in composition layer | **Rejected** | Reimplements go-datastar's protocol layer for no benefit |
-| Document composition pattern (this doc) | **Accepted** | Captures the decision and shows the right architecture |
-| Build `health-dashboard` sibling package | **Future** | Right place for HTML rendering using templ-components; separate module, separate deps |
+| Option                                    | Verdict      | Rationale                                                                             |
+| ----------------------------------------- | ------------ | ------------------------------------------------------------------------------------- |
+| Add content negotiation to go-health      | **Rejected** | Breaks single-dependency principle, adds complexity for zero production benefit       |
+| Add HTML rendering to go-health           | **Rejected** | Couples health-checking with presentation; forces transitive deps                     |
+| Add `text/plain` to go-health             | **Rejected** | Status code already communicates this; not worth the negotiation cost                 |
+| HTMX polling in composition layer         | **Default**  | Zero SSE deps, cache-backed reads, covers 95% of dashboard use cases                  |
+| go-datastar SSE push in composition layer | **Optional** | Sub-second push for NOC monitors; go-datastar (not raw go-sse) for templ integration  |
+| go-sse raw in composition layer           | **Rejected** | Reimplements go-datastar's protocol layer for no benefit                              |
+| Document composition pattern (this doc)   | **Accepted** | Captures the decision and shows the right architecture                                |
+| Build `health-dashboard` sibling package  | **Future**   | Right place for HTML rendering using templ-components; separate module, separate deps |
 
 ---
 
@@ -270,13 +270,13 @@ serves from this cache — **no dependency checks run per request**.
 }, healthCard(resp))
 ```
 
-| Advantage | Detail |
-|---|---|
-| Zero SSE dependencies | No go-sse, no go-datastar, no persistent connections |
-| Stateless | Each poll is independent; no connection lifecycle, no reconnection logic |
-| Proxy-friendly | Works through every reverse proxy and corporate firewall without SSE upgrade negotiation |
-| Cache-backed | Polls read `p.latest` (atomic pointer) — cost is a JSON marshal + HTTP roundtrip |
-| Already available | `htmx.PolledRegion` ships in templ-components today |
+| Advantage             | Detail                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Zero SSE dependencies | No go-sse, no go-datastar, no persistent connections                                     |
+| Stateless             | Each poll is independent; no connection lifecycle, no reconnection logic                 |
+| Proxy-friendly        | Works through every reverse proxy and corporate firewall without SSE upgrade negotiation |
+| Cache-backed          | Polls read `p.latest` (atomic pointer) — cost is a JSON marshal + HTTP roundtrip         |
+| Already available     | `htmx.PolledRegion` ships in templ-components today                                      |
 
 For a health dashboard with 1-5 operators checking status during incidents,
 2-second polling vs sub-second push is **imperceptible** — you're watching
@@ -340,13 +340,13 @@ Browser-side, `datastar.LiveRegion` opens the SSE connection automatically:
 }, healthCard(resp))
 ```
 
-| Why go-datastar over go-sse directly | Detail |
-|---|---|
-| `ElementsFromTempl(component)` | Renders a templ component to an SSE patch in one call — no manual HTML string building |
-| templ-components integration | `datastar.LiveRegion` is designed for go-datastar's protocol |
-| DOM diffing | Datastar client merges only changed fragments — no full page re-render |
-| Signals support | Push structured data (status, check count, latency) as reactive signals for charts/sparklines |
-| Still uses go-sse underneath | Broadcaster, EventStore, Replay, Heartbeat all available |
+| Why go-datastar over go-sse directly | Detail                                                                                        |
+| ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `ElementsFromTempl(component)`       | Renders a templ component to an SSE patch in one call — no manual HTML string building        |
+| templ-components integration         | `datastar.LiveRegion` is designed for go-datastar's protocol                                  |
+| DOM diffing                          | Datastar client merges only changed fragments — no full page re-render                        |
+| Signals support                      | Push structured data (status, check count, latency) as reactive signals for charts/sparklines |
+| Still uses go-sse underneath         | Broadcaster, EventStore, Replay, Heartbeat all available                                      |
 
 #### Why Not go-sse Directly?
 
@@ -367,11 +367,11 @@ abstraction.
 
 ### Decision Matrix
 
-| Approach | Deps Added | Complexity | Latency | Verdict |
-|---|---|---|---|---|
-| HTMX polling (`htmx.PolledRegion`) | none (templ-components only) | minimal | 2-5s | **Default** — covers 95% of dashboards |
-| go-datastar SSE push | go-datastar + go-sse | moderate (broadcaster, goroutine, connection lifecycle) | sub-second | **Optional** — for NOC monitors with many viewers |
-| go-sse raw (no Datastar) | go-sse | high (reimplement protocol) | sub-second | **Rejected** — reimplements go-datastar for no benefit |
+| Approach                           | Deps Added                   | Complexity                                              | Latency    | Verdict                                                |
+| ---------------------------------- | ---------------------------- | ------------------------------------------------------- | ---------- | ------------------------------------------------------ |
+| HTMX polling (`htmx.PolledRegion`) | none (templ-components only) | minimal                                                 | 2-5s       | **Default** — covers 95% of dashboards                 |
+| go-datastar SSE push               | go-datastar + go-sse         | moderate (broadcaster, goroutine, connection lifecycle) | sub-second | **Optional** — for NOC monitors with many viewers      |
+| go-sse raw (no Datastar)           | go-sse                       | high (reimplement protocol)                             | sub-second | **Rejected** — reimplements go-datastar for no benefit |
 
 ### What go-health Needs to Expose
 

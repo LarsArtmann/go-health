@@ -431,6 +431,36 @@ func (p *Probe) StartupComplete() bool {
 	return p.startupPassed.Load()
 }
 
+// CachedResponse returns the last background-refreshed health Response. When
+// the background cache is active ([Probe.Start] called with a non-zero
+// [WithRefreshInterval]), this reads the atomic p.latest pointer — lock-free,
+// zero dependency calls. When no cache exists (live mode or before the first
+// refresh), it returns a zero-value Response with StatusPass.
+//
+// The live shuttingDown flag is overlaid on the cached value so a stale cached
+// response (evaluated before [Probe.Shutdown] was called) still reflects the
+// current shutdown state.
+func (p *Probe) CachedResponse() Response {
+	if cached := p.latest.Load(); cached != nil {
+		resp := *cached
+
+		if p.shuttingDown.Load() {
+			resp.ShuttingDown = true
+			resp.Status = StatusFail
+		}
+
+		return resp
+	}
+
+	return Response{Status: StatusPass, Checks: map[string]Check{}}
+}
+
+// RefreshInterval returns the configured background cache refresh interval.
+// Returns zero when the probe is in live evaluation mode.
+func (p *Probe) RefreshInterval() time.Duration {
+	return p.refreshInterval
+}
+
 // evaluateStartup checks whether all critical services are present and healthy
 // in the results map. Returns true if the startup latch should be set.
 func (p *Probe) evaluateStartup(results map[string]error) bool {

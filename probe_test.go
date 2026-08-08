@@ -1466,3 +1466,97 @@ func BenchmarkReadinessHandler_RecorderPath(b *testing.B) {
 		handler(w, r)
 	}
 }
+
+// --- CachedResponse tests ---.
+
+func TestCachedResponse_ReturnsCachedValue_WhenAvailable(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	provideHealthy(injector, "db")
+	invoke[*healthyService](t, injector, "db")
+
+	probe := health.New(injector, health.WithCriticalServices("db"))
+	mustStart(t, probe, t.Context())
+	defer probe.Shutdown()
+
+	cached := probe.CachedResponse()
+
+	if cached.Status != health.StatusPass {
+		t.Errorf("cached status: want pass, got %s", cached.Status)
+	}
+
+	if len(cached.Checks) != 1 {
+		t.Errorf("cached checks: want 1, got %d", len(cached.Checks))
+	}
+}
+
+func TestCachedResponse_ReturnsZeroValue_WhenNoCache(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithRefreshInterval(0))
+
+	// Never started, so no cache exists.
+	cached := probe.CachedResponse()
+
+	if cached.Status != health.StatusPass {
+		t.Errorf("zero-value cached status: want pass, got %s", cached.Status)
+	}
+
+	if len(cached.Checks) != 0 {
+		t.Errorf("zero-value cached checks: want empty, got %d", len(cached.Checks))
+	}
+}
+
+func TestCachedResponse_OverlaysShutdownFlag(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	provideHealthy(injector, "db")
+	invoke[*healthyService](t, injector, "db")
+
+	probe := health.New(injector, health.WithCriticalServices("db"))
+	mustStart(t, probe, t.Context())
+
+	// The cache was populated while healthy. Now mark shutdown.
+	probe.Shutdown()
+
+	cached := probe.CachedResponse()
+
+	if !cached.ShuttingDown {
+		t.Error("cached response after shutdown: want ShuttingDown=true")
+	}
+
+	if cached.Status != health.StatusFail {
+		t.Errorf("cached status after shutdown: want fail, got %s", cached.Status)
+	}
+}
+
+// --- RefreshInterval accessor test ---.
+
+func TestRefreshInterval_ReturnsConfiguredValue(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithRefreshInterval(42*time.Second))
+	if got := probe.RefreshInterval(); got != 42*time.Second {
+		t.Errorf("refresh interval: want 42s, got %s", got)
+	}
+}
+
+func TestRefreshInterval_DefaultIsOneSecond(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New())
+	if got := probe.RefreshInterval(); got != 1*time.Second {
+		t.Errorf("default refresh interval: want 1s, got %s", got)
+	}
+}
+
+func TestRefreshInterval_ZeroInLiveMode(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithRefreshInterval(0))
+	if got := probe.RefreshInterval(); got != 0 {
+		t.Errorf("live mode refresh interval: want 0, got %s", got)
+	}
+}

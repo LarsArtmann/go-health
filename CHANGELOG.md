@@ -5,6 +5,35 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+## [0.0.2] - 2026-08-08
+
+Adds read-only accessors so composition layers (e.g. `go-health-dashboard`) and
+middleware can inspect cached health state without triggering a synchronous
+evaluation through every dependency. Purely additive — no breaking changes.
+
+### Added
+
+- `Probe.CachedResponse() Response` — returns the last background-refreshed
+  health `Response` from the atomic `latest` pointer, enabling lock-free,
+  zero-dependency reads for callers that need to query health state without a
+  full evaluation pass.
+- `Probe.RefreshInterval() time.Duration` — accessor returning the configured
+  background cache refresh interval; zero indicates live (non-caching)
+  evaluation mode.
+
+### Changed
+
+- `CachedResponse()` now reflects the live shutdown state in both the cached and
+  the no-cache fallback paths. Previously the no-cache fallback returned
+  `StatusPass` even while shutting down; it now returns `ShuttingDown=true` and
+  `Status=StatusFail` so load balancers and orchestrators stop routing traffic
+  to a draining instance.
+
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/larsartmann/go-health/releases/tag/v0.0.2
+
 ## [0.0.1] - 2026-08-07
 
 First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.

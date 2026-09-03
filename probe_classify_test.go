@@ -14,6 +14,9 @@ type state struct {
 	healthy bool
 }
 
+// serviceNames are the three probe services exercised by the matrix.
+var serviceNames = []string{"a", "b", "c"}
+
 // TestClassify_ExhaustiveMatrix walks all combinations of three services in
 // {healthy, failing} states against all 2^3 critical sets and checks the
 // roll-up against the spec, computed independently of classify:
@@ -29,105 +32,125 @@ type state struct {
 func TestClassify_ExhaustiveMatrix(t *testing.T) {
 	t.Parallel()
 
-	serviceNames := []string{"a", "b", "c"}
+	for _, states := range enumerateStates() {
+		for _, critical := range enumerateCriticals() {
+			t.Run(matrixLabel(states, critical), func(t *testing.T) {
+				t.Parallel()
 
-	// allStates enumerates every assignment of healthy/failing to the three
-	// services: 2^3 = 8 rows.
-	allStates := make([]map[string]state, 0, 8)
-	for mask := 0; mask < 8; mask++ {
+				assertMatrixCombo(t, states, critical)
+			})
+		}
+	}
+}
+
+// enumerateStates enumerates every assignment of healthy/failing to the
+// three services: 2^3 = 8 rows.
+func enumerateStates() []map[string]state {
+	rows := make([]map[string]state, 0, 8)
+
+	for mask := range 8 {
 		states := make(map[string]state, len(serviceNames))
 		for i, name := range serviceNames {
 			states[name] = state{healthy: mask&(1<<i) != 0}
 		}
 
-		allStates = append(allStates, states)
+		rows = append(rows, states)
 	}
 
-	// allCriticals enumerates every critical subset: 2^3 = 8 rows.
-	allCriticals := make([]map[string]bool, 0, 8)
-	for mask := 0; mask < 8; mask++ {
+	return rows
+}
+
+// enumerateCriticals enumerates every critical subset: 2^3 = 8 rows.
+func enumerateCriticals() []map[string]bool {
+	rows := make([]map[string]bool, 0, 8)
+
+	for mask := range 8 {
 		critical := make(map[string]bool, len(serviceNames))
 		for i, name := range serviceNames {
 			critical[name] = mask&(1<<i) != 0
 		}
 
-		allCriticals = append(allCriticals, critical)
+		rows = append(rows, critical)
 	}
 
-	for _, states := range allStates {
-		for _, critical := range allCriticals {
-			states, critical := states, critical
+	return rows
+}
 
-			label := ""
-			for _, name := range serviceNames {
-				mark := "ok"
-				if !states[name].healthy {
-					mark = "FAIL"
-				}
+// matrixLabel renders one matrix cell as a readable subtest name.
+func matrixLabel(states map[string]state, critical map[string]bool) string {
+	label := ""
 
-				label += name + "=" + mark
-				if critical[name] {
-					label += "(crit)"
-				}
+	for _, name := range serviceNames {
+		mark := "ok"
+		if !states[name].healthy {
+			mark = "FAIL"
+		}
 
-				label += " "
+		label += name + "=" + mark
+		if critical[name] {
+			label += "(crit)"
+		}
+
+		label += " "
+	}
+
+	return label
+}
+
+// assertMatrixCombo evaluates one (states, critical set) cell through the
+// public API and checks roll-up and per-check grading against the spec.
+func assertMatrixCombo(t *testing.T, states map[string]state, critical map[string]bool) {
+	t.Helper()
+
+	injector := do.New()
+	t.Cleanup(func() { injector.Shutdown() })
+
+	wantCritical := make([]string, 0, len(serviceNames))
+
+	for _, name := range serviceNames {
+		if states[name].healthy {
+			provideHealthy(injector, name)
+			invoke[*healthyService](t, injector, name)
+		} else {
+			provideUnhealthy(injector, name, "matrix failure")
+			invoke[*unhealthyService](t, injector, name)
+		}
+
+		if critical[name] {
+			wantCritical = append(wantCritical, name)
+		}
+	}
+
+	probe := health.New(injector, health.WithCriticalServices(wantCritical...))
+
+	resp := probe.Evaluate(context.Background())
+
+	want := expectedStatus(states, critical)
+	if resp.Status != want {
+		t.Errorf("roll-up: want %s, got %s", want, resp.Status)
+	}
+
+	if len(resp.Checks) != len(serviceNames) {
+		t.Fatalf("checks: want %d entries, got %d", len(serviceNames), len(resp.Checks))
+	}
+
+	for _, name := range serviceNames {
+		check, ok := resp.Checks[name]
+		if !ok {
+			t.Fatalf("check %q missing from response", name)
+		}
+
+		wantCheck := health.StatusPass
+		if !states[name].healthy {
+			if critical[name] {
+				wantCheck = health.StatusFail
+			} else {
+				wantCheck = health.StatusWarn
 			}
+		}
 
-			t.Run(label, func(t *testing.T) {
-				t.Parallel()
-
-				injector := do.New()
-				t.Cleanup(func() { injector.Shutdown() })
-
-				var wantCritical []string
-
-				for _, name := range serviceNames {
-					if states[name].healthy {
-						provideHealthy(injector, name)
-						invoke[*healthyService](t, injector, name)
-					} else {
-						provideUnhealthy(injector, name, "matrix failure")
-						invoke[*unhealthyService](t, injector, name)
-					}
-
-					if critical[name] {
-						wantCritical = append(wantCritical, name)
-					}
-				}
-
-				probe := health.New(injector, health.WithCriticalServices(wantCritical...))
-
-				resp := probe.Evaluate(context.Background())
-
-				want := expectedStatus(states, critical)
-				if resp.Status != want {
-					t.Errorf("roll-up: want %s, got %s", want, resp.Status)
-				}
-
-				if len(resp.Checks) != len(serviceNames) {
-					t.Fatalf("checks: want %d entries, got %d", len(serviceNames), len(resp.Checks))
-				}
-
-				for _, name := range serviceNames {
-					check, ok := resp.Checks[name]
-					if !ok {
-						t.Fatalf("check %q missing from response", name)
-					}
-
-					wantCheck := health.StatusPass
-					if !states[name].healthy {
-						if critical[name] {
-							wantCheck = health.StatusFail
-						} else {
-							wantCheck = health.StatusWarn
-						}
-					}
-
-					if check.Status != wantCheck {
-						t.Errorf("check %q: want %s, got %s", name, wantCheck, check.Status)
-					}
-				}
-			})
+		if check.Status != wantCheck {
+			t.Errorf("check %q: want %s, got %s", name, wantCheck, check.Status)
 		}
 	}
 }

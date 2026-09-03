@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+// errMarshalTestCause is a package-level sentinel so the dynamic-error
+// linter stays satisfied while the test simulates a marshal failure.
+var errMarshalTestCause = errors.New("boom: unsupported type")
+
 // TestWriteResponse_MarshalErrorIncludesCause forces the defensive marshal
 // error branch and asserts the body carries the underlying cause, so a
 // future serialization regression is debuggable from the response alone.
@@ -15,7 +19,7 @@ import (
 func TestWriteResponse_MarshalErrorIncludesCause(t *testing.T) {
 	original := marshalResponse
 	marshalResponse = func(Response) ([]byte, error) {
-		return nil, errors.New("boom: unsupported type")
+		return nil, errMarshalTestCause
 	}
 
 	t.Cleanup(func() { marshalResponse = original })

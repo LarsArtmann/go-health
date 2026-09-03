@@ -253,7 +253,11 @@ func writeResponse(w http.ResponseWriter, code int, resp health.Response) {
 		// Defensive: Response only contains basic types so json.Marshal
 		// cannot fail today. Mirrors the root package's guard, including
 		// the underlying cause in the body.
-		http.Error(w, "aggregate: failed to encode response: "+err.Error(), http.StatusInternalServerError)
+		http.Error(
+			w,
+			"aggregate: failed to encode response: "+err.Error(),
+			http.StatusInternalServerError,
+		)
 
 		return
 	}

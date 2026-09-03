@@ -175,7 +175,11 @@ func writeResponse(w http.ResponseWriter, code int, resp Response) {
 		// map[string]Check) so json.Marshal cannot fail today. This branch
 		// guards against future fields that might introduce marshal errors,
 		// and includes the underlying cause so a regression is debuggable.
-		http.Error(w, "health: failed to encode response: "+err.Error(), http.StatusInternalServerError)
+		http.Error(
+			w,
+			"health: failed to encode response: "+err.Error(),
+			http.StatusInternalServerError,
+		)
 
 		return
 	}

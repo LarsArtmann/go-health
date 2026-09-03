@@ -43,7 +43,9 @@ func newStressProbe(t *testing.T) (*health.Probe, context.Context) {
 // MarkShuttingDown from many goroutines while readers evaluate health and
 // consume cached responses. Run under -race it verifies the lifecycle's
 // mutex/atomic discipline: no data races, no panics, no goroutine leaks from
-// double-started refresh loops.
+// double-started refresh loops. It guards a real regression: Start's
+// WaitGroup.Add and Shutdown's WaitGroup.Wait must stay serialized under the
+// probe mutex, or WaitGroup panics with "reused before previous Wait".
 func TestStress_ConcurrentStartAndShutdown(t *testing.T) {
 	t.Parallel()
 
@@ -58,11 +60,7 @@ func TestStress_ConcurrentStartAndShutdown(t *testing.T) {
 	var wg sync.WaitGroup
 
 	for range writers {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			for range rounds {
 				ctx, cancel := context.WithCancel(baseCtx)
 
@@ -72,15 +70,11 @@ func TestStress_ConcurrentStartAndShutdown(t *testing.T) {
 
 				cancel()
 			}
-		}()
+		})
 	}
 
 	for range readers {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			for range rounds {
 				resp := probe.Evaluate(context.Background())
 				_ = resp.Status
@@ -88,7 +82,7 @@ func TestStress_ConcurrentStartAndShutdown(t *testing.T) {
 				cached := probe.CachedResponse()
 				_ = cached.Status
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -97,7 +91,7 @@ func TestStress_ConcurrentStartAndShutdown(t *testing.T) {
 }
 
 // TestStress_MarkThenShutdown_TwoPhase drains via MarkShuttingDown first and
-// stops the loop later, with readers asserting the drain invariant the whole
+// stops the loop later, with a reader asserting the drain invariant the whole
 // time: once marked, cached responses must report ShuttingDown with fail.
 func TestStress_MarkThenShutdown_TwoPhase(t *testing.T) {
 	t.Parallel()
@@ -108,11 +102,7 @@ func TestStress_MarkThenShutdown_TwoPhase(t *testing.T) {
 
 	var readers sync.WaitGroup
 
-	readers.Add(1)
-
-	go func() {
-		defer readers.Done()
-
+	readers.Go(func() {
 		for {
 			select {
 			case <-stop:
@@ -128,7 +118,7 @@ func TestStress_MarkThenShutdown_TwoPhase(t *testing.T) {
 				return
 			}
 		}
-	}()
+	})
 
 	const phases = 25
 

@@ -9,6 +9,11 @@ import (
 	health "github.com/larsartmann/go-health"
 )
 
+// state is one service's health state in the classify matrix.
+type state struct {
+	healthy bool
+}
+
 // TestClassify_ExhaustiveMatrix walks all combinations of three services in
 // {healthy, failing} states against all 2^3 critical sets and checks the
 // roll-up against the spec, computed independently of classify:
@@ -25,10 +30,6 @@ func TestClassify_ExhaustiveMatrix(t *testing.T) {
 	t.Parallel()
 
 	serviceNames := []string{"a", "b", "c"}
-
-	type state struct {
-		healthy bool
-	}
 
 	// allStates enumerates every assignment of healthy/failing to the three
 	// services: 2^3 = 8 rows.
@@ -76,7 +77,7 @@ func TestClassify_ExhaustiveMatrix(t *testing.T) {
 				t.Parallel()
 
 				injector := do.New()
-				t.Cleanup(injector.Shutdown)
+				t.Cleanup(func() { injector.Shutdown() })
 
 				var wantCritical []string
 
@@ -133,7 +134,7 @@ func TestClassify_ExhaustiveMatrix(t *testing.T) {
 
 // expectedStatus is the classification spec, written out independently of the
 // implementation so the matrix test cannot drift into tautology.
-func expectedStatus(states map[string]struct{ healthy bool }, critical map[string]bool) health.Status {
+func expectedStatus(states map[string]state, critical map[string]bool) health.Status {
 	anyNonCriticalFailure := false
 
 	for name, st := range states {

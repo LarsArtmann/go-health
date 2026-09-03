@@ -334,15 +334,22 @@ func (p *Probe) refreshCache(ctx context.Context) {
 func (p *Probe) Shutdown() {
 	p.shuttingDown.Store(true)
 
+	// Add (in Start) and Wait are serialized under p.mu on purpose: the
+	// WaitGroup contract forbids an Add from a zero counter running
+	// concurrently with a Wait, which concurrent Start/Shutdown callers
+	// would otherwise trigger ("WaitGroup is reused before previous Wait
+	// has returned"). refreshLoop does not take p.mu, so waiting under the
+	// lock cannot deadlock the loop we are waiting for.
 	p.mu.Lock()
 	cancel := p.cancel
 	p.cancel = nil
-	p.mu.Unlock()
 
 	if cancel != nil {
 		cancel()
 		p.wg.Wait()
 	}
+
+	p.mu.Unlock()
 }
 
 // MarkShuttingDown flips the shutdown flag without stopping the background

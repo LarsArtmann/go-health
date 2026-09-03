@@ -1,0 +1,1 @@
+{"status":"warn","version":"1.2.3","uptime":"4m5s","shutting_down":true,"total_latency_ms":42,"checks":{"cache":{"status":"warn","error":"connection refused"},"db":{"status":"pass"}}}

@@ -17,23 +17,32 @@
 
 | Task                                  | Status  | Impact | Effort | Evidence                                                                                                                                                          |
 | ------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Set up GitHub Actions CI pipeline     | TODO    | High   | 1h     | No `.github/workflows/`. CI should run: `go test -race`, `go vet`, `golangci-lint`, `govulncheck`, `gosec`                                                        |
+| Set up GitHub Actions CI pipeline     | TODO    | High   | 1h     | No `.github/workflows/`. CI should run: `go test -race`, `go vet`, `golangci-lint`, `govulncheck`, `gosec`, `nix flake check`                                      |
 | Run `doanalyzerv2` to verify DO-6 fix | BLOCKED | High   | 15min  | DO-6 anti-pattern fix is architecturally sound but unverified by the analyzer. Not in nixpkgs; `go install` blocked by sandbox. `probe.go:52` (no injector field) |
 
 ## Medium Impact
 
-| Task                                                           | Status | Impact | Effort | Evidence                                                                                                                                                   |
-| -------------------------------------------------------------- | ------ | ------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Expand `CONTRIBUTING.md` with real dev setup                   | TODO   | Med    | 30min  | Currently a stub. Should cover Nix setup, test/lint commands, code conventions, PR process. `CONTRIBUTING.md`                                              |
-| Create migration guide: `WithPlugin` to `WithHealthRecorder`   | TODO   | Med    | 20min  | Consumers coming from `samber-do-auditlog` need to know the API changed. No guide exists.                                                                  |
-| Add `go.mod` toolchain directive                               | TODO   | Med    | 5min   | Go 1.26.5 in use but no `toolchain` line for reproducibility. `go.mod:3`                                                                                   |
-| Decide: should panic recovery treat critical services as fail? | TODO   | Med    | 1h     | Panics produce `StatusWarn` regardless of service criticality. A panicking critical service arguably should produce `StatusFail` (503). `probe.go:377-384` |
+| Task                                                            | Status | Impact | Effort | Evidence                                                                                                                                                     |
+| --------------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Create migration guide: `WithPlugin` to `WithHealthRecorder`    | TODO   | Med    | 20min  | Consumers coming from `samber-do-auditlog` need to know the API changed. No guide exists.                                                                     |
+| Add `go.mod` toolchain directive                                | TODO   | Med    | 5min   | `go.mod:3` says `go 1.26.7` but has no `toolchain` line pinning the exact toolchain for reproducibility.                                                      |
+| Decide: should panic recovery treat critical services as fail?  | TODO   | Med    | 1h     | A panic anywhere in the batch surfaces as one synthetic `health-check` error, which `classify` maps to `warn` even if a critical service panicked. `probe.go:382` |
+| Add `meta.description` to all Nix apps                          | TODO   | Med    | 15min  | Apps in `flake.nix` carry no `meta.description`; `nix flake check` emits warnings for every app.                                                              |
 
 ## Low Impact
 
-| Task                                                    | Status | Impact | Effort | Evidence                                                                                                 |
-| ------------------------------------------------------- | ------ | ------ | ------ | -------------------------------------------------------------------------------------------------------- |
-| Add property-based test for `classify`                  | TODO   | Low    | 1h     | No property test covering pass/warn/fail across all possible result maps + critical sets. `probe.go:395` |
-| Add stress test for concurrent `Start()` + `Shutdown()` | TODO   | Low    | 30min  | Mutex protects `cancel` but interleaving not stress-tested. `probe.go:262-276`                           |
-| Add snapshot test for readiness JSON response shape     | TODO   | Low    | 30min  | No golden-file test for full JSON response structure.                                                    |
-| Add fuzz tests for JSON marshaling edge cases           | TODO   | Low    | 1h     | No fuzz tests exist. `handlers.go:165` (`json.Marshal`)                                                  |
+| Task                                                              | Status | Impact | Effort | Evidence                                                                                                    |
+| ----------------------------------------------------------------- | ------ | ------ | ------ | ----------------------------------------------------------------------------------------------------------- |
+| Add property-based test for `classify`                            | TODO   | Low    | 1h     | No property test covering pass/warn/fail across all possible result maps + critical sets. `probe.go:401`     |
+| Add stress tests for lifecycle interleaving                       | TODO   | Low    | 30min  | Concurrent `Start()`+`Shutdown()` and `MarkShuttingDown()`+`Shutdown()` interleavings untested. Existing concurrency tests cover read paths only. `probe.go:260` |
+| Add test: `Start()` called after `Shutdown()` (restart scenario)  | TODO   | Low    | 15min  | `TestShutdown_Idempotent` and `TestShutdown_WithoutStart_DoesNotPanic` exist; restart-after-shutdown does not. `probe_test.go:1299` |
+| Add snapshot test for readiness JSON response shape               | TODO   | Low    | 30min  | No golden-file test for full JSON response structure. `handlers.go:165`                                      |
+| Add fuzz tests for JSON marshaling edge cases                     | TODO   | Low    | 1h     | No fuzz tests exist. `handlers.go:165`                                                                       |
+| Add benchmark: startup handler under contention                   | TODO   | Low    | 20min  | Only the unlatched variant exists. `probe_test.go:1422`                                                      |
+| Verify README Quick Start compiles (as an `Example` function)      | TODO   | Low    | 15min  | README example drifted from `ExampleNew` once already. `README.md:53`, `example_test.go:23`                   |
+| Re-evaluate the two `//nolint` suppressions in panic recovery      | TODO   | Low    | 30min  | `err113` could use a static sentinel; `nonamedreturns` could be refactored away. Suppressed with justification at `probe.go:382`. |
+| Add ADRs for key decisions                                        | TODO   | Low    | 1h     | Stdlib errors, no-logging, and three-state classify decisions live only in AGENTS.md prose. No `docs/adr/`.   |
+| Document `docs/status/` convention + testing strategy in CONTRIBUTING | TODO | Low   | 20min  | Report naming pattern and testing philosophy are tribal knowledge. `CONTRIBUTING.md`                          |
+| Add renovate.json or dependabot.yml                               | TODO   | Low    | 15min  | No automated dependency updates. Only one direct dependency, so value is modest.                              |
+| Add `.github/ISSUE_TEMPLATE/`                                     | TODO   | Low    | 15min  | No bug report / feature request templates.                                                                   |
+| Verify `nix flake check --all-systems`                            | TODO   | Low    | 10min  | Flake declares all systems via `systems` input but checks have only been run on x86_64-linux. `flake.nix`      |

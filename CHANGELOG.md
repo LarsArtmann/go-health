@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Migrated JSON serialization from `encoding/json` to `encoding/json/v2`
+  (Go 1.26+). All three handlers serialize responses through the new
+  implementation, and `writeResponse` now passes `json.Deterministic(true)`
+  explicitly, because v2 does not sort map keys by default. The wire format is
+  unchanged (keys stay alphabetically ordered), guarded by
+  `TestReadiness_JSONChecksAreSortedAlphabetically`.
+- Toolchain bumped to Go 1.26.7; Nix flake inputs and lockfile refreshed.
+
 ## [0.0.2] - 2026-08-08
 
 Adds read-only accessors so composition layers (e.g. `go-health-dashboard`) and

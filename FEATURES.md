@@ -20,7 +20,7 @@
 | Probe creation (`New`)            | FULLY_FUNCTIONAL | Resolves health-check capability at construction; never stores injector. `probe.go:180`                                               |
 | Functional options (7 total)      | FULLY_FUNCTIONAL | WithVersion, WithCriticalServices, WithHealthRecorder, WithRefreshInterval, WithTimeout, WithBootTime, WithGETOnly. `probe.go:89-154` |
 | Config validation (`Validate`)    | FULLY_FUNCTIONAL | Checks timeout > 0 and refreshInterval >= 0. Enriched sentinel errors with offending value + remediation. `probe.go:233`              |
-| Start returns error on bad config | FULLY_FUNCTIONAL | `Start()` calls `Validate()` and returns `ErrInvalidTimeout` / `ErrInvalidRefreshInterval`. `probe.go:257`                            |
+| Start returns error on bad config | FULLY_FUNCTIONAL | `Start()` calls `Validate()` and returns `ErrInvalidTimeout` / `ErrInvalidRefreshInterval`. `probe.go:260`                            |
 
 ## Three-Probe HTTP Handlers
 
@@ -37,20 +37,22 @@
 
 | Feature                                 | Status           | Notes                                                                                                                |
 | --------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Background cache loop (`Start`)         | FULLY_FUNCTIONAL | Launches goroutine at configurable interval (default 1s). Idempotent: calling Start twice is a no-op. `probe.go:257` |
-| Graceful shutdown (`Shutdown`)          | FULLY_FUNCTIONAL | Stops background loop, marks readiness 503, liveness stays 200. `probe.go:322`                                       |
-| Two-phase drain (`MarkShuttingDown`)    | FULLY_FUNCTIONAL | Flips shutdown flag without stopping loop. Readiness immediately returns 503 from stale cache. `probe.go:340`        |
-| Startup latch query (`StartupComplete`) | FULLY_FUNCTIONAL | One-way atomic boolean. Returns true once all critical services passed. `probe.go:424`                               |
+| Background cache loop (`Start`)         | FULLY_FUNCTIONAL | Launches goroutine at configurable interval (default 1s). Idempotent: calling Start twice is a no-op. `probe.go:260` |
+| Graceful shutdown (`Shutdown`)          | FULLY_FUNCTIONAL | Stops background loop, marks readiness 503, liveness stays 200. `probe.go:325`                                       |
+| Two-phase drain (`MarkShuttingDown`)    | FULLY_FUNCTIONAL | Flips shutdown flag without stopping loop. Readiness immediately returns 503 from stale cache. `probe.go:343`        |
+| Startup latch query (`StartupComplete`) | FULLY_FUNCTIONAL | One-way atomic boolean. Returns true once all critical services passed. `probe.go:430`                               |
 
 ## Evaluation & Classification
 
 | Feature                         | Status               | Notes                                                                                                                                                                                                    |
 | ------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public evaluation (`Evaluate`)  | FULLY_FUNCTIONAL     | Runs full health-check batch, returns `Response`. Usable outside HTTP. `probe.go:352`                                                                                                                    |
-| Three-state classify            | FULLY_FUNCTIONAL     | pass (all healthy) / warn (non-critical failures only) / fail (critical failure or shutting down). `probe.go:395`                                                                                        |
-| Critical service classification | FULLY_FUNCTIONAL     | Critical failures = 503; non-critical failures = 200 degraded. `probe.go:451`                                                                                                                            |
-| Panic recovery                  | PARTIALLY_FUNCTIONAL | Recovers panics from health-check function, reports as synthetic `health-check` error. All panics treated as non-critical (warn); a panicking critical service does not produce fail/503. `probe.go:377` |
-| Programmatic status query       | PLANNED              | No `Probe.Status()` / `Probe.Alive()` / `Probe.Ready()` methods yet. Only `StartupComplete()` exists.                                                                                                    |
+| Public evaluation (`Evaluate`)  | FULLY_FUNCTIONAL     | Runs full health-check batch, returns `Response`. Usable outside HTTP. `probe.go:355`                                                                                                                    |
+| Three-state classify            | FULLY_FUNCTIONAL     | pass (all healthy) / warn (non-critical failures only) / fail (critical failure or shutting down). `probe.go:401`                                                                                        |
+| Critical service classification | FULLY_FUNCTIONAL     | Critical failures = 503; non-critical failures = 200 degraded. `probe.go:494`                                                                                                                            |
+| Panic recovery                  | PARTIALLY_FUNCTIONAL | Recovers panics from health-check function, reports as synthetic `health-check` error. All panics treated as non-critical (warn); a panicking critical service does not produce fail/503. `probe.go:382` |
+| Cached response accessor        | FULLY_FUNCTIONAL     | `CachedResponse()` returns the last background-refreshed `Response` lock-free; overlays live shutdown state in cached and no-cache fallback paths (v0.0.2). `probe.go:443`                               |
+| Refresh interval accessor       | FULLY_FUNCTIONAL     | `RefreshInterval()` returns the configured refresh interval; zero means live evaluation mode (v0.0.2). `probe.go:467`                                                                                     |
+| Programmatic status query       | PLANNED              | No `Probe.Status()` / `Probe.Alive()` / `Probe.Ready()` methods yet. Read-only accessors exist: `CachedResponse()`, `RefreshInterval()`, `StartupComplete()`.                                             |
 
 ## Caching & Performance
 
@@ -59,7 +61,7 @@
 | Lock-free cache reads         | FULLY_FUNCTIONAL     | `atomic.Pointer[Response]` for cached responses. `probe.go:63`                                                                  |
 | Configurable refresh interval | FULLY_FUNCTIONAL     | Default 1s. Set to 0 for live evaluation mode. `probe.go:124`                                                                   |
 | Live evaluation mode          | PARTIALLY_FUNCTIONAL | `WithRefreshInterval(0)` evaluates on every request. No debounce/throttle: high traffic hammers dependencies. `handlers.go:131` |
-| Batch-level timeout           | FULLY_FUNCTIONAL     | All services share one context deadline (default 5s). Per-service isolation via `do.WithHealthCheckTimeout`. `probe.go:128`     |
+| Batch-level timeout           | FULLY_FUNCTIONAL     | All services share one context deadline (default 5s). Per-service isolation via `do.WithHealthCheckTimeout`. `probe.go:139`     |
 
 ## Integration & Extensibility
 
@@ -67,7 +69,7 @@
 | ---------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
 | HealthRecorder interface     | FULLY_FUNCTIONAL | Delegates health-check batches to any implementation. `samber-do-auditlog.Plugin` satisfies implicitly. `probe.go:21` |
 | Construction-time resolution | FULLY_FUNCTIONAL | Injector and recorder resolved in `New()` into a `healthCheckFunc`. Probe holds neither. `probe.go:206`               |
-| Deterministic JSON output    | FULLY_FUNCTIONAL | Go's `json.Marshal` sorts map keys alphabetically. Locked in with a test.                                             |
+| Deterministic JSON output    | FULLY_FUNCTIONAL | `encoding/json/v2` with `json.Deterministic(true)` keeps map keys alphabetically ordered. Locked in with a test. `handlers.go:165` |
 
 ## Data Model
 

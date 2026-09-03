@@ -966,7 +966,10 @@ func TestWithHealthRecorder_PanicRecovered_DoesNotCrash(t *testing.T) {
 	resp := probe.Evaluate(context.Background())
 
 	if resp.Status != health.StatusFail {
-		t.Errorf("status: want fail (panics fail closed, see docs/panic-recovery-design.md), got %s", resp.Status)
+		t.Errorf(
+			"status: want fail (panics fail closed, see docs/panic-recovery-design.md), got %s",
+			resp.Status,
+		)
 	}
 
 	panicCheck, ok := resp.Checks["health-check"]

@@ -150,7 +150,7 @@ func main() {
 - **Background caching** (1s default) — kubelet/LB polling doesn't hammer dependencies.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
 - **GET-only enforcement** — `WithGETOnly()` rejects non-GET with 405.
-- **Panic-proof** — panics from misbehaving recorders or services are recovered and reported as failed checks, never crashing your process.
+- **Panic-hardened** — panics from misbehaving recorders are recovered, reported as a failed check wrapping `health.ErrPanicDuringHealthCheck`, and roll readiness up to 503 (fail closed) instead of crashing your process or lying with a 200. (Note: a service whose own `HealthCheck` panics on the raw-injector path crashes the process — samber/do runs each check in a goroutine; keep service checks total.)
 - **Read-only accessors** — `CachedResponse()` and `RefreshInterval()` let dashboards and middleware read cached health state without triggering a synchronous evaluation.
 - **Config validation** — `Start()` validates configuration and returns an error on invalid settings (zero/negative timeout, negative refresh interval).
 - **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch.

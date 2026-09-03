@@ -25,7 +25,6 @@
 | --------------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Create migration guide: `WithPlugin` to `WithHealthRecorder`    | TODO   | Med    | 20min  | Consumers coming from `samber-do-auditlog` need to know the API changed. No guide exists.                                                                     |
 | Add `go.mod` toolchain directive                                | TODO   | Med    | 5min   | `go.mod:3` says `go 1.26.7` but has no `toolchain` line pinning the exact toolchain for reproducibility.                                                      |
-| Decide: should panic recovery treat critical services as fail?  | TODO   | Med    | 1h     | A panic anywhere in the batch surfaces as one synthetic `health-check` error, which `classify` maps to `warn` even if a critical service panicked. `probe.go:382` |
 | Add `meta.description` to all Nix apps                          | TODO   | Med    | 15min  | Apps in `flake.nix` carry no `meta.description`; `nix flake check` emits warnings for every app.                                                              |
 | Scope v0.0.3 release                                            | TODO   | Med    | 15min  | json/v2 migration + toolchain bump sit unreleased in `[Unreleased]`. Decide content, tag, release. `CHANGELOG.md`                                              |
 

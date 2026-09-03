@@ -280,6 +280,11 @@ func (p *Probe) Start(ctx context.Context) error {
 
 	if p.refreshInterval > 0 {
 		runCtx, p.cancel = context.WithCancel(ctx)
+
+		// Register with the WaitGroup in the same critical section that
+		// publishes cancel: Shutdown swaps cancel under the lock before it
+		// waits, so a concurrent Start can never slip an Add past a Wait.
+		p.wg.Add(1)
 	}
 
 	p.mu.Unlock()
@@ -287,8 +292,6 @@ func (p *Probe) Start(ctx context.Context) error {
 	p.refreshCache(ctx)
 
 	if p.refreshInterval > 0 {
-		p.wg.Add(1)
-
 		go p.refreshLoop(runCtx)
 	}
 

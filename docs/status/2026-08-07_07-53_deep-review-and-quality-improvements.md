@@ -67,16 +67,16 @@ User asked for a deep review of the entire library with instructions to read all
 
 ## c) NOT STARTED
 
-- No `flake.nix` (AGENTS.md says "(yet)")
-- No CI/CD pipeline (no GitHub Actions, no golangci-lint config)
-- No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md`
-- No `gosec` / `govulncheck` scan (mandated by how-to-golang skill, never run)
-- No fuzz tests
-- No benchmark for `StartupHandler` (only liveness, readiness, Evaluate are benchmarked)
-- No benchmark for the recorder code path
-- No `docs/DOMAIN_LANGUAGE.md`
-- No release/version tagging process
-- No migration guide for consumers coming from samber-do-auditlog's old `WithPlugin`
+- ~~No `flake.nix` (AGENTS.md says "(yet)")~~ done at `5bac97a`
+- ~~No CI/CD pipeline (no GitHub Actions, no golangci-lint config)~~ golangci config done at `5bac97a`; CI pipeline still open — tracked in TODO_LIST (High Impact)
+- ~~No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md`~~ done at `9017c5a`
+- ~~No `gosec` / `govulncheck` scan (mandated by how-to-golang skill, never run)~~ done — both verified clean in the 09-12 session
+- No fuzz tests → TODO_LIST (Low Impact)
+- ~~No benchmark for `StartupHandler` (only liveness, readiness, Evaluate are benchmarked)~~ done at `1a388ab`
+- ~~No benchmark for the recorder code path~~ done at `1a388ab`
+- ~~No `docs/DOMAIN_LANGUAGE.md`~~ done at `9017c5a`
+- ~~No release/version tagging process~~ done — v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
+- No migration guide for consumers coming from samber-do-auditlog's old `WithPlugin` → TODO_LIST (Medium Impact)
 
 ---
 
@@ -156,7 +156,7 @@ Decision upheld: stdlib-only, no logging coupling is now a ROADMAP non-goal. The
 4. ~~Eliminate the `recorder` field entirely — use a construction-only config struct so the Probe never carries dead weight~~ done at `98231c9`
 5. ~~Create `flake.nix` with devShell (go 1.26.5, golangci-lint, test/lint commands)~~ done at `5bac97a`
 6. ~~Create `.golangci.yml` with enabled linters (ineffassign, errcheck, govet, staticcheck, revive)~~ done at `5bac97a`
-7. Set up GitHub Actions CI: `go test -race`, `go vet`, `golangci-lint run`, `gosec`, `govulncheck`
+7. Set up GitHub Actions CI: `go test -race`, `go vet`, `golangci-lint run`, `gosec`, `govulncheck` → TODO_LIST (High Impact)
 8. ~~Cover the `writeResponse` error branches (marshal failure + write failure)~~ NOT-DO — marshal branch genuinely unreachable; write-failure test created at `1a388ab` but deleted at `897b571` as it tested nothing useful
 9. ~~Add test for panicking recorder (should not crash the probe)~~ done at `c682d95`
 10. ~~Add `StartupHandler` benchmark~~ done at `1a388ab`
@@ -205,7 +205,7 @@ Decision upheld: stdlib-only, no logging coupling is now a ROADMAP non-goal. The
 47. Add structured error context to `writeResponse` marshal failure → TODO_LIST (Low Impact)
 48. Consider `Status` validation (reject unknown values at construction) → ROADMAP (Theme 5)
 49. Add `go.mod` `toolchain` directive for reproducibility → TODO_LIST (Medium Impact)
-50. Add release/tagging workflow (semver via goreleaser) → TODO_LIST (Low Impact)
+50. ~~Add release/tagging workflow (semver via goreleaser)~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created → TODO_LIST (Low Impact)
 
 ---
 

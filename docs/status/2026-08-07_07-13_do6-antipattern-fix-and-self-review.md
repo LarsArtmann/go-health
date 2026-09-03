@@ -49,19 +49,19 @@ Commit `9303509` added error-reporting improvements I did NOT make:
 ## b) PARTIALLY DONE
 
 - ~~**`AGENTS.md` documentation**: Updated the design decisions and data flow, but the `probe.go` line in the source-file inventory still says "Probe struct, 7 Option functional options" — the internal architecture description doesn't mention `healthCheckFunc` or `resolveHealthCheck`.~~ done — AGENTS.md rewritten across sessions, now reflects config struct pattern.
-- **Public API stability**: The refactor preserves the public API completely, but I didn't verify downstream consumers (samber-do-auditlog) still compile against this. ← still open — no consumer verification done
+- ~~**Public API stability**: The refactor preserves the public API completely, but I didn't verify downstream consumers (samber-do-auditlog) still compile against this.~~ ← still open — no consumer verification done → TODO_LIST (Low Impact)
 
 ---
 
 ## c) NOT STARTED
 
-- No `flake.nix` (AGENTS.md says "(yet)")
-- No CI/CD pipeline (no GitHub Actions, no golangci-lint config)
-- No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md` (AGENTS.md global instructions say these should exist)
-- No API reference beyond godoc
-- No release/version tagging process
-- No fuzz tests
-- No benchmarks for `StartupHandler` or recorder code path
+- ~~No `flake.nix` (AGENTS.md says "(yet)")~~ done at `5bac97a`
+- ~~No CI/CD pipeline (no GitHub Actions, no golangci-lint config)~~ golangci config done at `5bac97a`; CI pipeline still open — tracked in TODO_LIST (High Impact)
+- ~~No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md` (AGENTS.md global instructions say these should exist)~~ done at `9017c5a`
+- ~~No API reference beyond godoc~~ done — pkg.go.dev indexes the package with full docs at v0.0.2
+- ~~No release/version tagging process~~ done — v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
+- No fuzz tests → TODO_LIST (Low Impact)
+- ~~No benchmarks for `StartupHandler` or recorder code path~~ done at `1a388ab`
 
 ---
 
@@ -143,10 +143,10 @@ After `New()` returns, **`p.recorder` is never read again.** The recorder is cap
 
 ### High Priority
 
-4. Export `healthCheckFunc` and add `NewWithHealthCheck(fn healthCheckFunc, opts...)` constructor
+4. Export `healthCheckFunc` and add `NewWithHealthCheck(fn healthCheckFunc, opts...)` constructor → ROADMAP (Theme 1)
 5. ~~Create `flake.nix` with devShell (go 1.26.5, golangci-lint, test/lint commands)~~ done at `5bac97a`
 6. ~~Create `.golangci.yml` with enabled linters (ineffassign, errcheck, govet, staticcheck, revive)~~ done at `5bac97a`
-7. Set up GitHub Actions CI: `go test -race`, `go vet`, `golangci-lint run`
+7. Set up GitHub Actions CI: `go test -race`, `go vet`, `golangci-lint run` → TODO_LIST (High Impact)
 8. ~~Create `FEATURES.md` — honest feature inventory by status~~ done at `9017c5a`
 9. ~~Create `TODO_LIST.md` — actionable short/mid-term tasks~~ done at `9017c5a`
 10. ~~Identify and cover the 2.6% test coverage gap~~ done at `1a388ab`, `c682d95` — coverage now 98.7%, remaining gap is unreachable marshal-error branch
@@ -201,8 +201,8 @@ After `New()` returns, **`p.recorder` is never read again.** The recorder is cap
 
 ## g) Questions I Cannot Answer Myself
 
-1. **Should `HealthRecorder` drop `do.Injector` from its signature?** The interface `RecordHealthCheckWithContext(ctx, injector do.Injector) map[string]error` leaks the container type into consumer code — directly undermining the decoupling I just did on `Probe`. But changing it breaks implicit compatibility with `samber-do-auditlog.Plugin`. Is there a migration plan for samber-do-auditlog, or is the coupling intentional?
+1. **Should `HealthRecorder` drop `do.Injector` from its signature?** The interface `RecordHealthCheckWithContext(ctx, injector do.Injector) map[string]error` leaks the container type into consumer code — directly undermining the decoupling I just did on `Probe`. But changing it breaks implicit compatibility with `samber-do-auditlog.Plugin`. Is there a migration plan for samber-do-auditlog, or is the coupling intentional? → ROADMAP (Theme 4) — signature kept for `samber-do-auditlog` compat for now.
 
-2. **Is this project targeting a v1.0 release soon?** The ALPHA status affects how aggressively I can change the public API (e.g., exporting `healthCheckFunc`, adding constructors, changing interface signatures). Is the API frozen, or is breaking change acceptable right now?
+2. **Is this project targeting a v1.0 release soon?** The ALPHA status affects how aggressively I can change the public API (e.g., exporting `healthCheckFunc`, adding constructors, changing interface signatures). Is the API frozen, or is breaking change acceptable right now? resolved — v0.0.1 and v0.0.2 shipped as alpha; pre-1.0 breaking changes accepted (the `Start()` error return shipped in v0.0.1).
 
-3. **Should `Probe` implement `do.HealthcheckerWithContext` and `do.ShutdownerWithError`?** This would let it self-register in the container it monitors — elegant for composition, but creates a chicken-and-egg problem (the probe monitoring the container it's registered in). Is this a pattern you want, or should Probe always remain external?
+3. **Should `Probe` implement `do.HealthcheckerWithContext` and `do.ShutdownerWithError`?** This would let it self-register in the container it monitors — elegant for composition, but creates a chicken-and-egg problem (the probe monitoring the container it's registered in). Is this a pattern you want, or should Probe always remain external? → ROADMAP (Theme 4)

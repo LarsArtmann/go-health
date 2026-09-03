@@ -37,21 +37,21 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 
 ## b) PARTIALLY DONE
 
-- **Error-message test coverage** — added assertions for `Validate()` paths only; the `writeResponse` marshal-failure branch and the `w.Write` failure branch remain untested (hard to trigger without a custom `http.ResponseWriter` mock).
-- **erraudit baseline** — got to 0 ERROR / 0 CRITICAL / 0 ignored, but 1 WARNING remains (generic `error` return on `Validate`, which is idiomatic Go — noise, not actionable).
+- ~~**Error-message test coverage** — added assertions for `Validate()` paths only; the `writeResponse` marshal-failure branch and the `w.Write` failure branch remain untested (hard to trigger without a custom `http.ResponseWriter` mock).~~ **NOT-DO — marshal branch unreachable by design (defensive code documented in the 09-12 session); the write-failure test was created at `1a388ab` and deleted at `897b571` as it tested nothing useful.**
+- ~~**erraudit baseline** — got to 0 ERROR / 0 CRITICAL / 0 ignored, but 1 WARNING remains (generic `error` return on `Validate`, which is idiomatic Go — noise, not actionable).~~ **Won't implement — the warning flags idiomatic Go; noise.**
 
 ## c) NOT STARTED
 
-- `gosec` / `govulncheck` not run (skill mandates these in CI)
-- Benchmarks not re-run after `writeResponse` hot-path change
-- No test asserting the 405 response **body** content (only status + Allow header asserted)
-- No `flake.nix` for build/task automation (AGENTS.md notes "no flake.nix yet")
-- No CI pipeline configuration
+- ~~`gosec` / `govulncheck` not run (skill mandates these in CI)~~ done — both verified clean in the 09-12 session
+- ~~Benchmarks not re-run after `writeResponse` hot-path change~~ resolved — `slog` reverted at `9ebd13d`; all 6 benchmarks run clean (verified 09-12)
+- ~~No test asserting the 405 response **body** content (only status + Allow header asserted)~~ done at `9ebd13d` (`TestGETOnly_405BodyContainsMessage`)
+- ~~No `flake.nix` for build/task automation (AGENTS.md notes "no flake.nix yet")~~ done at `5bac97a`
+- No CI pipeline configuration → TODO_LIST (High Impact)
 
 ## d) TOTALLY FUCKED UP
 
-- **Introduced `log/slog` to a library that has zero logging coupling by design.** This is my biggest mistake this session. The library's entire design philosophy is "eliminate the transitive dependency cost." While `slog` is stdlib (no new module), the _behavioral_ coupling is the real problem: **libraries should not log directly.** The library now emits `slog.Debug` calls to the default logger that the host application never asked for and may not have configured. The original `_, _ = w.Write(payload)` was actually **idiomatic and correct** for an HTTP handler where the write failure is genuinely unrecoverable (client disconnected mid-write). I "fixed" something that wasn't broken. **This should be reverted to the silent swallow, OR a logger should be injected via an Option if observability of write failures is genuinely desired.**
-- **Unilateral architecture decision** on oops/error-family — I dismissed adoption and documented my reasoning, but this is a cross-project consistency question that the user should own, not me. I should have flagged it as a question rather than deciding and documenting.
+- ~~**Introduced `log/slog` to a library that has zero logging coupling by design.** This is my biggest mistake this session. The library's entire design philosophy is "eliminate the transitive dependency cost." While `slog` is stdlib (no new module), the _behavioral_ coupling is the real problem: **libraries should not log directly.** The library now emits `slog.Debug` calls to the default logger that the host application never asked for and may not have configured. The original `_, _ = w.Write(payload)` was actually **idiomatic and correct** for an HTTP handler where the write failure is genuinely unrecoverable (client disconnected mid-write). I "fixed" something that wasn't broken. **This should be reverted to the silent swallow, OR a logger should be injected via an Option if observability of write failures is genuinely desired.**~~ resolved at `9ebd13d` — reverted to silent swallow; no-logging is a ROADMAP non-goal.
+- ~~**Unilateral architecture decision** on oops/error-family — I dismissed adoption and documented my reasoning, but this is a cross-project consistency question that the user should own, not me. I should have flagged it as a question rather than deciding and documenting.~~ resolved — stdlib-by-design documented in AGENTS.md; upheld by later sessions.
 
 ## e) WHAT WE SHOULD IMPROVE
 
@@ -68,13 +68,13 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 ### Error Handling (this session's theme)
 
 1. ~~Revert `slog.Debug` in `writeResponse` OR add `WithLogger` option — **highest priority**~~ done at `9ebd13d` — reverted to silent swallow
-2. Add test for `writeResponse` marshal-failure branch (inject a Response field that fails to marshal)
+2. **Add test for `writeResponse` marshal-failure branch (inject a Response field that fails to marshal)** **NOT-DO — branch unreachable by design; `Response` only contains marshal-safe types (documented in the 09-12 session).**
 3. ~~Add test for `writeResponse` write-failure branch (use a failing `http.ResponseWriter` mock)~~ NOT-DO — created at `1a388ab` but tested nothing useful; deleted at `897b571`. Production code swallows write errors by design.
 4. ~~Add test asserting 405 response body contains "health probes only accept GET"~~ done at `9ebd13d`
-5. Add benchmark for `writeResponse` success path to verify no new allocations
+5. ~~Add benchmark for `writeResponse` success path to verify no new allocations~~ No longer relevant — `slog` reverted at `9ebd13d`; the success path is unchanged
 6. ~~Run `gosec ./...` and fix findings~~ done — 0 issues, verified in 09-12 session
 7. ~~Run `govulncheck ./...` and fix findings~~ done — No vulnerabilities found, verified in 09-12 session
-8. Make explicit go/no-go decision on adopting `go-error-family` across all LarsArtmann Go projects
+8. **Make explicit go/no-go decision on adopting `go-error-family` across all LarsArtmann Go projects** **Won't implement here — decided for this project: stdlib-by-design (AGENTS.md); a cross-project policy is user-owned.**
 
 ### Testing Gaps
 

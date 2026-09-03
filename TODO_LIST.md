@@ -28,6 +28,7 @@
 | Add `go.mod` toolchain directive                                | TODO   | Med    | 5min   | `go.mod:3` says `go 1.26.7` but has no `toolchain` line pinning the exact toolchain for reproducibility.                                                      |
 | Decide: should panic recovery treat critical services as fail?  | TODO   | Med    | 1h     | A panic anywhere in the batch surfaces as one synthetic `health-check` error, which `classify` maps to `warn` even if a critical service panicked. `probe.go:382` |
 | Add `meta.description` to all Nix apps                          | TODO   | Med    | 15min  | Apps in `flake.nix` carry no `meta.description`; `nix flake check` emits warnings for every app.                                                              |
+| Scope v0.0.3 release                                            | TODO   | Med    | 15min  | json/v2 migration + toolchain bump sit unreleased in `[Unreleased]`. Decide content, tag, release. `CHANGELOG.md`                                              |
 
 ## Low Impact
 
@@ -48,3 +49,9 @@
 | Add renovate.json or dependabot.yml                               | TODO   | Low    | 15min  | No automated dependency updates. Only one direct dependency, so value is modest.                              |
 | Add `.github/ISSUE_TEMPLATE/`                                     | TODO   | Low    | 15min  | No bug report / feature request templates.                                                                   |
 | Verify `nix flake check --all-systems`                            | TODO   | Low    | 10min  | Flake declares all systems via `systems` input but checks have only been run on x86_64-linux. `flake.nix`      |
+| Top up `done at <hash>` citations in reports `19-01`/`19-11`       | TODO   | Low    | 10min  | ~12 verdicts cite dates instead of hashes; hashes now exist. `docs/status/2026-08-07_19-01*`, `_19-11*`       |
+| Record gopls/jsonv2 false positive in AGENTS.md gotchas            | TODO   | Low    | 5min   | gopls claims `encoding/json/v2` needs go1.27; stock go1.26.7 imports it fine (verified empirically). `handlers.go:165` |
+| Add `erraudit ./... --type-aware` to the verification gate         | TODO   | Low    | 10min  | Canonical invocation documented in AGENTS.md but never part of the gate.                                        |
+| Re-run coverage and record the current %                           | TODO   | Low    | 10min  | Last recorded figure (98.7%) predates the json/v2 migration. `nix run .#coverage`                               |
+| Curate TODO_LIST Low section                                       | TODO   | Low    | 15min  | Cap at ~8 actionable rows; move infra-noise (renovate, templates) to ROADMAP until scheduled.                   |
+| Full read-through verification of all 6 annotated reports          | TODO   | Low    | 30min  | Annotation verification relied on grep sweeps; one whitespace-equivalent edit only indirectly verified.         |

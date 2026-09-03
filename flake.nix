@@ -124,13 +124,16 @@
               gosec ./...
             '';
 
-            clean = mkApp "clean" "Remove coverage artifacts and clear the test cache" [
-              goPkg
-              pkgs.trash-cli
-            ] ''
-              trash-put coverage.out 2>/dev/null || true
-              go clean -testcache
-            '';
+            clean =
+              mkApp "clean" "Remove coverage artifacts and clear the test cache"
+                [
+                  goPkg
+                  pkgs.trash-cli
+                ]
+                ''
+                  trash-put coverage.out 2>/dev/null || true
+                  go clean -testcache
+                '';
           };
         };
     };

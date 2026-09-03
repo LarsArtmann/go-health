@@ -21,6 +21,7 @@ func newStressProbe(t *testing.T) (*health.Probe, context.Context) {
 	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
+
 	invoke[*healthyService](t, injector, "db")
 
 	probe := health.New(injector,
@@ -164,12 +165,14 @@ func TestStart_AfterShutdown_RestartsLoopButStaysDown(t *testing.T) {
 
 	liveness := probe.LivenessHandler()
 	rec := doRequest(t, liveness, health.DefaultRoutes().Liveness)
+
 	if rec.Code != http.StatusOK {
 		t.Errorf("liveness after restart: want 200, got %d", rec.Code)
 	}
 
 	readiness := probe.ReadinessHandler()
 	rec = doRequest(t, readiness, health.DefaultRoutes().Readiness)
+
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("readiness after restart: want 503, got %d", rec.Code)
 	}

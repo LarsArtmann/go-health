@@ -78,7 +78,7 @@ func enumerateCriticals() []map[string]bool {
 
 // matrixLabel renders one matrix cell as a readable subtest name.
 func matrixLabel(states map[string]state, critical map[string]bool) string {
-	label := ""
+	var b strings.Builder
 
 	for _, name := range serviceNames {
 		mark := "ok"
@@ -86,15 +86,18 @@ func matrixLabel(states map[string]state, critical map[string]bool) string {
 			mark = "FAIL"
 		}
 
-		label += name + "=" + mark
+		b.WriteString(name)
+		b.WriteString("=")
+		b.WriteString(mark)
+
 		if critical[name] {
-			label += "(crit)"
+			b.WriteString("(crit)")
 		}
 
-		label += " "
+		b.WriteString(" ")
 	}
 
-	return label
+	return b.String()
 }
 
 // assertMatrixCombo evaluates one (states, critical set) cell through the
@@ -116,10 +119,12 @@ func assertMatrixCombo(t *testing.T, states map[string]state, critical map[strin
 			invoke[*unhealthyService](t, injector, name)
 		}
 
+
 		if critical[name] {
 			wantCritical = append(wantCritical, name)
 		}
 	}
+
 
 	probe := health.New(injector, health.WithCriticalServices(wantCritical...))
 

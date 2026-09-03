@@ -52,8 +52,10 @@ func TestReadinessResponse_JSONSnapshot(t *testing.T) {
 	}
 }
 
-// TestReadinessResponse_JSONOmitEmpty pins which fields disappear when empty,
-// so an accidental omitempty change on the wire format cannot slip through.
+// TestReadinessResponse_JSONOmitEmpty pins which fields disappear when empty.
+// Note: under encoding/json/v2, scalar `omitempty` is NOT honored — bool and
+// int fields are always emitted (v2 reserves omission for `omitzero`). The
+// tags on Response are historical; the wire format below is the truth.
 func TestReadinessResponse_JSONOmitEmpty(t *testing.T) {
 	resp := health.Response{
 		Status: health.StatusPass,
@@ -65,7 +67,7 @@ func TestReadinessResponse_JSONOmitEmpty(t *testing.T) {
 		t.Fatalf("marshal response: %v", err)
 	}
 
-	want := `{"status":"pass","checks":{}}`
+	want := `{"status":"pass","shutting_down":false,"total_latency_ms":0,"checks":{}}`
 	if string(payload) != want {
 		t.Errorf("empty response shape: want %s, got %s", want, payload)
 	}

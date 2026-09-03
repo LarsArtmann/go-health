@@ -17,7 +17,6 @@
 
 | Task                                  | Status  | Impact | Effort | Evidence                                                                                                                                                          |
 | ------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Set up GitHub Actions CI pipeline     | TODO    | High   | 1h     | No `.github/workflows/`. CI should run: `go test -race`, `go vet`, `golangci-lint`, `govulncheck`, `gosec`, `nix flake check`                                      |
 | Run `doanalyzerv2` to verify DO-6 fix | BLOCKED | High   | 15min  | DO-6 anti-pattern fix is architecturally sound but unverified by the analyzer. Not in nixpkgs; `go install` blocked by sandbox. `probe.go:52` (no injector field) |
 
 ## Medium Impact
@@ -50,7 +49,6 @@
 | Add `.github/ISSUE_TEMPLATE/`                                     | TODO   | Low    | 15min  | No bug report / feature request templates.                                                                   |
 | Verify `nix flake check --all-systems`                            | TODO   | Low    | 10min  | Flake declares all systems via `systems` input but checks have only been run on x86_64-linux. `flake.nix`      |
 | Top up `done at <hash>` citations in reports `19-01`/`19-11`       | TODO   | Low    | 10min  | ~12 verdicts cite dates instead of hashes; hashes now exist. `docs/status/2026-08-07_19-01*`, `_19-11*`       |
-| Record gopls/jsonv2 false positive in AGENTS.md gotchas            | TODO   | Low    | 5min   | gopls claims `encoding/json/v2` needs go1.27; stock go1.26.7 imports it fine (verified empirically). `handlers.go:165` |
 | Add `erraudit ./... --type-aware` to the verification gate         | TODO   | Low    | 10min  | Canonical invocation documented in AGENTS.md but never part of the gate.                                        |
 | Re-run coverage and record the current %                           | TODO   | Low    | 10min  | Last recorded figure (98.7%) predates the json/v2 migration. `nix run .#coverage`                               |
 | Curate TODO_LIST Low section                                       | TODO   | Low    | 15min  | Cap at ~8 actionable rows; move infra-noise (renovate, templates) to ROADMAP until scheduled.                   |

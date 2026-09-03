@@ -41,7 +41,6 @@
 | Add benchmark: startup handler under contention                   | TODO   | Low    | 20min  | Only the unlatched variant exists. `probe_test.go:1422`                                                      |
 | Verify README Quick Start compiles (as an `Example` function)      | TODO   | Low    | 15min  | README example drifted from `ExampleNew` once already. `README.md:53`, `example_test.go:23`                   |
 | Improve `writeResponse` marshal-error message                      | TODO   | Low    | 10min  | Message is opaque (no underlying error). Branch is defensive-only today — `Response` has marshal-safe types. `handlers.go:165` |
-| Verify samber-do-auditlog still compiles against this module        | TODO   | Low    | 20min  | Public API preserved through the DO-6 refactor but no consumer-compile verification ever ran. `probe.go:21`    |
 | Re-evaluate the two `//nolint` suppressions in panic recovery      | TODO   | Low    | 30min  | `err113` could use a static sentinel; `nonamedreturns` could be refactored away. Suppressed with justification at `probe.go:382`. |
 | Add ADRs for key decisions                                        | TODO   | Low    | 1h     | Stdlib errors, no-logging, and three-state classify decisions live only in AGENTS.md prose. No `docs/adr/`.   |
 | Document `docs/status/` convention + testing strategy in CONTRIBUTING | TODO | Low   | 20min  | Report naming pattern and testing philosophy are tribal knowledge. `CONTRIBUTING.md`                          |

@@ -68,6 +68,7 @@
 | Feature                      | Status           | Notes                                                                                                                 |
 | ---------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
 | HealthRecorder interface     | FULLY_FUNCTIONAL | Delegates health-check batches to any implementation. `samber-do-auditlog.Plugin` satisfies implicitly. `probe.go:21` |
+| Consumer verification        | VERIFIED (2026-09-04) | `go-health-dashboard` (7 importing files) compiles against HEAD via replace; `auditlog.Plugin` passes `var _ health.HealthRecorder` and runs a live probe end-to-end. `samber-do-auditlog` itself does not import go-health. |
 | Construction-time resolution | FULLY_FUNCTIONAL | Injector and recorder resolved in `New()` into a `healthCheckFunc`. Probe holds neither. `probe.go:206`               |
 | Deterministic JSON output    | FULLY_FUNCTIONAL | `encoding/json/v2` with `json.Deterministic(true)` keeps map keys alphabetically ordered. Locked in with a test. `handlers.go:165` |
 

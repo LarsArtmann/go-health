@@ -205,7 +205,7 @@ Decision upheld: stdlib-only, no logging coupling is now a ROADMAP non-goal. The
 47. Add structured error context to `writeResponse` marshal failure → TODO_LIST (Low Impact)
 48. Consider `Status` validation (reject unknown values at construction) → ROADMAP (Theme 5)
 49. Add `go.mod` `toolchain` directive for reproducibility → TODO_LIST (Medium Impact)
-50. ~~Add release/tagging workflow (semver via goreleaser)~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created → TODO_LIST (Low Impact)
+50. ~~Add release/tagging workflow (semver via goreleaser)~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
 
 ---
 
@@ -215,4 +215,4 @@ Decision upheld: stdlib-only, no logging coupling is now a ROADMAP non-goal. The
 
 2. ~~**Should this project create `flake.nix` now?**~~ Resolved — done at `5bac97a`. Yes.
 
-3. **Is this library targeting a v1.0 release soon?** Still open — affects whether breaking API changes are acceptable. Tracked in TODO_LIST as BLOCKED (needs user decision on `Start()` error return).
+3. **Is this library targeting a v1.0 release soon?** Still open — affects whether breaking API changes are acceptable. ~~Tracked in TODO_LIST as BLOCKED (needs user decision on `Start()` error return).~~ resolved — `Start()` error return kept and shipped in v0.0.1; v1.0 timing remains a user decision.

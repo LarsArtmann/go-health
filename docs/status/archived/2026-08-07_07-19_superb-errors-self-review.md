@@ -107,7 +107,7 @@ User pasted `erraudit ./... --type-aware --enforce-go-error-family --no-suppress
 29. ~~Add `golangci-lint` configuration~~ done at `5bac97a`
 30. Add `go-arch-lint` to enforce package boundaries → ROADMAP (not yet scoped)
 31. Add pre-commit hooks (goimports, go vet, erraudit) → ROADMAP (not yet scoped)
-32. Add release/tagging workflow (goreleaser or equivalent) → TODO_LIST (Low Impact)
+32. ~~Add release/tagging workflow (goreleaser or equivalent)~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
 
 ### Documentation
 

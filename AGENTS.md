@@ -105,4 +105,4 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 | [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                       | Domain terms (liveness, readiness, startup, critical, etc.)                       |
 | [docs/timeout-design.md](docs/timeout-design.md)                         | Batch-level vs per-service timeout analysis                                       |
 | [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
-| [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots)                              |
+| [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                      |

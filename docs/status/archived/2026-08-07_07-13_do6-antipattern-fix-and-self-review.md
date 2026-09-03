@@ -187,7 +187,7 @@ After `New()` returns, **`p.recorder` is never read again.** The recorder is cap
 39. ~~Add `doc.go` mention of the `healthCheckFunc` pattern and construction-time resolution~~ done at `9ebd13d`
 40. ~~Add `CONTRIBUTING.md` detail (currently 403 bytes)~~ done at `9017c5a`
 41. Verify Go 1.26.5 compatibility in CI (very new version) → TODO_LIST (covered by CI pipeline task)
-42. Add version tagging / release process (semver) → TODO_LIST (Low Impact)
+42. ~~Add version tagging / release process (semver)~~ done — v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
 43. Add pre-commit hooks (gofmt, goimports, golangci-lint) → ROADMAP (not yet scoped)
 44. Add `go.mod` `toolchain` directive for reproducibility → TODO_LIST (Medium Impact)
 45. Consider child-scope isolation for multi-tenant health checks → ROADMAP (Theme 4)

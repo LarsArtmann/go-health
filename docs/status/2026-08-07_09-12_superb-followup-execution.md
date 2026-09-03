@@ -109,41 +109,41 @@ These claims are now verified, not assumed.
 
 ## c) NOT STARTED
 
-- No CI/CD pipeline (no GitHub Actions workflow)
-- No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md`
-- No `docs/DOMAIN_LANGUAGE.md`
-- No fuzz tests
-- No migration guide for consumers coming from samber-do-auditlog's old `WithPlugin`
-- `doanalyzerv2` never run (the samber/do static analyzer that checks for DO-6 and other anti-patterns — it's not available in nixpkgs and I couldn't install it via `go install` because the sandbox blocks the `go` command for package installation)
-- No `go.mod` `toolchain` directive
-- No release/version tagging
-- No `WithLogger(*slog.Logger)` option
-- No debounce/throttle for live evaluation mode
-- No `Probe.Status()` / `Probe.Alive()` / `Probe.Ready()` programmatic methods
+- No CI/CD pipeline (no GitHub Actions workflow) → TODO_LIST (High Impact)
+- ~~No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md`~~ done at `9017c5a`
+- ~~No `docs/DOMAIN_LANGUAGE.md`~~ done at `9017c5a`
+- No fuzz tests → TODO_LIST (Low Impact)
+- No migration guide for consumers coming from samber-do-auditlog's old `WithPlugin` → TODO_LIST (Medium Impact)
+- `doanalyzerv2` never run (the samber/do static analyzer that checks for DO-6 and other anti-patterns — it's not available in nixpkgs and I couldn't install it via `go install` because the sandbox blocks the `go` command for package installation) → TODO_LIST (BLOCKED)
+- No `go.mod` `toolchain` directive → TODO_LIST (Medium Impact)
+- ~~No release/version tagging~~ done — v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
+- ~~No `WithLogger(*slog.Logger)` option~~ Won't implement — non-goal: libraries must not log
+- No debounce/throttle for live evaluation mode → ROADMAP (Theme 3)
+- No `Probe.Status()` / `Probe.Alive()` / `Probe.Ready()` programmatic methods → ROADMAP (Theme 1)
 
 ---
 
 ## d) TOTALLY FUCKED UP
 
-### 1. I introduced a breaking API change (`Start()` returns error) without asking the user.
+### ~~1. I introduced a breaking API change (`Start()` returns error) without asking the user.~~ resolved — kept; shipped in v0.0.1 (tag pushed, GitHub release published).
 
-Still open — tracked in TODO_LIST as BLOCKED (needs user decision). The change is architecturally better but was made unilaterally.
+~~Still open — tracked in TODO_LIST as BLOCKED (needs user decision).~~ The change is architecturally better but was made unilaterally.
 
 ### ~~2. The `write_response_internal_test.go` file tests almost nothing useful.~~
 
 ~~The `failingResponseWriter` returns `0, nil` from Write (not an error)~~ Resolved at `897b571` — file deleted.
 
-### 3. I didn't verify the `flake.nix` actually builds.
+### ~~3. I didn't verify the `flake.nix` actually builds.~~ resolved — `nix flake check` passed (19-11 session); re-verified 2026-09-03.
 
-Still open — tracked in TODO_LIST (High Impact). `nix develop` and `nix flake check` never run.
+~~Still open — tracked in TODO_LIST (High Impact).~~ `nix develop` and `nix flake check` never run at the time.
 
 ### 4. I still haven't run `doanalyzerv2`.
 
 Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` blocked by sandbox.
 
-### 5. The `.golangci.yml` may be too aggressive for a library this small.
+### ~~5. The `.golangci.yml` may be too aggressive for a library this small.~~ done at `3e7411b` — curated, 28 violations fixed to 0, config verified.
 
-→ TODO_LIST (Medium Impact) — needs curation, currently cargo-culted from `go-sse`.
+~~→ TODO_LIST (Medium Impact) — needs curation, currently cargo-culted from `go-sse`.~~
 
 ---
 
@@ -158,9 +158,9 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 
 ### Testing Gaps
 
-5. **No test for concurrent `Start()` + `Shutdown()` interleaving** — the mutex protects `cancel`, but the exact interleaving hasn't been stress-tested with a timing-sensitive test.
-6. **No fuzz tests** — JSON marshaling edge cases, handler input fuzzing.
-7. **No property-based test for `classify`** — pass/warn/fail across all possible result maps + critical sets.
+5. **No test for concurrent `Start()` + `Shutdown()` interleaving** — the mutex protects `cancel`, but the exact interleaving hasn't been stress-tested with a timing-sensitive test. → TODO_LIST (Low Impact)
+6. **No fuzz tests** — JSON marshaling edge cases, handler input fuzzing. → TODO_LIST (Low Impact)
+7. **No property-based test for `classify`** — pass/warn/fail across all possible result maps + critical sets. → TODO_LIST (Low Impact)
 
 ### Error Handling
 
@@ -187,9 +187,9 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 ### Critical (verify claims / fix mistakes)
 
 1. Run `doanalyzerv2` → TODO_LIST (BLOCKED)
-2. Verify `flake.nix` builds → TODO_LIST (High Impact)
+2. ~~Verify `flake.nix` builds~~ resolved — `nix flake check` passed (19-11 session); re-verified 2026-09-03
 3. ~~Fix or delete `write_response_internal_test.go`~~ done at `897b571`
-4. Curate `.golangci.yml` → TODO_LIST (Medium Impact)
+4. ~~Curate `.golangci.yml`~~ done at `3e7411b` — curated, 0 violations, config verified
 
 ### High Priority
 
@@ -235,7 +235,7 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 
 ### Lower Priority
 
-41. Add release/tagging workflow (semver via goreleaser or tags). → TODO_LIST (Low Impact)
+41. ~~Add release/tagging workflow (semver via goreleaser or tags).~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
 42. Consider per-service timeout exposure (action item #3 from timeout-design.md — still deferred as YAGNI). → ROADMAP non-goal: per-service timeout belongs to samber/do
 43. Add `Response.Timestamp` field for when the check was run. → ROADMAP (Theme 2)
 44. Consider structured error context to `writeResponse` marshal failure. → TODO_LIST (Low Impact)
@@ -250,9 +250,9 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 
 ## g) Questions I Cannot Answer Myself
 
-### 1. Should I revert the `Start()` signature change?
+### ~~1. Should I revert the `Start()` signature change?~~ resolved — kept; shipped in v0.0.1 (tag pushed, GitHub release published).
 
-Still open — tracked in TODO_LIST as BLOCKED (needs user decision). The change is architecturally better (fail-fast on misconfiguration via `Validate()`), but was made without user confirmation.
+~~Still open — tracked in TODO_LIST as BLOCKED (needs user decision).~~ The change is architecturally better (fail-fast on misconfiguration via `Validate()`), but was made without user confirmation.
 
 ### 2. Should the panic recovery treat critical services differently?
 

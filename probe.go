@@ -221,6 +221,12 @@ var ErrInvalidTimeout = errors.New("health: timeout must be positive")
 // refresh interval is negative.
 var ErrInvalidRefreshInterval = errors.New("health: refresh interval must not be negative")
 
+// ErrPanicDuringHealthCheck is wrapped into the synthetic "health-check" error
+// when the health-check batch panics and the panic is recovered. Match with
+// errors.Is to distinguish a recovered panic from an ordinary service failure:
+// a recovered panic rolls the response up to fail, never to warn.
+var ErrPanicDuringHealthCheck = errors.New("health: panic during health check")
+
 // Validate checks that the Probe configuration is internally consistent.
 // Returns nil when the configuration is safe to use.
 //
@@ -375,26 +381,42 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 // this is a single function call.
 //
 // A panic from the health-check function (e.g. a misbehaving recorder or a
-// service with a nil-pointer dereference) is recovered and returned as a
-// synthetic error so it never crashes the process or the HTTP handler.
-//
-//nolint:nonamedreturns // named return is required for recover() to assign the synthetic error
-func (p *Probe) runHealthChecks(ctx context.Context) (results map[string]error) {
-	defer func() {
-		if r := recover(); r != nil {
-			results = map[string]error{
-				//nolint:err113 // panic value is inherently dynamic; cannot be a pre-defined static error
-				"health-check": fmt.Errorf("health: panic during health check: %v", r),
+// service with a nil-pointer dereference) is recovered and reported as a
+// synthetic "health-check" error wrapping [ErrPanicDuringHealthCheck], so it
+// never crashes the process or the HTTP handler. classify maps a recovered
+// panic to fail: the interrupted batch leaves every not-yet-checked service
+// unverified, and a panic that hit a critical service must not degrade to a
+// 200 warn. See docs/panic-recovery-design.md for the full rationale.
+func (p *Probe) runHealthChecks(ctx context.Context) map[string]error {
+	return recoverHealthChecks(func() map[string]error { return p.healthCheck(ctx) })
+}
+
+// recoverHealthChecks runs fn and converts a panic into a synthetic result
+// map. The inner closure confines the deferred recover to one frame whose
+// result is captured in an outer variable, so no named return is needed.
+func recoverHealthChecks(fn func() map[string]error) map[string]error {
+	var results map[string]error
+
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				results = map[string]error{
+					"health-check": fmt.Errorf("%w: %v", ErrPanicDuringHealthCheck, r),
+				}
 			}
-		}
+		}()
+
+		results = fn()
 	}()
 
-	return p.healthCheck(ctx)
+	return results
 }
 
 // classify computes the roll-up status from health-check results:
 //
-//   - StatusFail when shutting down or any critical service failed.
+//   - StatusFail when shutting down, any critical service failed, or the
+//     batch panicked (recovered panic: results are untrustworthy — see
+//     docs/panic-recovery-design.md).
 //   - StatusWarn when no critical service failed but at least one
 //     non-critical service failed (degraded but still serving traffic).
 //   - StatusPass when every checked service is healthy.
@@ -408,6 +430,10 @@ func (p *Probe) classify(results map[string]error, shuttingDown bool) Status {
 	for name, err := range results {
 		if err == nil {
 			continue
+		}
+
+		if errors.Is(err, ErrPanicDuringHealthCheck) {
+			return StatusFail
 		}
 
 		if _, critical := p.critical[name]; critical {

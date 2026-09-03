@@ -97,6 +97,7 @@ func (a *Aggregate) CachedResponse() health.Response {
 	checks := make(map[string]health.Check)
 	status := health.StatusPass
 	shuttingDown := false
+
 	var maxLatency int64
 
 	for _, src := range a.sources {
@@ -198,6 +199,7 @@ func (a *Aggregate) StartupHandler() http.HandlerFunc {
 		}
 
 		checks := make(map[string]health.Check)
+
 		for _, src := range a.sources {
 			if !src.Probe.StartupComplete() {
 				checks[src.Name] = health.Check{
@@ -232,6 +234,8 @@ func statusRank(s health.Status) int {
 		return 0
 	case health.StatusWarn:
 		return 1
+	case health.StatusPass:
+		return 2
 	default:
 		return 2
 	}

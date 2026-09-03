@@ -9,8 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	aggregate "github.com/larsartmann/go-health/aggregate"
 	health "github.com/larsartmann/go-health"
+	aggregate "github.com/larsartmann/go-health/aggregate"
 	"github.com/samber/do/v2"
 )
 
@@ -62,6 +62,7 @@ func newStartedProbe(t *testing.T, critical bool, unhealthy bool) *health.Probe 
 	probe := health.New(injector, opts...)
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	t.Cleanup(func() {
 		cancel()
 		injector.Shutdown()
@@ -269,15 +270,20 @@ func TestReadinessHandler_StatusCodes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
-		critical bool
+		name      string
+		critical  bool
 		unhealthy bool
-		shutdown bool
-		wantCode int
+		shutdown  bool
+		wantCode  int
 	}{
 		{name: "healthy is 200", wantCode: http.StatusOK},
 		{name: "non-critical failure (warn) stays 200", unhealthy: true, wantCode: http.StatusOK},
-		{name: "critical failure (fail) is 503", critical: true, unhealthy: true, wantCode: http.StatusServiceUnavailable},
+		{
+			name:      "critical failure (fail) is 503",
+			critical:  true,
+			unhealthy: true,
+			wantCode:  http.StatusServiceUnavailable,
+		},
 		{name: "shutdown is 503", shutdown: true, wantCode: http.StatusServiceUnavailable},
 	}
 
@@ -293,7 +299,8 @@ func TestReadinessHandler_StatusCodes(t *testing.T) {
 			agg := mustAggregate(t, aggregate.Source{Name: "api", Probe: probe})
 
 			rec := httptest.NewRecorder()
-			agg.ReadinessHandler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+			agg.ReadinessHandler().
+				ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
 
 			if rec.Code != tt.wantCode {
 				t.Fatalf("readiness code = %d, want %d", rec.Code, tt.wantCode)
@@ -330,7 +337,8 @@ func TestStartupHandler_LatchesWhenAllSourcesComplete(t *testing.T) {
 	// so the first evaluation passes immediately).
 	for _, probe := range []*health.Probe{first, second} {
 		probeRec := httptest.NewRecorder()
-		probe.StartupHandler().ServeHTTP(probeRec, httptest.NewRequest(http.MethodGet, "/startupz", nil))
+		probe.StartupHandler().
+			ServeHTTP(probeRec, httptest.NewRequest(http.MethodGet, "/startupz", nil))
 	}
 
 	rec = httptest.NewRecorder()

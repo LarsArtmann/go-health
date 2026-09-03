@@ -101,9 +101,16 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 - **Three-state classify** — `classify` returns `pass`/`warn`/`fail`. The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
 - **Config validation** — `Probe.Validate()` checks `timeout > 0` and `refreshInterval >= 0`. `Start()` calls `Validate()` and returns an error on invalid config — callers should check the error from `Start()`.
 - **GOEXPERIMENT=jsonv2 IS required since the jsonv2 migration** — `handlers.go` (and
-  `aggregate/aggregate.go`) import `encoding/json/v2`. Run all Go commands with
-  `GOEXPERIMENT=jsonv2` (older revisions of this file claimed otherwise; that predates the
-  migration). Set `GOWORK=off` to avoid workspace interference.
+  `aggregate/aggregate.go`) import `encoding/json/v2`, which go1.26 only exposes behind
+  `GOEXPERIMENT=jsonv2` (verified: `env -u GOEXPERIMENT go build ./...` fails with "build
+  constraints exclude all Go files in encoding/json/v2"; `env GOEXPERIMENT=jsonv2` builds).
+  An older revision of this file claimed no GOEXPERIMENT was needed — that claim was an
+  artifact of the host shell leaking `GOEXPERIMENT=jsonv2` into every nix invocation.
+  The flake now sets it explicitly in every app and the devShell, so the gates are
+  hermetic; only bare `go` commands outside the flake need it manually. gopls' stdversion
+  warning ("json.Marshal requires go1.27") is expected and benign while the experiment is
+  enabled — it reflects the stabilized json/v2 landing in go1.27, not a real build failure.
+  Set `GOWORK=off` to avoid workspace interference.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
 - **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.
 - **`WithTimeout` is batch-level, not per-service** — the deadline is shared across all services in one evaluation. A slow dependency steals time from every other check. samber/do exposes `HealthCheckTimeout` (per-service) via `InjectorOpts` at injector creation time. See [docs/timeout-design.md](docs/timeout-design.md) for the full analysis, including why HTTP query-param timeout overrides are rejected (DoS amplifier + breaks caching).

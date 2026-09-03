@@ -90,14 +90,14 @@ func main() {
 
 ```json
 {
-	"status": "pass",
-	"version": "1.0.0",
-	"uptime": "5m32s",
-	"total_latency_ms": 12,
-	"checks": {
-		"database": { "status": "pass" },
-		"redis": { "status": "pass" }
-	}
+  "status": "pass",
+  "version": "1.0.0",
+  "uptime": "5m32s",
+  "total_latency_ms": 12,
+  "checks": {
+    "database": { "status": "pass" },
+    "redis": { "status": "pass" }
+  }
 }
 ```
 
@@ -105,15 +105,15 @@ func main() {
 
 ```json
 {
-	"status": "warn",
-	"version": "1.0.0",
-	"uptime": "5m32s",
-	"total_latency_ms": 15,
-	"checks": {
-		"database": { "status": "pass" },
-		"redis": { "status": "pass" },
-		"metrics-exporter": { "status": "warn", "error": "connection refused" }
-	}
+  "status": "warn",
+  "version": "1.0.0",
+  "uptime": "5m32s",
+  "total_latency_ms": 15,
+  "checks": {
+    "database": { "status": "pass" },
+    "redis": { "status": "pass" },
+    "metrics-exporter": { "status": "warn", "error": "connection refused" }
+  }
 }
 ```
 
@@ -121,14 +121,14 @@ func main() {
 
 ```json
 {
-	"status": "fail",
-	"version": "1.0.0",
-	"uptime": "5m32s",
-	"total_latency_ms": 5004,
-	"checks": {
-		"database": { "status": "fail", "error": "context deadline exceeded" },
-		"redis": { "status": "pass" }
-	}
+  "status": "fail",
+  "version": "1.0.0",
+  "uptime": "5m32s",
+  "total_latency_ms": 5004,
+  "checks": {
+    "database": { "status": "fail", "error": "context deadline exceeded" },
+    "redis": { "status": "pass" }
+  }
 }
 ```
 

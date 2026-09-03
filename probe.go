@@ -530,6 +530,10 @@ func (p *Probe) buildChecks(results map[string]error) map[string]Check {
 				check.Status = StatusWarn
 			}
 
+			if errors.Is(err, ErrPanicDuringHealthCheck) {
+				check.Status = StatusFail
+			}
+
 			check.Error = err.Error()
 		}
 

@@ -965,13 +965,17 @@ func TestWithHealthRecorder_PanicRecovered_DoesNotCrash(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if resp.Status != health.StatusWarn {
-		t.Errorf("status: want warn (non-critical panic), got %s", resp.Status)
+	if resp.Status != health.StatusFail {
+		t.Errorf("status: want fail (panics fail closed, see docs/panic-recovery-design.md), got %s", resp.Status)
 	}
 
 	panicCheck, ok := resp.Checks["health-check"]
 	if !ok {
 		t.Fatal("expected 'health-check' entry for recovered panic")
+	}
+
+	if panicCheck.Status != health.StatusFail {
+		t.Errorf("panic check status: want fail, got %s", panicCheck.Status)
 	}
 
 	if panicCheck.Error == "" {
@@ -982,6 +986,12 @@ func TestWithHealthRecorder_PanicRecovered_DoesNotCrash(t *testing.T) {
 		t.Errorf("panic check error should contain panic message, got %q", panicCheck.Error)
 	}
 }
+
+// Service panics on the injector path are deliberately NOT tested here:
+// samber/do runs each service health check in its own goroutine
+// (raceWithTimeout), so a panicking service crashes the process before any
+// probe-side recover can run. Only the recorder path is recoverable. See
+// docs/panic-recovery-design.md.
 
 // --- Lifecycle tests ---.
 

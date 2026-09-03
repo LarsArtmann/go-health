@@ -873,9 +873,10 @@ func TestReadiness_JSONChecksAreSortedAlphabetically(t *testing.T) {
 
 	probe := health.New(injector, health.WithRefreshInterval(0))
 
-	// Verify alphabetical ordering: "alpha" must appear before "mongo" before "zebra"
-	// in the raw JSON body. Go's json.Marshal sorts map[string]K keys, so this is
-	// guaranteed by the standard library — the test locks the property in.
+	// Verify alphabetical ordering: "alpha" must appear before "mongo" before
+	// "zebra" in the raw JSON body. encoding/json/v2 serializes map keys in
+	// random Go map order unless json.Deterministic(true) is passed, so this
+	// test locks the property that writeResponse opted into.
 	body := doRequest(t, probe.ReadinessHandler(), "/readyz").Body.String()
 
 	indices := make([]int, 0, 3)

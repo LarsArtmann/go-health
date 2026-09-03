@@ -162,7 +162,7 @@ func writeResponse(w http.ResponseWriter, code int, resp Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
-	payload, err := json.Marshal(resp)
+	payload, err := json.Marshal(resp, json.Deterministic(true))
 	if err != nil {
 		// Defensive: Response only contains basic types (string, bool, int64,
 		// map[string]Check) so json.Marshal cannot fail today. This branch

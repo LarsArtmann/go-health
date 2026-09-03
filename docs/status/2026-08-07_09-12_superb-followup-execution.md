@@ -133,7 +133,7 @@ These claims are now verified, not assumed.
 
 ~~The `failingResponseWriter` returns `0, nil` from Write (not an error)~~ Resolved at `897b571` — file deleted.
 
-### ~~3. I didn't verify the `flake.nix` actually builds.~~ resolved — `nix flake check` passed (19-11 session); re-verified 2026-09-03.
+### ~~3. I didn't verify the `flake.nix` actually builds.~~ resolved — `nix flake check` passed (19-11 session); re-verified in the 2026-09-03 run (report `bc20c90`)
 
 ~~Still open — tracked in TODO_LIST (High Impact).~~ `nix develop` and `nix flake check` never run at the time.
 
@@ -187,7 +187,7 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 ### Critical (verify claims / fix mistakes)
 
 1. Run `doanalyzerv2` → TODO_LIST (BLOCKED)
-2. ~~Verify `flake.nix` builds~~ resolved — `nix flake check` passed (19-11 session); re-verified 2026-09-03
+2. ~~Verify `flake.nix` builds~~ resolved — `nix flake check` passed (19-11 session); re-verified in the 2026-09-03 run (report `bc20c90`)
 3. ~~Fix or delete `write_response_internal_test.go`~~ done at `897b571`
 4. ~~Curate `.golangci.yml`~~ done at `3e7411b` — curated, 0 violations, config verified
 

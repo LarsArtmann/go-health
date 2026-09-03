@@ -100,7 +100,7 @@ User asked me to view all `docs/status/2026-08-*` files, then run the `docs-heal
 
 - ~~**CHANGELOG `[0.1.0]` date** — I dated it `2026-08-07` from the initial commit (`2c2d766`), but there are no git tags. The "version" is inferred from the commit message `feat(health): implement core health check library`, not from an actual `v0.1.0` tag. If the user considers the initial commit as a different version boundary, the date may be wrong. The `[Unreleased]` compare link `.../compare/v0.1.0...HEAD` will 404 until a tag exists.~~ resolved at `da5b015` — CHANGELOG rebuilt around real tags: v0.0.1 (2026-08-07) and v0.0.2 (2026-08-08), both pushed with GitHub releases.
 
-- ~~**AGENTS.md cleanup** — I added a documentation reference table and benchmark list, but I did NOT audit the rest of AGENTS.md against the `agents-quality-guide.md` endurance test. There may be temporal pollution (version-specific claims, coverage percentages) that should be pruned. The file is 8.8 KB which is within the sweet spot (5-15 KB) but the content was written across 4 sessions without a holistic review.~~ done — audited in the 2026-09-03 docs-health run: status line updated to v0.0.2 / Go 1.26.7, all gotchas verified current against code, no temporal pollution found.
+- ~~**AGENTS.md cleanup** — I added a documentation reference table and benchmark list, but I did NOT audit the rest of AGENTS.md against the `agents-quality-guide.md` endurance test. There may be temporal pollution (version-specific claims, coverage percentages) that should be pruned. The file is 8.8 KB which is within the sweet spot (5-15 KB) but the content was written across 4 sessions without a holistic review.~~ done at `7f489ac` — audited in the 2026-09-03 docs-health run: status line updated to v0.0.2 / Go 1.26.7, all gotchas verified current against code, no temporal pollution found.
 
 - ~~**CHANGELOG link comparison URLs** — The links at the bottom reference GitHub compare URLs (`/compare/v0.1.0...HEAD`) but no tags exist yet. These will 404 until tags are created. This is conventional (you add the links when you tag), but technically broken right now.~~ resolved at `da5b015` — links now target real tags v0.0.1/v0.0.2; both exist on origin with GitHub releases.
 
@@ -116,13 +116,13 @@ User asked me to view all `docs/status/2026-08-*` files, then run the `docs-heal
 - No migration guide from `WithPlugin` to `WithHealthRecorder`
 - No fuzz tests, property-based tests, or snapshot tests
 - ~~No release/tagging process~~ done — v0.0.1 and v0.0.2 tagged, pushed to origin, GitHub releases created.
-- ~~AGENTS.md not audited against endurance test (agents-quality-guide.md)~~ done — audited in the 2026-09-03 docs-health run.
+- ~~AGENTS.md not audited against endurance test (agents-quality-guide.md)~~ done at `7f489ac` — audited in the 2026-09-03 docs-health run.
 
 ---
 
 ## d) TOTALLY FUCKED UP
 
-### ~~1. I didn't verify the annotation edits were actually applied correctly.~~ done — every numbered item in sections d/e/f/g of all reports verified and resolved inline in the 2026-09-03 docs-health run.
+### ~~1. I didn't verify the annotation edits were actually applied correctly.~~ done — every numbered item in sections d/e/f/g of all reports verified and resolved inline in the 2026-09-03 docs-health run (report `bc20c90`).
 
 I used `multiedit` with up to 12 edits per call on the status reports. Several edit batches reported "Applied 11 of 12 edits" or "Applied 5 of 7 edits" — meaning some edits silently failed. I only caught one case (the 07-13 report items 5-10 in section e) where I had to retry with individual `edit` calls. But I may have missed other failed edits. The annotation completeness check (`grep -c`) showed 70/80, 54/64, 80/82, 73/83 — meaning some items in each report may still be unannotated. The remaining unannotated items appear to be in "What I Did" narrative sections (which don't need annotation), but I didn't verify every single one.
 
@@ -130,7 +130,7 @@ I used `multiedit` with up to 12 edits per call on the status reports. Several e
 
 I harvested from 4 status reports spanning the entire project history. While I verified the most obvious items against code (flake.nix exists, FEATURES.md exists, panic recovery exists), some items may have been completed in intermediate commits I didn't check. For example, "stress test for concurrent Start() + Shutdown()" — I didn't search `probe_test.go` for this specific test before adding it to TODO_LIST. Some items might be duplicate or already resolved.
 
-### ~~3. I didn't read the `docs-health` references for annotation placement.~~ done — `resolving-items.md` and placement guidance loaded and applied in the 2026-09-03 pass.
+### ~~3. I didn't read the `docs-health` references for annotation placement.~~ done — `resolving-items.md` and placement guidance loaded and applied in the 2026-09-03 pass (report `bc20c90`).
 
 The skill says to load `references/annotation-placement.md` and `references/resolving-items.md` for the full format catalog. I read the main `SKILL.md` and `build-guide.md` but skipped these two reference files. My annotations follow the basic format from the main skill, but there may be better patterns for table-row annotations, multi-item tables, and edge cases that I missed.
 
@@ -138,7 +138,7 @@ The skill says to load `references/annotation-placement.md` and `references/reso
 
 I looked at the commit history (`git log --oneline`) but didn't do a proper `git log --format="%ai %s" v0.1.0..HEAD` (which would fail anyway since there are no tags). I inferred the `[0.1.0]` boundary from the initial commit message. There may be changes between the initial commit and the "real" v0.1.0 that should be in the `[0.1.0]` section instead of `[Unreleased]`. Without a tag, the boundary is a judgment call.
 
-### ~~5. I didn't check whether the auto-git daemon committed my AGENTS.md changes.~~ done — committed by the daemon; AGENTS.md since re-audited in the 2026-09-03 docs-health run.
+### ~~5. I didn't check whether the auto-git daemon committed my AGENTS.md changes.~~ done — committed by the daemon; AGENTS.md since re-audited in the 2026-09-03 docs-health run (report `bc20c90`).
 
 At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto-git daemon committed the docs-status files but may not have caught the AGENTS.md edit yet. If the session ends, this change could be lost.
 
@@ -148,7 +148,7 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 ### Documentation Quality
 
-1. ~~**AGENTS.md needs an endurance-test audit** — The file was written across 4 sessions and may contain temporal pollution: coverage percentages (98.7%), specific test counts, and design-decision language that reads like changelog entries. The `agents-quality-guide.md` anti-pattern catalog should be applied to prune content that won't be true in 6 months.~~ done — audited in the 2026-09-03 docs-health run: gotchas verified current, status line refreshed to v0.0.2 / Go 1.26.7, no temporal pollution found.
+1. ~~**AGENTS.md needs an endurance-test audit** — The file was written across 4 sessions and may contain temporal pollution: coverage percentages (98.7%), specific test counts, and design-decision language that reads like changelog entries. The `agents-quality-guide.md` anti-pattern catalog should be applied to prune content that won't be true in 6 months.~~ done at `7f489ac` — audited in the 2026-09-03 docs-health run: gotchas verified current, status line refreshed to v0.0.2 / Go 1.26.7, no temporal pollution found.
 
 2. ~~**FEATURES.md Infrastructure section mixes concerns** — The `flake.nix` status is `PARTIALLY_FUNCTIONAL` (written but unverified) while `golangci-lint config` is `FULLY_FUNCTIONAL`. These are fundamentally different states (one is unverified code, the other is verified config). The status vocabulary doesn't capture "written but unverified" well — it should probably be its own status or have a note convention.~~ done — `flake.nix` verified via `nix flake check` (19-11 session) and is FULLY_FUNCTIONAL; the Notes column carries per-row nuance.
 
@@ -160,7 +160,7 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 5. ~~**I should have run the annotation in sub-agents** — Annotating 4 reports with ~277 markers is mechanical work. Using sub-agents (one per report, as the build-guide suggests for file scanning) would have been faster and less error-prone. I did it manually and had edit failures.~~ **Won't implement — process retrospective; the 2026-09-03 pass verified every item inline instead.**
 
-6. ~~**I should have verified every annotation edit** — After each `multiedit` batch, I should have immediately re-read the file to verify all edits applied. Instead, I trusted the "Applied N of M" summary and moved on, only discovering missed edits when I later ran a grep count check.~~ done — the 2026-09-03 docs-health run verifies annotation completeness item-by-item after each batch.
+6. ~~**I should have verified every annotation edit** — After each `multiedit` batch, I should have immediately re-read the file to verify all edits applied. Instead, I trusted the "Applied N of M" summary and moved on, only discovering missed edits when I later ran a grep count check.~~ done at `bc20c90` — the 2026-09-03 docs-health run verifies annotation completeness item-by-item after each batch.
 
 7. ~~**The CHANGELOG should cite PRs or commits** — Each entry in `[Unreleased]` ideally links to the commit or PR that introduced it. I wrote prose descriptions but didn't add commit hashes or links. This makes it harder to trace entries back to specific changes.~~ **Won't implement — Keep a Changelog entries stay prose; changes are traceable via git log.**
 
@@ -168,9 +168,9 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 8. ~~**No `docs/DOMAIN_LANGUAGE.md` cross-references from source code** — The domain language doc defines terms, but the source code doc comments don't link to it. Adding `[domain language](docs/DOMAIN_LANGUAGE.md)` references in key doc comments would improve discoverability.~~ **Won't implement — doc comments stay focused on the API; AGENTS.md links the glossary.**
 
-9. ~~**README doesn't mention FEATURES.md or TODO_LIST.md** — The README links to `docs/timeout-design.md` but not to the new living docs. A "See also" or "Project Status" section linking to FEATURES.md would help users understand what's done vs planned.~~ done — README gained a Project Docs section linking FEATURES, TODO_LIST, ROADMAP, and DOMAIN_LANGUAGE (2026-09-03 docs-health run).
+9. ~~**README doesn't mention FEATURES.md or TODO_LIST.md** — The README links to `docs/timeout-design.md` but not to the new living docs. A "See also" or "Project Status" section linking to FEATURES.md would help users understand what's done vs planned.~~ done at `7f489ac` — README gained a Project Docs section linking FEATURES, TODO_LIST, ROADMAP, and DOMAIN_LANGUAGE (2026-09-03 docs-health run).
 
-10. ~~**CONTRIBUTING.md doesn't mention `docs/status/` convention** — New contributors (or AI sessions) writing status reports need to know the naming convention and location. The CONTRIBUTING.md should document this.~~ done — CONTRIBUTING.md gained a Status Reports section (2026-09-03 docs-health run).
+10. ~~**CONTRIBUTING.md doesn't mention `docs/status/` convention** — New contributors (or AI sessions) writing status reports need to know the naming convention and location. The CONTRIBUTING.md should document this.~~ done at `7f489ac` — CONTRIBUTING.md gained a Status Reports section (2026-09-03 docs-health run).
 
 ---
 
@@ -179,14 +179,14 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 ### Critical (fix my mistakes / verify my claims)
 
 1. ~~**Commit the uncommitted `AGENTS.md` changes** — `git status` shows `M AGENTS.md`. Ensure it's committed before session ends.~~ done — committed by the auto-git daemon.
-2. ~~**Audit AGENTS.md against `agents-quality-guide.md` endurance test** — Prune temporal pollution, verify every line passes the "true in 6 months" test.~~ done — audited in the 2026-09-03 docs-health run; refreshed to v0.0.2 / Go 1.26.7, no pollution found.
-3. ~~**Verify annotation completeness** — Read each status report fully and confirm every numbered item in sections d/e/f/g is either struck through, routed, or explicitly left open. The grep-based check I used is insufficient.~~ done — completed in the 2026-09-03 docs-health run.
+2. ~~**Audit AGENTS.md against `agents-quality-guide.md` endurance test** — Prune temporal pollution, verify every line passes the "true in 6 months" test.~~ done at `7f489ac` — audited in the 2026-09-03 docs-health run; refreshed to v0.0.2 / Go 1.26.7, no pollution found.
+3. ~~**Verify annotation completeness** — Read each status report fully and confirm every numbered item in sections d/e/f/g is either struck through, routed, or explicitly left open. The grep-based check I used is insufficient.~~ done at `bc20c90` — completed in the 2026-09-03 docs-health run.
 4. ~~**Verify TODO_LIST items against code** — Grep `probe_test.go` for stress tests, concurrent tests, snapshot tests before assuming they're missing.~~ done at `3f56a5b` — every row re-verified; stale CONTRIBUTING row deleted, evidence refreshed.
-5. ~~**Read `docs-health/references/resolving-items.md`** — Check whether my annotation format follows the prescribed patterns for all item types.~~ done — loaded and applied in the 2026-09-03 pass.
+5. ~~**Read `docs-health/references/resolving-items.md`** — Check whether my annotation format follows the prescribed patterns for all item types.~~ done at `bc20c90` — loaded and applied in the 2026-09-03 pass (report `bc20c90`).
 
 ### High Priority
 
-6. ~~**Verify `flake.nix` builds** — `nix develop -c bash -c "go test ./..."` and `nix flake check`. Written 2 sessions ago, never executed. May have hash mismatches.~~ done — `nix flake check` passed (19-11 session); re-verified 2026-09-03.
+6. ~~**Verify `flake.nix` builds** — `nix develop -c bash -c "go test ./..."` and `nix flake check`. Written 2 sessions ago, never executed. May have hash mismatches.~~ done — `nix flake check` passed (19-11 session); re-verified in the 2026-09-03 run (report `bc20c90`).
 7. **Set up GitHub Actions CI pipeline** — `go test -race`, `go vet`, `golangci-lint run`, `govulncheck`, `gosec`, `nix flake check`.
 8. **Run `doanalyzerv2`** — 4 sessions unverified. Find a way: build from source outside sandbox, ask user, or use a nix overlay.
 9. ~~**Curate `.golangci.yml` for this project** — Don't blindly copy `go-sse`. Remove linters that don't add value for a 4-file library.~~ done at `3e7411b` — curated, 0 violations, config verified.
@@ -198,8 +198,8 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 13. ~~**Add "Blocked" section to TODO_LIST** — Separate the 4 BLOCKED items from actionable TODO items for clarity.~~ **Won't implement — the Status column already distinguishes BLOCKED rows.**
 14. ~~**Add commit hashes to CHANGELOG entries** — Each `[Unreleased]` item should cite the commit that introduced it.~~ **Won't implement — Keep a Changelog format; traceability via git log.**
-15. ~~**Add "See also" section to README** — Link to FEATURES.md, TODO_LIST.md, ROADMAP.md.~~ done — Project Docs section added (2026-09-03 docs-health run).
-16. ~~**Document `docs/status/` convention in CONTRIBUTING.md** — Naming pattern, when to write reports.~~ done — Status Reports section added (2026-09-03 docs-health run).
+15. ~~**Add "See also" section to README** — Link to FEATURES.md, TODO_LIST.md, ROADMAP.md.~~ done at `7f489ac` — Project Docs section added (2026-09-03 docs-health run).
+16. ~~**Document `docs/status/` convention in CONTRIBUTING.md** — Naming pattern, when to write reports.~~ done at `7f489ac` — Status Reports section added (2026-09-03 docs-health run).
 17. **Decide: should panic recovery treat critical services as fail?** — A panicking critical service arguably should produce StatusFail, not StatusWarn. → TODO_LIST (Medium Impact)
 18. **Add `Probe.Status() Status` method** — Programmatic health query without HTTP overhead. → ROADMAP (Theme 1)
 19. **Add debounce/throttle for live evaluation mode** — `WithRefreshInterval(0)` has no DOS protection. → ROADMAP (Theme 3)

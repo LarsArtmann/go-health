@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.0.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+> **Stability:** v0.0.2 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
 
 ---
 
@@ -149,6 +149,7 @@ func main() {
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
 - **GET-only enforcement** — `WithGETOnly()` rejects non-GET with 405.
 - **Panic-proof** — panics from misbehaving recorders or services are recovered and reported as failed checks, never crashing your process.
+- **Read-only accessors** — `CachedResponse()` and `RefreshInterval()` let dashboards and middleware read cached health state without triggering a synchronous evaluation.
 - **Config validation** — `Start()` validates configuration and returns an error on invalid settings (zero/negative timeout, negative refresh interval).
 - **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch.
 
@@ -287,6 +288,13 @@ nix run .#test       # Run tests
 nix run .#test-race  # Run tests with race detector
 nix run .#lint       # Run golangci-lint
 ```
+
+## Project Docs
+
+- [FEATURES.md](FEATURES.md) — honest feature inventory by status
+- [TODO_LIST.md](TODO_LIST.md) — current work items
+- [ROADMAP.md](ROADMAP.md) — long-term direction and non-goals
+- [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md) — domain glossary
 
 ## License
 

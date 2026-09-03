@@ -56,6 +56,7 @@ Raw ideas:
 
 - Implement `do.HealthcheckerWithContext` on Probe for self-registration
 - Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle
+- Remove `do.Injector` from the `HealthRecorder` interface signature (the current `RecordHealthCheckWithContext(ctx, injector)` shape forces every consumer to know the container type, even after the Probe itself stopped holding one)
 - `WithCriticalService(name string, critical bool)` for per-service toggle at runtime
 - Child-scope isolation for multi-tenant health checks
 - `WithProbeName(string)` for multi-probe setups in one process
@@ -93,4 +94,4 @@ Things we are deliberately NOT pursuing and why:
 - **Per-service timeout within this library:** samber/do already provides `do.WithHealthCheckTimeout`. This library controls only the outer batch deadline. Duplicating per-service logic here adds complexity for no benefit.
 - **Direct logging:** Libraries must not make logging decisions for the host application. Observability should be injected, not hardcoded. A `WithLogger` option was considered and rejected as anti-pattern coupling.
 - **Error library adoption:** Sentinel errors via stdlib `errors.New` / `fmt.Errorf` are sufficient for config-validation errors matched via `errors.Is`. Adopting oops, go-error-family, or cockroachdb/errors adds a dependency for marginal value.
-- **JSON v2 dependency:** The package only needs `encoding/json` for a simple struct. No `GOEXPERIMENT=jsonv2` needed.
+- **Non-stdlib serialization:** Responses serialize through the stdlib `encoding/json/v2` package (migrated from `encoding/json` in v0.0.2+). Third-party JSON or serialization libraries stay out of scope.

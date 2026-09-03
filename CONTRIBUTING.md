@@ -45,6 +45,13 @@ golangci-lint run ./...
 
 5. Submit a pull request
 
+## Status Reports
+
+Significant sessions may add a point-in-time snapshot to `docs/status/`, named
+`YYYY-MM-DD_HH-MM_<slug>.md`. These are historical records: never rewrite them.
+Resolve their numbered items inline (strikethrough + commit hash) once the work
+ships elsewhere, and archive fully-resolved reports under `docs/status/archived/`.
+
 ## Code Conventions
 
 - **Single package** — all code lives in package `health`. No sub-packages.

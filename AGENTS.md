@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Package**: `health` · **Go**: 1.26.5 · **Status**: v0.0.1 (alpha)
+**Module**: `github.com/larsartmann/go-health` · **Package**: `health` · **Go**: 1.26.7 · **Status**: v0.0.2 (alpha)
 
 ---
 

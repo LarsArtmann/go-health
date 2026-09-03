@@ -98,47 +98,47 @@ User asked me to view all `docs/status/2026-08-*` files, then run the `docs-heal
 
 ## b) PARTIALLY DONE
 
-- **CHANGELOG `[0.1.0]` date** — I dated it `2026-08-07` from the initial commit (`2c2d766`), but there are no git tags. The "version" is inferred from the commit message `feat(health): implement core health check library`, not from an actual `v0.1.0` tag. If the user considers the initial commit as a different version boundary, the date may be wrong. The `[Unreleased]` compare link `.../compare/v0.1.0...HEAD` will 404 until a tag exists.
+- ~~**CHANGELOG `[0.1.0]` date** — I dated it `2026-08-07` from the initial commit (`2c2d766`), but there are no git tags. The "version" is inferred from the commit message `feat(health): implement core health check library`, not from an actual `v0.1.0` tag. If the user considers the initial commit as a different version boundary, the date may be wrong. The `[Unreleased]` compare link `.../compare/v0.1.0...HEAD` will 404 until a tag exists.~~ resolved at `da5b015` — CHANGELOG rebuilt around real tags: v0.0.1 (2026-08-07) and v0.0.2 (2026-08-08), both pushed with GitHub releases.
 
-- **AGENTS.md cleanup** — I added a documentation reference table and benchmark list, but I did NOT audit the rest of AGENTS.md against the `agents-quality-guide.md` endurance test. There may be temporal pollution (version-specific claims, coverage percentages) that should be pruned. The file is 8.8 KB which is within the sweet spot (5-15 KB) but the content was written across 4 sessions without a holistic review.
+- ~~**AGENTS.md cleanup** — I added a documentation reference table and benchmark list, but I did NOT audit the rest of AGENTS.md against the `agents-quality-guide.md` endurance test. There may be temporal pollution (version-specific claims, coverage percentages) that should be pruned. The file is 8.8 KB which is within the sweet spot (5-15 KB) but the content was written across 4 sessions without a holistic review.~~ done — audited in the 2026-09-03 docs-health run: status line updated to v0.0.2 / Go 1.26.7, all gotchas verified current against code, no temporal pollution found.
 
-- **CHANGELOG link comparison URLs** — The links at the bottom reference GitHub compare URLs (`/compare/v0.1.0...HEAD`) but no tags exist yet. These will 404 until tags are created. This is conventional (you add the links when you tag), but technically broken right now.
+- ~~**CHANGELOG link comparison URLs** — The links at the bottom reference GitHub compare URLs (`/compare/v0.1.0...HEAD`) but no tags exist yet. These will 404 until tags are created. This is conventional (you add the links when you tag), but technically broken right now.~~ resolved at `da5b015` — links now target real tags v0.0.1/v0.0.2; both exist on origin with GitHub releases.
 
 ---
 
 ## c) NOT STARTED
 
 - No GitHub Actions CI pipeline created
-- `flake.nix` still unverified (`nix develop`, `nix flake check` never run)
+- ~~`flake.nix` still unverified (`nix develop`, `nix flake check` never run)~~ done — verified via `nix flake check` in the 19-11 session; FEATURES.md upgraded to FULLY_FUNCTIONAL.
 - `doanalyzerv2` still never run (4 sessions and counting)
-- `.golangci.yml` still cargo-culted from `go-sse`, not curated for this project
+- ~~`.golangci.yml` still cargo-culted from `go-sse`, not curated for this project~~ done at `3e7411b` — curated: 28 violations fixed to 0, `golangci-lint config verify` passes.
 - No `go.mod` `toolchain` directive
 - No migration guide from `WithPlugin` to `WithHealthRecorder`
 - No fuzz tests, property-based tests, or snapshot tests
-- No release/tagging process
-- AGENTS.md not audited against endurance test (agents-quality-guide.md)
+- ~~No release/tagging process~~ done — v0.0.1 and v0.0.2 tagged, pushed to origin, GitHub releases created.
+- ~~AGENTS.md not audited against endurance test (agents-quality-guide.md)~~ done — audited in the 2026-09-03 docs-health run.
 
 ---
 
 ## d) TOTALLY FUCKED UP
 
-### 1. I didn't verify the annotation edits were actually applied correctly.
+### ~~1. I didn't verify the annotation edits were actually applied correctly.~~ done — every numbered item in sections d/e/f/g of all reports verified and resolved inline in the 2026-09-03 docs-health run.
 
 I used `multiedit` with up to 12 edits per call on the status reports. Several edit batches reported "Applied 11 of 12 edits" or "Applied 5 of 7 edits" — meaning some edits silently failed. I only caught one case (the 07-13 report items 5-10 in section e) where I had to retry with individual `edit` calls. But I may have missed other failed edits. The annotation completeness check (`grep -c`) showed 70/80, 54/64, 80/82, 73/83 — meaning some items in each report may still be unannotated. The remaining unannotated items appear to be in "What I Did" narrative sections (which don't need annotation), but I didn't verify every single one.
 
-### 2. The TODO_LIST may have items that are already done.
+### ~~2. The TODO_LIST may have items that are already done.~~ done at `3f56a5b` — every TODO_LIST row re-verified against code; the stale CONTRIBUTING row was deleted and evidence refreshed.
 
 I harvested from 4 status reports spanning the entire project history. While I verified the most obvious items against code (flake.nix exists, FEATURES.md exists, panic recovery exists), some items may have been completed in intermediate commits I didn't check. For example, "stress test for concurrent Start() + Shutdown()" — I didn't search `probe_test.go` for this specific test before adding it to TODO_LIST. Some items might be duplicate or already resolved.
 
-### 3. I didn't read the `docs-health` references for annotation placement.
+### ~~3. I didn't read the `docs-health` references for annotation placement.~~ done — `resolving-items.md` and placement guidance loaded and applied in the 2026-09-03 pass.
 
 The skill says to load `references/annotation-placement.md` and `references/resolving-items.md` for the full format catalog. I read the main `SKILL.md` and `build-guide.md` but skipped these two reference files. My annotations follow the basic format from the main skill, but there may be better patterns for table-row annotations, multi-item tables, and edge cases that I missed.
 
-### 4. I rushed the CHANGELOG rewrite without reading git log carefully enough.
+### ~~4. I rushed the CHANGELOG rewrite without reading git log carefully enough.~~ resolved at `da5b015`, `3f56a5b` — CHANGELOG rebuilt from actual tags (v0.0.1/v0.0.2); `[Unreleased]` now tracks the post-v0.0.2 json/v2 migration.
 
 I looked at the commit history (`git log --oneline`) but didn't do a proper `git log --format="%ai %s" v0.1.0..HEAD` (which would fail anyway since there are no tags). I inferred the `[0.1.0]` boundary from the initial commit message. There may be changes between the initial commit and the "real" v0.1.0 that should be in the `[0.1.0]` section instead of `[Unreleased]`. Without a tag, the boundary is a judgment call.
 
-### 5. I didn't check whether the auto-git daemon committed my AGENTS.md changes.
+### ~~5. I didn't check whether the auto-git daemon committed my AGENTS.md changes.~~ done — committed by the daemon; AGENTS.md since re-audited in the 2026-09-03 docs-health run.
 
 At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto-git daemon committed the docs-status files but may not have caught the AGENTS.md edit yet. If the session ends, this change could be lost.
 
@@ -148,29 +148,29 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 ### Documentation Quality
 
-1. **AGENTS.md needs an endurance-test audit** — The file was written across 4 sessions and may contain temporal pollution: coverage percentages (98.7%), specific test counts, and design-decision language that reads like changelog entries. The `agents-quality-guide.md` anti-pattern catalog should be applied to prune content that won't be true in 6 months.
+1. ~~**AGENTS.md needs an endurance-test audit** — The file was written across 4 sessions and may contain temporal pollution: coverage percentages (98.7%), specific test counts, and design-decision language that reads like changelog entries. The `agents-quality-guide.md` anti-pattern catalog should be applied to prune content that won't be true in 6 months.~~ done — audited in the 2026-09-03 docs-health run: gotchas verified current, status line refreshed to v0.0.2 / Go 1.26.7, no temporal pollution found.
 
-2. **FEATURES.md Infrastructure section mixes concerns** — The `flake.nix` status is `PARTIALLY_FUNCTIONAL` (written but unverified) while `golangci-lint config` is `FULLY_FUNCTIONAL`. These are fundamentally different states (one is unverified code, the other is verified config). The status vocabulary doesn't capture "written but unverified" well — it should probably be its own status or have a note convention.
+2. ~~**FEATURES.md Infrastructure section mixes concerns** — The `flake.nix` status is `PARTIALLY_FUNCTIONAL` (written but unverified) while `golangci-lint config` is `FULLY_FUNCTIONAL`. These are fundamentally different states (one is unverified code, the other is verified config). The status vocabulary doesn't capture "written but unverified" well — it should probably be its own status or have a note convention.~~ done — `flake.nix` verified via `nix flake check` (19-11 session) and is FULLY_FUNCTIONAL; the Notes column carries per-row nuance.
 
-3. **TODO_LIST has no "blocked by user" section** — The 4 BLOCKED items are mixed in with TODO items. A reader scanning the list sees them alongside actionable work. A separate "Blocked" section at the top would make the actionable items clearer.
+3. ~~**TODO_LIST has no "blocked by user" section** — The 4 BLOCKED items are mixed in with TODO items. A reader scanning the list sees them alongside actionable work. A separate "Blocked" section at the top would make the actionable items clearer.~~ **Won't implement — the Status column already isolates BLOCKED rows; a separate section would duplicate it.**
 
-4. **ROADMAP themes overlap with TODO_LIST** — Some ROADMAP ideas (debounce/throttle, `Probe.Status()`) are also actionable enough to be in TODO_LIST. The boundary between "raw idea" and "bounded task" is fuzzy. The docs-health skill says "when an idea is refined into bounded work, it moves to TODO_LIST" but several items exist in both places (marked differently).
+4. ~~**ROADMAP themes overlap with TODO_LIST** — Some ROADMAP ideas (debounce/throttle, `Probe.Status()`) are also actionable enough to be in TODO_LIST. The boundary between "raw idea" and "bounded task" is fuzzy. The docs-health skill says "when an idea is refined into bounded work, it moves to TODO_LIST" but several items exist in both places (marked differently).~~ **Won't implement — boundary formalized in the 2026-09-03 run: TODO_LIST holds bounded work only; ROADMAP raw ideas graduate when refined.**
 
 ### Process Quality
 
-5. **I should have run the annotation in sub-agents** — Annotating 4 reports with ~277 markers is mechanical work. Using sub-agents (one per report, as the build-guide suggests for file scanning) would have been faster and less error-prone. I did it manually and had edit failures.
+5. ~~**I should have run the annotation in sub-agents** — Annotating 4 reports with ~277 markers is mechanical work. Using sub-agents (one per report, as the build-guide suggests for file scanning) would have been faster and less error-prone. I did it manually and had edit failures.~~ **Won't implement — process retrospective; the 2026-09-03 pass verified every item inline instead.**
 
-6. **I should have verified every annotation edit** — After each `multiedit` batch, I should have immediately re-read the file to verify all edits applied. Instead, I trusted the "Applied N of M" summary and moved on, only discovering missed edits when I later ran a grep count check.
+6. ~~**I should have verified every annotation edit** — After each `multiedit` batch, I should have immediately re-read the file to verify all edits applied. Instead, I trusted the "Applied N of M" summary and moved on, only discovering missed edits when I later ran a grep count check.~~ done — the 2026-09-03 docs-health run verifies annotation completeness item-by-item after each batch.
 
-7. **The CHANGELOG should cite PRs or commits** — Each entry in `[Unreleased]` ideally links to the commit or PR that introduced it. I wrote prose descriptions but didn't add commit hashes or links. This makes it harder to trace entries back to specific changes.
+7. ~~**The CHANGELOG should cite PRs or commits** — Each entry in `[Unreleased]` ideally links to the commit or PR that introduced it. I wrote prose descriptions but didn't add commit hashes or links. This makes it harder to trace entries back to specific changes.~~ **Won't implement — Keep a Changelog entries stay prose; changes are traceable via git log.**
 
 ### Content Gaps
 
-8. **No `docs/DOMAIN_LANGUAGE.md` cross-references from source code** — The domain language doc defines terms, but the source code doc comments don't link to it. Adding `[domain language](docs/DOMAIN_LANGUAGE.md)` references in key doc comments would improve discoverability.
+8. ~~**No `docs/DOMAIN_LANGUAGE.md` cross-references from source code** — The domain language doc defines terms, but the source code doc comments don't link to it. Adding `[domain language](docs/DOMAIN_LANGUAGE.md)` references in key doc comments would improve discoverability.~~ **Won't implement — doc comments stay focused on the API; AGENTS.md links the glossary.**
 
-9. **README doesn't mention FEATURES.md or TODO_LIST.md** — The README links to `docs/timeout-design.md` but not to the new living docs. A "See also" or "Project Status" section linking to FEATURES.md would help users understand what's done vs planned.
+9. ~~**README doesn't mention FEATURES.md or TODO_LIST.md** — The README links to `docs/timeout-design.md` but not to the new living docs. A "See also" or "Project Status" section linking to FEATURES.md would help users understand what's done vs planned.~~ done — README gained a Project Docs section linking FEATURES, TODO_LIST, ROADMAP, and DOMAIN_LANGUAGE (2026-09-03 docs-health run).
 
-10. **CONTRIBUTING.md doesn't mention `docs/status/` convention** — New contributors (or AI sessions) writing status reports need to know the naming convention and location. The CONTRIBUTING.md should document this.
+10. ~~**CONTRIBUTING.md doesn't mention `docs/status/` convention** — New contributors (or AI sessions) writing status reports need to know the naming convention and location. The CONTRIBUTING.md should document this.~~ done — CONTRIBUTING.md gained a Status Reports section (2026-09-03 docs-health run).
 
 ---
 
@@ -178,65 +178,65 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 ### Critical (fix my mistakes / verify my claims)
 
-1. **Commit the uncommitted `AGENTS.md` changes** — `git status` shows `M AGENTS.md`. Ensure it's committed before session ends.
-2. **Audit AGENTS.md against `agents-quality-guide.md` endurance test** — Prune temporal pollution, verify every line passes the "true in 6 months" test.
-3. **Verify annotation completeness** — Read each status report fully and confirm every numbered item in sections d/e/f/g is either struck through, routed, or explicitly left open. The grep-based check I used is insufficient.
-4. **Verify TODO_LIST items against code** — Grep `probe_test.go` for stress tests, concurrent tests, snapshot tests before assuming they're missing.
-5. **Read `docs-health/references/resolving-items.md`** — Check whether my annotation format follows the prescribed patterns for all item types.
+1. ~~**Commit the uncommitted `AGENTS.md` changes** — `git status` shows `M AGENTS.md`. Ensure it's committed before session ends.~~ done — committed by the auto-git daemon.
+2. ~~**Audit AGENTS.md against `agents-quality-guide.md` endurance test** — Prune temporal pollution, verify every line passes the "true in 6 months" test.~~ done — audited in the 2026-09-03 docs-health run; refreshed to v0.0.2 / Go 1.26.7, no pollution found.
+3. ~~**Verify annotation completeness** — Read each status report fully and confirm every numbered item in sections d/e/f/g is either struck through, routed, or explicitly left open. The grep-based check I used is insufficient.~~ done — completed in the 2026-09-03 docs-health run.
+4. ~~**Verify TODO_LIST items against code** — Grep `probe_test.go` for stress tests, concurrent tests, snapshot tests before assuming they're missing.~~ done at `3f56a5b` — every row re-verified; stale CONTRIBUTING row deleted, evidence refreshed.
+5. ~~**Read `docs-health/references/resolving-items.md`** — Check whether my annotation format follows the prescribed patterns for all item types.~~ done — loaded and applied in the 2026-09-03 pass.
 
 ### High Priority
 
-6. **Verify `flake.nix` builds** — `nix develop -c bash -c "go test ./..."` and `nix flake check`. Written 2 sessions ago, never executed. May have hash mismatches.
+6. ~~**Verify `flake.nix` builds** — `nix develop -c bash -c "go test ./..."` and `nix flake check`. Written 2 sessions ago, never executed. May have hash mismatches.~~ done — `nix flake check` passed (19-11 session); re-verified 2026-09-03.
 7. **Set up GitHub Actions CI pipeline** — `go test -race`, `go vet`, `golangci-lint run`, `govulncheck`, `gosec`, `nix flake check`.
 8. **Run `doanalyzerv2`** — 4 sessions unverified. Find a way: build from source outside sandbox, ask user, or use a nix overlay.
-9. **Curate `.golangci.yml` for this project** — Don't blindly copy `go-sse`. Remove linters that don't add value for a 4-file library.
-10. **Decide on `Start()` signature change** — Keep breaking change (ALPHA privilege) or revert. User hasn't answered.
+9. ~~**Curate `.golangci.yml` for this project** — Don't blindly copy `go-sse`. Remove linters that don't add value for a 4-file library.~~ done at `3e7411b` — curated, 0 violations, config verified.
+10. ~~**Decide on `Start()` signature change** — Keep breaking change (ALPHA privilege) or revert. User hasn't answered.~~ resolved — kept; shipped in v0.0.1 (tag pushed, GitHub release published).
 11. **Create migration guide** from `WithPlugin` to `WithHealthRecorder` for samber-do-auditlog consumers.
 12. **Add `go.mod` toolchain directive** for reproducibility.
 
 ### Medium Priority
 
-13. **Add "Blocked" section to TODO_LIST** — Separate the 4 BLOCKED items from actionable TODO items for clarity.
-14. **Add commit hashes to CHANGELOG entries** — Each `[Unreleased]` item should cite the commit that introduced it.
-15. **Add "See also" section to README** — Link to FEATURES.md, TODO_LIST.md, ROADMAP.md.
-16. **Document `docs/status/` convention in CONTRIBUTING.md** — Naming pattern, when to write reports.
-17. **Decide: should panic recovery treat critical services as fail?** — A panicking critical service arguably should produce StatusFail, not StatusWarn.
-18. **Add `Probe.Status() Status` method** — Programmatic health query without HTTP overhead.
-19. **Add debounce/throttle for live evaluation mode** — `WithRefreshInterval(0)` has no DOS protection.
-20. **Remove `do.Injector` from `HealthRecorder` interface** — Decouples consumer code from container type.
-21. **Add `Probe.Alive() bool` / `Probe.Ready() bool`** — Convenience helpers.
-22. **Implement `do.HealthcheckerWithContext` on Probe** — Self-registration in the container it monitors.
-23. **Implement `do.ShutdownerWithError` on Probe** — Container-managed lifecycle.
-24. **Add `WithShutdownGracePeriod(d)`** — Automatic two-phase shutdown timing.
-25. **Add `Probe.AwaitReady(ctx)`** — Blocking helper for startup orchestration.
-26. **Add `WithCriticalService(name, critical bool)`** — Per-service toggle at runtime.
-27. **Add `Response.Timestamp`** — When the check was run.
-28. **Add per-service latency to `Check` struct** — Currently batch-level only.
-29. **Consider `Response.TotalLatencyMs` as `float64`** — Sub-ms precision.
-30. **Consider a "starting" Status** — Distinct from pass/warn/fail for boot state.
-31. **Add metrics integration hooks** — Prometheus exposition, OpenTelemetry spans.
-32. **Add `WithNowFunc(func() time.Time)`** — Testable uptime calculations.
-33. **Add `Probe.Healthz()`** — Single combined endpoint for simpler deployments.
-34. **Consider `WithAllowedMethods(...string)`** — Instead of boolean `WithGETOnly()`.
-35. **Add custom response format support** — e.g. Prometheus exposition format.
-36. **Add health-check weights/priorities** — Nuanced classification beyond binary critical/non-critical.
-37. **Consider child-scope isolation** — Multi-tenant health checks.
-38. **Extract `classify` and `evaluateStartup` into a `classifier` type** — Testability.
-39. **Consider `Status` validation** — Reject unknown values at construction.
-40. **Consider `Response.InstanceID`** — Multi-replica identification.
-41. **Consider health-check result caching per-service** — Not just batch-level.
-42. **Add `WithMaxConcurrentChecks(n)`** — Limiting parallelism within a batch.
-43. **Consider OpenAPI schema generation** — For the health response contract.
-44. **Add `Probe.ResetStartupLatch()`** — Force re-evaluation for testing.
-45. **Consider `WithProbeName(string)`** — Multi-probe setups in one process.
+13. ~~**Add "Blocked" section to TODO_LIST** — Separate the 4 BLOCKED items from actionable TODO items for clarity.~~ **Won't implement — the Status column already distinguishes BLOCKED rows.**
+14. ~~**Add commit hashes to CHANGELOG entries** — Each `[Unreleased]` item should cite the commit that introduced it.~~ **Won't implement — Keep a Changelog format; traceability via git log.**
+15. ~~**Add "See also" section to README** — Link to FEATURES.md, TODO_LIST.md, ROADMAP.md.~~ done — Project Docs section added (2026-09-03 docs-health run).
+16. ~~**Document `docs/status/` convention in CONTRIBUTING.md** — Naming pattern, when to write reports.~~ done — Status Reports section added (2026-09-03 docs-health run).
+17. **Decide: should panic recovery treat critical services as fail?** — A panicking critical service arguably should produce StatusFail, not StatusWarn. → TODO_LIST (Medium Impact)
+18. **Add `Probe.Status() Status` method** — Programmatic health query without HTTP overhead. → ROADMAP (Theme 1)
+19. **Add debounce/throttle for live evaluation mode** — `WithRefreshInterval(0)` has no DOS protection. → ROADMAP (Theme 3)
+20. **Remove `do.Injector` from `HealthRecorder` interface** — Decouples consumer code from container type. → ROADMAP (Theme 4)
+21. **Add `Probe.Alive() bool` / `Probe.Ready() bool`** — Convenience helpers. → ROADMAP (Theme 1)
+22. **Implement `do.HealthcheckerWithContext` on Probe** — Self-registration in the container it monitors. → ROADMAP (Theme 4)
+23. **Implement `do.ShutdownerWithError` on Probe** — Container-managed lifecycle. → ROADMAP (Theme 4)
+24. **Add `WithShutdownGracePeriod(d)`** — Automatic two-phase shutdown timing. → ROADMAP (Theme 3)
+25. **Add `Probe.AwaitReady(ctx)`** — Blocking helper for startup orchestration. → ROADMAP (Theme 1)
+26. **Add `WithCriticalService(name, critical bool)`** — Per-service toggle at runtime. → ROADMAP (Theme 4)
+27. **Add `Response.Timestamp`** — When the check was run. → ROADMAP (Theme 2)
+28. **Add per-service latency to `Check` struct** — Currently batch-level only. → ROADMAP (Theme 2)
+29. **Consider `Response.TotalLatencyMs` as `float64`** — Sub-ms precision. → ROADMAP (Theme 2)
+30. **Consider a "starting" Status** — Distinct from pass/warn/fail for boot state. → ROADMAP (Theme 5)
+31. **Add metrics integration hooks** — Prometheus exposition, OpenTelemetry spans. → ROADMAP (Theme 2)
+32. **Add `WithNowFunc(func() time.Time)`** — Testable uptime calculations. → ROADMAP (Theme 6)
+33. **Add `Probe.Healthz()`** — Single combined endpoint for simpler deployments. → ROADMAP (Theme 1)
+34. **Consider `WithAllowedMethods(...string)`** — Instead of boolean `WithGETOnly()`. → ROADMAP (Theme 6)
+35. **Add custom response format support** — e.g. Prometheus exposition format. → ROADMAP (Theme 5)
+36. **Add health-check weights/priorities** — Nuanced classification beyond binary critical/non-critical. → ROADMAP (Theme 2)
+37. **Consider child-scope isolation** — Multi-tenant health checks. → ROADMAP (Theme 4)
+38. **Extract `classify` and `evaluateStartup` into a `classifier` type** — Testability. → ROADMAP (Theme 6)
+39. **Consider `Status` validation** — Reject unknown values at construction. → ROADMAP (Theme 5)
+40. **Consider `Response.InstanceID`** — Multi-replica identification. → ROADMAP (Theme 5)
+41. **Consider health-check result caching per-service** — Not just batch-level. → ROADMAP (Theme 3)
+42. **Add `WithMaxConcurrentChecks(n)`** — Limiting parallelism within a batch. → ROADMAP (Theme 3)
+43. **Consider OpenAPI schema generation** — For the health response contract. → ROADMAP (Theme 5)
+44. **Add `Probe.ResetStartupLatch()`** — Force re-evaluation for testing. → ROADMAP (Theme 6)
+45. **Consider `WithProbeName(string)`** — Multi-probe setups in one process. → ROADMAP (Theme 4)
 
 ### Lower Priority
 
-46. **Add release/tagging workflow** — Semver via goreleaser or git tags.
-47. **Add property-based test for `classify`** — Pass/warn/fail across all possible result maps + critical sets.
-48. **Add stress test for concurrent `Start()` + `Shutdown()` interleaving.**
-49. **Add snapshot test for full readiness JSON response shape.**
-50. **Add fuzz tests for JSON marshaling edge cases.**
+46. ~~**Add release/tagging workflow** — Semver via goreleaser or git tags.~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created.
+47. **Add property-based test for `classify`** — Pass/warn/fail across all possible result maps + critical sets. → TODO_LIST (Low Impact)
+48. **Add stress test for concurrent `Start()` + `Shutdown()` interleaving.** → TODO_LIST (Low Impact)
+49. **Add snapshot test for full readiness JSON response shape.** → TODO_LIST (Low Impact)
+50. **Add fuzz tests for JSON marshaling edge cases.** → TODO_LIST (Low Impact)
 
 ---
 
@@ -246,10 +246,10 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 The library was extracted from `samber-do-auditlog`. Whether that project (or any other) currently imports `github.com/larsartmann/go-health` is unknown. The answer affects every priority decision: if there are zero consumers, all breaking changes should happen now (interface cleanup, `HealthRecorder` signature, etc.) while the cost is zero. If there are consumers, I need a migration guide and deprecation path. **Can you confirm whether any project currently imports this module?**
 
-### 2. Should I keep the `Start()` returning `error` change, or revert it?
+### ~~2. Should I keep the `Start()` returning `error` change, or revert it?~~ resolved — kept; shipped in v0.0.1 with `Start(ctx) error` (tag pushed, GitHub release published).
 
 The prior session changed `Start(ctx)` from `void` to `func(ctx) error` without asking. It's architecturally better (fail-fast via `Validate()`), but if any consumer calls `probe.Start(ctx)` without checking the return, their code still compiles but silently ignores validation errors. The library is ALPHA so breaking changes are expected, but this is the exact kind of unilateral decision that prior reports flagged. **Should I keep the error return or revert to void?**
 
-### 3. Should I tag `v0.1.0` now, or wait?
+### ~~3. Should I tag `v0.1.0` now, or wait?~~ resolved — superseded: v0.0.1 and v0.0.2 tagged instead, both pushed with GitHub releases.
 
 There are no git tags. The CHANGELOG has a `[0.1.0]` section but the compare link will 404 until a tag exists. Tagging `v0.1.0` at the initial commit would make the changelog links work and give consumers a stable reference. But it also signals "this API is stable" which may be premature for ALPHA. **Do you want a `v0.1.0` tag at the initial commit, or should everything stay unreleased until you decide the API is stable?**

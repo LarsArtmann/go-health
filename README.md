@@ -1,5 +1,6 @@
 # go-health
 
+[![CI](https://github.com/larsartmann/go-health/actions/workflows/ci.yml/badge.svg)](https://github.com/larsartmann/go-health/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-health.svg)](https://pkg.go.dev/github.com/larsartmann/go-health)
 [![Go Report Card](https://goreportcard.com/badge/github.com/larsartmann/go-health)](https://goreportcard.com/report/github.com/larsartmann/go-health)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

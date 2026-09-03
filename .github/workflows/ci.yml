@@ -1,0 +1,84 @@
+# CI — every push and PR runs the same gates the maintainer runs locally
+# (nix run .#<gate>), so "green locally" and "green on CI" can never drift.
+#
+# Gates not expressible here: `erraudit ./... --type-aware`. The erraudit tool
+# lives in a private repository, so CI cannot fetch it. It remains a documented
+# local gate — see CONTRIBUTING.md.
+#
+# Recommended branch protection for master: require the four jobs below plus
+# linear history. This file provides the check names CI reports.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (race)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+
+      - name: Run tests with race detector
+        run: nix run .#test-race
+
+  static-analysis:
+    name: Vet + Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+
+      - name: go vet
+        run: nix run .#vet
+
+      - name: golangci-lint
+        run: nix run .#lint
+
+  security:
+    name: Security (govulncheck + gosec)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+
+      - name: govulncheck
+        run: nix run .#vulncheck
+
+      - name: gosec
+        run: nix run .#security
+
+  flake:
+    name: Flake + Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+
+      - name: nix flake check (includes formatting)
+        run: nix flake check

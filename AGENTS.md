@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Package**: `health` · **Go**: 1.26.7 · **Status**: v0.0.2 (alpha)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate` · **Go**: 1.26.7 · **Status**: v0.0.2 (alpha)
 
 ---
 
@@ -36,6 +36,13 @@ probe.go    — Probe struct, config struct, 7 Option functional options (write 
 handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, writeResponse
 ```
 
+Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
+`health.Response`: `Source{Name, Probe}`, `New(sources...) (*Aggregate, error)` (rejects empty,
+duplicate, or nil sources), `CachedResponse` (merge-on-read: N lock-free loads, worst-of status,
+`"source/check"` namespacing, shutdown overlay, max latency), `RefreshInterval` (slowest source),
+`StartupComplete` (AND of latches), the three kubelet handlers (liveness 200, readiness 503 on
+fail, startup 503 until all latches), `RegisterRoutes`.
+
 ### Key Design Decisions
 
 - **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
@@ -46,7 +53,13 @@ handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoute
 - **GET-only enforcement** — `WithGETOnly()` wraps all handlers to reject non-GET with 405 + `Allow: GET` header. Off by default.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly.
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down).
-- **Stdlib errors by design** — sentinels (`ErrInvalidTimeout`, `ErrInvalidRefreshInterval`) use `errors.New`; `Validate()` wraps them with `fmt.Errorf("%w: ...")` to include the offending value and remediation. No error library (samber/oops, go-error-family, cockroachdb/errors) is adopted: this is a single-dependency library whose only Go-level errors are config-validation sentinels matched via `errors.Is`, not errors at an HTTP/CLI boundary that need classification. HTTP failures are communicated via status codes, not error returns.
+- **`aggregate` is passive and lock-free by construction** — merge-on-read: every read performs
+  one atomic `CachedResponse` load per source. No goroutines, no scheduler, no staleness of its
+  own; freshness is bounded by the slowest source's refresh interval. Scalars (`Version`,
+  `Uptime`) deliberately do not survive a merge — they are per-process and would lie in an
+  aggregate view.
+- **Stdlib errors by design** — sentinels (`ErrInvalidTimeout`, `ErrInvalidRefreshInterval`,
+  `aggregate.ErrNoSources`, `aggregate.ErrInvalidSource`) use `errors.New`; `Validate()` wraps them with `fmt.Errorf("%w: ...")` to include the offending value and remediation. No error library (samber/oops, go-error-family, cockroachdb/errors) is adopted: this is a single-dependency library whose only Go-level errors are config-validation sentinels matched via `errors.Is`, not errors at an HTTP/CLI boundary that need classification. HTTP failures are communicated via status codes, not error returns.
 - **Injector resolved at construction** — `New` captures the health-check capability into a `healthCheckFunc` via the `resolveHealthCheck` free function. Options write to a construction-only `config` struct, not the `Probe` directly. The Probe never stores `do.Injector` or `HealthRecorder` as fields, avoiding the injector-in-service anti-pattern (DO-6) and eliminating dead construction-only fields.
 - **Panic recovery in health checks** — `runHealthChecks` recovers panics from misbehaving recorders or services and converts them to synthetic errors. A panicking recorder shows up as a failed `health-check` entry instead of crashing the process.
 - **Validate-on-Start** — `Start()` calls `Validate()` and returns an error on invalid configuration (zero/negative timeout, negative refresh interval). Fail-fast instead of silent runtime degradation.
@@ -87,10 +100,14 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 - **samber/do v2.1.0 behavior** — never-invoked lazy services appear in `HealthCheckWithContext` results with nil error. Eagerly invoke critical services at boot for the startup probe to be meaningful.
 - **Three-state classify** — `classify` returns `pass`/`warn`/`fail`. The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
 - **Config validation** — `Probe.Validate()` checks `timeout > 0` and `refreshInterval >= 0`. `Start()` calls `Validate()` and returns an error on invalid config — callers should check the error from `Start()`.
-- **No GOEXPERIMENT=jsonv2 needed** — this package only depends on `samber/do/v2` + stdlib. No templ, no go-output, no SSE infrastructure.
+- **GOEXPERIMENT=jsonv2 IS required since the jsonv2 migration** — `handlers.go` (and
+  `aggregate/aggregate.go`) import `encoding/json/v2`. Run all Go commands with
+  `GOEXPERIMENT=jsonv2` (older revisions of this file claimed otherwise; that predates the
+  migration). Set `GOWORK=off` to avoid workspace interference.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
 - **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.
 - **`WithTimeout` is batch-level, not per-service** — the deadline is shared across all services in one evaluation. A slow dependency steals time from every other check. samber/do exposes `HealthCheckTimeout` (per-service) via `InjectorOpts` at injector creation time. See [docs/timeout-design.md](docs/timeout-design.md) for the full analysis, including why HTTP query-param timeout overrides are rejected (DoS amplifier + breaks caching).
+- **`aggregate` sources must be eagerly invoked too** — the samber/do lazy-service gotcha applies per source: a source probe whose services were never invoked health-checks as pass, and the aggregate propagates that false confidence. Invoke critical services at boot.
 
 ---
 

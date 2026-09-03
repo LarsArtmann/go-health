@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Nothing yet.
+
+## [0.1.0] - 2026-09-04
+
+### Added
+
+- New `aggregate` sub-package: merge multiple in-process `*health.Probe`
+  instances into a single health surface. `aggregate.New(sources...)` combines
+  N probes (unique non-empty names, non-nil probes) into one `*Aggregate` with
+  the full go-health-compatible surface: `CachedResponse` (merge-on-read,
+  worst-of status, `"source/check"` namespaced keys, shutdown overlay),
+  `RefreshInterval` (slowest source), `StartupComplete` (AND of startup
+  latches), liveness/readiness/startup handlers, and `RegisterRoutes`.
+  Purely additive — no changes to the root `health` package.
+
 ### Changed
 
 - Migrated JSON serialization from `encoding/json` to `encoding/json/v2`

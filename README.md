@@ -22,6 +22,7 @@ Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a s
 - [Key Features](#key-features)
 - [Configuration Reference](#configuration-reference)
 - [Shutdown Awareness](#shutdown-awareness)
+- [Aggregating Multiple Probes](#aggregating-multiple-probes)
 - [Audit Integration](#audit-integration)
 - [Kubernetes Wiring](#kubernetes-wiring)
 - [Troubleshooting](#troubleshooting)
@@ -217,6 +218,29 @@ probe.MarkShuttingDown()
 // Phase 2: stop background loop
 probe.Shutdown()
 ```
+
+## Aggregating Multiple Probes
+
+One process can embed several independently configured probes — one per logical service or tenant — and expose their combined state as a single go-health surface via the [`aggregate`](aggregate/) sub-package:
+
+```go
+import "github.com/larsartmann/go-health/aggregate"
+
+apiProbe := health.New(apiInjector, health.WithCriticalServices("db"))
+webProbe := health.New(webInjector, health.WithCriticalServices("db", "cache"))
+
+agg, err := aggregate.New(
+    aggregate.Source{Name: "api", Probe: apiProbe},
+    aggregate.Source{Name: "web", Probe: webProbe},
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+agg.RegisterRoutes(mux, health.DefaultRoutes())
+```
+
+The aggregate is passive: it adds no goroutines and merges on read (one lock-free cache load per source), so freshness is bounded by the slowest source's refresh interval. Overall status is the worst of the sources; every check is namespaced `source/check`, which keeps keys collision-free and gives consumers a stable grouping axis. Liveness stays dependency-blind (always 200); readiness is 503 on `fail` or any source shutting down; startup latches only when every source has booted.
 
 ## Audit Integration
 

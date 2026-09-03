@@ -157,17 +157,25 @@ func (p *Probe) buildStartupResponse(results map[string]error) Response {
 	return resp
 }
 
+// marshalResponse is the single serialization seam for health responses.
+// It is a package variable only so tests can force the marshal-error branch;
+// production code must never swap it.
+var marshalResponse = func(resp Response) ([]byte, error) {
+	return json.Marshal(resp, json.Deterministic(true))
+}
+
 // writeResponse serialises the health response as JSON with the given status code.
 func writeResponse(w http.ResponseWriter, code int, resp Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
-	payload, err := json.Marshal(resp, json.Deterministic(true))
+	payload, err := marshalResponse(resp)
 	if err != nil {
 		// Defensive: Response only contains basic types (string, bool, int64,
 		// map[string]Check) so json.Marshal cannot fail today. This branch
-		// guards against future fields that might introduce marshal errors.
-		http.Error(w, "health: failed to encode response", http.StatusInternalServerError)
+		// guards against future fields that might introduce marshal errors,
+		// and includes the underlying cause so a regression is debuggable.
+		http.Error(w, "health: failed to encode response: "+err.Error(), http.StatusInternalServerError)
 
 		return
 	}

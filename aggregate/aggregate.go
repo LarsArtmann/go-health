@@ -251,8 +251,9 @@ func writeResponse(w http.ResponseWriter, code int, resp health.Response) {
 	payload, err := json.Marshal(resp, json.Deterministic(true))
 	if err != nil {
 		// Defensive: Response only contains basic types so json.Marshal
-		// cannot fail today. Mirrors the root package's guard.
-		http.Error(w, "aggregate: failed to encode response", http.StatusInternalServerError)
+		// cannot fail today. Mirrors the root package's guard, including
+		// the underlying cause in the body.
+		http.Error(w, "aggregate: failed to encode response: "+err.Error(), http.StatusInternalServerError)
 
 		return
 	}

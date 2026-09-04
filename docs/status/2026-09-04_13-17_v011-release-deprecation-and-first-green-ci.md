@@ -274,7 +274,7 @@ green against HEAD via replace.
 12. Decide SA1019 policy for in-repo use of deprecated symbols (pin-tests vs
     nolint), record in `.golangci.yml` or AGENTS.
 13. Add SECURITY.md (disclosure contact for the public module).
-14. Verify dependabot covers both `gomod` and `github-actions` ecosystems.
+14. ~~Verify dependabot covers both `gomod` and `github-actions` ecosystems.~~ verified — `.github/dependabot.yml` covers both (weekly).
 15. Add PR template (Dependabot PRs benefit; issue templates exist).
 16. Optional: coverage-threshold job (fail < 97%) — policy decision.
 17. Optional: dependabot/renovate auto-merge rules for patch bumps.
@@ -311,17 +311,17 @@ green against HEAD via replace.
 
 **Docs / polish**
 
-35. Top up `done at <hash>` citations in the two 2026-08-07 reports.
-36. Add a short "Middleware" section to README (link the design note +
-    example).
-37. Add "Metrics" section to README (hook + Prometheus pattern).
-38. Add troubleshooting entry: "405 with Allow header" (method-set guard).
-39. Troubleshooting entry: "pkg.go.dev shows old docs" (propagation lag).
-40. DOMAIN_LANGUAGE: add "deprecation" convention entry.
+35. ~~Top up `done at <hash>` citations in the two 2026-08-07 reports.~~ done — 2026-09-04 docs-health run (also `09-12`).
+36. ~~Add a short "Middleware" section to README (link the design note +
+    example).~~ done at `e366fcc`
+37. ~~Add "Metrics" section to README (hook + Prometheus pattern).~~ done at `e366fcc`
+38. ~~Add troubleshooting entry: "405 with Allow header" (method-set guard).~~ done at `e366fcc`
+39. ~~Troubleshooting entry: "pkg.go.dev shows old docs" (propagation lag).~~ done at `e366fcc`
+40. ~~DOMAIN_LANGUAGE: add "deprecation" convention entry.~~ done at `9219ebc` (plus Aggregate term and refreshed line refs)
 41. Consider retiring `TotalLatencyMs`/`shutting_down`'s always-emitted quirk
     note into the OpenAPI descriptions (already there — verify wording).
-42. Consider `.gitignore` for `coverage.out` (the clean app trashes it;
-    confirm it's ignored).
+42. ~~Consider `.gitignore` for `coverage.out` (the clean app trashes it;
+    confirm it's ignored).~~ verified moot — `*.out` is already ignored.
 
 **Strategic (needs discussion)**
 

@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate` · **Go**: 1.26.7 · **Status**: v0.0.2 (alpha)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate` · **Go**: 1.26.7 · **Status**: v0.1.1 (alpha)
 
 ---
 
@@ -15,6 +15,7 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 | `nix run .#lint`      | Run golangci-lint                |
 | `nix run .#vet`       | Run go vet                       |
 | `nix run .#coverage`  | Run tests with coverage report   |
+| `nix run .#fuzz`      | Run fuzz targets (short budget)  |
 | `nix run .#vulncheck` | Run govulncheck                  |
 | `nix run .#security`  | Run gosec                        |
 | `nix run .#build`     | Build all packages               |
@@ -77,9 +78,9 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 
 Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md).
 
-**doanalyzerv2 verified (2026-09-04):** the private `branching-flow/pkg/doanalyzerv2` AST analyzer (run via a local replace-module runner, sidestepping the nix-sandbox `go install` block) reports 0 findings for DO-1..DO-6 across all 5 source files.
+**doanalyzerv2:** the private `branching-flow/pkg/doanalyzerv2` AST analyzer (run via a local replace-module runner, sidestepping the nix-sandbox `go install` block) reports 0 findings for DO-1..DO-6 across all source files. No persisted runner exists in-repo yet — each session rebuilds it ad-hoc in `/tmp`.
 
-**Consumer verification (2026-09-04):** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard) on v0.1.0, verified compiling against HEAD (7 importing files, replace-directive build, exit 0). The `auditlog.Plugin`-as-`HealthRecorder` integration was also verified live (compile-time interface assertion + probe Start/Evaluate). Any public API change must be coordinated with the dashboard consumer.
+**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard) (still pinned below v0.1.1 via a replace directive), verified compiling against HEAD (7 importing files, replace-directive build, exit 0). The `auditlog.Plugin`-as-`HealthRecorder` integration was also verified live (compile-time interface assertion + probe Start/Evaluate). Any public API change must be coordinated with the dashboard consumer.
 
 ### Data Flow
 
@@ -104,7 +105,7 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 - Standard `testing.T` + table-driven tests. No ginkgo/testify.
 - Each test creates its own `do.Injector` — no shared state.
 - `mockRecorder` type replaces the old auditlog integration tests.
-- Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `Evaluate`.
+- Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `StartupHandler_Contention`, `CachedResponse_ParallelReads`, `Evaluate`.
 
 ---
 
@@ -151,8 +152,14 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 | [CHANGELOG.md](CHANGELOG.md)                                             | What changed in each version                                                      |
 | [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                       | Domain terms (liveness, readiness, startup, critical, etc.)                       |
 | [docs/timeout-design.md](docs/timeout-design.md)                         | Batch-level vs per-service timeout analysis                                       |
-| [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
 | [docs/panic-recovery-design.md](docs/panic-recovery-design.md)           | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces    |
+| [docs/middleware-design.md](docs/middleware-design.md)                   | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard |
+| [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md) | Metrics via `WithEvaluationHook` composition, never `client_golang`           |
+| [docs/openapi-design.md](docs/openapi-design.md) + [docs/openapi.yaml](docs/openapi.yaml) | Static OpenAPI 3.1 spec over runtime generation                |
+| [docs/classification-2.0-design.md](docs/classification-2.0-design.md)  | Rejected: weights, circuit-breaker, MaxConcurrent, per-service caching            |
+| [docs/multi-tenant-design.md](docs/multi-tenant-design.md)              | Rejected: child scopes, `WithProbeName`, runtime criticality toggles              |
+| [docs/starting-status-design.md](docs/starting-status-design.md)        | Rejected: fourth Status value, Status input validation                            |
+| [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
 | [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md) | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers    |
 | [docs/adr/](docs/adr/)                                                   | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003), recorder decoupling (004) |
 | [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                      |

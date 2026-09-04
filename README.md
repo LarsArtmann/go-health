@@ -285,6 +285,33 @@ probe := health.NewWithHealthCheck(func(ctx context.Context) map[string]error {
 }, health.WithCriticalServices("database"))
 ```
 
+## Metrics
+
+The library ships no metrics client — it provides the seam instead. `WithEvaluationHook(fn)` fires synchronously after every evaluation with the fully classified response, so a few lines of composition produce a Prometheus exposition without adding a dependency:
+
+```go
+probe := health.New(injector,
+    health.WithEvaluationHook(func(resp health.Response) {
+        healthGauge.Set(statusValue(resp.Status))
+        for name, check := range resp.Checks {
+            checkGauge.WithLabelValues(name, string(check.Status)).Set(1)
+        }
+    }),
+)
+```
+
+A complete, verified ~40-line stdlib exposition writer lives in [`prometheus_example_test.go`](prometheus_example_test.go); the design rationale is in [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md).
+
+## Middleware
+
+Handlers are plain `http.HandlerFunc`, so standard middleware composes directly — no library concept needed:
+
+```go
+mux.Handle("/readyz", authMiddleware(probe.ReadinessHandler()))
+```
+
+Wrap readiness (and startup) when they need auth or rate limiting; leave liveness unwrapped — the kubelet cannot send credentials, and liveness must never fail on auth. See [docs/middleware-design.md](docs/middleware-design.md) and the verified example in [`middleware_example_test.go`](middleware_example_test.go).
+
 ## Aggregating Multiple Probes
 
 One process can embed several independently configured probes — one per logical service or tenant — and expose their combined state as a single go-health surface via the [`aggregate`](aggregate/) sub-package:
@@ -370,6 +397,14 @@ Check whether the failing service is marked as critical. Non-critical failures r
 
 The default timeout is 5 seconds shared across ALL services. If one service is slow, it steals time from every other check. Either increase the batch timeout via `WithTimeout`, or configure per-service timeouts via `do.WithHealthCheckTimeout` at injector creation time.
 
+### 405 Method Not Allowed with an `Allow` header
+
+A method-set guard is active (`WithAllowedMethods` or the deprecated `WithGETOnly`). The `Allow` header lists every accepted method, sorted. Add the missing method to the set — or remove the guard — if a caller (e.g. a load balancer sending HEAD) is legitimate.
+
+### pkg.go.dev shows old docs
+
+pkg.go.dev picks up new versions from the module proxy with propagation lag (up to ~1h after tagging). If the latest tag is still missing, wait and re-check; the proxy itself (`go get module@version`) works immediately.
+
 ## Contributing
 
 This project uses Nix for reproducible builds. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code conventions, and PR process.
@@ -387,6 +422,9 @@ nix run .#lint       # Run golangci-lint
 - [TODO_LIST.md](TODO_LIST.md) — current work items
 - [ROADMAP.md](ROADMAP.md) — long-term direction and non-goals
 - [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md) — domain glossary
+- [docs/openapi.yaml](docs/openapi.yaml) — OpenAPI 3.1 spec for the three probes
+
+Design notes: [timeout](docs/timeout-design.md) · [panic recovery](docs/panic-recovery-design.md) · [middleware](docs/middleware-design.md) · [Prometheus exposition](docs/prometheus-exposition-design.md) · [OpenAPI](docs/openapi-design.md) · [classification 2.0](docs/classification-2.0-design.md) · [multi-tenant](docs/multi-tenant-design.md) · [starting status](docs/starting-status-design.md) · [content negotiation (rejected)](docs/content-negotiation-design.md) · [`WithPlugin` → `WithHealthRecorder` migration](docs/migration-plugin-to-recorder.md) · [ADRs](docs/adr/)
 
 ## License
 

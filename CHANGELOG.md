@@ -21,12 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.1.1] - 2026-09-04
 
-### Deprecated
-
-- `WithGETOnly()` — superseded by `WithAllowedMethods(...)` (the method-set
-  superset; `WithAllowedMethods()` with no arguments behaves identically).
-  The option keeps working and no removal is planned in the v0.x line.
-
 ### Added
 
 - doanalyzerv2 verification: 0 anti-pattern findings (DO-1..DO-6 incl. injector-in-service) across the root and aggregate packages.
@@ -86,6 +80,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   in `docs/panic-recovery-design.md`. Injector-path service panics remain
   process-fatal (samber/do runs checks in goroutines).
 - `writeResponse` marshal-failure body now includes the underlying cause.
+
+### Deprecated
+
+- `WithGETOnly()` — superseded by `WithAllowedMethods(...)` (the method-set
+  superset; `WithAllowedMethods()` with no arguments behaves identically).
+  The option keeps working and no removal is planned in the v0.x line.
 
 ### Fixed
 
@@ -152,11 +152,6 @@ evaluation through every dependency. Purely additive — no breaking changes.
   `Status=StatusFail` so load balancers and orchestrators stop routing traffic
   to a draining instance.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/larsartmann/go-health/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/larsartmann/go-health/releases/tag/v0.1.0
-[0.0.2]: https://github.com/larsartmann/go-health/releases/tag/v0.0.2
-
 ## [0.0.1] - 2026-08-07
 
 First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
@@ -183,4 +178,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/larsartmann/go-health/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/larsartmann/go-health/releases/tag/v0.1.0
+[0.0.2]: https://github.com/larsartmann/go-health/releases/tag/v0.0.2
 [0.0.1]: https://github.com/larsartmann/go-health/releases/tag/v0.0.1

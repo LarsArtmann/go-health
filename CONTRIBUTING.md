@@ -139,8 +139,10 @@ ships elsewhere, and archive fully-resolved reports under `docs/status/archived/
   worst-of/shutdown merge rules. Fuzz failures land in `testdata/fuzz/` and
   must be fixed, never deleted.
 - **Error-handling audit** — `erraudit ./... --type-aware` baseline is
-  **0 violations**. The two intentional `_, _ = w.Write` swallows carry
-  `//nolint:erraudit` with rationale; `erraudit nolint-audit .` verifies the
+  **0 violations**. The two intentional `_, _ = w.Write` swallows (root
+  `handlers.go` and `aggregate/aggregate.go` write seams) carry
+  `//nolint:erraudit` with rationale; `erraudit nolint-audit .` baseline is
+  **2 directives: 2 needed, 0 stale** (2026-09-04) and verifies the
   directives stay needed and un-stale.
 
 ## Reporting Issues

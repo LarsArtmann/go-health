@@ -86,7 +86,7 @@ DO-1..DO-6 across all source files. Invoke with
 checkout at `/home/lars/projects/branching-flow` (the replace path in
 `tools/doanalyzerv2/go.mod`).
 
-**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard) (still pinned below v0.1.1 via a replace directive), verified compiling against HEAD (7 importing files, replace-directive build, exit 0). The `auditlog.Plugin`-as-`HealthRecorder` integration was also verified live (compile-time interface assertion + probe Start/Evaluate). Any public API change must be coordinated with the dashboard consumer.
+**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires released v0.1.1 directly (NO replace directive since ~2026-09-04 — the older "pinned below v0.1.1 via replace" note is stale). Re-verified 2026-09-04 post-fix: dashboard build + vet + full test suite green against released v0.1.1, and build + tests green against go-health HEAD (temporary replace directive, restored after; HEAD incl. the instance_id sanitize fix and the aggregate slash-name validation). Consumers building against go-health need `GOEXPERIMENT=jsonv2` (json/v2 is behind the experiment on go1.26). Any public API change must be coordinated with the dashboard consumer.
 
 ### Data Flow
 

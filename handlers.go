@@ -191,5 +191,7 @@ func writeResponse(w http.ResponseWriter, code int, resp Response) {
 	// The status line is already committed so a write failure (client
 	// disconnect, broken pipe) is genuinely unrecoverable. Silently
 	// swallow — a library must not make logging decisions for the host.
-	_, _ = w.Write(payload) //nolint:erraudit // intentional: status already committed; a library must not log client disconnects
+	_, _ = w.Write(
+		payload,
+	) //nolint:erraudit // intentional: status already committed; a library must not log client disconnects
 }

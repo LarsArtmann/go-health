@@ -263,5 +263,7 @@ func writeResponse(w http.ResponseWriter, code int, resp health.Response) {
 	}
 
 	w.WriteHeader(code)
-	_, _ = w.Write(payload) //nolint:erraudit // intentional: status already committed; a library must not log client disconnects
+	_, _ = w.Write(
+		payload,
+	) //nolint:erraudit // intentional: status already committed; a library must not log client disconnects
 }

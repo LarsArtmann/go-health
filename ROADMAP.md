@@ -19,6 +19,8 @@ shipped. Remaining raw ideas:
   (patterns exist in tests/docs; promoted examples are tracked in TODO_LIST)
 - `AwaitReady` with a cache-aware poll interval (respect the source's
   refresh interval instead of a fixed 50ms poll)
+- Aggregate-level `Healthz` parity: one combined endpoint across all sources
+  (decide whether worst-of-N belongs in a single 200/503 answer)
 
 ### 2. Observability & Diagnostics
 

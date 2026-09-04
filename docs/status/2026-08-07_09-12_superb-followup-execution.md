@@ -109,17 +109,17 @@ These claims are now verified, not assumed.
 
 ## c) NOT STARTED
 
-- No CI/CD pipeline (no GitHub Actions workflow) → TODO_LIST (High Impact)
+- ~~No CI/CD pipeline (no GitHub Actions workflow)~~ done at `ea5dda0` — 4-job nix CI; green on master and the v0.1.1 tag
 - ~~No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md`~~ done at `9017c5a`
 - ~~No `docs/DOMAIN_LANGUAGE.md`~~ done at `9017c5a`
-- No fuzz tests → TODO_LIST (Low Impact)
-- No migration guide for consumers coming from samber-do-auditlog's old `WithPlugin` → TODO_LIST (Medium Impact)
-- `doanalyzerv2` never run (the samber/do static analyzer that checks for DO-6 and other anti-patterns — it's not available in nixpkgs and I couldn't install it via `go install` because the sandbox blocks the `go` command for package installation) → TODO_LIST (BLOCKED)
-- No `go.mod` `toolchain` directive → TODO_LIST (Medium Impact)
+- ~~No fuzz tests~~ done at `893d12f`
+- ~~No migration guide for consumers coming from samber-do-auditlog's old `WithPlugin`~~ done (covered by the 11-13 report §a P6; `docs/migration-plugin-to-recorder.md`)
+- ~~`doanalyzerv2` never run~~ done at `8e2b6e8` — unblocked via a local replace-module runner; 0 findings
+- ~~No `go.mod` `toolchain` directive~~ **Won't implement — moot: `go mod tidy` drops a `toolchain` line equal to the `go` directive; the hermetic pin lives in `flake.nix`**
 - ~~No release/version tagging~~ done — v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
 - ~~No `WithLogger(*slog.Logger)` option~~ Won't implement — non-goal: libraries must not log
-- No debounce/throttle for live evaluation mode → ROADMAP (Theme 3)
-- No `Probe.Status()` / `Probe.Alive()` / `Probe.Ready()` programmatic methods → ROADMAP (Theme 1)
+- ~~No debounce/throttle for live evaluation mode~~ done at `f29a64a` (`WithLiveThrottle`)
+- ~~No `Probe.Status()` / `Probe.Alive()` / `Probe.Ready()` programmatic methods~~ done at `f29a64a`
 
 ---
 
@@ -137,9 +137,9 @@ These claims are now verified, not assumed.
 
 ~~Still open — tracked in TODO_LIST (High Impact).~~ `nix develop` and `nix flake check` never run at the time.
 
-### 4. I still haven't run `doanalyzerv2`.
+### 4. ~~I still haven't run `doanalyzerv2`.~~
 
-Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` blocked by sandbox.
+done at `8e2b6e8` — unblocked in the 2026-09-04 marathon via a local replace-module runner; 0 findings for DO-1..DO-6.
 
 ### ~~5. The `.golangci.yml` may be too aggressive for a library this small.~~ done at `3e7411b` — curated, 28 violations fixed to 0, config verified.
 
@@ -151,34 +151,34 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 
 ### Code Quality
 
-1. **`runHealthChecks` panic recovery treats all panics as non-critical** — → TODO_LIST (Medium Impact)
-2. **`HealthRecorder` interface leaks `do.Injector`** — → ROADMAP (Theme 4)
-3. **No DOS protection on live evaluation mode** — → ROADMAP (Theme 3)
+1. ~~**`runHealthChecks` panic recovery treats all panics as non-critical**~~ done at `6bfac99` — fail-closed via `ErrPanicDuringHealthCheck`; design note `docs/panic-recovery-design.md`
+2. ~~**`HealthRecorder` interface leaks `do.Injector`**~~ **Won't implement for v0.x — ADR-004 froze the interface after live consumer verification; revisit at v1.0** `87bab11`
+3. ~~**No DOS protection on live evaluation mode**~~ done at `f29a64a` (`WithLiveThrottle`)
 4. **`Evaluate` doesn't respect context cancellation for the startup latch** — mitigated by implicit behavior; test at `1a388ab` verifies latch doesn't flip on timeout
 
 ### Testing Gaps
 
-5. **No test for concurrent `Start()` + `Shutdown()` interleaving** — the mutex protects `cancel`, but the exact interleaving hasn't been stress-tested with a timing-sensitive test. → TODO_LIST (Low Impact)
-6. **No fuzz tests** — JSON marshaling edge cases, handler input fuzzing. → TODO_LIST (Low Impact)
-7. **No property-based test for `classify`** — pass/warn/fail across all possible result maps + critical sets. → TODO_LIST (Low Impact)
+5. ~~**No test for concurrent `Start()` + `Shutdown()` interleaving**~~ done at `99e7511` — lifecycle stress tests
+6. ~~**No fuzz tests**~~ done at `893d12f`
+7. ~~**No property-based test for `classify`**~~ done at `99e7511` — 64-combination matrix
 
 ### Error Handling
 
-8. **`writeResponse` marshal error message is opaque** — → TODO_LIST (Low Impact)
+8. ~~**`writeResponse` marshal error message is opaque**~~ done (covered by the v0.1.1 CHANGELOG "Changed": marshal-failure body includes the underlying cause)
 
 ### Documentation
 
 9. ~~**`CONTRIBUTING.md` is still a 22-line stub**~~ done at `9017c5a`
 10. ~~**No `FEATURES.md`, `TODO_LIST.md`, `ROADMAP.md`**~~ done at `9017c5a`
 11. ~~**No `docs/DOMAIN_LANGUAGE.md`**~~ done at `9017c5a`
-12. **No migration guide** → TODO_LIST (Medium Impact)
+12. ~~**No migration guide**~~ done (covered by the 11-13 report §a P6)
 
 ### Build / CI
 
-13. **No GitHub Actions CI** → TODO_LIST (High Impact)
-14. **`flake.nix` is unverified** → TODO_LIST (High Impact)
-15. **`doanalyzerv2` never run** → TODO_LIST (BLOCKED)
-16. **No `go.mod` toolchain directive** → TODO_LIST (Medium Impact)
+13. ~~**No GitHub Actions CI**~~ done at `ea5dda0`
+14. ~~**`flake.nix` is unverified**~~ done — `nix flake check` verified (19-11 session; re-verified since)
+15. ~~**`doanalyzerv2` never run**~~ done at `8e2b6e8`
+16. ~~**No `go.mod` toolchain directive**~~ **Won't implement — moot: `go mod tidy` drops it; flake pins the toolchain hermetically**
 
 ---
 
@@ -186,22 +186,22 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 
 ### Critical (verify claims / fix mistakes)
 
-1. Run `doanalyzerv2` → TODO_LIST (BLOCKED)
+1. ~~Run `doanalyzerv2`~~ done at `8e2b6e8`
 2. ~~Verify `flake.nix` builds~~ resolved — `nix flake check` passed (19-11 session); re-verified in the 2026-09-03 run (report `bc20c90`)
 3. ~~Fix or delete `write_response_internal_test.go`~~ done at `897b571`
 4. ~~Curate `.golangci.yml`~~ done at `3e7411b` — curated, 0 violations, config verified
 
 ### High Priority
 
-5. Set up GitHub Actions CI → TODO_LIST (High Impact)
+5. ~~Set up GitHub Actions CI~~ done at `ea5dda0`
 6. ~~Create `TODO_LIST.md` with actionable short/mid-term tasks.~~ done at `9017c5a`
 7. ~~Create `FEATURES.md` with honest feature inventory by status.~~ done at `9017c5a`
 8. ~~Create `ROADMAP.md` with long-term direction.~~ done at `9017c5a`
 9. ~~Expand `CONTRIBUTING.md` with real development setup.~~ done at `9017c5a`
 10. ~~Create `docs/DOMAIN_LANGUAGE.md`.~~ done at `9017c5a`
-11. Add migration guide from `WithPlugin` to `WithHealthRecorder`. → TODO_LIST (Medium Impact)
-12. Add `go.mod` toolchain directive. → TODO_LIST (Medium Impact)
-13. Consider whether the panic recovery in `runHealthChecks` should respect critical service classification. → TODO_LIST (Medium Impact)
+11. ~~Add migration guide from `WithPlugin` to `WithHealthRecorder`.~~ done (covered by the 11-13 report §a P6)
+12. ~~Add `go.mod` toolchain directive.~~ **Won't implement — moot: `go mod tidy` drops it; flake pins the toolchain**
+13. ~~Consider whether the panic recovery in `runHealthChecks` should respect critical service classification.~~ done at `6bfac99` — all recovered panics fail closed
 
 ### Medium Priority
 
@@ -237,14 +237,14 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 
 41. ~~Add release/tagging workflow (semver via goreleaser or tags).~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created
 42. Consider per-service timeout exposure (action item #3 from timeout-design.md — still deferred as YAGNI). → ROADMAP non-goal: per-service timeout belongs to samber/do
-43. Add `Response.Timestamp` field for when the check was run. → ROADMAP (Theme 2)
-44. Consider structured error context to `writeResponse` marshal failure. → TODO_LIST (Low Impact)
-45. Add `Probe.ResetStartupLatch()` for testing (force re-evaluation). → ROADMAP (Theme 6)
-46. Consider `WithProbeName(string)` for multi-probe setups. → ROADMAP (Theme 4)
-47. Add `Response.InstanceID` for multi-replica identification. → ROADMAP (Theme 5)
-48. Consider health-check result caching per-service (not just batch-level). → ROADMAP (Theme 3)
-49. Add `WithMaxConcurrentChecks(n int)` for limiting parallelism. → ROADMAP (Theme 3)
-50. Consider OpenAPI schema generation for the health response. → ROADMAP (Theme 5)
+43. ~~Add `Response.Timestamp` field for when the check was run.~~ done at `f29a64a`
+44. ~~Consider structured error context to `writeResponse` marshal failure.~~ done (covered by the v0.1.1 CHANGELOG "Changed" entry)
+45. ~~Add `Probe.ResetStartupLatch()` for testing (force re-evaluation).~~ done (covered by the 13-17 report §a B102: test-scoped only; public latch stays one-way)
+46. ~~Consider `WithProbeName(string)` for multi-probe setups.~~ **Won't implement — rejected in `docs/multi-tenant-design.md` (aggregate namespacing + `WithInstanceID` cover it)**
+47. ~~Add `Response.InstanceID` for multi-replica identification.~~ done (covered by the 13-17 report §a P36)
+48. ~~Consider health-check result caching per-service (not just batch-level).~~ **Won't implement — rejected in `docs/classification-2.0-design.md`**
+49. ~~Add `WithMaxConcurrentChecks(n int)` for limiting parallelism.~~ **Won't implement — rejected in `docs/classification-2.0-design.md`; a custom `HealthRecorder` is the escape hatch**
+50. ~~Consider OpenAPI schema generation for the health response.~~ done (covered by the 13-17 report §a P36: static spec `docs/openapi.yaml`)
 
 ---
 
@@ -254,10 +254,10 @@ Still open — tracked in TODO_LIST (BLOCKED). Not in nixpkgs, `go install` bloc
 
 ~~Still open — tracked in TODO_LIST as BLOCKED (needs user decision).~~ The change is architecturally better (fail-fast on misconfiguration via `Validate()`), but was made without user confirmation.
 
-### 2. Should the panic recovery treat critical services differently?
+### ~~2. Should the panic recovery treat critical services differently?~~
 
-→ TODO_LIST (Medium Impact) — needs design decision: restructure to per-service panic catch (significant refactor) vs keep batch-level recovery vs treat all panics as critical.
+resolved at `6bfac99` — all recovered panics fail closed (`fail`/503) via `ErrPanicDuringHealthCheck`; injector-path service panics remain process-fatal by design (`docs/panic-recovery-design.md`).
 
-### 3. Is there a consumer of this library right now?
+### ~~3. Is there a consumer of this library right now?~~
 
-Still open — affects whether breaking changes are free or need migration paths. The library was extracted from `samber-do-auditlog` — whether that project (or any other) currently imports it is unknown.
+resolved — `go-health-dashboard` is the known consumer (compiles against HEAD via replace); `samber-do-auditlog` does NOT import go-health. Recorded in AGENTS.md "Consumer verification".

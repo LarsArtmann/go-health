@@ -50,6 +50,7 @@
 | Property-based JSON round-trip test (unmarshal → marshal identity) | TODO | Low  | 30min  | Complements the golden snapshot. 13-17 f48                                               |
 | Optional CI: validate `docs/openapi.yaml` (spectral/redocly) so it can't drift | TODO | Low | 30min | Spec is kept in lockstep only by convention today. 13-17 f30                             |
 | Document `WithLiveThrottle` × `Start`-populated cache interaction | TODO  | Low    | 15min  | Throttle only matters on cache miss; worth one paragraph. 11-13 f43                       |
+| Aggregate: fill coverage gaps (error paths in `New`, partial startup latch) | TODO | Low | 30min | 98.5% total hides package-level skew. `aggregate/aggregate_test.go`; 11-13 f37              |
 
 ## Blocked on user decisions
 

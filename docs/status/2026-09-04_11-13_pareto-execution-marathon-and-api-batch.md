@@ -15,8 +15,9 @@ fast path, a json/v2 500-on-invalid-UTF-8 crash path, and a wrong benchmark
 that would have recorded misleading baselines) and **overturned one inherited
 "fact"** (the "gopls json/v2 false positive" was wrong; GOEXPERIMENT=jsonv2 is
 required, and CI would have failed on its first run without the flake fix).
-The working tree is **currently red**: `probe.go` is missing two imports
-(`sort`, `strings`) after a daemon edit race — 2-line fix, first item in §f.
+The working tree is ~~**currently red**: `probe.go` is missing two imports
+(`sort`, `strings`) after a daemon edit race — 2-line fix, first item in §f.~~
+fixed the same day by the successor session (see Completion below).
 
 Commits this session (selected): `ea5dda0` (CI), `eb67f1c` (hermetic flake),
 `6bfac99` (panic fail-closed), `99e7511` (matrix/stress/snapshot tests),
@@ -163,56 +164,56 @@ Commits this session (selected): `ea5dda0` (CI), `eb67f1c` (hermetic flake),
 
 ## f) UP TO 50 THINGS TO DO NEXT (ordered)
 
-1. **FIX THE BUILD**: add `"sort"` + `"strings"` to probe.go imports; `go build ./...`.
-2. Run full test suite + lint after fix; confirm no dedupe残留 from the option duplication.
-3. B100: `WithNowFunc` test — fixed clock → deterministic `uptime` + `Timestamp`.
-4. B101: `WithAllowedMethods` tests — GET always OK, HEAD allowed when listed, DELETE 405, `Allow` header lists sorted set.
-5. B102: `ResetStartupLatchForTest` in `export_test.go` (package health) + AGENTS note (latch stays one-way publicly).
-6. B103: "starting" Status exploration → design note (wire-format + API consequences), no code.
-7. P28-writeup: per-service latency feasibility (do owns the batch; recorder already times) → fold into classification doc.
-8. B107: weights/priorities design note.
-9. B108: circuit-breaker + MaxConcurrent design note.
-10. B109: per-service caching design note.
-11. B104: Prometheus exposition spike (sample output in a doc; no dependency).
-12. B105: `WithInstanceID` + `Response.InstanceID` (additive, omitempty) + test + golden update.
-13. B106: OpenAPI schema exploration note.
-14. B110: multi-tenant child-scope isolation note.
-15. B111: `WithProbeName` + per-service criticality toggle note.
-16. B112: HTTP middleware design + spike snippet.
-17. P24: human read-through of all 6 annotated reports; fix anything found (B64-B65).
-18. P23: final TODO_LIST pass — re-sort, cap Low at ~8, move infra-noise to ROADMAP (B62-B63).
-19. Sync FEATURES: new API rows (accessors, Healthz, AwaitReady, NewWithHealthCheck, hook, throttle, grace, Timestamp, SanitizeResponse).
-20. Sync README: new options into Configuration Reference; Healthz into Three Probes/Troubleshooting.
-21. Sync AGENTS: architecture file list (accessors.go, classifier.go, new test files), option count (7 → 12+), concurrency model (throttleMu).
-22. Sync docs/DOMAIN_LANGUAGE.md: throttle, grace period, evaluation hook, combined endpoint.
-23. CHANGELOG `[Unreleased]`: Added (API batch, SanitizeResponse, fuzz, benchmarks), Fixed (WaitGroup race, throttle fast path), Changed (guard Allow header).
-24. Full gate sweep: test-race, lint, vet, fuzz (30s), flake check, fmt, erraudit, nolint-audit.
-25. Re-run doanalyzerv2 over the API batch (self-registration example could trip service-locator rules).
-26. Re-run consumer verification (dashboard replace-build against HEAD).
-27. Re-run coverage; update FEATURES (98.5% is pre-API-batch).
-28. Re-run benchmarks; confirm WithNowFunc refactor didn't shift baselines; update FEATURES if needed.
-29. Verify golden snapshot still passes (Timestamp omitzero must not leak into old goldens).
-30. Push master to origin (re-affirm authorization) so the CI workflow executes for real.
-31. Watch the first CI run; fix whatever remote-only failures appear (nix install time, cache cold).
+1. ~~**FIX THE BUILD**: add `"sort"` + `"strings"` to probe.go imports; `go build ./...`.~~ done (covered by the 13-17 report §a P35 build fix)
+2. ~~Run full test suite + lint after fix; confirm no dedupe残留 from the option duplication.~~ done (covered by the 13-17 report "Full gate sweep")
+3. ~~B100: `WithNowFunc` test — fixed clock → deterministic `uptime` + `Timestamp`.~~ done (covered by the 13-17 report §a P35 B100)
+4. ~~B101: `WithAllowedMethods` tests — GET always OK, HEAD allowed when listed, DELETE 405, `Allow` header lists sorted set.~~ done (covered by the 13-17 report §a P35 B101)
+5. ~~B102: `ResetStartupLatchForTest` in `export_test.go` (package health) + AGENTS note (latch stays one-way publicly).~~ done (covered by the 13-17 report §a P35 B102)
+6. ~~B103: "starting" Status exploration → design note (wire-format + API consequences), no code.~~ done (covered by the 13-17 report §a P35 B103; `docs/starting-status-design.md`)
+7. ~~P28-writeup: per-service latency feasibility (do owns the batch; recorder already times) → fold into classification doc.~~ done (covered by the 13-17 report §a P37)
+8. ~~B107: weights/priorities design note.~~ done (covered by the 13-17 report §a P37)
+9. ~~B108: circuit-breaker + MaxConcurrent design note.~~ done (covered by the 13-17 report §a P37)
+10. ~~B109: per-service caching design note.~~ done (covered by the 13-17 report §a P37)
+11. ~~B104: Prometheus exposition spike (sample output in a doc; no dependency).~~ done (covered by the 13-17 report §a P36)
+12. ~~B105: `WithInstanceID` + `Response.InstanceID` (additive, omitempty) + test + golden update.~~ done (covered by the 13-17 report §a P36)
+13. ~~B106: OpenAPI schema exploration note.~~ done (covered by the 13-17 report §a P36; `docs/openapi.yaml`)
+14. ~~B110: multi-tenant child-scope isolation note.~~ done (covered by the 13-17 report §a P38)
+15. ~~B111: `WithProbeName` + per-service criticality toggle note.~~ done (covered by the 13-17 report §a P38)
+16. ~~B112: HTTP middleware design + spike snippet.~~ done (covered by the 13-17 report §a P39)
+17. ~~P24: human read-through of all 6 annotated reports; fix anything found (B64-B65).~~ done (covered by the 13-17 report §a P23-final/P24 agent sweep)
+18. ~~P23: final TODO_LIST pass — re-sort, cap Low at ~8, move infra-noise to ROADMAP (B62-B63).~~ done (covered by the 13-17 report §a P23-final; rebuilt again in the 2026-09-04 docs-health run)
+19. ~~Sync FEATURES: new API rows (accessors, Healthz, AwaitReady, NewWithHealthCheck, hook, throttle, grace, Timestamp, SanitizeResponse).~~ done (covered by the 13-17 report §a Docs sync)
+20. ~~Sync README: new options into Configuration Reference; Healthz into Three Probes/Troubleshooting.~~ done (covered by the 13-17 report §a Docs sync)
+21. ~~Sync AGENTS: architecture file list (accessors.go, classifier.go, new test files), option count (7 → 12+), concurrency model (throttleMu).~~ done (covered by the 13-17 report §a Docs sync)
+22. ~~Sync docs/DOMAIN_LANGUAGE.md: throttle, grace period, evaluation hook, combined endpoint.~~ done (covered by the 13-17 report §a Docs sync)
+23. ~~CHANGELOG `[Unreleased]`: Added (API batch, SanitizeResponse, fuzz, benchmarks), Fixed (WaitGroup race, throttle fast path), Changed (guard Allow header).~~ done (covered by the 13-17 report §a Docs sync; cut to `[0.1.1]`)
+24. ~~Full gate sweep: test-race, lint, vet, fuzz (30s), flake check, fmt, erraudit, nolint-audit.~~ done (covered by the 13-17 report "Full gate sweep (all green)")
+25. ~~Re-run doanalyzerv2 over the API batch (self-registration example could trip service-locator rules).~~ done (covered by the 13-17 report: 7 files, 0 findings)
+26. ~~Re-run consumer verification (dashboard replace-build against HEAD).~~ done (covered by the 13-17 report: compile + tests green)
+27. ~~Re-run coverage; update FEATURES (98.5% is pre-API-batch).~~ done (covered by the 13-17 report: 98.5% recorded)
+28. ~~Re-run benchmarks; confirm WithNowFunc refactor didn't shift baselines; update FEATURES if needed.~~ done (covered by the 13-17 report gate sweep; baselines in FEATURES)
+29. ~~Verify golden snapshot still passes (Timestamp omitzero must not leak into old goldens).~~ done (covered by the 13-17 report gate sweep)
+30. ~~Push master to origin (re-affirm authorization) so the CI workflow executes for real.~~ done (covered by the 13-17 report: pushed, CI green)
+31. ~~Watch the first CI run; fix whatever remote-only failures appear (nix install time, cache cold).~~ done at `d20f481` — first run caught the missing `goPkg` toolchain; second run 4/4 green
 32. Branch protection: document requiring the 4 check names + linear history (CONTRIBUTING or repo settings).
-33. Decide + cut next release (v0.1.1 vs v0.2.0 — see question 2): finalize CHANGELOG, tag, release, verify pkg.go.dev.
-34. goreportcard: check the score behind the README badge; fix top complaints if cheap.
-35. Aggregate package: add `SanitizeResponse` integration test (it calls health.SanitizeResponse now).
+33. ~~Decide + cut next release (v0.1.1 vs v0.2.0 — see question 2): finalize CHANGELOG, tag, release, verify pkg.go.dev.~~ done (covered by the 13-17 report §a: v0.1.1 tagged, released, proxy-verified)
+34. ~~goreportcard: check the score behind the README badge; fix top complaints if cheap.~~ **Won't implement — goreportcard.com has been sunset; the badge was removed from the README** `e366fcc`
+35. ~~Aggregate package: add `SanitizeResponse` integration test (it calls health.SanitizeResponse now).~~ done at `893d12f` — aggregate marshals through `health.SanitizeResponse` (`aggregate/aggregate.go:251`)
 36. Aggregate: consider a combined `Healthz`-style handler parity decision (document if N/A).
 37. Aggregate: fill coverage gaps (error paths in `New`, startup partial) — 98.5% total hides package-level skew.
 38. Godoc examples: `ExampleNewWithHealthCheck`, `ExampleProbe_Healthz`, `ExampleWithEvaluationHook`.
 39. AwaitReady: consider cache-aware poll interval (respect refreshInterval instead of fixed 50ms).
-40. Document Healthz's "don't use for kubelet" guidance prominently (three-probe split is the k8s answer).
+40. ~~Document Healthz's "don't use for kubelet" guidance prominently (three-probe split is the k8s answer).~~ done at `5a79775` — README Programmatic Health API section scopes `Healthz()` to single-endpoint deployments
 41. CONTRIBUTING: add "adding a new Option" checklist (config field + Probe field + assemble + docs + test).
-42. Move P36-P39 design notes into ROADMAP themes as they land; mark original ROADMAP raw ideas addressed.
+42. ~~Move P36-P39 design notes into ROADMAP themes as they land; mark original ROADMAP raw ideas addressed.~~ done at `5a79775` — ROADMAP links every design note; shipped ideas marked
 43. Consider `WithLiveThrottle` interaction with `Start`-populated cache (currently throttle only matters cache-miss; document).
-44. `ProbeShutdowner`: add example showing self-registration via `do.Provide`.
-45. Re-check gopls stdversion warnings after toolchain moves; keep AGENTS gotcha current.
-46. Clean up: kill accumulated background shells / avoid pool saturation next session.
-47. Status report for the API batch itself (this report covers execution; API design deserves its own if shipped).
-48. Annotate this session's open threads into TODO_LIST with evidence pointers.
-49. Re-verify `erraudit nolint-audit .` after any new nolint added by the API batch (none expected).
-50. Celebrate v0.1.x, then start ROADMAP Theme graduation planning (weights/circuit-breaker decisions need product input, not just notes).
+44. ~~`ProbeShutdowner`: add example showing self-registration via `do.Provide`.~~ **NOT-DO/DUPLICATE — subsumed by the godoc-examples TODO_LIST row (item 38)**
+45. ~~Re-check gopls stdversion warnings after toolchain moves; keep AGENTS gotcha current.~~ done (covered by the AGENTS.md gopls/jsonv2 gotcha: expected and benign while the experiment is enabled)
+46. ~~Clean up: kill accumulated background shells / avoid pool saturation next session.~~ **Won't implement — session hygiene note, not project work**
+47. ~~Status report for the API batch itself (this report covers execution; API design deserves its own if shipped).~~ done (covered by the 13-17 report)
+48. ~~Annotate this session's open threads into TODO_LIST with evidence pointers.~~ done (covered by the 2026-09-04 docs-health TODO_LIST rebuild)
+49. ~~Re-verify `erraudit nolint-audit .` after any new nolint added by the API batch (none expected).~~ done (covered by the 13-17 report gate sweep: 2 needed, 0 stale)
+50. ~~Celebrate v0.1.x, then start ROADMAP Theme graduation planning (weights/circuit-breaker decisions need product input, not just notes).~~ done at `5a79775` — ROADMAP pruned: themes marked shipped or decided-against with design-note links
 
 ## g) QUESTIONS ONLY YOU CAN ANSWER
 
@@ -237,3 +238,15 @@ Commits this session (selected): `ea5dda0` (CI), `eb67f1c` (hermetic flake),
 ---
 
 *Report ends. Awaiting instructions.*
+
+---
+
+## Completion (2026-09-04, same day)
+
+The remaining 11 plan tasks (P35–P39, P23/P24, final sweep) plus the red-tree
+fix landed in the successor session — see
+[13-17 report](2026-09-04_13-17_v011-release-deprecation-and-first-green-ci.md):
+full gate sweep green, master pushed, first CI failure root-caused and fixed
+(`d20f481`), tag run green, **v0.1.1 tagged and released**. The f-list above is
+resolved inline; items 32, 36, 37, 38, 39, 41, and 43 remain open and are
+tracked in TODO_LIST.md / ROADMAP.md.

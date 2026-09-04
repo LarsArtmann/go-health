@@ -139,27 +139,24 @@ green against HEAD via replace.
 
 ## b) PARTIALLY DONE
 
-1. **pkg.go.dev verification for v0.1.1** — proxy + `go get` + consumer run
-   all verified; pkg.go.dev still returned 404 at 13:15 CEST (propagation
-   lag, can take up to ~1h). The v0.1.1 godoc (incl. the new
+1. ~~pkg.go.dev verification for v0.1.1~~ — still propagating at the 2026-09-04 docs-health run (proxy resolves it; page 404); tracked in TODO_LIST. The v0.1.1 godoc (incl. the new
    `// Deprecated:` marker on `WithGETOnly`) is not yet human-visible there.
 2. **Deprecation completeness in-repo** — 4 tests still call the now-deprecated
    `WithGETOnly` (intentional: they pin the deprecated path), but there is no
    explicit policy note in the tests or `.golangci.yml` decision recorded for
    SA1019-style flags in other repos consuming ours.
-3. **Docs tables lag the new design notes** — the AGENTS.md "Project
+3. ~~**Docs tables lag the new design notes** — the AGENTS.md "Project
    Documentation" table and the README "Project Docs" section predate the six
-   new notes (see a-forgot list below). Discovered during this report; not
-   yet fixed.
+   new notes (see a-forgot list below).~~ done at `e366fcc` — both tables list all design notes + openapi.yaml now.
 4. **CHANGELOG section order** — `[0.1.1]` orders Deprecated before Added;
    Keep-a-Changelog canon is Added, Changed, Deprecated, Removed, Fixed.
    Cosmetic.
 5. **doanalyzerv2 runner** — reconstructed ad-hoc in `/tmp` (worked: 7 files,
    0 findings) but thrown away again. Still no persisted, repeatable
    invocation; this is the second session in a row that had to rebuild it.
-6. **Master-plan closure** — `docs/planning/2026-09-04_00-02_pareto-master-
+6. ~~**Master-plan closure** — `docs/planning/2026-09-04_00-02_pareto-master-
    execution-plan.md` has no "COMPLETED" header stamp; the 11-13 report has
-   no completion addendum pointing here.
+   no completion addendum pointing here.~~ done — 2026-09-04 docs-health run (plan stamped COMPLETED; 11-13 report got a Completion section and inline f-list verdicts).
 
 ## c) NOT STARTED
 
@@ -167,14 +164,13 @@ green against HEAD via replace.
    the workflow header recommends it; needs admin/owner action).
 2. Examples: custom `HealthRecorder`, two-phase shutdown, live-vs-cached
    (TODO_LIST Low — patterns exist only in tests/docs).
-3. Hash-citation top-up for the two 2026-08-07 reports (TODO_LIST Low).
-4. Go Report Card / goreportcard re-scan for v0.1.1 (badge exists; grade not
-   re-verified this session).
+3. ~~Hash-citation top-up for the two 2026-08-07 reports (TODO_LIST Low).~~ done — 2026-09-04 docs-health run: all shipped/routed items in `09-12`, `19-01`, `19-11` now carry hashes or explicit Won't-implement verdicts.
+4. ~~Go Report Card / goreportcard re-scan for v0.1.1 (badge exists; grade not re-verified this session).~~ **Won't implement — the service has been sunset; badge removed** `e366fcc`.
 5. Release-automation evaluation (manual tag→release flow worked twice;
    GoReleaser/actions automation never assessed).
 6. SECURITY.md (vuln disclosure path for a public module) — absent.
 7. aggregate-package fuzz targets (fuzzing covers the root package only).
-8. Dependency freshness sweep: is `samber/do v2.1.0` still the newest 2.x?
+8. ~~Dependency freshness sweep: is `samber/do v2.1.0` still the newest 2.x?~~ **Won't implement as a manual task — dependabot (weekly gomod) now owns this.**
 
 ## d) TOTALLY FUCKED UP (and what each cost)
 
@@ -255,17 +251,18 @@ green against HEAD via replace.
 
 **Now (release hygiene, ≤15 min each)**
 
-1. Verify pkg.go.dev renders v0.1.1 (incl. the `Deprecated` section) once
-   propagation completes.
-2. Update README stability line "v0.1.0 alpha" → "v0.1.1".
-3. Add the 6 new design notes + openapi.yaml to README "Project Docs".
-4. Add the 6 new design notes to the AGENTS.md Project Documentation table.
-5. Refresh `doc.go` package comment for the programmatic API + new options
-   (currently zero mentions of Healthz/AwaitReady/hook/throttle/InstanceID).
-6. Reorder `[0.1.1]` CHANGELOG categories to Keep-a-Changelog canon.
-7. Stamp the master-plan file COMPLETED; add completion addendum to the 11-13
-   report.
-8. Confirm Go Report Card re-scanned post-release.
+1. ~~Verify pkg.go.dev renders v0.1.1 (incl. the `Deprecated` section) once
+   propagation completes.~~ re-checked in the 2026-09-04 docs-health run: still
+   propagating (page 404, proxy resolves it) — stays on TODO_LIST until rendered.
+2. ~~Update README stability line "v0.1.0 alpha" → "v0.1.1".~~ done at `1d0e1ea`
+3. ~~Add the 6 new design notes + openapi.yaml to README "Project Docs".~~ done at `e366fcc`
+4. ~~Add the 6 new design notes to the AGENTS.md Project Documentation table.~~ done at `e366fcc`
+5. ~~Refresh `doc.go` package comment for the programmatic API + new options
+   (currently zero mentions of Healthz/AwaitReady/hook/throttle/InstanceID).~~ done at `1d0e1ea`
+6. ~~Reorder `[0.1.1]` CHANGELOG categories to Keep-a-Changelog canon.~~ done at `e366fcc`
+7. ~~Stamp the master-plan file COMPLETED; add completion addendum to the 11-13
+   report.~~ done — 2026-09-04 docs-health run
+8. ~~Confirm Go Report Card re-scanned post-release.~~ **Won't implement — goreportcard.com has been sunset; badge removed from the README** `e366fcc`
 
 **CI / repo hardening**
 

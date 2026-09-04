@@ -94,64 +94,64 @@ All deliberate scope exclusions for this docs-only run (user: "DO NOT RESEARCH O
 
 | #  | Task                                                        | Impact | Effort | Category | Status/Route        |
 | -- | ----------------------------------------------------------- | ------ | ------ | -------- | ------------------- |
-| 11 | Property-based test for `classify`                           | Med    | M      | Quality  | TODO_LIST (Low)     |
-| 12 | Lifecycle interleaving stress tests (Start/Shutdown/Mark)    | Med    | S      | Quality  | TODO_LIST (Low)     |
-| 13 | Restart-after-shutdown test (`Start()` after `Shutdown()`)   | Low    | S      | Quality  | TODO_LIST (Low)     |
-| 14 | Snapshot/golden-file test for readiness JSON                 | Low    | S      | Quality  | TODO_LIST (Low)     |
-| 15 | Fuzz tests for json/v2 marshaling                            | Low    | M      | Quality  | TODO_LIST (Low)     |
-| 16 | Startup-handler-under-contention benchmark                   | Low    | S      | Quality  | TODO_LIST (Low)     |
-| 17 | README Quick Start → compiled `Example` test                 | Low    | S      | Quality  | TODO_LIST (Low)     |
-| 18 | Refactor or permanently justify the two `//nolint`s          | Low    | S      | Quality  | TODO_LIST (Low)     |
-| 19 | ADRs: stdlib errors / no logging / three-state classify      | Low    | M      | Docs     | TODO_LIST (Low)     |
-| 20 | CONTRIBUTING testing-strategy section                        | Low    | S      | Docs     | TODO_LIST (Low)     |
-| 21 | renovate or dependabot config                                | Low    | S      | Infra    | TODO_LIST (Low)     |
-| 22 | `.github/ISSUE_TEMPLATE/`                                    | Low    | S      | Infra    | TODO_LIST (Low)     |
-| 23 | `nix flake check --all-systems` verification                 | Low    | S      | Infra    | TODO_LIST (Low)     |
-| 24 | Re-run coverage and record the current %                     | Low    | S      | Quality  | this report — new   |
-| 25 | Curate TODO_LIST Low section (infra-noise → ROADMAP)         | Low    | S      | Docs     | this report — new   |
+| ~~11~~ | ~~Property-based test for `classify`~~ done at `99e7511` | ~~Med~~ | ~~M~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~12~~ | ~~Lifecycle interleaving stress tests (Start/Shutdown/Mark)~~ done at `99e7511` | ~~Med~~ | ~~S~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~13~~ | ~~Restart-after-shutdown test (`Start()` after `Shutdown()`)~~ done at `99e7511` | ~~Low~~ | ~~S~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~14~~ | ~~Snapshot/golden-file test for readiness JSON~~ done at `99e7511` | ~~Low~~ | ~~S~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~15~~ | ~~Fuzz tests for json/v2 marshaling~~ done at `893d12f` | ~~Low~~ | ~~M~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~16~~ | ~~Startup-handler-under-contention benchmark~~ done — 11-13 P12 contention benchmark | ~~Low~~ | ~~S~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~17~~ | ~~README Quick Start → compiled `Example` test~~ done — 11-13 P13 ExampleProbe_Start | ~~Low~~ | ~~S~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~18~~ | ~~Refactor or permanently justify the two `//nolint`s~~ done — 11-13 P14 — both nolints removed | ~~Low~~ | ~~S~~ | ~~Quality~~ | ~~TODO_LIST (Low)~~ |
+| ~~19~~ | ~~ADRs: stdlib errors / no logging / three-state classify~~ done at `6d1869f`, `87bab11` | ~~Low~~ | ~~M~~ | ~~Docs~~ | ~~TODO_LIST (Low)~~ |
+| ~~20~~ | ~~CONTRIBUTING testing-strategy section~~ done at `b2c0d6c` | ~~Low~~ | ~~S~~ | ~~Docs~~ | ~~TODO_LIST (Low)~~ |
+| ~~21~~ | ~~renovate or dependabot config~~ done at `79eb4f4` | ~~Low~~ | ~~S~~ | ~~Infra~~ | ~~TODO_LIST (Low)~~ |
+| ~~22~~ | ~~`.github/ISSUE_TEMPLATE/`~~ done at `3f381b2` | ~~Low~~ | ~~S~~ | ~~Infra~~ | ~~TODO_LIST (Low)~~ |
+| ~~23~~ | ~~`nix flake check --all-systems` verification~~ done at `9bfa6b8` | ~~Low~~ | ~~S~~ | ~~Infra~~ | ~~TODO_LIST (Low)~~ |
+| ~~24~~ | ~~Re-run coverage and record the current %~~ done — 13-17 full gate sweep: 98.5% | ~~Low~~ | ~~S~~ | ~~Quality~~ | ~~this report — new~~ |
+| ~~25~~ | ~~Curate TODO_LIST Low section (infra-noise → ROADMAP)~~ done — 2026-09-04 TODO_LIST rebuild | ~~Low~~ | ~~S~~ | ~~Docs~~ | ~~this report — new~~ |
 
 ### ROADMAP fuel (long-term themes; see ROADMAP.md for the full list)
 
 | #  | Task                                                              | Impact | Effort | Category | Status/Route    |
 | -- | ----------------------------------------------------------------- | ------ | ------ | -------- | --------------- |
-| 26 | `Probe.Status() Status` programmatic query                        | Med    | M      | Feature  | ROADMAP Theme 1 |
-| 27 | `Probe.Alive()` / `Ready()` / `AwaitReady(ctx)` / `Healthz()`      | Med    | M      | Feature  | ROADMAP Theme 1 |
-| 28 | Export `healthCheckFunc` + `NewWithHealthCheck(fn)`               | Low    | M      | Feature  | ROADMAP Theme 1 |
-| 29 | Per-service latency in `Check`; `Response.Timestamp`              | Low    | M      | Feature  | ROADMAP Theme 2 |
+| ~~26~~ | ~~`Probe.Status() Status` programmatic query~~ done at `f29a64a` | ~~Med~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 1~~ |
+| ~~27~~ | ~~`Probe.Alive()` / `Ready()` / `AwaitReady(ctx)` / `Healthz()`~~ done at `f29a64a` | ~~Med~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 1~~ |
+| ~~28~~ | ~~Export `healthCheckFunc` + `NewWithHealthCheck(fn)`~~ done at `f29a64a` | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 1~~ |
+| ~~29~~ | ~~Per-service latency in `Check`; `Response.Timestamp`~~ **Won't implement — per-service latency infeasible in core — do owns the batch (classification-2.0-design.md §4); Response.Timestamp shipped at f29a64a.** | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 2~~ |
 | 30 | `Response.TotalLatencyMs` as `float64`                            | Low    | S      | Feature  | ROADMAP Theme 2 |
-| 31 | Metrics hooks (Prometheus exposition, OTel spans)                 | Med    | L      | Feature  | ROADMAP Theme 2 |
-| 32 | Debounce/throttle for live evaluation mode (DOS protection)       | Med    | M      | Feature  | ROADMAP Theme 3 |
-| 33 | `WithShutdownGracePeriod(d)` automatic two-phase timing           | Low    | M      | Feature  | ROADMAP Theme 3 |
-| 34 | Circuit-breaker for flapping dependencies                         | Low    | L      | Feature  | ROADMAP Theme 3 |
-| 35 | `WithMaxConcurrentChecks(n)`; per-service result caching          | Low    | M      | Feature  | ROADMAP Theme 3 |
-| 36 | `do.HealthcheckerWithContext` self-registration                   | Med    | M      | Feature  | ROADMAP Theme 4 |
-| 37 | `do.ShutdownerWithError` container lifecycle                      | Med    | M      | Feature  | ROADMAP Theme 4 |
-| 38 | Remove `do.Injector` from `HealthRecorder` signature              | Med    | M      | Design   | ROADMAP Theme 4 |
-| 39 | `WithCriticalService(name, critical)` runtime toggle              | Low    | S      | Feature  | ROADMAP Theme 4 |
-| 40 | Child-scope isolation; `WithProbeName(string)`                    | Low    | M      | Feature  | ROADMAP Theme 4 |
-| 41 | `Status` validation (reject unknown values)                       | Low    | S      | Design   | ROADMAP Theme 5 |
-| 42 | "starting" Status; `Response.InstanceID`                          | Low    | M      | Feature  | ROADMAP Theme 5 |
-| 43 | OpenAPI schema for the health contract                            | Low    | M      | Feature  | ROADMAP Theme 5 |
-| 44 | Custom response formats (Prometheus exposition, plain text)       | Low    | L      | Feature  | ROADMAP Theme 5 |
-| 45 | Extract `classify`/`evaluateStartup` into a `classifier` type     | Low    | M      | Refactor | ROADMAP Theme 6 |
-| 46 | `WithNowFunc(func() time.Time)` testable uptime                   | Low    | S      | Feature  | ROADMAP Theme 6 |
-| 47 | `WithAllowedMethods(...string)` replaces `WithGETOnly()`          | Low    | S      | Design   | ROADMAP Theme 6 |
-| 48 | `Probe.ResetStartupLatch()`; HTTP middleware support              | Low    | M      | Feature  | ROADMAP Theme 6 |
-| 49 | Full read-through verification of all 6 annotated reports         | Low    | M      | Docs     | this report — new |
-| 50 | Scope v0.0.3 (json/v2 migration is unreleased; next tag decision) | Med    | S      | Release  | this report — new |
+| ~~31~~ | ~~Metrics hooks (Prometheus exposition, OTel spans)~~ done at `f29a64a` | ~~Med~~ | ~~L~~ | ~~Feature~~ | ~~ROADMAP Theme 2~~ |
+| ~~32~~ | ~~Debounce/throttle for live evaluation mode (DOS protection)~~ done at `f29a64a` | ~~Med~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 3~~ |
+| ~~33~~ | ~~`WithShutdownGracePeriod(d)` automatic two-phase timing~~ done at `f29a64a` | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 3~~ |
+| ~~34~~ | ~~Circuit-breaker for flapping dependencies~~ **Won't implement — rejected — circuit-breaker in core (classification-2.0-design.md).** | ~~Low~~ | ~~L~~ | ~~Feature~~ | ~~ROADMAP Theme 3~~ |
+| ~~35~~ | ~~`WithMaxConcurrentChecks(n)`; per-service result caching~~ **Won't implement — rejected — MaxConcurrentChecks and per-service caching (classification-2.0-design.md; recorder is the escape hatch).** | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 3~~ |
+| ~~36~~ | ~~`do.HealthcheckerWithContext` self-registration~~ done at `f29a64a` | ~~Med~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 4~~ |
+| ~~37~~ | ~~`do.ShutdownerWithError` container lifecycle~~ done at `f29a64a` | ~~Med~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 4~~ |
+| ~~38~~ | ~~Remove `do.Injector` from `HealthRecorder` signature~~ **Won't implement — ADR-004 froze the HealthRecorder interface for v0.x (87bab11); revisit at v1.0.** | ~~Med~~ | ~~M~~ | ~~Design~~ | ~~ROADMAP Theme 4~~ |
+| ~~39~~ | ~~`WithCriticalService(name, critical)` runtime toggle~~ **Won't implement — rejected — WithCriticalService toggle (multi-tenant-design.md).** | ~~Low~~ | ~~S~~ | ~~Feature~~ | ~~ROADMAP Theme 4~~ |
+| ~~40~~ | ~~Child-scope isolation; `WithProbeName(string)`~~ **Won't implement — rejected — child-scope isolation and WithProbeName (multi-tenant-design.md).** | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 4~~ |
+| ~~41~~ | ~~`Status` validation (reject unknown values)~~ **Won't implement — rejected — Status validation (starting-status-design.md: no injection boundary).** | ~~Low~~ | ~~S~~ | ~~Design~~ | ~~ROADMAP Theme 5~~ |
+| ~~42~~ | ~~"starting" Status; `Response.InstanceID`~~ done — starting Status rejected (starting-status-design.md); Response.InstanceID shipped (13-17 P36) | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 5~~ |
+| ~~43~~ | ~~OpenAPI schema for the health contract~~ done — 13-17 P36 — static spec docs/openapi.yaml | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 5~~ |
+| ~~44~~ | ~~Custom response formats (Prometheus exposition, plain text)~~ done — 13-17 P36 — composition via hook + exposition-writer spike | ~~Low~~ | ~~L~~ | ~~Feature~~ | ~~ROADMAP Theme 5~~ |
+| ~~45~~ | ~~Extract `classify`/`evaluateStartup` into a `classifier` type~~ done at `4d5e7a3` | ~~Low~~ | ~~M~~ | ~~Refactor~~ | ~~ROADMAP Theme 6~~ |
+| ~~46~~ | ~~`WithNowFunc(func() time.Time)` testable uptime~~ done — 13-17 P35 — WithNowFunc clock seam | ~~Low~~ | ~~S~~ | ~~Feature~~ | ~~ROADMAP Theme 6~~ |
+| ~~47~~ | ~~`WithAllowedMethods(...string)` replaces `WithGETOnly()`~~ done — 13-17 P35 — WithAllowedMethods; WithGETOnly deprecated | ~~Low~~ | ~~S~~ | ~~Design~~ | ~~ROADMAP Theme 6~~ |
+| ~~48~~ | ~~`Probe.ResetStartupLatch()`; HTTP middleware support~~ done — ResetStartupLatchForTest (13-17 B102, test-scoped); middleware = composition, no library concept (13-17 P39) | ~~Low~~ | ~~M~~ | ~~Feature~~ | ~~ROADMAP Theme 6~~ |
+| ~~49~~ | ~~Full read-through verification of all 6 annotated reports~~ done — 13-17 §a P23-final/P24 agent sweep | ~~Low~~ | ~~M~~ | ~~Docs~~ | ~~this report — new~~ |
+| ~~50~~ | ~~Scope v0.0.3 (json/v2 migration is unreleased; next tag decision)~~ done — superseded — v0.1.0 and v0.1.1 released | ~~Med~~ | ~~S~~ | ~~Release~~ | ~~this report — new~~ |
 
 > HARVEST note: items 3, 4, 9, 24, 25, 49, 50 are new from this session and belong in TODO_LIST; the rest already live in TODO_LIST/ROADMAP (verified this session).
 
 ## g) Questions I Cannot Answer Myself
 
-### 1. Top up the missing annotation hashes now?
+### ~~1. Top up the missing annotation hashes now?~~ resolved — done in the 2026-09-04 marathon (P3: 0 date-only verdicts remain) with a final sweep in the 2026-09-04 docs-health run.
 
 ~12 annotation verdicts cite "2026-09-03 docs-health run" instead of `done at <hash>`, because the daemon commits (`7f489ac`, `db13aee`) didn't exist when I wrote them. The hashes exist now. Do you want the 10-minute top-up pass for strict format compliance, or are date-based citations acceptable for same-session work?
 
-### 2. Execute the trivial fixes now, or was docs-only scope intentional?
+### ~~2. Execute the trivial fixes now, or was docs-only scope intentional?~~ resolved — the 2026-09-04 marathon fixed them all: `meta.description` at `eb67f1c`, toolchain directive proved moot, gopls gotcha written into AGENTS.md.
 
 The `go.mod` `toolchain` directive (one line), flake.nix `meta.description`, and the gopls/jsonv2 gotcha in AGENTS.md are each ≤ 15 minutes. I filed them instead of fixing them under a docs-only scope reading. Should small safe fixes ride along with doc runs, or do you want strict scope separation?
 
-### 3. Does anything actually import this module today?
+### ~~3. Does anything actually import this module today?~~ resolved — `go-health-dashboard` is the known consumer (compiles against HEAD via replace); `samber-do-auditlog` does NOT import go-health. Recorded in AGENTS.md "Consumer verification".
 
 Five reports across three sessions flagged this and it remains unanswered: does `samber-do-auditlog` (or `go-health-dashboard`) import `github.com/larsartmann/go-health` right now? The answer gates the migration guide's urgency, whether the `HealthRecorder` signature decoupling (ROADMAP Theme 4) is breaking-change-free, and whether the consumer-compile verification TODO matters at all.

@@ -71,6 +71,8 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 
 Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md).
 
+**doanalyzerv2 verified (2026-09-04):** the private `branching-flow/pkg/doanalyzerv2` AST analyzer (run via a local replace-module runner, sidestepping the nix-sandbox `go install` block) reports 0 findings for DO-1..DO-6 across all 5 source files.
+
 **Consumer verification (2026-09-04):** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard) on v0.1.0, verified compiling against HEAD (7 importing files, replace-directive build, exit 0). The `auditlog.Plugin`-as-`HealthRecorder` integration was also verified live (compile-time interface assertion + probe Start/Evaluate). Any public API change must be coordinated with the dashboard consumer.
 
 ### Data Flow

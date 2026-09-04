@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- doanalyzerv2 verification: 0 anti-pattern findings (DO-1..DO-6 incl. injector-in-service) across the root and aggregate packages.
+
 - Exhaustive classify matrix test (8 health-state assignments × 8 critical
   sets, asserted against an independent spec), lifecycle stress tests for
   concurrent `Start`/`Shutdown`/`MarkShuttingDown` interleavings, a

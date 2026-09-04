@@ -17,7 +17,6 @@
 
 | Task                                  | Status  | Impact | Effort | Evidence                                                                                                                                                          |
 | ------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Run `doanalyzerv2` to verify DO-6 fix | BLOCKED | High   | 15min  | DO-6 anti-pattern fix is architecturally sound but unverified by the analyzer. Not in nixpkgs; `go install` blocked by sandbox. `probe.go:52` (no injector field) |
 
 ## Medium Impact
 

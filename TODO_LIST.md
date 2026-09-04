@@ -4,7 +4,9 @@
 > For long-term vision and unrefined ideas, use ROADMAP.md.
 > Items are ranked by impact. Status is verified, not assumed.
 
-> Re-curated 2026-09-04 (evening, post-v0.1.2 docs-health run): completed rows
+> Re-curated 2026-09-04 22:30 (post-v0.1.3 release): the slash-name contract
+> shipped as v0.1.3 (tagged, released, proxy-verified; dashboard bumped);
+> completed rows
 > deleted per lifecycle (they live in CHANGELOG), the "Resolved" traceability
 > section removed, and the open items from the freshest status report
 > (`docs/status/2026-09-04_21-31_pareto-plan-v2-full-execution-v012-released.md`
@@ -25,7 +27,6 @@
 | ---------------------------------------------------------------- | ------- | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Enable branch protection on `master` (5 checks + linear history) | BLOCKED | High   | 10min  | Needs owner/admin repo settings (decision G3). Ready-to-run command below. ⚠️ required status checks block direct pushes for non-admins; `enforce_admins: false` keeps your admin bypass. See `.github/workflows/ci.yml` header. |
 | Coverage-threshold CI job (fail < 97%)?                          | BLOCKED | Medium | 20min  | Policy call (decision G3 follow-up). CONTRIBUTING states the 99.7% baseline; a red-failing threshold job is a maintainer preference, not a default.                                                                             |
-| Release vehicle for the aggregate slash-name contract            | BLOCKED | High   | 5min   | Owner veto window (21-31 §g1): the strict `aggregate.New` source-name rejection sits unreleased in CHANGELOG `[Unreleased]` — ship as v0.1.3 now, or let it ride in v0.2.0 with `errors.Join` + `SourceStatuses()`.             |
 
 ### Ready-to-run: branch protection (G3)
 

@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate` · **Go**: 1.26.7 · **Status**: v0.1.2 (alpha)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate` · **Go**: 1.26.7 · **Status**: v0.1.3 (alpha)
 
 ---
 
@@ -90,7 +90,7 @@ DO-1..DO-6 across all source files. Invoke with
 checkout at `/home/lars/projects/branching-flow` (the replace path in
 `tools/doanalyzerv2/go.mod`).
 
-**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires released v0.1.2 directly (no replace directive; bumped from v0.1.1 on 2026-09-04). Verified 2026-09-04: dashboard build + vet + full test suite green against released v0.1.1, and build + tests green against go-health HEAD (temporary replace directive, restored after; HEAD incl. the instance_id sanitize fix and the aggregate slash-name validation). Consumers building against go-health need `GOEXPERIMENT=jsonv2` (json/v2 is behind the experiment on go1.26). Any public API change must be coordinated with the dashboard consumer.
+**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires released v0.1.3 directly (no replace directive; bumped to v0.1.3 at release time 2026-09-04). Verified at the v0.1.3 release (2026-09-04): dashboard build green and all go-health-related tests (aggregate, integration, dashboard) green against released v0.1.3 with source names `api`/`web` (contract-compatible); its pre-existing CSP/Datastar test failures are unchanged from v0.1.2 and unrelated to go-health. Consumers building against go-health need `GOEXPERIMENT=jsonv2` (json/v2 is behind the experiment on go1.26). Any public API change must be coordinated with the dashboard consumer.
 
 ### Data Flow
 

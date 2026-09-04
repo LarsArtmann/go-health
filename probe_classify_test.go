@@ -2,6 +2,7 @@ package health_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	do "github.com/samber/do/v2"
@@ -119,12 +120,10 @@ func assertMatrixCombo(t *testing.T, states map[string]state, critical map[strin
 			invoke[*unhealthyService](t, injector, name)
 		}
 
-
 		if critical[name] {
 			wantCritical = append(wantCritical, name)
 		}
 	}
-
 
 	probe := health.New(injector, health.WithCriticalServices(wantCritical...))
 

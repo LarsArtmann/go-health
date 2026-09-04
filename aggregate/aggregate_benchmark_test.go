@@ -60,9 +60,9 @@ func benchAggregate(b *testing.B, sourceCount int) *aggregate.Aggregate {
 // Recorded baseline (2026-09-04, go1.26.7 linux/amd64): FEATURES.md
 // "Performance".
 func BenchmarkAggregateCachedResponse(b *testing.B) {
-	for _, n := range []int{1, 2, 4, 8} {
-		b.Run(fmt.Sprintf("sources=%d", n), func(b *testing.B) {
-			agg := benchAggregate(b, n)
+	for _, sourceCount := range []int{1, 2, 4, 8} {
+		b.Run(fmt.Sprintf("sources=%d", sourceCount), func(b *testing.B) {
+			agg := benchAggregate(b, sourceCount)
 
 			b.ReportAllocs()
 

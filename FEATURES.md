@@ -104,6 +104,7 @@ Baselines recorded 2026-09-04 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`
 | `BenchmarkStartupHandler_Unlatched`     | 919 ns/op · 1428 B/op · 16 allocs  | Serial loop; latches on first successful batch, subsequent ops measure the latch check only.                                                                    |
 | `BenchmarkCachedResponse_ParallelReads` | ~0.03 ns/op · 0 B/op · 0 allocs    | Lock-free atomic cache read under full contention.                                                                                                              |
 | `BenchmarkGuardOverhead/allowed`        | ~900 ns/op · 474 B/op · 9 allocs   | Method-set guard, method in the allowed set: ~0 overhead vs no-guard (same allocs). The 405 path (`unlisted`) is cheaper still (~220 ns — no response marshal). |
+| `BenchmarkAggregateCachedResponse` (median of 3) | 1 src: 390 ns · 504 B · 5 allocs; 2: 506 ns · 544 B · 8; 4: 1.26 µs · 1560 B · 17; 8: 2.79 µs · 3544 B · 31 | Merge-on-read cost scales ~linearly with source count (~330 ns + 1 map-entry insert per check per source). `aggregate/aggregate_benchmark_test.go`. |
 
 ## Infrastructure & Tooling
 

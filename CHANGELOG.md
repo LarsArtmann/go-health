@@ -9,7 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- Godoc examples for the programmatic API: `ExampleNewWithHealthCheck`,
+  `ExampleProbe_Healthz`, `ExampleWithEvaluationHook`, `ExampleProbe_AwaitReady`,
+  `ExampleWithHealthRecorder`, `ExampleProbe_MarkShuttingDown`, and
+  `ExampleProbe_CachedResponse`.
+- Fuzz target for the `aggregate` package's merge-on-read invariants (worst-of
+  status, `source/check` namespacing, scalar dropping, handler codes) and
+  `instance_id`-populated seeds for the root marshal fuzz.
+- Property test pinning unmarshal → marshal wire identity of `Response`.
+- `tools/doanalyzerv2`: persisted local runner for the private do-analyzer
+  audit (see CONTRIBUTING.md).
+- `SECURITY.md` vulnerability-disclosure policy, PR template, and
+  `docs/deprecation-policy.md`.
+- CI job linting `docs/openapi.yaml` with Redocly; the spec now states its
+  unauthenticated-by-design posture and MIT license explicitly.
 
 ### Deprecated
 
@@ -17,7 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Nothing yet.
+- Invalid UTF-8 in the replica identifier set via `WithInstanceID` failed
+  JSON encoding of every health response, turning all probe endpoints into
+  HTTP 500. `SanitizeResponse` now coerces `instance_id` like the other
+  string fields. (Found by the new marshal-fuzz seeds.)
 
 ## [0.1.1] - 2026-09-04
 

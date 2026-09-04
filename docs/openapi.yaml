@@ -6,7 +6,17 @@ info:
     Kubernetes-style health probes exposed by the go-health Probe.
     Field-presence rules are documented per property; they are enforced by
     the golden-file wire-format test, not by OpenAPI keywords.
-servers: []
+  license:
+    name: MIT
+    identifier: MIT
+# Health endpoints are unauthenticated by design: the kubelet and load
+# balancers poll them without credentials. Auth (if any) is the host's
+# reverse-proxy decision, not the probe's.
+security: []
+# Routes are mounted wherever the host application chooses; all paths are
+# relative to that base.
+servers:
+  - url: /
 paths:
   /healthz:
     get:

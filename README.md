@@ -16,6 +16,7 @@ Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a s
 
 - [Why three probes?](#why-three-probes)
 - [Install](#install)
+- [Compatibility](#compatibility)
 - [Quick Start](#quick-start)
 - [Sample Responses](#sample-responses)
 - [Three Probes](#three-probes)
@@ -51,6 +52,25 @@ go get github.com/larsartmann/go-health
 ```
 
 **Requirements:** Go 1.26+. Single dependency: `github.com/samber/do/v2`.
+
+## Compatibility
+
+What CI actually tests on every push — not what merely compiles:
+
+| Dimension        | Tested                                        |
+| ---------------- | --------------------------------------------- |
+| Go               | 1.26.x — CI runs go 1.26.7 on linux/amd64     |
+| samber/do        | v2.1.0 (the pinned `go.mod` dependency)       |
+| Aggregate        | same module version, tested in the same suite |
+
+Bare `go` commands outside this repo's flake need `GOEXPERIMENT=jsonv2`: the
+library imports `encoding/json/v2`, which go1.26 only exposes behind that
+experiment. Building through the flake, or with Go 1.27+ where json/v2 is
+stable, needs nothing special.
+
+Older Go toolchains are unsupported. Other samber/do v2.x versions are
+expected to work but are not covered by CI — if you bump it, run the test
+suite against your version before relying on it.
 
 ## Quick Start
 
@@ -204,7 +224,7 @@ Overrides the boot timestamp used to compute uptime. Defaults to the time `New()
 
 ### `WithGETOnly()` — deprecated
 
-> **Deprecated:** use [`WithAllowedMethods(...)`](#withallowedmethodsmethods-string) instead — the method-set superset (`WithAllowedMethods()` with no arguments behaves identically). `WithGETOnly` keeps working; no removal is planned in the v0.x line.
+> **Deprecated:** use [`WithAllowedMethods(...)`](#withallowedmethodsmethods-string) instead — the method-set superset (`WithAllowedMethods()` with no arguments behaves identically). `WithGETOnly` keeps working; no removal is planned in the v0.x line. See [docs/deprecation-policy.md](docs/deprecation-policy.md) for the full policy.
 
 Wraps all handlers to reject non-GET requests with 405 Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces misconfigurations (e.g. a load balancer sending HEAD or POST) early.
 
@@ -227,6 +247,8 @@ Registers a callback invoked synchronously after every evaluation with the fully
 ### `WithLiveThrottle(d time.Duration)`
 
 Coalesces live-mode request floods: within the throttle window, requests are served the stored result of the previous evaluation instead of each starting its own batch. One evaluation per window, no matter how many requests arrive.
+
+**Interaction with the `Start`-populated cache.** The throttle changes the readiness read path: a handler serves any stored result younger than the window — including the one the background refresh loop writes — and evaluates live only when the stored result is older than the window. Concretely: with the default cache (`WithRefreshInterval(1s)`) a window at least as large as the refresh interval means requests never trigger evaluations; the loop refreshes, requests only read. With `WithRefreshInterval(0)` (live mode) the window is what turns a request flood into one batch per window. Liveness is unaffected; startup never throttles.
 
 ### `WithShutdownGracePeriod(d time.Duration)`
 

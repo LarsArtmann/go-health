@@ -78,7 +78,13 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 
 Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md).
 
-**doanalyzerv2:** the private `branching-flow/pkg/doanalyzerv2` AST analyzer (run via a local replace-module runner, sidestepping the nix-sandbox `go install` block) reports 0 findings for DO-1..DO-6 across all source files. No persisted runner exists in-repo yet — each session rebuilds it ad-hoc in `/tmp`.
+**doanalyzerv2:** the private `branching-flow/pkg/doanalyzerv2` AST analyzer
+(persisted in-repo as the `tools/doanalyzerv2` replace-module runner,
+sidestepping the nix-sandbox `go install` block) reports 0 findings for
+DO-1..DO-6 across all source files. Invoke with `go run ./tools/doanalyzerv2 .`
+from the repo root; it requires the go-design-smells checkout at
+`/home/lars/projects/branching-flow` (the replace path in
+`tools/doanalyzerv2/go.mod`).
 
 **Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard) (still pinned below v0.1.1 via a replace directive), verified compiling against HEAD (7 importing files, replace-directive build, exit 0). The `auditlog.Plugin`-as-`HealthRecorder` integration was also verified live (compile-time interface assertion + probe Start/Evaluate). Any public API change must be coordinated with the dashboard consumer.
 
@@ -105,7 +111,12 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 - Standard `testing.T` + table-driven tests. No ginkgo/testify.
 - Each test creates its own `do.Injector` — no shared state.
 - `mockRecorder` type replaces the old auditlog integration tests.
-- Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `StartupHandler_Contention`, `CachedResponse_ParallelReads`, `Evaluate`.
+- Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `StartupHandler_Contention`, `CachedResponse_ParallelReads`, `Evaluate`, `GuardOverhead`.
+- Fuzz targets: `FuzzResponseMarshalDeterministic` + `FuzzHandlerInput` (root), `FuzzAggregateMergeInvariants` (aggregate); run via `nix run .#fuzz`.
+- **Seam-swap tests must not be parallel** — tests swapping a package-global
+  seam (`marshalResponse` in both packages) mutate shared state, so they omit
+  `t.Parallel()` (marked `//nolint:paralleltest`). A parallel seam test
+  corrupts concurrent handler tests (observed: spurious 500s).
 
 ---
 

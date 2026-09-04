@@ -5,7 +5,7 @@
 # lives in a private repository, so CI cannot fetch it. It remains a documented
 # local gate — see CONTRIBUTING.md.
 #
-# Recommended branch protection for master: require the four jobs below plus
+# Recommended branch protection for master: require the five jobs below plus
 # linear history. This file provides the check names CI reports.
 
 name: CI
@@ -85,3 +85,13 @@ jobs:
 
       - name: nix flake check (includes formatting)
         run: nix flake check
+
+  openapi:
+    name: OpenAPI spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Lint OpenAPI spec (redocly)
+        run: npx --yes @redocly/cli@latest lint docs/openapi.yaml

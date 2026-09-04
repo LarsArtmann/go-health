@@ -45,7 +45,8 @@ export_test.go   — ResetStartupLatchForTest (test builds only; public latch st
 
 Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
 `health.Response`: `Source{Name, Probe}`, `New(sources...) (*Aggregate, error)` (rejects empty,
-duplicate, or nil sources), `CachedResponse` (merge-on-read: N lock-free loads, worst-of status,
+duplicate, slash-containing, or nil-probe sources — see docs/aggregate-source-name-design.md),
+`CachedResponse` (merge-on-read: N lock-free loads, worst-of status,
 `"source/check"` namespacing, shutdown overlay, max latency), `RefreshInterval` (slowest source),
 `StartupComplete` (AND of latches), the three kubelet handlers (liveness 200, readiness 503 on
 fail, startup 503 until all latches), `RegisterRoutes`.
@@ -89,7 +90,7 @@ DO-1..DO-6 across all source files. Invoke with
 checkout at `/home/lars/projects/branching-flow` (the replace path in
 `tools/doanalyzerv2/go.mod`).
 
-**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires released v0.1.1 directly (NO replace directive since ~2026-09-04 — the older "pinned below v0.1.1 via replace" note is stale). Re-verified 2026-09-04 post-fix: dashboard build + vet + full test suite green against released v0.1.1, and build + tests green against go-health HEAD (temporary replace directive, restored after; HEAD incl. the instance_id sanitize fix and the aggregate slash-name validation). Consumers building against go-health need `GOEXPERIMENT=jsonv2` (json/v2 is behind the experiment on go1.26). Any public API change must be coordinated with the dashboard consumer.
+**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires released v0.1.2 directly (no replace directive; bumped from v0.1.1 on 2026-09-04). Verified 2026-09-04: dashboard build + vet + full test suite green against released v0.1.1, and build + tests green against go-health HEAD (temporary replace directive, restored after; HEAD incl. the instance_id sanitize fix and the aggregate slash-name validation). Consumers building against go-health need `GOEXPERIMENT=jsonv2` (json/v2 is behind the experiment on go1.26). Any public API change must be coordinated with the dashboard consumer.
 
 ### Data Flow
 

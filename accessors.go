@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	do "github.com/samber/do/v2"
 )
 
 // ErrProbeUnhealthy is returned by [Probe.HealthCheck] when the probe's
@@ -16,13 +14,13 @@ var ErrProbeUnhealthy = errors.New("health: probe reports fail")
 
 // HealthCheckFunc runs one health-check batch and returns the per-service
 // results. It is the injector-free equivalent of the capability [New]
-// resolves from a [do.Injector] or [HealthRecorder]: pass one to
+// resolves from a samber/do injector or [HealthRecorder]: pass one to
 // [NewWithHealthCheck] to run a probe without any injector at all.
 type HealthCheckFunc func(ctx context.Context) map[string]error
 
 // NewWithHealthCheck creates a [Probe] whose health-check batches are
-// produced by the given function, with no [do.Injector] involved. Use it for
-// injectors other than samber/do, for composed or external checks, or for
+// produced by the given function, with no samber/do injector involved. Use it
+// for injectors other than samber/do, for composed or external checks, or for
 // tests that need full control over the batch.
 //
 // The function must be safe for concurrent use: batch evaluations can run
@@ -34,7 +32,10 @@ type HealthCheckFunc func(ctx context.Context) map[string]error
 // explicit function already owns batch execution. All other options apply
 // normally.
 func NewWithHealthCheck(fn HealthCheckFunc, opts ...Option) *Probe {
-	return newProbe(func(ctx context.Context) map[string]error { return fn(ctx) }, opts...)
+	cfg := buildConfig(opts)
+	cfg.recorder = nil
+
+	return assemble(func(ctx context.Context) map[string]error { return fn(ctx) }, cfg)
 }
 
 // Status returns the cached roll-up status: pass, warn, or fail. It performs
@@ -84,7 +85,7 @@ func (p *Probe) AwaitReady(ctx context.Context) error {
 	}
 }
 
-// HealthCheck implements [do.HealthcheckerWithContext], letting the probe
+// HealthCheck implements do.HealthcheckerWithContext, letting the probe
 // itself be registered as a service in the very injector it monitors. The
 // verdict comes from the cached roll-up view — no dependency calls, so it
 // composes safely with samber/do's health-check fan-out. It wraps
@@ -97,7 +98,7 @@ func (p *Probe) HealthCheck(_ context.Context) error {
 	return nil
 }
 
-// ProbeShutdowner adapts a [Probe] to [do.ShutdownerWithError]. The adapter
+// ProbeShutdowner adapts a [Probe] to do.ShutdownerWithError. The adapter
 // exists because the Probe's own Shutdown returns nothing, which cannot
 // change without breaking the public API.
 type ProbeShutdowner struct {
@@ -113,7 +114,7 @@ func (s ProbeShutdowner) Shutdown() error {
 	return nil
 }
 
-// AsShutdowner returns a [do.ShutdownerWithError] view of the probe for
+// AsShutdowner returns a do.ShutdownerWithError view of the probe for
 // registration as a samber/do shutdown service.
 func (p *Probe) AsShutdowner() ProbeShutdowner {
 	return ProbeShutdowner{Probe: p}

@@ -64,6 +64,11 @@ type Probe struct {
 	refreshInterval time.Duration
 	timeout         time.Duration
 
+	evalHook      func(Response)
+	liveThrottle  time.Duration
+	shutdownGrace time.Duration
+	lastEvalNano  atomic.Int64
+
 	mu     sync.Mutex
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
@@ -80,6 +85,9 @@ type config struct {
 	refreshInterval time.Duration
 	timeout         time.Duration
 	getOnly         bool
+	evalHook        func(Response)
+	liveThrottle    time.Duration
+	shutdownGrace   time.Duration
 }
 
 // Option configures a [Probe]. Use the With* functions to create options.
@@ -100,6 +108,35 @@ func WithCriticalServices(names ...string) Option {
 			c.critical[name] = struct{}{}
 		}
 	}
+}
+
+// WithEvaluationHook registers a callback invoked synchronously after every
+// [Probe.Evaluate] with the fully classified response. Use it to feed metrics
+// or alerting without polling. The hook must be fast and must not block: it
+// runs on the evaluation path (background loop and live requests). The hook
+// receives the response by value and must not retain or mutate its Checks map.
+func WithEvaluationHook(fn func(Response)) Option {
+	return func(c *config) { c.evalHook = fn }
+}
+
+// WithLiveThrottle caps how often live (cache-miss) evaluations may run:
+// within the window after an evaluation, readiness and combined handlers
+// serve that stored result instead of re-running the batch. Without it,
+// live mode runs one full batch per request — a DoS amplifier when the
+// health endpoint is exposed. It has no effect when a background cache is
+// active ([WithRefreshInterval] > 0 with [Probe.Start] called).
+func WithLiveThrottle(d time.Duration) Option {
+	return func(c *config) { c.liveThrottle = d }
+}
+
+// WithShutdownGracePeriod makes [Probe.Shutdown] two-phase automatically:
+// after marking the probe as draining (readiness 503) it keeps the refresh
+// loop running for d so dashboards and load balancers observe fresh 503s,
+// then stops the loop. Shutdown blocks for the grace window. Zero (default)
+// stops the loop immediately; [Probe.MarkShuttingDown] remains the manual
+// two-phase path.
+func WithShutdownGracePeriod(d time.Duration) Option {
+	return func(c *config) { c.shutdownGrace = d }
 }
 
 // WithHealthRecorder wires a [HealthRecorder] so that every health-check batch
@@ -178,7 +215,42 @@ func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 // resolved here at construction time, so the returned Probe holds only the
 // resolved function — never the container itself.
 func New(injector do.Injector, opts ...Option) *Probe {
-	return newProbe(resolveHealthCheck(nil, injector), opts...) // placeholder, replaced below
+	cfg := buildConfig(opts)
+
+	return assemble(resolveHealthCheck(cfg.recorder, injector), cfg)
+}
+
+// buildConfig applies options onto the default construction-time config.
+func buildConfig(opts []Option) config {
+	cfg := config{
+		critical:        make(map[string]struct{}),
+		bootTime:        time.Now(),
+		timeout:         defaultTimeout,
+		refreshInterval: defaultRefreshInterval,
+	}
+
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	return cfg
+}
+
+// assemble wires a resolved health-check capability and configuration into
+// a Probe. Both constructors funnel through here.
+func assemble(healthCheck healthCheckFunc, cfg config) *Probe {
+	return &Probe{
+		healthCheck:     healthCheck,
+		critical:        cfg.critical,
+		bootTime:        cfg.bootTime,
+		version:         cfg.version,
+		getOnly:         cfg.getOnly,
+		refreshInterval: cfg.refreshInterval,
+		timeout:         cfg.timeout,
+		evalHook:        cfg.evalHook,
+		liveThrottle:    cfg.liveThrottle,
+		shutdownGrace:   cfg.shutdownGrace,
+	}
 }
 
 // resolveHealthCheck captures the health-check capability at construction

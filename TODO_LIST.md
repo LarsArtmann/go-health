@@ -32,14 +32,9 @@
 
 | Task                                                              | Status | Impact | Effort | Evidence                                                                                                    |
 | ----------------------------------------------------------------- | ------ | ------ | ------ | ----------------------------------------------------------------------------------------------------------- |
-| Add property-based test for `classify`                            | TODO   | Low    | 1h     | No property test covering pass/warn/fail across all possible result maps + critical sets. `probe.go:401`     |
-| Add stress tests for lifecycle interleaving                       | TODO   | Low    | 30min  | Concurrent `Start()`+`Shutdown()` and `MarkShuttingDown()`+`Shutdown()` interleavings untested. Existing concurrency tests cover read paths only. `probe.go:260` |
-| Add test: `Start()` called after `Shutdown()` (restart scenario)  | TODO   | Low    | 15min  | `TestShutdown_Idempotent` and `TestShutdown_WithoutStart_DoesNotPanic` exist; restart-after-shutdown does not. `probe_test.go:1299` |
-| Add snapshot test for readiness JSON response shape               | TODO   | Low    | 30min  | No golden-file test for full JSON response structure. `handlers.go:165`                                      |
 | Add fuzz tests for JSON marshaling edge cases                     | TODO   | Low    | 1h     | No fuzz tests exist. `handlers.go:165`                                                                       |
 | Add benchmark: startup handler under contention                   | TODO   | Low    | 20min  | Only the unlatched variant exists. `probe_test.go:1422`                                                      |
 | Verify README Quick Start compiles (as an `Example` function)      | TODO   | Low    | 15min  | README example drifted from `ExampleNew` once already. `README.md:53`, `example_test.go:23`                   |
-| Improve `writeResponse` marshal-error message                      | TODO   | Low    | 10min  | Message is opaque (no underlying error). Branch is defensive-only today — `Response` has marshal-safe types. `handlers.go:165` |
 | Re-evaluate the two `//nolint` suppressions in panic recovery      | TODO   | Low    | 30min  | `err113` could use a static sentinel; `nonamedreturns` could be refactored away. Suppressed with justification at `probe.go:382`. |
 | Add ADRs for key decisions                                        | TODO   | Low    | 1h     | Stdlib errors, no-logging, and three-state classify decisions live only in AGENTS.md prose. No `docs/adr/`.   |
 | Document `docs/status/` convention + testing strategy in CONTRIBUTING | TODO | Low   | 20min  | Report naming pattern and testing philosophy are tribal knowledge. `CONTRIBUTING.md`                          |

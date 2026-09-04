@@ -18,6 +18,7 @@ var updateGolden = flag.Bool("update", false, "rewrite testdata golden files")
 // file is a wire-format change and must be called out in the changelog.
 func TestReadinessResponse_JSONSnapshot(t *testing.T) {
 	t.Parallel()
+
 	resp := health.Response{
 		Status:         health.StatusWarn,
 		Version:        "1.2.3",
@@ -59,6 +60,7 @@ func TestReadinessResponse_JSONSnapshot(t *testing.T) {
 // tags on Response are historical; the wire format below is the truth.
 func TestReadinessResponse_JSONOmitEmpty(t *testing.T) {
 	t.Parallel()
+
 	resp := health.Response{
 		Status: health.StatusPass,
 		Checks: map[string]health.Check{},

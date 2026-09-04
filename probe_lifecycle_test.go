@@ -17,11 +17,12 @@ func newStressProbe(t *testing.T) (*health.Probe, context.Context) {
 	t.Helper()
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 
 	invoke[*healthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector,
 		health.WithCriticalServices("db"),

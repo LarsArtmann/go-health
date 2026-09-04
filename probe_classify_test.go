@@ -106,7 +106,6 @@ func assertMatrixCombo(t *testing.T, states map[string]state, critical map[strin
 	t.Helper()
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	wantCritical := make([]string, 0, len(serviceNames))
 
@@ -123,6 +122,8 @@ func assertMatrixCombo(t *testing.T, states map[string]state, critical map[strin
 			wantCritical = append(wantCritical, name)
 		}
 	}
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector, health.WithCriticalServices(wantCritical...))
 

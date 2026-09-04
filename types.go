@@ -1,5 +1,7 @@
 package health
 
+import "time"
+
 // Status is the roll-up health status of a check or the overall response.
 type Status string
 
@@ -38,6 +40,10 @@ type Response struct {
 	// batch. Populated by readiness and startup evaluations; always zero
 	// for liveness (which performs no dependency checks).
 	TotalLatencyMs int64 `json:"total_latency_ms,omitempty"`
+	// Timestamp is when the evaluation completed (server time, RFC 3339 in
+	// JSON). Zero — and omitted from JSON via omitzero — until the first
+	// evaluation. Live-mode throttling uses it to judge cache freshness.
+	Timestamp time.Time `json:"timestamp,omitzero"`
 	// Checks maps each service name to its individual result.
 	Checks map[string]Check `json:"checks"`
 }

@@ -128,16 +128,43 @@ func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes) {
 }
 
 // readinessResponse returns the cached response when available, or evaluates
-// live with a timeout-bounded context.
+// live with a timeout-bounded context. With [WithLiveThrottle] set, live
+// evaluations coalesce: within the throttle window the stored result of the
+// previous evaluation is served, so request floods cannot amplify into batch
+// floods against the dependencies.
 func (p *Probe) readinessResponse(ctx context.Context) Response {
 	if cached := p.latest.Load(); cached != nil {
 		return *cached
+	}
+
+	if p.liveThrottle > 0 {
+		return p.throttledLiveResponse(ctx)
 	}
 
 	evalCtx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	return p.Evaluate(evalCtx)
+}
+
+// throttledLiveResponse serializes live evaluations and reuses the stored
+// result while it is younger than the throttle window. The stored response's
+// Timestamp is the freshness marker; Evaluate stamps it.
+func (p *Probe) throttledLiveResponse(ctx context.Context) Response {
+	p.throttleMu.Lock()
+	defer p.throttleMu.Unlock()
+
+	if cached := p.latest.Load(); cached != nil && time.Since(cached.Timestamp) < p.liveThrottle {
+		return *cached
+	}
+
+	evalCtx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	resp := p.Evaluate(evalCtx)
+	p.latest.Store(&resp)
+
+	return resp
 }
 
 // buildStartupResponse assembles the response for a startup probe evaluation.

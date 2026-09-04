@@ -67,7 +67,10 @@ type Probe struct {
 	evalHook      func(Response)
 	liveThrottle  time.Duration
 	shutdownGrace time.Duration
-	lastEvalNano  atomic.Int64
+
+	// throttleMu serializes throttled live evaluations so a request flood
+	// produces one batch per window, not one per request.
+	throttleMu sync.Mutex
 
 	mu     sync.Mutex
 	cancel context.CancelFunc
@@ -387,12 +390,22 @@ func (p *Probe) refreshCache(ctx context.Context) {
 func (p *Probe) Shutdown() {
 	p.shuttingDown.Store(true)
 
+	// Grace window: with WithShutdownGracePeriod, keep the refresh loop
+	// running so cached readiness responses stay fresh 503s while load
+	// balancers drain. The draining flag is already set, so the loop only
+	// observes; it cannot resurrect readiness.
+	if grace := p.shutdownGrace; grace > 0 {
+		time.Sleep(grace)
+	}
+
 	// Add (in Start) and Wait are serialized under p.mu on purpose: the
 	// WaitGroup contract forbids an Add from a zero counter running
 	// concurrently with a Wait, which concurrent Start/Shutdown callers
 	// would otherwise trigger ("WaitGroup is reused before previous Wait
 	// has returned"). refreshLoop does not take p.mu, so waiting under the
-	// lock cannot deadlock the loop we are waiting for.
+	// lock cannot deadlock the loop we are waiting for. Capturing cancel
+	// after the grace window also means a Start that re-armed the loop
+	// during the drain gets stopped by this same Shutdown call.
 	p.mu.Lock()
 	cancel := p.cancel
 	p.cancel = nil
@@ -435,6 +448,11 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 	}
 
 	resp.Status = p.classify(results, resp.ShuttingDown)
+	resp.Timestamp = time.Now()
+
+	if p.evalHook != nil {
+		p.evalHook(resp)
+	}
 
 	return resp
 }

@@ -80,11 +80,21 @@
 | Check struct                 | FULLY_FUNCTIONAL | Per-service: status + error message. `types.go:17`                                             |
 | Response struct              | FULLY_FUNCTIONAL | Aggregate: status, version, uptime, shutting_down, total_latency_ms, checks map. `types.go:25` |
 
+## Performance
+
+Baselines recorded 2026-09-04 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`).
+
+| Benchmark                             | Result                        | Notes                                                                                         |
+| ------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| `BenchmarkStartupHandler_Contention`  | 7755 ns/op · 4518 B/op · 66 allocs | Worst case: failing critical service keeps the latch open; every parallel request runs a full live batch. |
+| `BenchmarkStartupHandler_Unlatched`   | 919 ns/op · 1428 B/op · 16 allocs  | Serial loop; latches on first successful batch, subsequent ops measure the latch check only.  |
+| `BenchmarkCachedResponse_ParallelReads` | ~0.03 ns/op · 0 B/op · 0 allocs   | Lock-free atomic cache read under full contention.                                            |
+
 ## Infrastructure & Tooling
 
 | Feature                         | Status           | Notes                                                                                                                                                     |
 | ------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Nix devShell (`flake.nix`)      | FULLY_FUNCTIONAL | Verified: `nix flake check` passes. devShell + treefmt + all Nix apps working. `flake.nix`                                                                |
 | Linter config (`.golangci.yml`) | FULLY_FUNCTIONAL | 0 issues. Curated for this project: varnamelen accepts idiomatic `w`/`r`/`wg`, tagliatelle enforces snake_case JSON. The former panic-recovery nolints were removed by restructuring `recoverHealthChecks` (no named returns, static sentinel). |
-| CI pipeline                     | PLANNED          | No GitHub Actions workflow.                                                                                                                               |
+| CI pipeline                     | FULLY_FUNCTIONAL | GitHub Actions (`.github/workflows/ci.yml`): test-race + short fuzz, vet+lint, govulncheck+gosec, flake check. Nix runners, SHA-pinned actions. erraudit stays a local gate (private tool). |
 | Security scanning               | FULLY_FUNCTIONAL | `govulncheck` (0 vulns) and `gosec` (0 issues) verified manually. Not wired into CI.                                                                      |

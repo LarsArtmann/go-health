@@ -10,9 +10,11 @@
 // locks, no goroutines, and no staleness of its own. Freshness is bounded by
 // the slowest source's refresh interval.
 //
-// Sources must have unique non-empty names. Every check is namespaced as
-// "source/check", which keeps keys collision-free and gives consumers a
-// stable grouping axis (the part before the first "/").
+// Sources must have unique, non-empty names without "/": the name becomes the
+// prefix of every check key it contributes, and a slash in it would blur the
+// "source/check" grouping axis and could alias another source's namespace.
+// [New] rejects such names at construction. Check names may contain "/";
+// everything before the first slash in a merged key is always the source name.
 package aggregate
 
 import (
@@ -20,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	health "github.com/larsartmann/go-health"
@@ -30,16 +33,18 @@ import (
 var ErrNoSources = errors.New("aggregate: at least one source is required")
 
 // ErrInvalidSource is returned by [New] for a source with an empty name, a
-// nil probe, or a name that collides with an earlier source. Names become
-// check-key prefixes, so duplicates would silently overwrite check entries.
+// name containing "/", a nil probe, or a name that collides with an earlier
+// source. Names become check-key prefixes ("name/check"), so duplicates or
+// slashes would break the documented grouping axis or silently overwrite
+// check entries.
 var ErrInvalidSource = errors.New("aggregate: invalid source")
 
 // Source is one named probe contributing to an [Aggregate]. The name becomes
 // the prefix of every check key the probe contributes ("name/check") and the
 // key under which its startup state is reported.
 type Source struct {
-	// Name namespaces this source's checks. Must be non-empty and unique
-	// across all sources of an aggregate.
+	// Name namespaces this source's checks as "name/check". Must be non-empty,
+	// unique across all sources of an aggregate, and free of "/".
 	Name string
 	// Probe is the in-process probe whose cached state is merged.
 	Probe *health.Probe
@@ -55,7 +60,7 @@ type Aggregate struct {
 
 // New creates an [Aggregate] over the given sources. Construction validates
 // the invariants that reads would otherwise have to enforce silently: at
-// least one source, and unique non-empty names with non-nil probes.
+// least one source, and unique non-empty slash-free names with non-nil probes.
 func New(sources ...Source) (*Aggregate, error) {
 	if len(sources) == 0 {
 		return nil, ErrNoSources
@@ -70,6 +75,10 @@ func New(sources ...Source) (*Aggregate, error) {
 			return nil, fmt.Errorf("%w: source %q has a nil Probe", ErrInvalidSource, src.Name)
 		case src.Name == "":
 			return nil, fmt.Errorf("%w: source name must not be empty", ErrInvalidSource)
+		case strings.Contains(src.Name, "/"):
+			return nil, fmt.Errorf(
+				"%w: source name %q must not contain '/' (names become \"name/check\" key prefixes)",
+				ErrInvalidSource, src.Name)
 		}
 
 		if _, dup := seen[src.Name]; dup {

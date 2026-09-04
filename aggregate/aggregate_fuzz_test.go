@@ -89,10 +89,10 @@ func newFuzzSource(t *testing.T, spec fuzzSourceSpec) *health.Probe {
 // per-process scalars (version, instance_id, uptime, timestamp) never survive
 // the merge; and the three handlers only emit their documented status codes.
 //
-// Source names containing "/" are out of contract here: the documented
-// grouping axis is the part before the first "/", and a slash in a source
-// name could alias another source's namespace (flagged as a follow-up, not
-// exercised as an invariant).
+// Source names containing "/" are out of contract: aggregate.New rejects
+// them (they would blur the "source/check" grouping axis and could alias
+// another source's namespace), so this harness skips them and construction
+// rejections stay covered by unit tests.
 func FuzzAggregateMergeInvariants(f *testing.F) {
 	f.Add("edge-a", "svc", "edge-b", "svc", true, false, true, true, "pod-1")
 	f.Add("api", "db", "worker", "db", true, true, false, true, "")
@@ -138,7 +138,8 @@ func FuzzAggregateMergeInvariants(f *testing.F) {
 }
 
 // buildFuzzSources constructs the two fuzz probes, skipping the iteration for
-// invalid or colliding source names (covered by unit tests instead).
+// inputs aggregate.New rejects: empty, duplicate, or slash-containing source
+// names (construction rejections are covered by unit tests instead).
 func buildFuzzSources(
 	t *testing.T,
 	specOne fuzzSourceSpec, nameOne string,

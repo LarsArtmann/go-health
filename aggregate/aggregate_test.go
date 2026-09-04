@@ -135,6 +135,11 @@ func TestNew_RejectsInvalidSources(t *testing.T) {
 			},
 			wantErr: aggregate.ErrInvalidSource,
 		},
+		{
+			name:    "name containing slash",
+			sources: []aggregate.Source{{Name: "team/api", Probe: healthy}},
+			wantErr: aggregate.ErrInvalidSource,
+		},
 	}
 
 	for _, tt := range tests {
@@ -147,6 +152,57 @@ func TestNew_RejectsInvalidSources(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestNew_SlashNameContract pins both halves of the source-name contract:
+// source names with "/" are rejected because the name becomes the check-key
+// prefix ("name/check") and a slash would blur the grouping axis and could
+// alias another source's namespace; check names with "/" are accepted and
+// everything before the first slash stays the source name.
+// See docs/aggregate-source-name-design.md.
+func TestNew_SlashNameContract(t *testing.T) {
+	t.Parallel()
+
+	t.Run("rejects slash in source name", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := aggregate.New(aggregate.Source{
+			Name:  "team/api",
+			Probe: newStartedProbe(t, false, false),
+		})
+		if !errors.Is(err, aggregate.ErrInvalidSource) {
+			t.Fatalf("aggregate.New error = %v, want %v", err, aggregate.ErrInvalidSource)
+		}
+	})
+
+	t.Run("accepts slash in check name, grouping axis intact", func(t *testing.T) {
+		t.Parallel()
+
+		results := func(context.Context) map[string]error {
+			return map[string]error{"pool/primary": nil}
+		}
+
+		probe := health.NewWithHealthCheck(results, health.WithRefreshInterval(0))
+
+		if err := probe.Start(context.Background()); err != nil {
+			t.Fatalf("probe.Start: %v", err)
+		}
+
+		agg, err := aggregate.New(aggregate.Source{Name: "api", Probe: probe})
+		if err != nil {
+			t.Fatalf("aggregate.New: %v", err)
+		}
+
+		merged := agg.CachedResponse()
+
+		if len(merged.Checks) != 1 {
+			t.Fatalf("merged check count = %d, want 1", len(merged.Checks))
+		}
+
+		if _, ok := merged.Checks["api/pool/primary"]; !ok {
+			t.Fatalf("merged checks = %v, want key \"api/pool/primary\"", merged.Checks)
+		}
+	})
 }
 
 func TestNew_RefreshIntervalIsSlowestSource(t *testing.T) {

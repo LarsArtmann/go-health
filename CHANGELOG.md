@@ -48,10 +48,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Migrated JSON serialization from `encoding/json` to `encoding/json/v2`
   (Go 1.26+). All three handlers serialize responses through the new
   implementation, and `writeResponse` now passes `json.Deterministic(true)`
-  explicitly, because v2 does not sort map keys by default. The wire format is
-  unchanged (keys stay alphabetically ordered), guarded by
-  `TestReadiness_JSONChecksAreSortedAlphabetically`.
+  explicitly, because v2 does not sort map keys by default. Key order stays
+  alphabetical (`TestReadiness_JSONChecksAreSortedAlphabetically`), but note
+  one behavioral difference found by the JSON snapshot tests: v2 ignores
+  `omitempty` on scalar fields, so `"shutting_down":false` and
+  `"total_latency_ms":0` are now always emitted where v1 omitted them.
+  Consumers parsing strictly should tolerate these always-present fields.
 - Toolchain bumped to Go 1.26.7; Nix flake inputs and lockfile refreshed.
+- The flake now exports `GOEXPERIMENT=jsonv2` in every app and the devShell,
+  making the gates hermetic (previously they only worked because the
+  maintainer's shell leaked the variable).
 
 ## [0.0.2] - 2026-08-08
 
@@ -77,7 +83,8 @@ evaluation through every dependency. Purely additive — no breaking changes.
   `Status=StatusFail` so load balancers and orchestrators stop routing traffic
   to a draining instance.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/larsartmann/go-health/releases/tag/v0.1.0
 [0.0.2]: https://github.com/larsartmann/go-health/releases/tag/v0.0.2
 
 ## [0.0.1] - 2026-08-07

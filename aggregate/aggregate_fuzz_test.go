@@ -13,12 +13,14 @@ import (
 )
 
 // sevRank mirrors the aggregate's worst-of merge order: lower is worse.
-func sevRank(s health.Status) int {
-	switch s {
+func sevRank(status health.Status) int {
+	switch status {
 	case health.StatusFail:
 		return 0
 	case health.StatusWarn:
 		return 1
+	case health.StatusPass:
+		return 2
 	default:
 		return 2
 	}
@@ -28,38 +30,46 @@ func sevRank(s health.Status) int {
 func fuzzRequest(t *testing.T) *http.Request {
 	t.Helper()
 
-	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/healthz", nil)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/healthz", nil)
 	if err != nil {
 		t.Fatalf("build request: %v", err)
 	}
 
-	return r
+	return request
+}
+
+// fuzzSourceSpec controls one fuzz-built source's cached health view.
+type fuzzSourceSpec struct {
+	checkName  string
+	critical   bool
+	failing    bool
+	instanceID string
 }
 
 // newFuzzSource builds a started probe whose cached response has a controlled
 // status: pass when the service is healthy, fail when it fails critically,
 // warn when it fails non-critically.
-func newFuzzSource(t *testing.T, checkName string, critical, failing bool, instanceID string) *health.Probe {
+func newFuzzSource(t *testing.T, spec fuzzSourceSpec) *health.Probe {
 	t.Helper()
 
 	results := func(context.Context) map[string]error {
-		if failing {
-			return map[string]error{checkName: errors.New("service unhealthy")}
+		if spec.failing {
+			return map[string]error{spec.checkName: errUnhealthy}
 		}
 
-		return map[string]error{checkName: nil}
+		return map[string]error{spec.checkName: nil}
 	}
 
-	opts := []health.Option{
+	options := []health.Option{
 		health.WithRefreshInterval(0),
-		health.WithInstanceID(instanceID),
+		health.WithInstanceID(spec.instanceID),
 	}
 
-	if critical {
-		opts = append(opts, health.WithCriticalServices(checkName))
+	if spec.critical {
+		options = append(options, health.WithCriticalServices(spec.checkName))
 	}
 
-	probe := health.NewWithHealthCheck(results, opts...)
+	probe := health.NewWithHealthCheck(results, options...)
 
 	if err := probe.Start(context.Background()); err != nil {
 		t.Fatalf("probe.Start: %v", err)
@@ -87,65 +97,45 @@ func FuzzAggregateMergeInvariants(f *testing.F) {
 
 	f.Fuzz(func(
 		t *testing.T,
-		name1, checkName1, name2, checkName2 string,
-		crit1, fail1, crit2, fail2 bool,
+		nameOne, checkNameOne, nameTwo, checkNameTwo string,
+		critOne, failOne, critTwo, failTwo bool,
 		instanceID string,
 	) {
-		if name1 == "" || name2 == "" || name1 == name2 ||
-			strings.Contains(name1, "/") || strings.Contains(name2, "/") {
+		if nameOne == "" || nameTwo == "" || nameOne == nameTwo ||
+			strings.Contains(nameOne, "/") || strings.Contains(nameTwo, "/") {
 			t.Skip("invalid or colliding source names are covered by unit tests")
 		}
 
-		p1 := newFuzzSource(t, checkName1, crit1, fail1, instanceID)
-		p2 := newFuzzSource(t, checkName2, crit2, fail2, instanceID)
+		probeOne := newFuzzSource(t, fuzzSourceSpec{
+			checkName: checkNameOne, critical: critOne, failing: failOne, instanceID: instanceID,
+		})
+
+		probeTwo := newFuzzSource(t, fuzzSourceSpec{
+			checkName: checkNameTwo, critical: critTwo, failing: failTwo, instanceID: instanceID,
+		})
 
 		agg, err := aggregate.New(
-			aggregate.Source{Name: name1, Probe: p1},
-			aggregate.Source{Name: name2, Probe: p2},
+			aggregate.Source{Name: nameOne, Probe: probeOne},
+			aggregate.Source{Name: nameTwo, Probe: probeTwo},
 		)
 		if err != nil {
 			t.Fatalf("aggregate.New: %v", err)
 		}
 
-		src1 := p1.CachedResponse()
-		src2 := p2.CachedResponse()
-		sources := map[string]health.Response{name1: src1, name2: src2}
-
-		wantStatus := health.StatusPass
-		anyShutdown := false
-
-		var wantLatency int64
-
-		wantChecks := 0
-
-		for _, src := range []health.Response{src1, src2} {
-			if sevRank(src.Status) < sevRank(wantStatus) {
-				wantStatus = src.Status
-			}
-
-			if src.ShuttingDown {
-				anyShutdown = true
-			}
-
-			if src.TotalLatencyMs > wantLatency {
-				wantLatency = src.TotalLatencyMs
-			}
-
-			wantChecks += len(src.Checks)
+		cachedViews := map[string]health.Response{
+			nameOne: probeOne.CachedResponse(),
+			nameTwo: probeTwo.CachedResponse(),
 		}
 
-		if anyShutdown {
-			wantStatus = health.StatusFail
-		}
-
+		wantStatus, wantShutdown, wantLatency, wantChecks := foldSources(cachedViews)
 		merged := agg.CachedResponse()
 
 		if merged.Status != wantStatus {
 			t.Fatalf("merged status: want %q, got %q", wantStatus, merged.Status)
 		}
 
-		if merged.ShuttingDown != anyShutdown {
-			t.Fatalf("merged shutting_down: want %v, got %v", anyShutdown, merged.ShuttingDown)
+		if merged.ShuttingDown != wantShutdown {
+			t.Fatalf("merged shutting_down: want %v, got %v", wantShutdown, merged.ShuttingDown)
 		}
 
 		if merged.TotalLatencyMs != wantLatency {
@@ -156,57 +146,119 @@ func FuzzAggregateMergeInvariants(f *testing.F) {
 			t.Fatalf("merged check count: want %d, got %d", wantChecks, len(merged.Checks))
 		}
 
-		for key, check := range merged.Checks {
-			prefix, rest, _ := strings.Cut(key, "/")
-			src, ok := sources[prefix]
-			if !ok {
-				t.Fatalf("merged check %q has prefix %q which is not a source name", key, prefix)
-			}
-
-			want, ok := src.Checks[rest]
-			if !ok {
-				t.Fatalf("merged check %q absent from source %q", key, prefix)
-			}
-
-			if want != check {
-				t.Fatalf("merged check %q value drift: want %+v, got %+v", key, want, check)
-			}
-		}
+		assertChecksNamespaced(t, merged.Checks, cachedViews)
 
 		if merged.Version != "" || merged.InstanceID != "" || merged.Uptime != "" || !merged.Timestamp.IsZero() {
 			t.Fatalf("per-process scalars survived the merge: %+v", merged)
 		}
 
-		wantStartup := p1.StartupComplete() && p2.StartupComplete()
+		wantStartup := probeOne.StartupComplete() && probeTwo.StartupComplete()
 		if agg.StartupComplete() != wantStartup {
 			t.Fatalf("startup AND: want %v, got %v", wantStartup, agg.StartupComplete())
 		}
 
-		assertCode := func(name string, handler http.HandlerFunc, want int) {
-			t.Helper()
-
-			w := httptest.NewRecorder()
-			handler(w, fuzzRequest(t))
-
-			if w.Code != want {
-				t.Fatalf("%s handler: want %d, got %d", name, want, w.Code)
-			}
-		}
-
-		assertCode("liveness", agg.LivenessHandler(), http.StatusOK)
-
-		wantCode := http.StatusOK
-		if wantStatus == health.StatusFail {
-			wantCode = http.StatusServiceUnavailable
-		}
-
-		assertCode("readiness", agg.ReadinessHandler(), wantCode)
-
-		wantCode = http.StatusServiceUnavailable
-		if wantStartup {
-			wantCode = http.StatusOK
-		}
-
-		assertCode("startup", agg.StartupHandler(), wantCode)
+		assertAggregateHandlers(t, agg, wantStatus, wantStartup)
 	})
+}
+
+// foldSources computes the merge expectations from the sources' cached views.
+func foldSources(sources map[string]health.Response) (status health.Status, shutdown bool, latency int64, checks int) {
+	status = health.StatusPass
+
+	for _, cached := range sources {
+		if sevRank(cached.Status) < sevRank(status) {
+			status = cached.Status
+		}
+
+		if cached.ShuttingDown {
+			shutdown = true
+		}
+
+		if cached.TotalLatencyMs > latency {
+			latency = cached.TotalLatencyMs
+		}
+
+		checks += len(cached.Checks)
+	}
+
+	if shutdown {
+		status = health.StatusFail
+	}
+
+	return status, shutdown, latency, checks
+}
+
+// assertChecksNamespaced verifies every merged check key is prefixed by a
+// source name and carries exactly that source's check value.
+func assertChecksNamespaced(t *testing.T, merged map[string]health.Check, sources map[string]health.Response) {
+	t.Helper()
+
+	for key, check := range merged {
+		prefix, rest, _ := strings.Cut(key, "/")
+
+		source, ok := sources[prefix]
+		if !ok {
+			t.Fatalf("merged check %q has prefix %q which is not a source name", key, prefix)
+		}
+
+		want, ok := source.Checks[rest]
+		if !ok {
+			t.Fatalf("merged check %q absent from source %q", key, prefix)
+		}
+
+		if want != check {
+			t.Fatalf("merged check %q value drift: want %+v, got %+v", key, want, check)
+		}
+	}
+}
+
+// assertAggregateHandlers verifies the three handlers answer with their
+// documented status codes for the merged state.
+func assertAggregateHandlers(t *testing.T, agg *aggregate.Aggregate, wantStatus health.Status, wantStartup bool) {
+	t.Helper()
+
+	cases := []struct {
+		name    string
+		handler http.HandlerFunc
+		want    int
+	}{
+		{name: "liveness", handler: agg.LivenessHandler(), want: http.StatusOK},
+	}
+
+	if wantStatus == health.StatusFail {
+		cases = append(cases, struct {
+			name    string
+			handler http.HandlerFunc
+			want    int
+		}{name: "readiness", handler: agg.ReadinessHandler(), want: http.StatusServiceUnavailable})
+	} else {
+		cases = append(cases, struct {
+			name    string
+			handler http.HandlerFunc
+			want    int
+		}{name: "readiness", handler: agg.ReadinessHandler(), want: http.StatusOK})
+	}
+
+	if wantStartup {
+		cases = append(cases, struct {
+			name    string
+			handler http.HandlerFunc
+			want    int
+		}{name: "startup", handler: agg.StartupHandler(), want: http.StatusOK})
+	} else {
+		cases = append(cases, struct {
+			name    string
+			handler http.HandlerFunc
+			want    int
+		}{name: "startup", handler: agg.StartupHandler(), want: http.StatusServiceUnavailable})
+	}
+
+	for _, testCase := range cases {
+		recorder := httptest.NewRecorder()
+		testCase.handler(recorder, fuzzRequest(t))
+
+		if recorder.Code != testCase.want {
+			t.Errorf("%s handler: want %d, got %d", testCase.name, testCase.want, recorder.Code)
+		}
+	}
 }

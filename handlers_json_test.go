@@ -138,33 +138,41 @@ func TestResponseJSONRoundTripIdentity(t *testing.T) {
 				t.Fatalf("wire identity broken:\nfirst:  %s\nsecond: %s", first, second)
 			}
 
-			if decoded.Status != resp.Status ||
-				decoded.Version != resp.Version ||
-				decoded.InstanceID != resp.InstanceID ||
-				decoded.Uptime != resp.Uptime ||
-				decoded.ShuttingDown != resp.ShuttingDown ||
-				decoded.TotalLatencyMs != resp.TotalLatencyMs {
-				t.Fatalf("scalar drift:\nwant: %+v\ngot:  %+v", resp, decoded)
-			}
-
-			if !decoded.Timestamp.Equal(resp.Timestamp) {
-				t.Fatalf("timestamp drift: want %v, got %v", resp.Timestamp, decoded.Timestamp)
-			}
-
-			if len(decoded.Checks) != len(resp.Checks) {
-				t.Fatalf("check count drift: want %d, got %d", len(resp.Checks), len(decoded.Checks))
-			}
-
-			for key, wantCheck := range resp.Checks {
-				gotCheck, ok := decoded.Checks[key]
-				if !ok {
-					t.Fatalf("check %q lost in round-trip", key)
-				}
-
-				if gotCheck != wantCheck {
-					t.Fatalf("check %q drift: want %+v, got %+v", key, wantCheck, gotCheck)
-				}
-			}
+			assertRoundTripEqual(t, resp, decoded)
 		})
+	}
+}
+
+// assertRoundTripEqual verifies the decoded value equals the original
+// Response field-for-field.
+func assertRoundTripEqual(t *testing.T, want, got health.Response) {
+	t.Helper()
+
+	if got.Status != want.Status ||
+		got.Version != want.Version ||
+		got.InstanceID != want.InstanceID ||
+		got.Uptime != want.Uptime ||
+		got.ShuttingDown != want.ShuttingDown ||
+		got.TotalLatencyMs != want.TotalLatencyMs {
+		t.Fatalf("scalar drift:\nwant: %+v\ngot:  %+v", want, got)
+	}
+
+	if !got.Timestamp.Equal(want.Timestamp) {
+		t.Fatalf("timestamp drift: want %v, got %v", want.Timestamp, got.Timestamp)
+	}
+
+	if len(got.Checks) != len(want.Checks) {
+		t.Fatalf("check count drift: want %d, got %d", len(want.Checks), len(got.Checks))
+	}
+
+	for key, wantCheck := range want.Checks {
+		gotCheck, ok := got.Checks[key]
+		if !ok {
+			t.Fatalf("check %q lost in round-trip", key)
+		}
+
+		if gotCheck != wantCheck {
+			t.Fatalf("check %q drift: want %+v, got %+v", key, wantCheck, gotCheck)
+		}
 	}
 }

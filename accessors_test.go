@@ -355,6 +355,19 @@ func (c *mutableClock) Now() time.Time { return time.Unix(0, c.nowNs.Load()) }
 
 func (c *mutableClock) Advance(d time.Duration) { c.nowNs.Add(int64(d)) }
 
+// requestReadiness performs one GET against the readiness handler and
+// returns the response body, failing the test on a non-200 status.
+func requestReadiness(t *testing.T, handler http.HandlerFunc, path string) string {
+	t.Helper()
+
+	rec := doRequest(t, handler, path)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("readiness request: want 200, got %d", rec.Code)
+	}
+
+	return rec.Body.String()
+}
+
 func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 	t.Parallel()
 
@@ -380,51 +393,17 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 	handler := probe.ReadinessHandler()
 	routes := health.DefaultRoutes()
 
-	rec := doRequest(t, handler, routes.Readiness)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("first request: want 200, got %d", rec.Code)
-	}
+	first := requestReadiness(t, handler, routes.Readiness)
 
 	if got := batches.Load(); got != 1 {
 		t.Fatalf("first request batches: want 1, got %d", got)
 	}
 
-	first := rec.Body.String()
-
-	var firstResp struct {
-		Timestamp time.Time `json:"timestamp"`
-	}
-
-	if err := json.Unmarshal([]byte(first), &firstResp); err != nil {
-		t.Fatalf("unmarshal first response: %v", err)
-	}
-
-	if !firstResp.Timestamp.Equal(epoch) {
-		t.Errorf(
-			"first response timestamp not stamped from fake clock: want %v, got %v",
-			epoch,
-			firstResp.Timestamp,
-		)
-	}
+	assertTimestampOf(t, first, epoch)
 
 	// With the clock frozen, any number of requests must serve the stored
 	// result byte-identically: one batch total, one response.
-	var wg sync.WaitGroup
-
-	for range 25 {
-		wg.Go(func() {
-			r := doRequest(t, handler, routes.Readiness)
-			if r.Code != http.StatusOK {
-				t.Errorf("frozen-clock status: want 200, got %d", r.Code)
-			}
-
-			if body := r.Body.String(); body != first {
-				t.Errorf("frozen-clock body drift within window:\n want %s\n got  %s", first, body)
-			}
-		})
-	}
-
-	wg.Wait()
+	assertFrozenWindow(t, handler, routes.Readiness, first, 25)
 
 	if got := batches.Load(); got != 1 {
 		t.Errorf("25 frozen-clock requests ran %d batches; want exactly 1", got)
@@ -434,30 +413,57 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 	// exactly one new batch; the new result is then frozen the same way.
 	clock.Advance(window + time.Millisecond)
 
-	rec = doRequest(t, handler, routes.Readiness)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("post-window request: want 200, got %d", rec.Code)
-	}
+	second := requestReadiness(t, handler, routes.Readiness)
 
 	if got := batches.Load(); got != 2 {
 		t.Fatalf("post-window batches: want 2, got %d", got)
 	}
 
-	second := rec.Body.String()
 	if second == first {
 		t.Error("post-window body equals pre-window body; freshness marker did not advance")
 	}
 
-	for range 10 {
-		r := doRequest(t, handler, routes.Readiness)
-		if body := r.Body.String(); body != second {
-			t.Errorf("re-frozen body drift:\n want %s\n got  %s", second, body)
-		}
-	}
+	assertFrozenWindow(t, handler, routes.Readiness, second, 10)
 
 	if got := batches.Load(); got != 2 {
 		t.Errorf("post-window re-frozen requests ran %d batches; want still 2", got)
 	}
+}
+
+// assertTimestampOf verifies the response's timestamp equals the expected
+// instant, proving Evaluate stamps from the injected clock.
+func assertTimestampOf(t *testing.T, body string, want time.Time) {
+	t.Helper()
+
+	var decoded struct {
+		Timestamp time.Time `json:"timestamp"`
+	}
+
+	if err := json.Unmarshal([]byte(body), &decoded); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+
+	if !decoded.Timestamp.Equal(want) {
+		t.Errorf("response timestamp not stamped from fake clock: want %v, got %v", want, decoded.Timestamp)
+	}
+}
+
+// assertFrozenWindow fires concurrent requests with the clock frozen and
+// verifies every one serves wantBody byte-identically.
+func assertFrozenWindow(t *testing.T, handler http.HandlerFunc, path, wantBody string, requests int) {
+	t.Helper()
+
+	var wg sync.WaitGroup
+
+	for range requests {
+		wg.Go(func() {
+			if body := requestReadiness(t, handler, path); body != wantBody {
+				t.Errorf("frozen-clock body drift within window:\n want %s\n got  %s", wantBody, body)
+			}
+		})
+	}
+
+	wg.Wait()
 }
 
 // --- P31: shutdown grace period ---.

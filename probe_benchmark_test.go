@@ -111,16 +111,16 @@ func BenchmarkGuardOverhead(b *testing.B) {
 		{name: "unlisted", opts: []health.Option{health.WithAllowedMethods(http.MethodGet)}, method: http.MethodPost},
 	}
 
-	for _, tc := range cases {
-		b.Run(tc.name, func(b *testing.B) {
+	for _, bench := range cases {
+		b.Run(bench.name, func(b *testing.B) {
 			probe := health.NewWithHealthCheck(
 				func(context.Context) map[string]error { return nil },
-				tc.opts...,
+				bench.opts...,
 			)
 
 			handler := probe.LivenessHandler()
 
-			r, err := http.NewRequestWithContext(context.Background(), tc.method, "/healthz", nil)
+			r, err := http.NewRequestWithContext(context.Background(), bench.method, "/healthz", nil)
 			if err != nil {
 				b.Fatal(err)
 			}

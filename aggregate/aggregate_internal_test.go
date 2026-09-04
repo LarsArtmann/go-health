@@ -39,6 +39,7 @@ func TestWriteResponse_MarshalError(t *testing.T) {
 	t.Parallel()
 
 	original := marshalResponse
+
 	t.Cleanup(func() { marshalResponse = original })
 
 	marshalResponse = func(health.Response) ([]byte, error) {

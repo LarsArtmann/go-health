@@ -103,6 +103,7 @@ Baselines recorded 2026-09-04 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`
 | `BenchmarkStartupHandler_Contention`  | 7755 ns/op · 4518 B/op · 66 allocs | Worst case: failing critical service keeps the latch open; every parallel request runs a full live batch. |
 | `BenchmarkStartupHandler_Unlatched`   | 919 ns/op · 1428 B/op · 16 allocs  | Serial loop; latches on first successful batch, subsequent ops measure the latch check only.  |
 | `BenchmarkCachedResponse_ParallelReads` | ~0.03 ns/op · 0 B/op · 0 allocs   | Lock-free atomic cache read under full contention.                                            |
+| `BenchmarkGuardOverhead/allowed`       | ~900 ns/op · 474 B/op · 9 allocs   | Method-set guard, method in the allowed set: ~0 overhead vs no-guard (same allocs). The 405 path (`unlisted`) is cheaper still (~220 ns — no response marshal). |
 
 ## Infrastructure & Tooling
 
@@ -110,7 +111,7 @@ Baselines recorded 2026-09-04 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`
 | ------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Nix devShell (`flake.nix`)      | FULLY_FUNCTIONAL | Verified: `nix flake check` passes. devShell + treefmt + all Nix apps working; `GOEXPERIMENT=jsonv2` exported hermetically (required — see AGENTS.md gotcha). `flake.nix` |
 | Linter config (`.golangci.yml`) | FULLY_FUNCTIONAL | 0 issues. Curated for this project: varnamelen accepts idiomatic `w`/`r`/`wg`, tagliatelle enforces snake_case JSON.                                       |
-| Fuzz targets                    | FULLY_FUNCTIONAL | Two targets (response marshal, handler round-trip); found and drove the UTF-8 sanitization fix. `handlers_fuzz_test.go`                                    |
+| Fuzz targets                    | FULLY_FUNCTIONAL | Three targets (response marshal, handler round-trip, aggregate merge invariants); found and drove the UTF-8 sanitization fix and the `instance_id` sanitization fix. `handlers_fuzz_test.go`, `aggregate/aggregate_fuzz_test.go`    |
 | Stress & property tests         | FULLY_FUNCTIONAL | Concurrent Start/Shutdown stress, restart-after-shutdown, 64-combo classify matrix, JSON snapshot + omit-empty wire locks.                                  |
 | CI pipeline                     | FULLY_FUNCTIONAL | GitHub Actions (`.github/workflows/ci.yml`): test-race + short fuzz, vet+lint, govulncheck+gosec, flake check. Nix runners, SHA-pinned actions, goPkg toolchain pinned. Green on `master` and on the `v0.1.1` tag run. |
 | Security scanning               | FULLY_FUNCTIONAL | `govulncheck` (0 vulns) and `gosec` (0 issues), enforced by CI jobs and reproducible locally via `nix run .#vulncheck` / `.#security`.                                                                                   |

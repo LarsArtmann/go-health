@@ -81,9 +81,9 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 **doanalyzerv2:** the private `branching-flow/pkg/doanalyzerv2` AST analyzer
 (persisted in-repo as the `tools/doanalyzerv2` replace-module runner,
 sidestepping the nix-sandbox `go install` block) reports 0 findings for
-DO-1..DO-6 across all source files. Invoke with `go run ./tools/doanalyzerv2 .`
-from the repo root; it requires the go-design-smells checkout at
-`/home/lars/projects/branching-flow` (the replace path in
+DO-1..DO-6 across all source files. Invoke with
+`(cd tools/doanalyzerv2 && go run . ..)`; it requires the go-design-smells
+checkout at `/home/lars/projects/branching-flow` (the replace path in
 `tools/doanalyzerv2/go.mod`).
 
 **Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard) (still pinned below v0.1.1 via a replace directive), verified compiling against HEAD (7 importing files, replace-directive build, exit 0). The `auditlog.Plugin`-as-`HealthRecorder` integration was also verified live (compile-time interface assertion + probe Start/Evaluate). Any public API change must be coordinated with the dashboard consumer.
@@ -172,5 +172,7 @@ from the repo root; it requires the go-design-smells checkout at
 | [docs/starting-status-design.md](docs/starting-status-design.md)        | Rejected: fourth Status value, Status input validation                            |
 | [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
 | [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md) | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers    |
+| [docs/deprecation-policy.md](docs/deprecation-policy.md)                 | Deprecation checklist, symbol lifetime, SA1019 stance                            |
+| [SECURITY.md](SECURITY.md)                                               | Vulnerability disclosure path, in/out of scope, response targets                 |
 | [docs/adr/](docs/adr/)                                                   | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003), recorder decoupling (004) |
 | [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                      |

@@ -71,7 +71,7 @@ done
    replace-module runner checked in under `tools/doanalyzerv2`:
 
 ```bash
-go run ./tools/doanalyzerv2 .   # requires the go-design-smells checkout at /home/lars/projects/branching-flow
+(cd tools/doanalyzerv2 && go run . ..)   # requires the go-design-smells checkout at /home/lars/projects/branching-flow
 ```
 
 7. Submit a pull request

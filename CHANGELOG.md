@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- `aggregate.New` now rejects source names containing `/` (wrapped
+  `ErrInvalidSource`): the name becomes the `"name/check"` key prefix, and a
+  slash would silently alias another source's namespace and break the
+  documented grouping axis. Check names may still contain `/`; everything
+  before the first slash in a merged key is the source name. Rationale and
+  migration guidance in `docs/aggregate-source-name-design.md`.
+
 ## [0.1.2] - 2026-09-04
 
 ### Added

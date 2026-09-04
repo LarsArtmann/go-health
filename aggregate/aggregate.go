@@ -78,7 +78,9 @@ func New(sources ...Source) (*Aggregate, error) {
 		case strings.Contains(src.Name, "/"):
 			return nil, fmt.Errorf(
 				"%w: source name %q must not contain '/' (names become \"name/check\" key prefixes)",
-				ErrInvalidSource, src.Name)
+				ErrInvalidSource,
+				src.Name,
+			)
 		}
 
 		if _, dup := seen[src.Name]; dup {

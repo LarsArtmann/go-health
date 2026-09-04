@@ -36,7 +36,10 @@ func TestAccessors_StatusAliveReady(t *testing.T) {
 	}
 
 	if probe.Status() != health.StatusPass {
-		t.Errorf("Status before any evaluation: want pass (cached fallback), got %s", probe.Status())
+		t.Errorf(
+			"Status before any evaluation: want pass (cached fallback), got %s",
+			probe.Status(),
+		)
 	}
 
 	if !probe.Ready() {
@@ -131,6 +134,7 @@ func TestHealthz_CombinesStartupAndReadiness(t *testing.T) {
 
 	rec = doRequest(t, handler, routes.Readiness)
 	if rec.Code != http.StatusOK {
+		t.Logf("DEBUG body: %s", rec.Body.String())
 		t.Errorf("after latch: want 200, got %d", rec.Code)
 	}
 
@@ -303,7 +307,10 @@ func TestWithLiveThrottle_CoalescesLiveEvaluations(t *testing.T) {
 	wg.Wait()
 
 	if calls := batches.Load(); calls > 5 {
-		t.Errorf("20 requests within the throttle window ran %d batches; want coalescing (<=5)", calls)
+		t.Errorf(
+			"20 requests within the throttle window ran %d batches; want coalescing (<=5)",
+			calls,
+		)
 	}
 
 	// After the window elapses a fresh batch runs.

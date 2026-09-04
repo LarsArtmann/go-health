@@ -133,12 +133,12 @@ func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes) {
 // previous evaluation is served, so request floods cannot amplify into batch
 // floods against the dependencies.
 func (p *Probe) readinessResponse(ctx context.Context) Response {
-	if cached := p.latest.Load(); cached != nil {
-		return *cached
-	}
-
 	if p.liveThrottle > 0 {
 		return p.throttledLiveResponse(ctx)
+	}
+
+	if cached := p.latest.Load(); cached != nil {
+		return *cached
 	}
 
 	evalCtx, cancel := context.WithTimeout(ctx, p.timeout)

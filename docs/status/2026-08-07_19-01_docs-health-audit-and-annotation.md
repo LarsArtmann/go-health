@@ -242,9 +242,9 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 
 ## g) Questions I Cannot Answer Myself
 
-### 1. Is there a consumer of this library right now?
+### ~~1. Is there a consumer of this library right now?~~ resolved — `go-health-dashboard` confirmed as the known consumer (build + tests green against HEAD and released v0.1.2; no replace directive); `samber-do-auditlog` does NOT import go-health (dependency-free both ways). Recorded in AGENTS.md "Consumer verification".
 
-The library was extracted from `samber-do-auditlog`. Whether that project (or any other) currently imports `github.com/larsartmann/go-health` is unknown. The answer affects every priority decision: if there are zero consumers, all breaking changes should happen now (interface cleanup, `HealthRecorder` signature, etc.) while the cost is zero. If there are consumers, I need a migration guide and deprecation path. **Can you confirm whether any project currently imports this module?**
+The library was extracted from `samber-do-auditlog`. ~~Whether that project (or any other) currently imports `github.com/larsartmann/go-health` is unknown. The answer affects every priority decision: if there are zero consumers, all breaking changes should happen now (interface cleanup, `HealthRecorder` signature, etc.) while the cost is zero. If there are consumers, I need a migration guide and deprecation path. **Can you confirm whether any project currently imports this module?**~~
 
 ### ~~2. Should I keep the `Start()` returning `error` change, or revert it?~~ resolved — kept; shipped in v0.0.1 with `Start(ctx) error` (tag pushed, GitHub release published).
 

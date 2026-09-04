@@ -63,14 +63,14 @@ committed in 9 commits during the run).
 
 ## b) PARTIALLY DONE
 
-1. **13-17 report annotation** — only the items this run actually closed were
-   marked (22 of ~50 f-items). The rest are genuinely open; per ANNOTATE
-   discipline absence IS the open signal. Full resolution of that file's list
-   happens as the backlog executes, not in one pass.
-2. **User decisions collected but not resolved** — the 13-17 g-questions
-   (branch protection, `WithGETOnly` removal timeline, dashboard consumer bump)
-   plus SA1019 policy and optional CI jobs are routed into TODO_LIST's
-   "Blocked on user decisions" table; none have answers yet.
+1. ~~**13-17 report annotation** — only the items this run actually closed were~~ done (completed — this evening's run resolved every remaining 13-17 item inline)
+   ~~marked (22 of ~50 f-items). The rest are genuinely open; per ANNOTATE~~
+   ~~discipline absence IS the open signal. Full resolution of that file's list~~
+   ~~happens as the backlog executes, not in one pass.~~
+2. ~~**User decisions collected but not resolved** — the 13-17 g-questions~~ done (resolved — SA1019 G5 (21-31 §a24), deprecation-policy.md (19-25 §a18), dashboard at v0.1.2 (21-31 §a8); branch protection routed to TODO_LIST)
+   ~~(branch protection, `WithGETOnly` removal timeline, dashboard consumer bump)~~
+   ~~plus SA1019 policy and optional CI jobs are routed into TODO_LIST's~~
+   ~~"Blocked on user decisions" table; none have answers yet.~~
 3. **Health-score findings table** — computed inline in the conversation with
    visible math (pre-fix 3.0/7.8 → post-fix 10/10) but the per-file finding
    list lives in the conversation only; this report carries the summary, not a
@@ -88,25 +88,32 @@ committed in 9 commits during the run).
 ## c) NOT STARTED
 
 All deliberate scope exclusions for this docs-only run (user: "DO NOT RESEARCH
-OTHER STUFF UNRELATED"). Everything below is already tracked in TODO_LIST /
-ROADMAP with evidence:
+OTHER STUFF UNRELATED"). ~~Everything below is already tracked in TODO_LIST /
+ROADMAP with evidence:~~ — since resolved by the 19-25/21-31 sessions or routed
+(verdict details in this report's §f):
 
-- Code/tests: fake-clock throttle determinism test; `getOnly bool` collapse
+- ~~Code/tests: fake-clock throttle determinism test; `getOnly bool` collapse
   into the method set; coverage-gap enumeration (~1.5%); aggregate fuzz
   targets + `instance_id` seeds; godoc examples (`NewWithHealthCheck`,
   `Healthz`, `WithEvaluationHook`, `AwaitReady`); method-set-guard benchmark;
   JSON round-trip property test; the three promoted examples (custom recorder,
-  two-phase shutdown, live-vs-cached); aggregate coverage gaps.
-- Infra/repo: persisted doanalyzerv2 runner; SECURITY.md; PR template;
+  two-phase shutdown, live-vs-cached); aggregate coverage gaps.~~ all shipped
+  in the 19-25 session (§a2–a10) except live-vs-cached — ROADMAP raw idea.
+- ~~Infra/repo: persisted doanalyzerv2 runner; SECURITY.md; PR template;
   sanitized-PATH release-checklist step in CONTRIBUTING; "adding a new Option"
-  checklist; openapi.yaml CI validation; README compat matrix; coverage-threshold
-  and dependabot-auto-merge jobs (optional, policy).
-- User decisions: branch protection; dashboard bump to v0.1.1; SA1019 policy;
+  checklist; openapi.yaml CI validation; README compat matrix;~~ shipped in the
+  19-25 session (§a11–a17); ~~coverage-threshold and dependabot-auto-merge jobs
+  (optional, policy)~~ routed to TODO_LIST (owner) / ROADMAP Theme 7.
+- ~~User decisions: branch protection; dashboard bump to v0.1.1; SA1019 policy;
   deprecation removal timeline; v0.2.0 scoping; v1.0 criteria; release
-  automation; v0.1.1 announcement.
-- External: pkg.go.dev v0.1.1 render verification (propagation lag — already
-  > 1h; re-check later).
-- HTML status dashboard variant (superseded by explicit `.md` request).
+  automation; v0.1.1 announcement.~~ SA1019 confirmed (G5), deprecation policy
+  written, dashboard at v0.1.2, v0.2.0/v1.0/release-automation decided in
+  ROADMAP Theme 7, announcement drafted; branch protection + publishing remain
+  owner actions (TODO_LIST).
+- ~~External: pkg.go.dev v0.1.1 render verification (propagation lag — already
+  > 1h; re-check later).~~ verified rendered (19-25 §a1).
+- ~~HTML status dashboard variant (superseded by explicit `.md` request).~~ Won't
+  implement — `.md` is the owner's standing preference.
 
 ## d) TOTALLY FUCKED UP
 
@@ -164,81 +171,88 @@ ROADMAP with evidence:
 
 **Now — release hygiene & external truth**
 
-1. Verify pkg.go.dev renders v0.1.1 (incl. `Deprecated` section) — still 404 at 14:00 CEST.
-2. Owner decision: branch protection on `master` (4 CI checks + linear history).
-3. Bump `go-health-dashboard` to v0.1.1 (drop its replace directive).
-4. Owner decision: `WithGETOnly` removal timeline / deprecation policy doc.
-5. Owner decision: SA1019 policy for in-repo pinning of deprecated symbols.
-6. Fake-clock determinism test for the live-throttle freshness seam.
-7. Persist a repeatable doanalyzerv2 runner (tools/ + CONTRIBUTING one-liner).
-8. CONTRIBUTING: add the sanitized-PATH "CI emulation" step to the release checklist.
-9. SECURITY.md (disclosure path for the public module).
-10. PR template (issue templates exist; PRs don't).
-11. Collapse internal `getOnly bool` into the `WithAllowedMethods` method set.
-12. Enumerate the uncovered ~1.5% coverage; cover or document each.
-13. Fuzz the `aggregate` package; add `instance_id`-populated fuzz seeds.
-14. Godoc examples: `ExampleNewWithHealthCheck`, `ExampleProbe_Healthz`, `ExampleWithEvaluationHook`, `ExampleProbe_AwaitReady`.
+1. ~~Verify pkg.go.dev renders v0.1.1 (incl. `Deprecated` section) — still 404 at 14:00 CEST.~~ done (closed for v0.1.1 — rendered and verified live (19-25 §a1); the v0.1.2 render check is tracked in TODO_LIST)
+2. ~~Owner decision: branch protection on `master` (4 CI checks + linear history).~~ done (routed to TODO_LIST — owner decision G3)
+3. ~~Bump `go-health-dashboard` to v0.1.1 (drop its replace directive).~~ done (superseded — dashboard bumped to released v0.1.2 (21-31 §a8))
+4. ~~Owner decision: `WithGETOnly` removal timeline / deprecation policy doc.~~ done (resolved — docs/deprecation-policy.md (19-25 §a18) — no removal in v0.x)
+5. ~~Owner decision: SA1019 policy for in-repo pinning of deprecated symbols.~~ done (G5 confirmed (21-31 §a24))
+6. ~~Fake-clock determinism test for the live-throttle freshness seam.~~ done (covered by the 19-25 report §a3)
+7. ~~Persist a repeatable doanalyzerv2 runner (tools/ + CONTRIBUTING one-liner).~~ done (covered by the 19-25 report §a11 + run.sh guard (21-31 §a23))
+8. ~~CONTRIBUTING: add the sanitized-PATH "CI emulation" step to the release checklist.~~ done (covered by the 19-25 report §a12; superseded by the .#ci-emulation app (21-31 §a11))
+9. ~~SECURITY.md (disclosure path for the public module).~~ done (covered by the 19-25 report §a14)
+10. ~~PR template (issue templates exist; PRs don't).~~ done (covered by the 19-25 report §a15)
+11. ~~Collapse internal `getOnly bool` into the `WithAllowedMethods` method set.~~ done (covered by the 19-25 report §a2)
+12. ~~Enumerate the uncovered ~1.5% coverage; cover or document each.~~ done (covered by the 19-25 report §a9)
+13. ~~Fuzz the `aggregate` package; add `instance_id`-populated fuzz seeds.~~ done (covered by the 19-25 report §a4/§a5)
+14. ~~Godoc examples: `ExampleNewWithHealthCheck`, `ExampleProbe_Healthz`, `ExampleWithEvaluationHook`, `ExampleProbe_AwaitReady`.~~ done (covered by the 19-25 report §a10)
 
 **Docs & guides (this run's leftovers)**
 
-15. Tighten the README Metrics snippet (define or pseudonymize the helpers).
-16. CONTRIBUTING: document the docs-health two-phase annotation workflow and the annotate scripts.
-17. CONTRIBUTING/AGENTS: extend the version/API-sync checklist with `doc.go` + a badge-liveness check.
-18. AGENTS gotcha: "external badges can rot (goreportcard sunset)" — record once, prevent re-adds.
-19. Document `WithLiveThrottle` × `Start`-populated cache interaction (throttle matters only on cache miss).
-20. Aggregate: fill coverage gaps (error paths in `New`, partial startup latch).
+15. ~~Tighten the README Metrics snippet (define or pseudonymize the helpers).~~ **Won't implement — deliberately illustrative — the snippet links the compiled prometheus_example_test.go (this report's own d6)..**
+16. ~~CONTRIBUTING: document the docs-health two-phase annotation workflow and the annotate scripts.~~ done (covered by the CONTRIBUTING 'Status Reports' section (7f489ac); the annotate scripts are skill-local tooling, intentionally not vendored)
+17. ~~CONTRIBUTING/AGENTS: extend the version/API-sync checklist with `doc.go` + a badge-liveness check.~~ done (landed in CONTRIBUTING 'Release / API-Sync Checklist' (2026-09-04 evening docs-health run))
+18. ~~AGENTS gotcha: "external badges can rot (goreportcard sunset)" — record once, prevent re-adds.~~ **Won't implement — dead badge removed; the remaining badges are GitHub-native (CI, pkg.go.dev, license) and self-verifying..**
+19. ~~Document `WithLiveThrottle` × `Start`-populated cache interaction (throttle matters only on cache miss).~~ done (covered by the 19-25 report §a17; test-backed per the 21-31 report §a13)
+20. ~~Aggregate: fill coverage gaps (error paths in `New`, partial startup latch).~~ done (covered by the 19-25 report §a9 — aggregate at 100%)
 
 **Quality & polish**
 
-21. Examples: custom `HealthRecorder`, two-phase shutdown, live-vs-cached → `example_test.go`.
-22. README compatibility matrix (tested Go × samber/do versions).
-23. Benchmark: method-set guard overhead (allowed / unlisted / no-guard).
-24. CONTRIBUTING: "adding a new Option" checklist.
-25. Property-based JSON round-trip test (unmarshal → marshal identity).
-26. Optional CI: validate `docs/openapi.yaml` (spectral/redocly) against drift.
-27. Optional CI: coverage-threshold job (fail < 97%?) — policy decision.
-28. Optional: dependabot auto-merge rules for patch bumps.
-29. Aggregate `Healthz` parity decision (single worst-of-N combined endpoint?).
-30. `AwaitReady` cache-aware poll interval (respect refresh interval vs fixed 50ms).
+21. ~~Examples: custom `HealthRecorder`, two-phase shutdown, live-vs-cached → `example_test.go`.~~ done (ExampleWithHealthRecorder + ExampleWithShutdownGracePeriod + ExampleProbe_AsShutdowner in CHANGELOG [Unreleased]; live-vs-cached stays a ROADMAP raw idea (21-31 §f27))
+22. ~~README compatibility matrix (tested Go × samber/do versions).~~ done (covered by the 19-25 report §a17)
+23. ~~Benchmark: method-set guard overhead (allowed / unlisted / no-guard).~~ done (covered by the 19-25 report §a8 + guard variants (21-31 §a17))
+24. ~~CONTRIBUTING: "adding a new Option" checklist.~~ done (covered by the 19-25 report §a13)
+25. ~~Property-based JSON round-trip test (unmarshal → marshal identity).~~ done (covered by the 19-25 report §a7)
+26. ~~Optional CI: validate `docs/openapi.yaml` (spectral/redocly) against drift.~~ done (covered by the 19-25 report §a16)
+27. ~~Optional CI: coverage-threshold job (fail < 97%?) — policy decision.~~ done (routed to TODO_LIST — owner policy decision)
+28. ~~Optional: dependabot auto-merge rules for patch bumps.~~ done (routed to ROADMAP Theme 7 raw idea)
+29. ~~Aggregate `Healthz` parity decision (single worst-of-N combined endpoint?).~~ done (routed to ROADMAP — Theme 1/7 v0.2.0 candidates)
+30. ~~`AwaitReady` cache-aware poll interval (respect refresh interval vs fixed 50ms).~~ done (routed to ROADMAP Theme 1 raw idea)
 
 **Strategic (ROADMAP Theme 7; needs product input)**
 
-31. v0.2.0 scoping: feature-driven vs date-based cadence.
-32. v1.0 criteria draft (API freeze list, stability promises).
-33. Deprecation burn-down plan (starts with `WithGETOnly`).
-34. Release automation: actions-based tag→release (GoReleaser judged overkill).
-35. Promote erraudit/doanalyzerv2 into CI if they ever become public.
-36. Track Go 1.26.x patch releases in the flake input (dependabot may cover).
-37. v0.1.1 announcement channel (user-owned marketing).
-38. `Probe.Snapshot()`-style accessor for structured-logging consumers (only with a concrete need).
-39. OpenTelemetry spans on Evaluate/checks (via the hook seam).
-40. `Response.TotalLatencyMs` as `float64` (revisit only with consumer need).
+31. ~~v0.2.0 scoping: feature-driven vs date-based cadence.~~ done (covered by the 21-31 report §a20 — ROADMAP Theme 7 v0.2.0 candidates)
+32. ~~v1.0 criteria draft (API freeze list, stability promises).~~ done (covered by the 21-31 report §a20 — ROADMAP Theme 7 v1.0 criteria draft)
+33. ~~Deprecation burn-down plan (starts with `WithGETOnly`).~~ done (covered by docs/deprecation-policy.md + ROADMAP Theme 7 v1.0 criteria)
+34. ~~Release automation: actions-based tag→release (GoReleaser judged overkill).~~ done (decided — manual tag flow adopted (ROADMAP Theme 7; 21-31 §a21))
+35. ~~Promote erraudit/doanalyzerv2 into CI if they ever become public.~~ done (routed to ROADMAP Theme 7 raw idea)
+36. ~~Track Go 1.26.x patch releases in the flake input (dependabot may cover).~~ done (routed to ROADMAP Theme 7 raw idea (flake-input coverage))
+37. ~~v0.1.1 announcement channel (user-owned marketing).~~ done (draft + channels ready (21-31 §a22); publishing routed to TODO_LIST owner action)
+38. ~~`Probe.Snapshot()`-style accessor for structured-logging consumers (only with a concrete need).~~ done (routed to ROADMAP Theme 2 raw idea)
+39. ~~OpenTelemetry spans on Evaluate/checks (via the hook seam).~~ done (routed to ROADMAP Theme 2 raw idea)
+40. ~~`Response.TotalLatencyMs` as `float64` (revisit only with consumer need).~~ done (routed to ROADMAP Theme 2 raw idea)
 
 **Hygiene & habit**
 
-41. Add "verified (date)" stamps to the temporal-pollution grep in future VERIFY passes.
-42. Add external-claim probing (badge/pkg.go.dev/proxy fetches) to every docs-health VERIFY.
-43. Sweep routing markers (`→ TODO_LIST/ROADMAP`) in the same pass as TODO_LIST rebuilds.
-44. Keep session-ending TODO_LIST curation mandatory (trophy decay regrows in one day).
-45. Prefer `annotate-rows.py`/`annotate-prose.py` before any hand-rolled annotation tooling.
-46. Re-check the gopls stdversion warnings after the next toolchain bump (AGENTS gotcha current as of today).
-47. Re-run consumer verification after every future API batch (dashboard compile via replace).
-48. Keep `erraudit ./... --type-aware` in the personal gate checklist (documented; not CI).
-49. Watch the first dependabot PRs (config verified; behavior not yet observed).
-50. Celebrate: the docs are now truthful end-to-end — six living docs, ten historical files, zero known inaccuracies at 14:15 CEST.
+41. ~~Add "verified (date)" stamps to the temporal-pollution grep in future VERIFY passes.~~ done (adopted as standing VERIFY practice)
+42. ~~Add external-claim probing (badge/pkg.go.dev/proxy fetches) to every docs-health VERIFY.~~ done (adopted as standing VERIFY practice — applied via the 19-25 pkg.go.dev/proxy fetches)
+43. ~~Sweep routing markers (`→ TODO_LIST/ROADMAP`) in the same pass as TODO_LIST rebuilds.~~ done (adopted — this run swept routed items in both directions)
+44. ~~Keep session-ending TODO_LIST curation mandatory (trophy decay regrows in one day).~~ done (standing practice — TODO_LIST re-curated at every session end since)
+45. ~~Prefer `annotate-rows.py`/`annotate-prose.py` before any hand-rolled annotation tooling.~~ done (standing practice — this run used annotate-prose.py after dry-runs)
+46. ~~Re-check the gopls stdversion warnings after the next toolchain bump (AGENTS gotcha current as of today).~~ done (routed to ROADMAP Theme 7 raw idea (editor noise only))
+47. ~~Re-run consumer verification after every future API batch (dashboard compile via replace).~~ done (standing practice — applied in the 21-31 report §a7/§a8)
+48. ~~Keep `erraudit ./... --type-aware` in the personal gate checklist (documented; not CI).~~ done (covered by CONTRIBUTING — erraudit is in the documented gate sweep)
+49. ~~Watch the first dependabot PRs (config verified; behavior not yet observed).~~ **Won't implement — observation is passive; dependabot coverage expansion is tracked as a ROADMAP Theme 7 raw idea..**
+50. ~~Celebrate: the docs are now truthful end-to-end — six living docs, ten historical files, zero known inaccuracies at 14:15 CEST.~~ done (held — this evening's docs-health run found only version-line drift (README/AGENTS), now fixed)
 
 ## g) Questions I Cannot Answer Myself
 
-1. **Branch protection**: shall the 4 CI checks + linear history be required on
-   `master`? It needs owner/admin repo settings either way — shall it be
-   configured now, or left until the repo has external contributors?
-2. **Dashboard consumer bump**: shall `go-health-dashboard` be upgraded to
-   v0.1.1 (drop its replace directive) as the first real downstream consumer
-   release now, or is that repo's cadence handled separately?
-3. **Deprecation removal timeline**: the godoc currently promises "no removal
-   in the v0.x line" for `WithGETOnly` — is that the final answer, or should a
-   deprecation policy pin a concrete version (v0.2? v1.0?) for removal?
+1. ~~**Branch protection**: shall the 4 CI checks + linear history be required on~~ done (owner decision — routed to TODO_LIST (G3 branch-protection row, ready-to-run command))
+   ~~`master`? It needs owner/admin repo settings either way — shall it be~~
+   ~~configured now, or left until the repo has external contributors?~~
+2. ~~**Dashboard consumer bump**: shall `go-health-dashboard` be upgraded to~~ done (resolved — superseded by the v0.1.2 bump (21-31 §a8))
+   ~~v0.1.1 (drop its replace directive) as the first real downstream consumer~~
+   ~~release now, or is that repo's cadence handled separately?~~
+3. ~~**Deprecation removal timeline**: the godoc currently promises "no removal~~ done (resolved — docs/deprecation-policy.md (19-25 §a18): no removal in v0.x, burn-down at v1.0)
+   ~~in the v0.x line" for `WithGETOnly` — is that the final answer, or should a~~
+   ~~deprecation policy pin a concrete version (v0.2? v1.0?) for removal?~~
 
 ---
 
 _Report ends. Awaiting instructions._
+
+## Completion (2026-09-04 evening docs-health run)
+
+The §f list (50 items), §g questions, and §c scope exclusions now all carry
+inline verdicts: shipped by the 19-25/21-31 sessions, routed to TODO_LIST
+(owner decisions) or ROADMAP raw ideas, or explicitly Won't-implement. Report
+fully resolved and archived to `docs/status/archived/`.

@@ -98,6 +98,19 @@ pattern. Checklist for a new `With*` option:
 8. **Gates**: `nix run .#test-race`, `.#lint`, `nix fmt`, and the CI-emulation
    step above if any gate is affected.
 
+## Release / API-Sync Checklist
+
+Any release, rename, or API batch must sweep every place that names a version
+or lists the API surface — these are the spots a docs sync historically missed:
+
+1. README stability line (the `> **Stability:**` quote)
+2. README badges + Project Docs section (dead badge = new drift class;
+   goreportcard sunset proved it)
+3. AGENTS.md status line + Project Documentation table
+4. `doc.go` package comment (was missed in the v0.1.1 batch)
+5. CHANGELOG `[Unreleased]` and the compare links at the bottom
+6. `docs/openapi.yaml` (wire shape) and the golden-file tests
+
 ## Status Reports
 
 Significant sessions may add a point-in-time snapshot to `docs/status/`, named

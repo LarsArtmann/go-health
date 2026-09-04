@@ -1,6 +1,6 @@
 # Pareto Master Plan v2 — Ship the Fix, Lock the Contract, Harden Verification
 
-**Created:** 2026-09-04 19:34 CEST · **Status:** PLANNED — execution starts after owner approval
+**Created:** 2026-09-04 19:34 CEST · **Status:** EXECUTED 2026-09-04 — all 27 medium tasks (86 micro tasks) completed and verified end-to-end; evidence, decision-gate outcomes, and open remnants in [docs/status/2026-09-04_21-31_pareto-plan-v2-full-execution-v012-released.md](../status/2026-09-04_21-31_pareto-plan-v2-full-execution-v012-released.md) (v0.1.2 cut, tagged, released; 5/5 CI jobs green)
 **Input universe:** 40 work items = 34 from status report `2026-09-04_19-25` §(f) + 6 carried blocked/strategy items
 **Method:** Pareto tiers (1% → 4% → 20% → 100%) × two granularity levels (27 medium tasks of 30–100 min → 86 micro tasks of ≤12 min)
 

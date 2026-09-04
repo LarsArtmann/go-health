@@ -69,6 +69,12 @@ Shipped: `Response.InstanceID` + `WithInstanceID`, static OpenAPI spec
 Decided against (see [starting-status-design.md](docs/starting-status-design.md)):
 "starting" Status, Status validation (no injection boundary exists).
 
+Raw ideas:
+
+- ETag/`If-None-Match` caching headers on health endpoints — write the
+  rejection note (caching is a proxy/CDN composition concern) before someone
+  asks for it
+
 ### 6. Testability & Internal Architecture — SHIPPED in v0.1.0
 
 `classifier` extraction, `ResetStartupLatchForTest` (test builds only; the
@@ -76,6 +82,14 @@ public latch stays one-way), `WithNowFunc` clock seam (deterministic uptime,
 timestamps, and throttle windows), `WithAllowedMethods` method-set guard.
 Middleware: no library concept needed — handlers are plain `http.HandlerFunc`
 ([middleware-design.md](docs/middleware-design.md)).
+
+Raw ideas (quality polish, none scheduled):
+
+- Aggregate handler (HTTP-path) benchmarks complementing the merge benchmark
+- Feed golden-fixture inputs into the aggregate fuzz seed corpus
+- Benchmark the throttled live path under contention (parallel load)
+- Fuzz the throttle-window boundary under concurrency with a fake clock
+- `-count=N` race-suite stress in CI if flakiness stays at zero
 
 ### 7. Release & Ecosystem Strategy
 
@@ -134,6 +148,14 @@ Raw ideas, none scheduled:
 
 - Promote `erraudit` / `doanalyzerv2` from local gates to CI steps if either
   tool ever becomes public
+- Dependabot/Renovate coverage for flake inputs + pinned action SHAs
+  (auto-merge rules are a separate policy decision)
+- Non-nix CI matrix job (plain `go test`) to widen the honestly-tested OS/arch
+  statement beyond linux/amd64; arm64 native runner evaluation if QEMU stays
+  too slow for race jobs
+- Raise the per-push fuzz budget above 10s/target if CI cost allows
+- Editor-experience: suppress the gopls stdversion warning while GOEXPERIMENT
+  stays enabled (AGENTS gotcha documents it as benign; noise only)
 - Track Go 1.26.x patch releases in the flake input (dependabot may cover)
 
 ## Non-goals

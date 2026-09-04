@@ -140,36 +140,36 @@ green against HEAD via replace.
 ## b) PARTIALLY DONE
 
 1. ~~pkg.go.dev verification for v0.1.1~~ — still propagating at the 2026-09-04 docs-health run (proxy resolves it; page 404); tracked in TODO_LIST. The v0.1.1 godoc (incl. the new
-   `// Deprecated:` marker on `WithGETOnly`) is not yet human-visible there.
-2. **Deprecation completeness in-repo** — 4 tests still call the now-deprecated
-   `WithGETOnly` (intentional: they pin the deprecated path), but there is no
-   explicit policy note in the tests or `.golangci.yml` decision recorded for
-   SA1019-style flags in other repos consuming ours.
+   `// Deprecated:` marker on `WithGETOnly`) is not yet human-visible there. — closed: rendered and verified live, incl. the Deprecated section (19-25 report §a1); v0.1.2 followed.
+2. ~~**Deprecation completeness in-repo** — 4 tests still call the now-deprecated~~ done (G5 confirmed — pin-tests stay; deprecation-policy.md records the stance (21-31 report §a24))
+   ~~`WithGETOnly` (intentional: they pin the deprecated path), but there is no~~
+   ~~explicit policy note in the tests or `.golangci.yml` decision recorded for~~
+   ~~SA1019-style flags in other repos consuming ours.~~
 3. ~~**Docs tables lag the new design notes** — the AGENTS.md "Project
    Documentation" table and the README "Project Docs" section predate the six
    new notes (see a-forgot list below).~~ done at `e366fcc` — both tables list all design notes + openapi.yaml now.
-4. **CHANGELOG section order** — `[0.1.1]` orders Deprecated before Added;
-   Keep-a-Changelog canon is Added, Changed, Deprecated, Removed, Fixed.
-   Cosmetic.
-5. **doanalyzerv2 runner** — reconstructed ad-hoc in `/tmp` (worked: 7 files,
-   0 findings) but thrown away again. Still no persisted, repeatable
-   invocation; this is the second session in a row that had to rebuild it.
+4. ~~**CHANGELOG section order** — `[0.1.1]` orders Deprecated before Added;~~ done at `e366fcc`
+   ~~Keep-a-Changelog canon is Added, Changed, Deprecated, Removed, Fixed.~~
+   ~~Cosmetic.~~
+5. ~~**doanalyzerv2 runner** — reconstructed ad-hoc in `/tmp` (worked: 7 files,~~ done (covered by the 19-25 report §a11 — tools/doanalyzerv2 persisted replace-module runner)
+   ~~0 findings) but thrown away again. Still no persisted, repeatable~~
+   ~~invocation; this is the second session in a row that had to rebuild it.~~
 6. ~~**Master-plan closure** — `docs/planning/2026-09-04_00-02_pareto-master-
    execution-plan.md` has no "COMPLETED" header stamp; the 11-13 report has
    no completion addendum pointing here.~~ done — 2026-09-04 docs-health run (plan stamped COMPLETED; 11-13 report got a Completion section and inline f-list verdicts).
 
 ## c) NOT STARTED
 
-1. Branch protection on `master` (require the 4 CI checks + linear history —
-   the workflow header recommends it; needs admin/owner action).
+1. ~~Branch protection on `master` (require the 4 CI checks + linear history —~~ done (routed to TODO_LIST — owner decision G3)
+   ~~the workflow header recommends it; needs admin/owner action).~~
 2. Examples: custom `HealthRecorder`, two-phase shutdown, live-vs-cached
    (TODO_LIST Low — patterns exist only in tests/docs).
 3. ~~Hash-citation top-up for the two 2026-08-07 reports (TODO_LIST Low).~~ done — 2026-09-04 docs-health run: all shipped/routed items in `09-12`, `19-01`, `19-11` now carry hashes or explicit Won't-implement verdicts.
 4. ~~Go Report Card / goreportcard re-scan for v0.1.1 (badge exists; grade not re-verified this session).~~ **Won't implement — the service has been sunset; badge removed** `e366fcc`.
-5. Release-automation evaluation (manual tag→release flow worked twice;
-   GoReleaser/actions automation never assessed).
-6. SECURITY.md (vuln disclosure path for a public module) — absent.
-7. aggregate-package fuzz targets (fuzzing covers the root package only).
+5. ~~Release-automation evaluation (manual tag→release flow worked twice;~~ done (decided — manual tag flow adopted (ROADMAP Theme 7; 21-31 report §a21))
+   ~~GoReleaser/actions automation never assessed).~~
+6. ~~SECURITY.md (vuln disclosure path for a public module) — absent.~~ done (covered by the 19-25 report §a14 — SECURITY.md)
+7. ~~aggregate-package fuzz targets (fuzzing covers the root package only).~~ done (covered by the 19-25 report §a4 — FuzzAggregateMergeInvariants)
 8. ~~Dependency freshness sweep: is `samber/do v2.1.0` still the newest 2.x?~~ **Won't implement as a manual task — dependabot (weekly gomod) now owns this.**
 
 ## d) TOTALLY FUCKED UP (and what each cost)
@@ -218,34 +218,34 @@ green against HEAD via replace.
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Pre-push CI emulation is mandatory for release pushes.** Add a step to
-   the release checklist: `env -i HOME=... PATH=<nix-only> nix run .#<gate>`
-   for every gate the workflow runs. All local gates passed while CI failed —
-   "green locally" is not evidence until PATH is sanitized.
-2. **Persist the doanalyzerv2 runner** (small script under `tools/` or a
-   documented one-liner in CONTRIBUTING) — two sessions have now paid the
-   rebuild cost.
-3. **Version/API-sync checklist for docs**: README stability line, README
-   badges, README Project Docs, AGENTS.md Project Documentation table, doc.go
-   package comment, CHANGELOG links. Any release or API batch runs this list.
-4. **Write files with resolved imports** — assemble the import block from
-   the used symbols before writing, not after the compiler complains.
-5. **Use `write` for generated scratch code, never heredoc+sed chains.**
-6. **Kill the inherited `getOnly bool` internal duplication** — the guard
-   reads two flags; internally `WithGETOnly` could seed `allowedMethods` and
-   delete the second code path (behavior-preserving refactor, simplifies
-   `guard`).
-7. **Add a fake-clock throttle test** — the clock-seam fix to
-   `throttledLiveResponse` has no dedicated determinism test (B100 covered
-   uptime/timestamp only).
-8. **CHANGELOG ordering convention** — adopt canonical Keep-a-Changelog
-   category order so future cuts are mechanical.
-9. **Coverage gap visibility** — 98.5% is recorded but the uncovered 1.5%
-   (which functions) was never enumerated; know _what_ is uncovered, not just
-   how much.
-10. **Reconcile editor LSP diagnostics with the CLI linter** — gopls/LSP
-    showed wsl_v5/stdversion warnings all session while `nix run .#lint` was
-    clean; aligning configs removes constant low-level doubt during edits.
+1. ~~**Pre-push CI emulation is mandatory for release pushes.** Add a step to~~ done (covered by the 19-25 report §a12 + the .#ci-emulation app (21-31 §a11) — mechanical now)
+   ~~the release checklist: `env -i HOME=... PATH=<nix-only> nix run .#<gate>`~~
+   ~~for every gate the workflow runs. All local gates passed while CI failed —~~
+   ~~"green locally" is not evidence until PATH is sanitized.~~
+2. ~~**Persist the doanalyzerv2 runner** (small script under `tools/` or a~~ done (covered by the 19-25 report §a11)
+   ~~documented one-liner in CONTRIBUTING) — two sessions have now paid the~~
+   ~~rebuild cost.~~
+3. ~~**Version/API-sync checklist for docs**: README stability line, README~~ done (landed in CONTRIBUTING 'Release / API-Sync Checklist' (2026-09-04 evening docs-health run))
+   ~~badges, README Project Docs, AGENTS.md Project Documentation table, doc.go~~
+   ~~package comment, CHANGELOG links. Any release or API batch runs this list.~~
+4. ~~**Write files with resolved imports** — assemble the import block from~~ done (adopted as standing practice)
+   ~~the used symbols before writing, not after the compiler complains.~~
+5. ~~**Use `write` for generated scratch code, never heredoc+sed chains.**~~ done (adopted as standing practice)
+6. ~~**Kill the inherited `getOnly bool` internal duplication** — the guard~~ done (covered by the 19-25 report §a2 — getOnly bool collapsed into the method set)
+   ~~reads two flags; internally `WithGETOnly` could seed `allowedMethods` and~~
+   ~~delete the second code path (behavior-preserving refactor, simplifies~~
+   ~~`guard`).~~
+7. ~~**Add a fake-clock throttle test** — the clock-seam fix to~~ done (covered by the 19-25 report §a3 — TestWithLiveThrottle_FakeClockFreshnessDeterministic)
+   ~~`throttledLiveResponse` has no dedicated determinism test (B100 covered~~
+   ~~uptime/timestamp only).~~
+8. ~~**CHANGELOG ordering convention** — adopt canonical Keep-a-Changelog~~ done at `e366fcc`
+   ~~category order so future cuts are mechanical.~~
+9. ~~**Coverage gap visibility** — 98.5% is recorded but the uncovered 1.5%~~ done (covered by the 19-25 report §a9 — 98.5% → 99.7%, every gap enumerated)
+   ~~(which functions) was never enumerated; know _what_ is uncovered, not just~~
+   ~~how much.~~
+10. ~~**Reconcile editor LSP diagnostics with the CLI linter** — gopls/LSP~~ **Won't implement — gopls stdversion noise is documented as benign in the AGENTS GOEXPERIMENT gotcha; editor-only, no config change..**
+    ~~showed wsl_v5/stdversion warnings all session while `nix run .#lint` was~~
+    ~~clean; aligning configs removes constant low-level doubt during edits.~~
 
 ## f) NEXT — up to 50, priority-ordered
 
@@ -253,7 +253,7 @@ green against HEAD via replace.
 
 1. ~~Verify pkg.go.dev renders v0.1.1 (incl. the `Deprecated` section) once
    propagation completes.~~ re-checked in the 2026-09-04 docs-health run: still
-   propagating (page 404, proxy resolves it) — stays on TODO_LIST until rendered.
+   propagating (page 404, proxy resolves it) — stays on TODO_LIST until rendered. — closed: rendered, verified live (19-25 report §a1).
 2. ~~Update README stability line "v0.1.0 alpha" → "v0.1.1".~~ done at `1d0e1ea`
 3. ~~Add the 6 new design notes + openapi.yaml to README "Project Docs".~~ done at `e366fcc`
 4. ~~Add the 6 new design notes to the AGENTS.md Project Documentation table.~~ done at `e366fcc`
@@ -266,48 +266,48 @@ green against HEAD via replace.
 
 **CI / repo hardening**
 
-9. Configure branch protection: require the 4 CI checks + linear history
-   (needs owner).
-10. Persist a repeatable doanalyzerv2 runner in-repo (tools/ + CONTRIBUTING).
-11. Add a sanitized-PATH "CI emulation" note to CONTRIBUTING's release
-    checklist.
-12. Decide SA1019 policy for in-repo use of deprecated symbols (pin-tests vs
-    nolint), record in `.golangci.yml` or AGENTS.
-13. Add SECURITY.md (disclosure contact for the public module).
+9. ~~Configure branch protection: require the 4 CI checks + linear history~~ done (routed to TODO_LIST — owner decision G3 (ready-to-run command there))
+   ~~(needs owner).~~
+10. ~~Persist a repeatable doanalyzerv2 runner in-repo (tools/ + CONTRIBUTING).~~ done (covered by the 19-25 report §a11 + run.sh guard (21-31 §a23))
+11. ~~Add a sanitized-PATH "CI emulation" note to CONTRIBUTING's release~~ done (covered by the 19-25 report §a12; superseded by the .#ci-emulation app (21-31 §a11))
+    ~~checklist.~~
+12. ~~Decide SA1019 policy for in-repo use of deprecated symbols (pin-tests vs~~ done (G5 confirmed — deprecation-policy.md (21-31 report §a24))
+    ~~nolint), record in `.golangci.yml` or AGENTS.~~
+13. ~~Add SECURITY.md (disclosure contact for the public module).~~ done (covered by the 19-25 report §a14)
 14. ~~Verify dependabot covers both `gomod` and `github-actions` ecosystems.~~ verified — `.github/dependabot.yml` covers both (weekly).
-15. Add PR template (Dependabot PRs benefit; issue templates exist).
-16. Optional: coverage-threshold job (fail < 97%) — policy decision.
-17. Optional: dependabot/renovate auto-merge rules for patch bumps.
+15. ~~Add PR template (Dependabot PRs benefit; issue templates exist).~~ done (covered by the 19-25 report §a15)
+16. ~~Optional: coverage-threshold job (fail < 97%) — policy decision.~~ done (routed to TODO_LIST — owner policy decision)
+17. ~~Optional: dependabot/renovate auto-merge rules for patch bumps.~~ done (routed to ROADMAP Theme 7 raw idea (dependabot coverage + auto-merge policy))
 
 **Code / tests**
 
-18. Fake-clock determinism test for `WithLiveThrottle` (pin the seam fix).
-19. Enumerate the uncovered 1.5% coverage functions; cover or document each.
-20. Refactor `guard`/config: collapse `getOnly bool` into the method set.
-21. Fuzz targets for the `aggregate` package (merge-on-read invariants).
-22. Benchmark: method-set guard overhead (allowed vs unlisted vs no-guard).
-23. Verify + document aggregate's merge rule for `InstanceID` (per-replica
-    scalar — presumably dropped like Version/Uptime; confirm and write it
-    into the aggregate doc comment + openapi note).
-24. Examples: custom `HealthRecorder`; two-phase shutdown;
-    live-vs-cached (promote from tests to `example_test.go`).
-25. Fuzz seed corpus: include `instance_id`-populated responses.
-26. Add godoc example for `AwaitReady` (blocking-helper discoverability).
-27. Consider `TotalLatencyMs float64` upgrade (deferred by design — reopen
-    only with a consumer need; keep on roadmap).
-28. Compatibility matrix in README (tested Go versions × samber/do versions).
-29. Deprecation policy doc: how long deprecated symbols live; what v1.0
-    promises (WithGETOnly removal timeline lives here).
-30. Link `docs/openapi.yaml` from README; optionally validate it in CI
-    (spectral/redocly) so it can't drift from the golden file silently.
+18. ~~Fake-clock determinism test for `WithLiveThrottle` (pin the seam fix).~~ done (covered by the 19-25 report §a3)
+19. ~~Enumerate the uncovered 1.5% coverage functions; cover or document each.~~ done (covered by the 19-25 report §a9)
+20. ~~Refactor `guard`/config: collapse `getOnly bool` into the method set.~~ done (covered by the 19-25 report §a2)
+21. ~~Fuzz targets for the `aggregate` package (merge-on-read invariants).~~ done (covered by the 19-25 report §a4)
+22. ~~Benchmark: method-set guard overhead (allowed vs unlisted vs no-guard).~~ done (covered by the 19-25 report §a8 + guard variants (21-31 §a17))
+23. ~~Verify + document aggregate's merge rule for `InstanceID` (per-replica~~ done (covered by the 14-15 report §a13 — InstanceID merge rule verified and documented)
+    ~~scalar — presumably dropped like Version/Uptime; confirm and write it~~
+    ~~into the aggregate doc comment + openapi note).~~
+24. ~~Examples: custom `HealthRecorder`; two-phase shutdown;~~ done (ExampleWithHealthRecorder + ExampleWithShutdownGracePeriod + ExampleProbe_AsShutdowner in CHANGELOG [Unreleased]; live-vs-cached stays a ROADMAP raw idea (21-31 §f27))
+    ~~live-vs-cached (promote from tests to `example_test.go`).~~
+25. ~~Fuzz seed corpus: include `instance_id`-populated responses.~~ done (covered by the 19-25 report §a5)
+26. ~~Add godoc example for `AwaitReady` (blocking-helper discoverability).~~ done (covered by the 19-25 report §a10 (ExampleProbe_AwaitReady))
+27. ~~Consider `TotalLatencyMs float64` upgrade (deferred by design — reopen~~ done (routed to ROADMAP Theme 2 raw idea)
+    ~~only with a consumer need; keep on roadmap).~~
+28. ~~Compatibility matrix in README (tested Go versions × samber/do versions).~~ done (covered by the 19-25 report §a17)
+29. ~~Deprecation policy doc: how long deprecated symbols live; what v1.0~~ done (covered by the 19-25 report §a18 — docs/deprecation-policy.md)
+    ~~promises (WithGETOnly removal timeline lives here).~~
+30. ~~Link `docs/openapi.yaml` from README; optionally validate it in CI~~ done (covered by the 19-25 report §a16 — Redocly CI job + README link)
+    ~~(spectral/redocly) so it can't drift from the golden file silently.~~
 
 **Consumers / ecosystem**
 
-31. Bump `go-health-dashboard` to v0.1.1 (drop its replace; real release
-    upgrade in that repo).
-32. Re-verify `samber-do-auditlog` stays dependency-free and compatible.
-33. Check samber/do for 2.x releases newer than v2.1.0; sweep if so.
-34. Track Go 1.26.x patch releases in the flake input (dependabot may cover).
+31. ~~Bump `go-health-dashboard` to v0.1.1 (drop its replace; real release~~ done (covered by the 21-31 report §a8 — dashboard on released v0.1.2, no replace)
+    ~~upgrade in that repo).~~
+32. ~~Re-verify `samber-do-auditlog` stays dependency-free and compatible.~~ done (covered by AGENTS.md 'Consumer verification' — dependency-free both ways)
+33. ~~Check samber/do for 2.x releases newer than v2.1.0; sweep if so.~~ done (dependabot weekly gomod owns freshness (go.mod still at v2.1.0))
+34. ~~Track Go 1.26.x patch releases in the flake input (dependabot may cover).~~ done (routed to ROADMAP Theme 7 raw idea)
 
 **Docs / polish**
 
@@ -318,39 +318,39 @@ green against HEAD via replace.
 38. ~~Add troubleshooting entry: "405 with Allow header" (method-set guard).~~ done at `e366fcc`
 39. ~~Troubleshooting entry: "pkg.go.dev shows old docs" (propagation lag).~~ done at `e366fcc`
 40. ~~DOMAIN_LANGUAGE: add "deprecation" convention entry.~~ done at `9219ebc` (plus Aggregate term and refreshed line refs)
-41. Consider retiring `TotalLatencyMs`/`shutting_down`'s always-emitted quirk
-    note into the OpenAPI descriptions (already there — verify wording).
+41. ~~Consider retiring `TotalLatencyMs`/`shutting_down`'s always-emitted quirk~~ done (verified 2026-09-04 evening run — docs/openapi.yaml says 'Always present' for shutting_down/total_latency_ms; wording correct)
+    ~~note into the OpenAPI descriptions (already there — verify wording).~~
 42. ~~Consider `.gitignore` for `coverage.out` (the clean app trashes it;
     confirm it's ignored).~~ verified moot — `*.out` is already ignored.
 
 **Strategic (needs discussion)**
 
-43. v0.2.0 scoping: what accumulates next (feature list or date-based).
-44. v1.0 criteria draft (API freeze list, stability promises, deprecation
-    burn-down incl. WithGETOnly).
-45. Release automation evaluation (actions-based tag→release; GoReleaser is
-    overkill for a library).
-46. Announcement channel for v0.1.1 (user's call).
-47. Evaluate `erraudit`/doanalyzerv2 as optional CI steps if either tool ever
-    becomes public (currently documented local gates).
-48. Property-based round-trip test: JSON → unmarshal → marshal identity
-    (complements golden snapshot).
-49. Consider exposing `Probe.Snapshot()` style accessor for structured
-    logging consumers (only with a concrete consumer need).
-50. Post-mortem habit: add the sanitized-PATH release check to every future
-    Go release in every project (global AGENTS.md candidate).
+43. ~~v0.2.0 scoping: what accumulates next (feature list or date-based).~~ done (covered by the 21-31 report §a20 — ROADMAP Theme 7 v0.2.0 candidates)
+44. ~~v1.0 criteria draft (API freeze list, stability promises, deprecation~~ done (covered by the 21-31 report §a20 — ROADMAP Theme 7 v1.0 criteria draft)
+    ~~burn-down incl. WithGETOnly).~~
+45. ~~Release automation evaluation (actions-based tag→release; GoReleaser is~~ done (decided — manual tag flow adopted (ROADMAP Theme 7; 21-31 §a21))
+    ~~overkill for a library).~~
+46. ~~Announcement channel for v0.1.1 (user's call).~~ done (draft + channels ready (21-31 §a22); publishing routed to TODO_LIST owner action)
+47. ~~Evaluate `erraudit`/doanalyzerv2 as optional CI steps if either tool ever~~ done (routed to ROADMAP Theme 7 raw idea)
+    ~~becomes public (currently documented local gates).~~
+48. ~~Property-based round-trip test: JSON → unmarshal → marshal identity~~ done (covered by the 19-25 report §a7 — JSON round-trip property test)
+    ~~(complements golden snapshot).~~
+49. ~~Consider exposing `Probe.Snapshot()` style accessor for structured~~ done (routed to ROADMAP Theme 2 raw idea)
+    ~~logging consumers (only with a concrete consumer need).~~
+50. ~~Post-mortem habit: add the sanitized-PATH release check to every future~~ done (standing practice — mechanical via the .#ci-emulation app)
+    ~~Go release in every project (global AGENTS.md candidate).~~
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF
 
-1. **Branch protection**: shall I require the 4 CI checks + linear history on
+1. ~~**Branch protection**: shall I require the 4 CI checks + linear history on
    `master` (needs owner/admin settings access; the workflow header
-   recommends it)?
-2. **Deprecation removal timeline**: when may `WithGETOnly` actually be
+   recommends it)?~~ owner decision — routed to TODO_LIST (G3, ready-to-run command there; now 5 checks incl. OpenAPI)
+2. ~~**Deprecation removal timeline**: when may `WithGETOnly` actually be
    removed — v0.2.0, v1.0, or indefinitely (the godoc currently promises no
-   removal in v0.x, which hard-codes the answer until you override it)?
-3. **Consumer bump**: shall I upgrade `go-health-dashboard` to v0.1.1 now
+   removal in v0.x, which hard-codes the answer until you override it)?~~ resolved — docs/deprecation-policy.md (19-25 §a18): no removal in v0.x; burn-down no earlier than v1.0 (ROADMAP Theme 7)
+3. ~~**Consumer bump**: shall I upgrade `go-health-dashboard` to v0.1.1 now
    (drop the replace, bump go.mod, run its suite) as the first real
-   downstream consumer, or is that repo's release cadence handled separately?
+   downstream consumer, or is that repo's release cadence handled separately?~~ resolved — dashboard bumped to released v0.1.2 (no replace), build + tests green (21-31 report §a8)
 
 ---
 
@@ -364,3 +364,10 @@ green against HEAD via replace.
   `github.com/larsartmann/go-health v0.1.1`; consumer run printed `pass`.
 - Release: `gh release view v0.1.1` → published, not prerelease.
 - pkg.go.dev: 404 at 13:15 CEST (propagation lag — tracked as item 1).
+
+## Completion (2026-09-04 evening docs-health run)
+
+Every remaining b/c/e/f/g item above now carries an inline verdict: closed by
+the 19-25 or 21-31 sessions, routed to TODO_LIST (owner decisions G3/coverage)
+or ROADMAP raw ideas, or explicitly Won't-implement. Report fully resolved and
+archived to `docs/status/archived/`.

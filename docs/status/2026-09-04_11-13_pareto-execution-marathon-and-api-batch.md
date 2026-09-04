@@ -195,18 +195,18 @@ Commits this session (selected): `ea5dda0` (CI), `eb67f1c` (hermetic flake),
 29. ~~Verify golden snapshot still passes (Timestamp omitzero must not leak into old goldens).~~ done (covered by the 13-17 report gate sweep)
 30. ~~Push master to origin (re-affirm authorization) so the CI workflow executes for real.~~ done (covered by the 13-17 report: pushed, CI green)
 31. ~~Watch the first CI run; fix whatever remote-only failures appear (nix install time, cache cold).~~ done at `d20f481` — first run caught the missing `goPkg` toolchain; second run 4/4 green
-32. Branch protection: document requiring the 4 check names + linear history (CONTRIBUTING or repo settings).
+32. ~~Branch protection: document requiring the 4 check names + linear history (CONTRIBUTING or repo settings).~~ done (routed to TODO_LIST — owner decision G3 (ready-to-run command there))
 33. ~~Decide + cut next release (v0.1.1 vs v0.2.0 — see question 2): finalize CHANGELOG, tag, release, verify pkg.go.dev.~~ done (covered by the 13-17 report §a: v0.1.1 tagged, released, proxy-verified)
 34. ~~goreportcard: check the score behind the README badge; fix top complaints if cheap.~~ **Won't implement — goreportcard.com has been sunset; the badge was removed from the README** `e366fcc`
 35. ~~Aggregate package: add `SanitizeResponse` integration test (it calls health.SanitizeResponse now).~~ done at `893d12f` — aggregate marshals through `health.SanitizeResponse` (`aggregate/aggregate.go:251`)
-36. Aggregate: consider a combined `Healthz`-style handler parity decision (document if N/A).
-37. Aggregate: fill coverage gaps (error paths in `New`, startup partial) — 98.5% total hides package-level skew.
-38. Godoc examples: `ExampleNewWithHealthCheck`, `ExampleProbe_Healthz`, `ExampleWithEvaluationHook`.
-39. AwaitReady: consider cache-aware poll interval (respect refreshInterval instead of fixed 50ms).
+36. ~~Aggregate: consider a combined `Healthz`-style handler parity decision (document if N/A).~~ done (routed to ROADMAP — aggregate Healthz parity is a Theme 1/7 v0.2.0 candidate)
+37. ~~Aggregate: fill coverage gaps (error paths in `New`, startup partial) — 98.5% total hides package-level skew.~~ done (covered by the 19-25 report §a9 — coverage gaps closed, aggregate 100%)
+38. ~~Godoc examples: `ExampleNewWithHealthCheck`, `ExampleProbe_Healthz`, `ExampleWithEvaluationHook`.~~ done (covered by the 19-25 report §a10 + CHANGELOG [Unreleased] aggregate examples)
+39. ~~AwaitReady: consider cache-aware poll interval (respect refreshInterval instead of fixed 50ms).~~ done (routed to ROADMAP Theme 1 raw idea (cache-aware poll interval))
 40. ~~Document Healthz's "don't use for kubelet" guidance prominently (three-probe split is the k8s answer).~~ done at `5a79775` — README Programmatic Health API section scopes `Healthz()` to single-endpoint deployments
-41. CONTRIBUTING: add "adding a new Option" checklist (config field + Probe field + assemble + docs + test).
+41. ~~CONTRIBUTING: add "adding a new Option" checklist (config field + Probe field + assemble + docs + test).~~ done (covered by the 19-25 report §a13 — CONTRIBUTING 'Adding a New Option' checklist)
 42. ~~Move P36-P39 design notes into ROADMAP themes as they land; mark original ROADMAP raw ideas addressed.~~ done at `5a79775` — ROADMAP links every design note; shipped ideas marked
-43. Consider `WithLiveThrottle` interaction with `Start`-populated cache (currently throttle only matters cache-miss; document).
+43. ~~Consider `WithLiveThrottle` interaction with `Start`-populated cache (currently throttle only matters cache-miss; document).~~ done (covered by the 19-25 report §a17; test-backed per the 21-31 report §a13)
 44. ~~`ProbeShutdowner`: add example showing self-registration via `do.Provide`.~~ **NOT-DO/DUPLICATE — subsumed by the godoc-examples TODO_LIST row (item 38)**
 45. ~~Re-check gopls stdversion warnings after toolchain moves; keep AGENTS gotcha current.~~ done (covered by the AGENTS.md gopls/jsonv2 gotcha: expected and benign while the experiment is enabled)
 46. ~~Clean up: kill accumulated background shells / avoid pool saturation next session.~~ **Won't implement — session hygiene note, not project work**
@@ -217,23 +217,23 @@ Commits this session (selected): `ea5dda0` (CI), `eb67f1c` (hermetic flake),
 
 ## g) QUESTIONS ONLY YOU CAN ANSWER
 
-1. **Push?** May I push master to origin now? The CI workflow (`ea5dda0`) has
-   never executed on GitHub — the plan's "1% = 51%" claim stays unverified
-   until the workflow runs, and branch protection can't reference checks
-   that never ran. If yes: push as-is after the build fix + gate, or only
-   after the API batch docs sync (item 19-23) too?
-2. **Next release number?** The post-v0.1.0 batch is purely additive public
-   API (accessors, Healthz, AwaitReady, NewWithHealthCheck, 5 new options,
-   SanitizeResponse, ErrProbeUnhealthy). Semver says **v0.2.0** (new
-   features, no breaks); the plan's original wording said v0.0.3-style patch
-   cadence. Which do you want tagged when items 1-33 land?
-3. **API name sign-off before consumers adopt them** — `Healthz()`,
-   `AsShutdowner()`/`ProbeShutdowner`, `WithEvaluationHook`,
-   `WithLiveThrottle`, `NewWithHealthCheck`/`HealthCheckFunc`,
-   `SanitizeResponse`, `ErrProbeUnhealthy`, `ResetStartupLatchForTest`.
-   Once go-health-dashboard consumes these, renames become coordinated
-   migrations. Any of them you want changed (e.g. `Healthz` vs
-   `CombinedHandler`, `WithEvaluationHook` vs `WithMetricsHook`)?
+1. ~~**Push?** May I push master to origin now? The CI workflow (`ea5dda0`) has~~ done (resolved — pushed; first CI failure fixed d20f481, then 4/4 green (13-17 report §a))
+   ~~never executed on GitHub — the plan's "1% = 51%" claim stays unverified~~
+   ~~until the workflow runs, and branch protection can't reference checks~~
+   ~~that never ran. If yes: push as-is after the build fix + gate, or only~~
+   ~~after the API batch docs sync (item 19-23) too?~~
+2. ~~**Next release number?** The post-v0.1.0 batch is purely additive public~~ done (resolved — v0.1.1 tagged and released (13-17 report §a); v0.1.2 followed same day)
+   ~~API (accessors, Healthz, AwaitReady, NewWithHealthCheck, 5 new options,~~
+   ~~SanitizeResponse, ErrProbeUnhealthy). Semver says **v0.2.0** (new~~
+   ~~features, no breaks); the plan's original wording said v0.0.3-style patch~~
+   ~~cadence. Which do you want tagged when items 1-33 land?~~
+3. ~~**API name sign-off before consumers adopt them** — `Healthz()`,~~ done (resolved — API names approved as-is incl. ResetStartupLatchForTest (13-17 report §a))
+   ~~`AsShutdowner()`/`ProbeShutdowner`, `WithEvaluationHook`,~~
+   ~~`WithLiveThrottle`, `NewWithHealthCheck`/`HealthCheckFunc`,~~
+   ~~`SanitizeResponse`, `ErrProbeUnhealthy`, `ResetStartupLatchForTest`.~~
+   ~~Once go-health-dashboard consumes these, renames become coordinated~~
+   ~~migrations. Any of them you want changed (e.g. `Healthz` vs~~
+   ~~`CombinedHandler`, `WithEvaluationHook` vs `WithMetricsHook`)?~~
 
 ---
 
@@ -248,5 +248,8 @@ fix landed in the successor session — see
 [13-17 report](2026-09-04_13-17_v011-release-deprecation-and-first-green-ci.md):
 full gate sweep green, master pushed, first CI failure root-caused and fixed
 (`d20f481`), tag run green, **v0.1.1 tagged and released**. The f-list above is
-resolved inline; items 32, 36, 37, 38, 39, 41, and 43 remain open and are
-tracked in TODO_LIST.md / ROADMAP.md.
+resolved inline; ~~items 32, 36, 37, 38, 39, 41, and 43 remain open and are
+tracked in TODO_LIST.md / ROADMAP.md.~~ those seven were closed by the
+19-25/21-31 sessions or routed (verdicts inline above); every f-item and
+g-question now carries a verdict — report fully resolved 2026-09-04 evening
+and archived.

@@ -11,7 +11,10 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    systems.url = "github:nix-systems/default";
+    # Linux-only: nixpkgs 26.11 dropped x86_64-darwin, so darwin systems
+    # cannot even evaluate the flake, let alone be verified. Widen again
+    # (nix-systems/default) if a darwin build target becomes verifiable.
+    systems.url = "github:nix-systems/default-linux";
   };
 
   outputs =

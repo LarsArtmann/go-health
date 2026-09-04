@@ -35,17 +35,13 @@ golangci-lint run ./...        # Install: go install github.com/golangci/golangc
 1. Fork the repository
 2. Create a feature branch from `master`
 3. Make your changes
-4. Ensure all checks pass (the same gates CI runs):
+4. Run the gate sweep — one command, same gates CI runs, fail-fast (or pass a
+   subset: `nix run .#gates -- test-race lint`):
 
 ```bash
-nix run .#test-race    # tests with race detector
-nix run .#vet          # go vet
-nix run .#lint         # golangci-lint
-nix run .#vulncheck    # govulncheck
-nix run .#security     # gosec
-nix flake check        # flake + formatting
+nix run .#gates         # test-race, vet, lint, vulncheck, security, fuzz, flake check
+nix fmt                 # gofumpt/goimports/golines/nixfmt
 erraudit ./... --type-aware   # error-handling audit (baseline: 0 violations)
-nix fmt                # gofumpt/goimports/golines/nixfmt
 ```
 
 Bare `go` commands outside the flake need `GOEXPERIMENT=jsonv2` — the code
@@ -55,15 +51,18 @@ The flake exports it for every gate; a fresh shell does not.
 5. Emulate CI once before pushing — CI machines have no host Go on `PATH`, so
    gates that shell out to `go` fall back to whatever toolchain the binary was
    built with and can fail there while passing locally (this exact leak
-   produced the first red CI run). Run the three affected gates with a `PATH`
-   that contains `nix` but not `go`:
+   produced the first red CI run). One command re-runs every gate under a
+   `PATH` that contains `nix` and `gcc` but not `go`:
 
 ```bash
-NIX_BIN="$(dirname "$(command -v nix)")"
-for gate in lint vulncheck security; do
-  env PATH="$NIX_BIN:/usr/bin:/bin" nix run .#$gate
-done
+nix run .#ci-emulation   # subset: nix run .#ci-emulation -- lint
 ```
+
+Verified 2026-09-04: both apps ran end-to-end green — `.#gates` (all seven
+gates) and `.#ci-emulation` (test-race, fuzz, lint, vet, vulncheck, security,
+flake check under the stripped PATH). The emulated run caught one real
+formatting gap the same day it was introduced; treat a red emulated gate as a
+real finding, not noise.
 
 6. If you changed anything touching samber/do usage patterns, re-run the
    doanalyzerv2 audit (baseline: 0 findings, DO-1..DO-6). The analyzer lives

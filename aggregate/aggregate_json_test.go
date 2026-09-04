@@ -7,46 +7,60 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/larsartmann/go-health/aggregate"
 	health "github.com/larsartmann/go-health"
-	aggregate "github.com/larsartmann/go-health/aggregate"
 )
 
 // updateAggregateGolden regenerates the aggregate golden file when
 // `go test ./aggregate -update` runs.
 var updateAggregateGolden = flag.Bool("update", false, "rewrite aggregate testdata golden files")
 
+// newPrimedSource builds a probe whose cache is populated exactly once: the
+// throttled live path stores its evaluation into `latest`, which is what the
+// aggregate's merge-on-read consumes. Without the priming request the probe
+// reports an empty cached view.
+func newPrimedSource(t *testing.T, results func(context.Context) map[string]error, instanceID string) *health.Probe {
+	t.Helper()
+
+	probe := health.NewWithHealthCheck(results,
+		health.WithRefreshInterval(0),
+		health.WithLiveThrottle(time.Hour),
+		health.WithInstanceID(instanceID),
+	)
+
+	if err := probe.Start(context.Background()); err != nil {
+		t.Fatalf("probe.Start: %v", err)
+	}
+
+	rec := httptest.NewRecorder()
+	probe.ReadinessHandler()(rec, fuzzRequest(t))
+
+	return probe
+}
+
 // TestAggregateReadiness_JSONSnapshot locks the merged wire format of the
 // aggregate readiness endpoint through the real handler path: namespaced
 // "source/check" keys, worst-of status, and the wire-level drop of
 // per-process scalars (both sources set instance_id; the merged body has no
-// instance_id field). `total_latency_ms` is real wall-clock measurement, so
-// it is normalized to 0 before comparison; its presence and integer shape in
-// the raw body are asserted separately. Any change to the golden file is a
-// wire-format change and must be called out in the changelog.
+// instance_id field). `total_latency_ms` is real wall-clock measurement
+// (sub-millisecond batches legitimately measure 0), so it is normalized to 0
+// before comparison; its presence in the raw body is asserted separately. Any
+// change to the golden file is a wire-format change and must be called out in
+// the changelog.
 func TestAggregateReadiness_JSONSnapshot(t *testing.T) {
 	t.Parallel()
 
-	apiProbe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+	apiProbe := newPrimedSource(t, func(context.Context) map[string]error {
 		return map[string]error{"cache": nil, "db": errUnhealthy}
-	},
-		health.WithRefreshInterval(0),
-		health.WithInstanceID("pod-api-1"),
-	)
+	}, "pod-api-1")
 
-	webProbe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+	webProbe := newPrimedSource(t, func(context.Context) map[string]error {
 		return map[string]error{"db": nil, "render": nil}
-	},
-		health.WithRefreshInterval(0),
-		health.WithInstanceID("pod-web-9"),
-	)
-
-	for _, probe := range []*health.Probe{apiProbe, webProbe} {
-		if err := probe.Start(context.Background()); err != nil {
-			t.Fatalf("probe.Start: %v", err)
-		}
-	}
+	}, "pod-web-9")
 
 	agg, err := aggregate.New(
 		aggregate.Source{Name: "api", Probe: apiProbe},
@@ -69,8 +83,8 @@ func TestAggregateReadiness_JSONSnapshot(t *testing.T) {
 		t.Fatalf("decode body: %v", err)
 	}
 
-	if decoded.TotalLatencyMs <= 0 {
-		t.Errorf("raw body total_latency_ms = %d, want a positive measurement", decoded.TotalLatencyMs)
+	if !strings.Contains(rec.Body.String(), "total_latency_ms") {
+		t.Errorf("raw body %s missing total_latency_ms", rec.Body.String())
 	}
 
 	decoded.TotalLatencyMs = 0
@@ -83,6 +97,10 @@ func TestAggregateReadiness_JSONSnapshot(t *testing.T) {
 	const golden = "testdata/aggregate_readiness_response.golden"
 
 	if *updateAggregateGolden {
+		if err := os.MkdirAll("testdata", 0o755); err != nil {
+			t.Fatalf("create testdata dir: %v", err)
+		}
+
 		if err := os.WriteFile(golden, payload, 0o600); err != nil {
 			t.Fatalf("update golden file: %v", err)
 		}

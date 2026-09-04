@@ -1,0 +1,1 @@
+{"status":"warn","shutting_down":false,"total_latency_ms":0,"checks":{"api/cache":{"status":"pass"},"api/db":{"status":"warn","error":"service unhealthy"},"web/db":{"status":"pass"},"web/render":{"status":"pass"}}}

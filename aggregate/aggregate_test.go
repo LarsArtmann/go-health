@@ -225,6 +225,70 @@ func TestNew_RefreshIntervalIsSlowestSource(t *testing.T) {
 
 // --- CachedResponse merging ---.
 
+// TestCachedResponse_NeverStartedSource pins the zero-cache merge path: a
+// source probe that was never started (or whose checks were never invoked)
+// contributes an empty cached view — no checks, no latency, status folded as
+// healthy. That is the documented false-confidence sharp edge (AGENTS.md:
+// invoke critical services at boot): readiness reports pass until the
+// source's own first evaluation populates its cache. The startup latch is
+// the honest signal — it stays false, so startup keeps serving 503.
+func TestCachedResponse_NeverStartedSource(t *testing.T) {
+	t.Parallel()
+
+	neverStarted := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"svc": nil}
+	}, health.WithRefreshInterval(0))
+
+	real := newPrimedSource(t, func(context.Context) map[string]error {
+		return map[string]error{"svc": nil}
+	}, "pod-1")
+
+	agg, err := aggregate.New(
+		aggregate.Source{Name: "ghost", Probe: neverStarted},
+		aggregate.Source{Name: "real", Probe: real},
+	)
+	if err != nil {
+		t.Fatalf("aggregate.New: %v", err)
+	}
+
+	merged := agg.CachedResponse()
+
+	if len(merged.Checks) != 1 {
+		t.Fatalf("merged check count = %d, want 1 (only the started source)", len(merged.Checks))
+	}
+
+	if _, ok := merged.Checks["real/svc"]; !ok {
+		t.Fatalf("merged checks = %v, want only \"real/svc\"", merged.Checks)
+	}
+
+	if merged.Status != health.StatusPass {
+		t.Errorf("merged status = %q, want pass (never-started folds as healthy)", merged.Status)
+	}
+
+	if merged.ShuttingDown || merged.TotalLatencyMs != 0 ||
+		merged.InstanceID != "" || merged.Version != "" {
+		t.Errorf("unexpected merged scalars: %+v", merged)
+	}
+
+	if agg.StartupComplete() {
+		t.Error("StartupComplete = true, want false (never-started latch is unset)")
+	}
+
+	startupRec := httptest.NewRecorder()
+	agg.StartupHandler()(startupRec, fuzzRequest(t))
+
+	if startupRec.Code != http.StatusServiceUnavailable {
+		t.Errorf("startup status = %d, want 503 while any latch is unset", startupRec.Code)
+	}
+
+	readyRec := httptest.NewRecorder()
+	agg.ReadinessHandler()(readyRec, fuzzRequest(t))
+
+	if readyRec.Code != http.StatusOK {
+		t.Errorf("readiness status = %d, want 200 (pass fold; the documented sharp edge)", readyRec.Code)
+	}
+}
+
 func TestCachedResponse_WorstOfStatus(t *testing.T) {
 	t.Parallel()
 

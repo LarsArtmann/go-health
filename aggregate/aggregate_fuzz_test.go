@@ -92,7 +92,10 @@ func newFuzzSource(t *testing.T, spec fuzzSourceSpec) *health.Probe {
 // Source names containing "/" are out of contract: aggregate.New rejects
 // them (they would blur the "source/check" grouping axis and could alias
 // another source's namespace), so this harness skips them and construction
-// rejections stay covered by unit tests.
+// rejections stay covered by unit tests. The never-started zero-cache source
+// path is likewise unit-pinned (TestCachedResponse_NeverStartedSource)
+// rather than widening this fuzz signature, which would invalidate the
+// accumulated corpus in testdata/fuzz.
 func FuzzAggregateMergeInvariants(f *testing.F) {
 	f.Add("edge-a", "svc", "edge-b", "svc", true, false, true, true, "pod-1")
 	f.Add("api", "db", "worker", "db", true, true, false, true, "")

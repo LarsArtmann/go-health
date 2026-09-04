@@ -5,9 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	do "github.com/samber/do/v2"
-
 	health "github.com/larsartmann/go-health"
+	do "github.com/samber/do/v2"
 )
 
 // state is one service's health state in the classify matrix.

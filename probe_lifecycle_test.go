@@ -7,9 +7,8 @@ import (
 	"testing"
 	"time"
 
-	do "github.com/samber/do/v2"
-
 	health "github.com/larsartmann/go-health"
+	do "github.com/samber/do/v2"
 )
 
 // newStressProbe builds a started probe with a fast background refresh, so
@@ -147,7 +146,7 @@ func TestStart_AfterShutdown_RestartsLoopButStaysDown(t *testing.T) {
 	probe, _ := newStressProbe(t)
 	probe.Shutdown()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 
 	if err := probe.Start(ctx); err != nil {

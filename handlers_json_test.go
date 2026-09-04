@@ -22,6 +22,7 @@ func TestReadinessResponse_JSONSnapshot(t *testing.T) {
 	resp := health.Response{
 		Status:         health.StatusWarn,
 		Version:        "1.2.3",
+		InstanceID:     "pod-7f9c",
 		Uptime:         "4m5s",
 		ShuttingDown:   true,
 		TotalLatencyMs: 42,

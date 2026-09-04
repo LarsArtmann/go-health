@@ -32,10 +32,11 @@ func DefaultRoutes() Routes {
 func (p *Probe) LivenessHandler() http.HandlerFunc {
 	return p.guard(func(w http.ResponseWriter, _ *http.Request) {
 		resp := Response{
-			Status:  StatusPass,
-			Uptime:  p.uptime(),
-			Version: p.version,
-			Checks:  map[string]Check{},
+			Status:     StatusPass,
+			Uptime:     p.uptime(),
+			Version:    p.version,
+			InstanceID: p.instanceID,
+			Checks:     map[string]Check{},
 		}
 
 		writeResponse(w, http.StatusOK, resp)
@@ -87,10 +88,11 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 	return p.guard(func(w http.ResponseWriter, r *http.Request) {
 		if p.startupPassed.Load() {
 			resp := Response{
-				Status:  StatusPass,
-				Uptime:  p.uptime(),
-				Version: p.version,
-				Checks:  map[string]Check{},
+				Status:     StatusPass,
+				Uptime:     p.uptime(),
+				Version:    p.version,
+				InstanceID: p.instanceID,
+				Checks:     map[string]Check{},
 			}
 
 			writeResponse(w, http.StatusOK, resp)
@@ -170,6 +172,7 @@ func (p *Probe) throttledLiveResponse(ctx context.Context) Response {
 func (p *Probe) buildStartupResponse(results map[string]error) Response {
 	resp := Response{
 		Version:      p.version,
+		InstanceID:   p.instanceID,
 		Uptime:       p.uptime(),
 		Checks:       p.buildChecks(results),
 		ShuttingDown: p.shuttingDown.Load(),

@@ -31,6 +31,9 @@ type Response struct {
 	Status Status `json:"status"`
 	// Version is the application version, if configured.
 	Version string `json:"version,omitempty"`
+	// InstanceID identifies this replica when multiple instances serve behind
+	// one load balancer, if configured via [WithInstanceID].
+	InstanceID string `json:"instance_id,omitempty"`
 	// Uptime is human-readable duration since boot.
 	Uptime string `json:"uptime,omitempty"`
 	// ShuttingDown is true when the probe has been marked for shutdown.

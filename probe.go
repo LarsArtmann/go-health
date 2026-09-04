@@ -70,6 +70,7 @@ type Probe struct {
 	liveThrottle   time.Duration
 	shutdownGrace  time.Duration
 	nowFunc        func() time.Time
+	instanceID     string
 	allowedMethods map[string]struct{}
 
 	// throttleMu serializes throttled live evaluations so a request flood
@@ -96,6 +97,7 @@ type config struct {
 	liveThrottle    time.Duration
 	shutdownGrace   time.Duration
 	nowFunc         func() time.Time
+	instanceID      string
 	allowedMethods  map[string]struct{}
 }
 
@@ -105,6 +107,13 @@ type Option func(*config)
 // WithVersion sets the application version included in health responses.
 func WithVersion(v string) Option {
 	return func(c *config) { c.version = v }
+}
+
+// WithInstanceID sets a replica identifier included in health responses.
+// Use it when several instances serve behind one load balancer and logs or
+// dashboards must attribute a response to the pod that produced it.
+func WithInstanceID(id string) Option {
+	return func(c *config) { c.instanceID = id }
 }
 
 // WithCriticalServices marks the named services as critical: if any of them
@@ -312,6 +321,7 @@ func assemble(healthCheck healthCheckFunc, cfg config) *Probe {
 		liveThrottle:    cfg.liveThrottle,
 		shutdownGrace:   cfg.shutdownGrace,
 		nowFunc:         cfg.nowFunc,
+		instanceID:      cfg.instanceID,
 		allowedMethods:  cfg.allowedMethods,
 	}
 }
@@ -501,6 +511,7 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 
 	resp := Response{
 		Version:        p.version,
+		InstanceID:     p.instanceID,
 		Uptime:         p.uptime(),
 		ShuttingDown:   p.shuttingDown.Load(),
 		Checks:         p.buildChecks(results),

@@ -2,8 +2,10 @@ package health_test
 
 import (
 	"context"
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -181,6 +183,54 @@ func TestWithAllowedMethods_EmptyActsAsGETOnly(t *testing.T) {
 
 	if allow := postW.Header().Get("Allow"); allow != "GET" {
 		t.Errorf("Allow header: want GET, got %s", allow)
+	}
+}
+
+// --- WithInstanceID tests ---.
+
+func TestWithInstanceID_AllHandlersCarryReplicaID(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	provideHealthy(injector, "db")
+	invoke[*healthyService](t, injector, "db")
+	probe := health.New(injector,
+		health.WithInstanceID("pod-abc"),
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
+
+	resp := probe.Evaluate(context.Background())
+	if resp.InstanceID != "pod-abc" {
+		t.Errorf("Evaluate instance ID: want pod-abc, got %q", resp.InstanceID)
+	}
+
+	for path, handler := range map[string]http.HandlerFunc{
+		"/healthz":  probe.LivenessHandler(),
+		"/readyz":   probe.ReadinessHandler(),
+		"/startupz": probe.StartupHandler(),
+	} {
+		got := decodeResponse(t, doRequest(t, handler, path))
+
+		if got.InstanceID != "pod-abc" {
+			t.Errorf("%s instance ID: want pod-abc, got %q", path, got.InstanceID)
+		}
+	}
+}
+
+func TestWithInstanceID_OmittedFromJSONWhenUnset(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector, health.WithRefreshInterval(0))
+
+	payload, err := json.Marshal(probe.Evaluate(context.Background()), json.Deterministic(true))
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	if strings.Contains(string(payload), "instance_id") {
+		t.Errorf("instance_id should be omitted when unset, got %s", payload)
 	}
 }
 

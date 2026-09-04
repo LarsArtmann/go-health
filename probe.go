@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -64,10 +66,10 @@ type Probe struct {
 	refreshInterval time.Duration
 	timeout         time.Duration
 
-	evalHook      func(Response)
-	liveThrottle  time.Duration
-	shutdownGrace time.Duration
-	nowFunc       func() time.Time
+	evalHook       func(Response)
+	liveThrottle   time.Duration
+	shutdownGrace  time.Duration
+	nowFunc        func() time.Time
 	allowedMethods map[string]struct{}
 
 	// throttleMu serializes throttled live evaluations so a request flood
@@ -158,13 +160,13 @@ func WithNowFunc(fn func() time.Time) Option {
 // Use it when infrastructure probes with HEAD or OPTIONS must pass. It
 // implies [WithGETOnly]; calling both is harmless.
 func WithAllowedMethods(methods ...string) Option {
-	return func(c *config) {
-		if c.allowedMethods == nil {
-			c.allowedMethods = map[string]struct{}{http.MethodGet: {}}
+	return func(cfg *config) {
+		if cfg.allowedMethods == nil {
+			cfg.allowedMethods = map[string]struct{}{http.MethodGet: {}}
 		}
 
 		for _, m := range methods {
-			c.allowedMethods[m] = struct{}{}
+			cfg.allowedMethods[m] = struct{}{}
 		}
 	}
 }

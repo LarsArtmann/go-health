@@ -10,9 +10,8 @@ import (
 	"testing"
 	"time"
 
-	do "github.com/samber/do/v2"
-
 	health "github.com/larsartmann/go-health"
+	do "github.com/samber/do/v2"
 )
 
 // --- P25: Status / Alive / Ready accessors ---.
@@ -21,10 +20,11 @@ func TestAccessors_StatusAliveReady(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 	invoke[*healthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector,
 		health.WithCriticalServices("db"),
@@ -67,10 +67,11 @@ func TestAwaitReady_ReturnsImmediatelyWhenReady(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 	invoke[*healthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector)
 
@@ -86,10 +87,11 @@ func TestAwaitReady_TimesOutWhenFailing(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideUnhealthy(injector, "db", "down")
 	invoke[*unhealthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
 	probe.Shutdown() // one-way fail: AwaitReady must never succeed
@@ -106,10 +108,11 @@ func TestHealthz_CombinesStartupAndReadiness(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 	invoke[*healthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector,
 		health.WithCriticalServices("db"),
@@ -206,10 +209,11 @@ func TestProbe_HealthCheck_Conformance(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 	invoke[*healthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
 
@@ -253,10 +257,11 @@ func TestWithEvaluationHook_InvokedPerEvaluation(t *testing.T) {
 	)
 
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 	invoke[*healthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector,
 		health.WithEvaluationHook(func(resp health.Response) {
@@ -340,10 +345,11 @@ func TestWithShutdownGracePeriod_BlocksButStops(t *testing.T) {
 
 	// Apply the option by building a second probe with the same injector.
 	injector := do.New()
-	t.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 	invoke[*healthyService](t, injector, "db")
+
+	t.Cleanup(func() { injector.Shutdown() })
 
 	graceProbe := health.New(injector,
 		health.WithRefreshInterval(5*time.Millisecond),

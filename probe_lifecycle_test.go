@@ -185,12 +185,14 @@ type flappableService struct {
 	up atomic.Bool
 }
 
+var errStillBooting = errors.New("still booting")
+
 func (s *flappableService) HealthCheck(_ context.Context) error {
 	if s.up.Load() {
 		return nil
 	}
 
-	return errors.New("still booting")
+	return errStillBooting
 }
 
 // The startup latch is one-way in the public API. ResetStartupLatchForTest

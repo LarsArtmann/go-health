@@ -16,6 +16,9 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 | `nix run .#vet`       | Run go vet                       |
 | `nix run .#coverage`  | Run tests with coverage report   |
 | `nix run .#fuzz`      | Run fuzz targets (short budget)  |
+| `nix run .#gates`     | Full pre-push gate sweep, fail-fast (subset: `nix run .#gates -- lint`) |
+| `nix run .#ci-emulation` | Re-run gates under a go-free PATH (CI emulation) |
+| `nix run .#fuzz-long` | Fuzz targets, 5 min each (weekly CI budget; override: `-- -fuzztime=10s`) |
 | `nix run .#vulncheck` | Run govulncheck                  |
 | `nix run .#security`  | Run gosec                        |
 | `nix run .#build`     | Build all packages               |
@@ -174,6 +177,8 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 | [docs/timeout-design.md](docs/timeout-design.md)                                          | Batch-level vs per-service timeout analysis                                                                                   |
 | [docs/aggregate-source-name-design.md](docs/aggregate-source-name-design.md)              | Slash rejected in aggregate source names (G2): collision + grouping-axis rationale                                             |
 | [docs/errors-join-design.md](docs/errors-join-design.md)                                  | errors.Join for aggregate construction errors: deferred to v0.2.0 with verified spike                                          |
+| [docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md) | Per-source roll-up accessor: deferred to v0.2.0; labels/pseudo-checks rejected                                             |
+| [docs/announcements/](docs/announcements/)                                                | Announcement drafts with channels + publishing checklist (owner publishes)                                                     |
 | [docs/panic-recovery-design.md](docs/panic-recovery-design.md)                            | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces                                                |
 | [docs/middleware-design.md](docs/middleware-design.md)                                    | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard                                             |
 | [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)              | Metrics via `WithEvaluationHook` composition, never `client_golang`                                                           |

@@ -38,3 +38,7 @@ Suppressing that warning at the call site is your decision; the upstream
 project does not require it. Within go-health's own test suite, four tests
 intentionally pin the deprecated `WithGETOnly` so its compatibility promise
 is enforced by CI — the in-repo SA1019 findings are accepted, not `nolint`ed.
+
+**Confirmed 2026-09-04 (decision G5):** this is the formal SA1019 policy —
+in-repo pin-tests stay, accepted SA1019 findings are the documented default,
+and no `//nolint:staticcheck` suppressions are introduced for them.

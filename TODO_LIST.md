@@ -4,20 +4,13 @@
 > For long-term vision and unrefined ideas, use ROADMAP.md.
 > Items are ranked by impact. Status is verified, not assumed.
 
-> Curated 2026-09-04 (docs-health run, post-v0.1.1): the Pareto master plan
-> (P1–P39) is complete and released; every item below was re-verified open
-> against code on this date.
->
-> Executed 2026-09-04 (same day): all 18 TODO items (High/Medium/Low) were
-> completed and verified — pkg.go.dev v0.1.1 render (with `Deprecated`
-> section), fake-clock throttle determinism test, `getOnly` collapse, coverage
-> enumeration (now 99.7% / aggregate 100%), persisted doanalyzerv2 runner,
-> CI-emulation + Option-checklist in CONTRIBUTING, SECURITY.md, PR template,
-> aggregate fuzz target + instance_id fuzz seeds (found and fixed the
-> `instance_id` UTF-8 sanitization bug), JSON round-trip property test, guard
-> benchmark, godoc examples, README compatibility matrix, deprecation policy,
-> openapi CI validation, and the `WithLiveThrottle` × cache documentation.
-> Completed items are recorded in CHANGELOG `[Unreleased]`, not here.
+> Curated 2026-09-04 (docs-health run, post-v0.1.1); re-harvested 2026-09-04
+> (evening) after the Pareto master plan v2 executed end-to-end: v0.1.2 cut
+> and released (instance_id fix), all 5 CI jobs green including the new
+> OpenAPI job, aggregate slash-name contract locked (strict source names),
+> dashboard bumped to v0.1.2 and synced, `.#gates` / `.#ci-emulation` /
+> `.#fuzz-long` flake apps landed, aggregate golden + merge benchmark +
+> throttle×Start tests added. Completed work lives in CHANGELOG, not here.
 
 ## Status legend
 
@@ -29,15 +22,47 @@
 
 ## High Impact
 
-| Task                                                                    | Status  | Impact | Effort | Evidence                                                                                     |
-| ----------------------------------------------------------------------- | ------- | ------ | ------ | -------------------------------------------------------------------------------------------- |
-| Bump `go-health-dashboard` to v0.1.1 (drop its replace directive)       | BLOCKED | High   | 30min  | First real downstream consumer bump; needs owner sign-off on that repo's cadence. 13-17 g3   |
-| Branch protection on `master`: require the 5 CI checks + linear history | BLOCKED | High   | 10min  | Needs owner/admin repo settings. `.github/workflows/ci.yml` header (now five jobs); 13-17 f9 |
+| Task                                                                 | Status  | Impact | Effort | Evidence                                                                                                                                                                                                                               |
+| -------------------------------------------------------------------- | ------- | ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enable branch protection on `master` (5 checks + linear history)     | BLOCKED | High   | 10min  | Needs owner/admin repo settings (decision G3). Ready-to-run command below. ⚠️ required status checks block direct pushes for non-admins; `enforce_admins: false` keeps your admin bypass. See `.github/workflows/ci.yml` header.       |
+| Coverage-threshold CI job (fail < 97%)?                              | BLOCKED | Medium | 20min  | Policy call (decision G3 follow-up). CONTRIBUTING states the 99.7% baseline; a red-failing threshold job is a maintainer preference, not a default.                                                                                    |
 
-## Blocked on user decisions
+### Ready-to-run: branch protection (G3)
 
-| Decision                                                                                | Why it blocks                                                                                                                                 |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| SA1019 policy for in-repo use of deprecated symbols (pin-tests vs nolint)               | 4 tests intentionally pin the deprecated `WithGETOnly`; deprecation policy now documents the pin-test stance — confirm or override. 13-17 f12 |
-| Optional CI jobs: coverage threshold (fail < 97%?) and dependabot auto-merge rules      | Policy calls, not defaults. CONTRIBUTING now states the 99.7% baseline; a CI threshold remains a policy call. 13-17 f16/f17                   |
-| v0.2.0 scoping, v1.0 criteria draft, release automation evaluation, v0.1.1 announcement | Strategic; tracked in ROADMAP until refined. 13-17 f43–f46                                                                                    |
+```bash
+gh api -X PUT repos/LarsArtmann/go-health/branches/master/protection --input - <<'JSON'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "Test (race)",
+      "Vet + Lint",
+      "Security (govulncheck + gosec)",
+      "Flake + Formatting",
+      "OpenAPI spec"
+    ]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+```
+
+Check names are the exact `name:` fields CI reports. To revert:
+`gh api -X DELETE repos/LarsArtmann/go-health/branches/master/protection`.
+
+## Owner Actions (artifacts ready, publishing is yours)
+
+| Task                                                                          | Status  | Impact | Effort | Evidence                                                                                                             |
+| ----------------------------------------------------------------------------- | ------- | ------ | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| Publish the v0.1.1/v0.1.2 announcement                                        | TODO    | Low    | 15min  | Draft + channels checklist ready in `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`.                                |
+
+## Resolved 2026-09-04 (kept for traceability, remove freely)
+
+- ~~Bump `go-health-dashboard` to v0.1.2~~ — done: requires released v0.1.2 directly (no replace), build + tests green, synced to origin.
+- ~~SA1019 policy (pin-tests vs nolint)~~ — confirmed (G5): pin-tests stay, accepted findings are the documented stance (`docs/deprecation-policy.md`).
+- ~~v0.2.0 scoping / v1.0 criteria / release automation / announcement draft~~ — done: ROADMAP Theme 7 now carries candidates, criteria, and the GoReleaser-vs-manual decision (manual adopted).

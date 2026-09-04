@@ -13,10 +13,9 @@
 
 `Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)`, `Healthz()`,
 `NewWithHealthCheck(fn, opts...)`, and `Probe.HealthCheck` conformance all
-shipped. Remaining raw ideas:
-
-- Examples: custom `HealthRecorder`, two-phase shutdown, live-vs-cached mode
-  (patterns exist in tests/docs; promoted examples are tracked in TODO_LIST)
+shipped. Godoc examples for the programmatic API shipped in v0.1.2
+(incl. `ExampleWithHealthRecorder`, `ExampleWithShutdownGracePeriod`,
+`ExampleProbe_AsShutdowner`, and the aggregate examples). Remaining raw ideas:
 - `AwaitReady` with a cache-aware poll interval (respect the source's
   refresh interval instead of a fixed 50ms poll)
 - Aggregate-level `Healthz` parity: one combined endpoint across all sources

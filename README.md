@@ -9,7 +9,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.0.2 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+> **Stability:** v0.1.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
 
 ---
 

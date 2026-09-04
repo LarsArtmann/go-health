@@ -227,6 +227,11 @@ func WithBootTime(t time.Time) Option {
 // WithGETOnly wraps all handlers so they reject non-GET requests with 405
 // Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces
 // misconfigurations (e.g. a load balancer sending HEAD or POST) early.
+//
+// Deprecated: use [WithAllowedMethods] instead — it is the method-set
+// superset (WithAllowedMethods() with no arguments behaves identically) and
+// the option to extend later without switching. WithGETOnly keeps working;
+// there is no removal planned in the v0.x line.
 func WithGETOnly() Option {
 	return func(c *config) { c.getOnly = true }
 }

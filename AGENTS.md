@@ -53,7 +53,7 @@ fail, startup 503 until all latches), `RegisterRoutes`.
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching by default** (1s refresh) — kubelet/LB polling doesn't hammer dependencies. Set `WithRefreshInterval(0)` for live mode.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200.
-- **Method-set enforcement** — `WithGETOnly()` or `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse). Off by default. Middleware composes outside this guard (see docs/middleware-design.md).
+- **Method-set enforcement** — `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse). Off by default. `WithGETOnly()` is **deprecated** (v0.1.1) but still functional — it is the zero-arg equivalent; keep its tests until removal is decided. Middleware composes outside this guard (see docs/middleware-design.md).
 - **Deterministic clock seam** — `p.now()` (backed by `WithNowFunc`) drives uptime, `Response.Timestamp`, and live-throttle freshness. Latency measurement stays on the real clock. Tests inject a fixed clock instead of sleeping.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly.
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down).

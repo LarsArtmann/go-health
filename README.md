@@ -150,7 +150,7 @@ func main() {
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching** (1s default) — kubelet/LB polling doesn't hammer dependencies.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
-- **GET-only enforcement** — `WithGETOnly()` rejects non-GET with 405; `WithAllowedMethods(...)` extends it with a method set and a sorted `Allow` header.
+- **Method-set enforcement** — `WithAllowedMethods(...)` rejects non-allowed methods with 405 and a sorted `Allow` header (`WithGETOnly` is the deprecated zero-arg equivalent).
 - **Programmatic health API** — `Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)`, `Healthz()` — query health without spinning up HTTP; register the probe in its own injector via `HealthCheck`.
 - **Observability seam** — `WithEvaluationHook(fn)` observes every classified response; Prometheus exposition and OpenTelemetry compose on top without new dependencies.
 - **Panic-hardened** — panics from misbehaving recorders are recovered, reported as a failed check wrapping `health.ErrPanicDuringHealthCheck`, and roll readiness up to 503 (fail closed) instead of crashing your process or lying with a 200. (Note: a service whose own `HealthCheck` panics on the raw-injector path crashes the process — samber/do runs each check in a goroutine; keep service checks total.)
@@ -201,7 +201,9 @@ health.WithRefreshInterval(0) // live mode
 
 Overrides the boot timestamp used to compute uptime. Defaults to the time `New()` was called. Useful for testing.
 
-### `WithGETOnly()`
+### `WithGETOnly()` — deprecated
+
+> **Deprecated:** use [`WithAllowedMethods(...)`](#withallowedmethodsmethods-string) instead — the method-set superset (`WithAllowedMethods()` with no arguments behaves identically). `WithGETOnly` keeps working; no removal is planned in the v0.x line.
 
 Wraps all handlers to reject non-GET requests with 405 Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces misconfigurations (e.g. a load balancer sending HEAD or POST) early.
 

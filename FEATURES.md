@@ -32,7 +32,7 @@
 | Startup handler (`/startupz`) | FULLY_FUNCTIONAL | Evaluates critical services until all pass, then latches. `handlers.go`                                              |
 | Combined endpoint (`Healthz`) | FULLY_FUNCTIONAL | Single handler answering "should traffic be routed here?" — 503 while booting/failing/draining, 200 otherwise. `accessors.go` |
 | Route registration helper     | FULLY_FUNCTIONAL | `RegisterRoutes(mux, routes)` + `DefaultRoutes()`. `handlers.go`                                                     |
-| Method-set enforcement        | FULLY_FUNCTIONAL | `WithGETOnly()` or `WithAllowedMethods(methods...)` wraps handlers: non-allowed methods get 405 + sorted `Allow` header (GET always included). `probe.go` |
+| Method-set enforcement        | FULLY_FUNCTIONAL | `WithAllowedMethods(methods...)` wraps handlers: non-allowed methods get 405 + sorted `Allow` header (GET always included). `WithGETOnly()` (deprecated v0.1.1) is the zero-arg equivalent, still functional. `probe.go` |
 | Custom route paths            | FULLY_FUNCTIONAL | `Routes` struct allows non-default paths. `handlers.go`                                                              |
 | HTTP middleware               | FULLY_FUNCTIONAL | By composition: handlers are plain `http.HandlerFunc`; verified spike with auth middleware. `middleware_example_test.go`, docs/middleware-design.md |
 

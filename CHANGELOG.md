@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet.
+
+### Deprecated
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.1.1] - 2026-09-04
+
+### Deprecated
+
+- `WithGETOnly()` — superseded by `WithAllowedMethods(...)` (the method-set
+  superset; `WithAllowedMethods()` with no arguments behaves identically).
+  The option keeps working and no removal is planned in the v0.x line.
+
+### Added
+
 - doanalyzerv2 verification: 0 anti-pattern findings (DO-1..DO-6 incl. injector-in-service) across the root and aggregate packages.
 
 - Exhaustive classify matrix test (8 health-state assignments × 8 critical

@@ -34,7 +34,7 @@ func (p *Probe) LivenessHandler() http.HandlerFunc {
 	return p.guard(func(w http.ResponseWriter, _ *http.Request) {
 		resp := Response{
 			Status:  StatusPass,
-			Uptime:  time.Since(p.bootTime).Round(uptimeResolution).String(),
+			Uptime:  p.uptime(),
 			Version: p.version,
 			Checks:  map[string]Check{},
 		}
@@ -89,7 +89,7 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 		if p.startupPassed.Load() {
 			resp := Response{
 				Status:  StatusPass,
-				Uptime:  time.Since(p.bootTime).Round(uptimeResolution).String(),
+				Uptime:  p.uptime(),
 				Version: p.version,
 				Checks:  map[string]Check{},
 			}
@@ -171,7 +171,7 @@ func (p *Probe) throttledLiveResponse(ctx context.Context) Response {
 func (p *Probe) buildStartupResponse(results map[string]error) Response {
 	resp := Response{
 		Version:      p.version,
-		Uptime:       time.Since(p.bootTime).Round(uptimeResolution).String(),
+		Uptime:       p.uptime(),
 		Checks:       p.buildChecks(results),
 		ShuttingDown: p.shuttingDown.Load(),
 	}

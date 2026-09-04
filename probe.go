@@ -67,6 +67,8 @@ type Probe struct {
 	evalHook      func(Response)
 	liveThrottle  time.Duration
 	shutdownGrace time.Duration
+	nowFunc       func() time.Time
+	allowedMethods map[string]struct{}
 
 	// throttleMu serializes throttled live evaluations so a request flood
 	// produces one batch per window, not one per request.
@@ -91,6 +93,8 @@ type config struct {
 	evalHook        func(Response)
 	liveThrottle    time.Duration
 	shutdownGrace   time.Duration
+	nowFunc         func() time.Time
+	allowedMethods  map[string]struct{}
 }
 
 // Option configures a [Probe]. Use the With* functions to create options.
@@ -140,6 +144,29 @@ func WithLiveThrottle(d time.Duration) Option {
 // two-phase path.
 func WithShutdownGracePeriod(d time.Duration) Option {
 	return func(c *config) { c.shutdownGrace = d }
+}
+
+// WithNowFunc overrides the clock used for uptime and evaluation timestamps.
+// Defaults to time.Now. Useful for deterministic tests; production code
+// should leave it unset.
+func WithNowFunc(fn func() time.Time) Option {
+	return func(c *config) { c.nowFunc = fn }
+}
+
+// WithAllowedMethods extends GET-only enforcement: the listed methods are
+// accepted (plus GET, always), anything else gets 405 with an Allow header.
+// Use it when infrastructure probes with HEAD or OPTIONS must pass. It
+// implies [WithGETOnly]; calling both is harmless.
+func WithAllowedMethods(methods ...string) Option {
+	return func(c *config) {
+		if c.allowedMethods == nil {
+			c.allowedMethods = map[string]struct{}{http.MethodGet: {}}
+		}
+
+		for _, m := range methods {
+			c.allowedMethods[m] = struct{}{}
+		}
+	}
 }
 
 // WithHealthRecorder wires a [HealthRecorder] so that every health-check batch
@@ -193,15 +220,30 @@ func WithGETOnly() Option {
 	return func(c *config) { c.getOnly = true }
 }
 
-// guard wraps a handler with GET-only enforcement when WithGETOnly is active.
+// guard wraps a handler with method enforcement when WithGETOnly or
+// WithAllowedMethods is active. The accepted set is GET plus any explicitly
+// allowed methods; the Allow response header names the full set.
 func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
-	if !p.getOnly {
+	allowed := p.allowedMethods
+
+	if allowed == nil && !p.getOnly {
 		return handler
 	}
 
+	if allowed == nil {
+		allowed = map[string]struct{}{http.MethodGet: {}}
+	}
+
+	allowList := make([]string, 0, len(allowed))
+	for m := range allowed {
+		allowList = append(allowList, m)
+	}
+
+	sort.Strings(allowList)
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.Header().Set("Allow", "GET")
+		if _, ok := allowed[r.Method]; !ok {
+			w.Header().Set("Allow", strings.Join(allowList, ", "))
 			http.Error(w, "health probes only accept GET", http.StatusMethodNotAllowed)
 
 			return
@@ -209,6 +251,20 @@ func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 
 		handler(w, r)
 	}
+}
+
+// now returns the configured clock. Tests inject a fixed one via WithNowFunc.
+func (p *Probe) now() time.Time {
+	if p.nowFunc != nil {
+		return p.nowFunc()
+	}
+
+	return time.Now()
+}
+
+// uptime renders the rounded time since boot.
+func (p *Probe) uptime() string {
+	return p.now().Sub(p.bootTime).Round(uptimeResolution).String()
 }
 
 // New creates a [Probe] wired to the given injector.
@@ -253,6 +309,8 @@ func assemble(healthCheck healthCheckFunc, cfg config) *Probe {
 		evalHook:        cfg.evalHook,
 		liveThrottle:    cfg.liveThrottle,
 		shutdownGrace:   cfg.shutdownGrace,
+		nowFunc:         cfg.nowFunc,
+		allowedMethods:  cfg.allowedMethods,
 	}
 }
 
@@ -441,7 +499,7 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 
 	resp := Response{
 		Version:        p.version,
-		Uptime:         time.Since(p.bootTime).Round(uptimeResolution).String(),
+		Uptime:         p.uptime(),
 		ShuttingDown:   p.shuttingDown.Load(),
 		Checks:         p.buildChecks(results),
 		TotalLatencyMs: time.Since(start).Milliseconds(),

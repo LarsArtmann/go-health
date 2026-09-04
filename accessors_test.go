@@ -129,12 +129,15 @@ func TestHealthz_CombinesStartupAndReadiness(t *testing.T) {
 		t.Errorf("booting body missing startup entry: %s", body)
 	}
 
-	// After one successful batch the latch is set → 200.
-	_ = probe.Evaluate(context.Background())
+	// After one successful startup-handler batch the latch is set to 200.
+	// (Evaluate alone does not latch; only the startup path does.)
+	rec = doRequest(t, probe.StartupHandler(), routes.Startup)
+	if rec.Code != http.StatusOK {
+		t.Errorf("startup after first batch: want 200, got %d", rec.Code)
+	}
 
 	rec = doRequest(t, handler, routes.Readiness)
 	if rec.Code != http.StatusOK {
-		t.Logf("DEBUG body: %s", rec.Body.String())
 		t.Errorf("after latch: want 200, got %d", rec.Code)
 	}
 

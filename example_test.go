@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json/v2"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -399,4 +400,71 @@ func ExampleProbe_CachedResponse() {
 	// status: pass
 	// checks in cache: 1
 	// batches run: 2
+}
+
+// WithShutdownGracePeriod turns the manual MarkShuttingDown + sleep +
+// Shutdown sequence into one call: Shutdown flips to draining immediately
+// (readiness 503, Alive false), keeps the background refresh loop running
+// for the grace window, then stops it.
+func ExampleWithShutdownGracePeriod() {
+	probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"db": nil}
+	},
+		health.WithRefreshInterval(10*time.Millisecond),
+		health.WithShutdownGracePeriod(100*time.Millisecond),
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := probe.Start(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	done := make(chan struct{})
+
+	go func() {
+		probe.Shutdown()
+
+		close(done)
+	}()
+
+	// Inside the grace window the probe is already draining, while the
+	// refresh loop keeps the served state fresh for dashboards.
+	time.Sleep(30 * time.Millisecond)
+
+	fmt.Println("draining:", !probe.Alive())
+
+	<-done
+
+	fmt.Println("alive after shutdown:", probe.Alive())
+
+	// Output:
+	// draining: true
+	// alive after shutdown: false
+}
+
+// AsShutdowner adapts the probe to do.ShutdownerWithError, so samber/do can
+// shut the probe down like any other registered service.
+func ExampleProbe_AsShutdowner() {
+	probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"db": nil}
+	}, health.WithRefreshInterval(0))
+
+	injector := do.New()
+
+	do.ProvideNamed(injector, "probe-shutdowner", func(do.Injector) (do.ShutdownerWithError, error) {
+		return probe.AsShutdowner(), nil
+	})
+
+	service := do.MustInvokeNamed[do.ShutdownerWithError](injector, "probe-shutdowner")
+
+	if err := service.Shutdown(); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("alive after do-shutdown:", probe.Alive())
+
+	// Output:
+	// alive after do-shutdown: false
 }

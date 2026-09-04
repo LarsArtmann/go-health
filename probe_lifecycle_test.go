@@ -2,8 +2,10 @@ package health_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -175,5 +177,75 @@ func TestStart_AfterShutdown_RestartsLoopButStaysDown(t *testing.T) {
 
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("readiness after restart: want 503, got %d", rec.Code)
+	}
+}
+
+// flappableService models a dependency whose health changes between requests.
+type flappableService struct {
+	up atomic.Bool
+}
+
+func (s *flappableService) HealthCheck(_ context.Context) error {
+	if s.up.Load() {
+		return nil
+	}
+
+	return errors.New("still booting")
+}
+
+// The startup latch is one-way in the public API. ResetStartupLatchForTest
+// (test builds only) clears it so the full latch lifecycle can be exercised
+// on a single Probe: latch, re-evaluate after reset, re-latch.
+func TestStartupLatch_ResetForTest_ReEvaluatesAndRelatches(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+
+	svc := &flappableService{}
+	svc.up.Store(true)
+
+	do.ProvideNamed(injector, "db", func(_ do.Injector) (*flappableService, error) {
+		return svc, nil
+	})
+	invoke[*flappableService](t, injector, "db")
+
+	probe := health.New(injector,
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
+
+	startup := probe.StartupHandler()
+	path := health.DefaultRoutes().Startup
+
+	w := doRequest(t, startup, path)
+	if w.Code != http.StatusOK {
+		t.Fatalf("healthy startup: want 200, got %d", w.Code)
+	}
+
+	if !probe.StartupComplete() {
+		t.Fatal("latch should be set after all critical services pass")
+	}
+
+	svc.up.Store(false)
+	probe.ResetStartupLatchForTest()
+
+	w = doRequest(t, startup, path)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("after reset with failing service: want 503, got %d", w.Code)
+	}
+
+	if probe.StartupComplete() {
+		t.Error("latch should be clear after reset with failing service")
+	}
+
+	svc.up.Store(true)
+
+	w = doRequest(t, startup, path)
+	if w.Code != http.StatusOK {
+		t.Fatalf("after recovery: want 200, got %d", w.Code)
+	}
+
+	if !probe.StartupComplete() {
+		t.Error("latch should be set again after successful re-evaluation")
 	}
 }

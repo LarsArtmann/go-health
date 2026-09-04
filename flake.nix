@@ -110,7 +110,15 @@
               go vet ./...
             '';
 
-            lint = mkApp "lint" "Run golangci-lint" [ pkgs.golangci-lint ] ''
+            lint = mkApp "lint" "Run golangci-lint" [
+              pkgs.golangci-lint
+              # golangci-lint shells out to a `go` binary for package
+              # loading; without goPkg on PATH it falls back to the GOROOT
+              # it was compiled with (an older Go that rejects
+              # GOEXPERIMENT=jsonv2) and fails on any machine whose host
+              # PATH does not already provide Go 1.26.
+              goPkg
+            ] ''
               golangci-lint run ./...
             '';
 
@@ -119,11 +127,17 @@
               go tool cover -func=coverage.out
             '';
 
-            vulncheck = mkApp "vulncheck" "Run govulncheck vulnerability scan" [ pkgs.govulncheck ] ''
+            vulncheck = mkApp "vulncheck" "Run govulncheck vulnerability scan" [
+              pkgs.govulncheck
+              goPkg
+            ] ''
               govulncheck ./...
             '';
 
-            security = mkApp "security" "Run gosec security scan" [ pkgs.gosec ] ''
+            security = mkApp "security" "Run gosec security scan" [
+              pkgs.gosec
+              goPkg
+            ] ''
               gosec ./...
             '';
 

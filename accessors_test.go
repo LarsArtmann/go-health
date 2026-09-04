@@ -549,10 +549,19 @@ func TestWithLiveThrottle_StartCacheServesWithoutBatches(t *testing.T) {
 	handler := probe.ReadinessHandler()
 	routes := health.DefaultRoutes()
 
-	assertFrozenWindow(t, handler, routes.Readiness, requestReadiness(t, handler, routes.Readiness), 25)
+	assertFrozenWindow(
+		t,
+		handler,
+		routes.Readiness,
+		requestReadiness(t, handler, routes.Readiness),
+		25,
+	)
 
 	if after := batches.Load(); after != before {
-		t.Errorf("requests against the loop-refreshed cache ran %d extra batches; want 0", after-before)
+		t.Errorf(
+			"requests against the loop-refreshed cache ran %d extra batches; want 0",
+			after-before,
+		)
 	}
 }
 
@@ -609,7 +618,13 @@ func TestWithLiveThrottle_StaleCacheTriggersExactlyOneEvaluation(t *testing.T) {
 	}
 
 	// The freshly evaluated result is inside the window again.
-	assertFrozenWindow(t, handler, routes.Readiness, requestReadiness(t, handler, routes.Readiness), 10)
+	assertFrozenWindow(
+		t,
+		handler,
+		routes.Readiness,
+		requestReadiness(t, handler, routes.Readiness),
+		10,
+	)
 
 	if got := batches.Load(); got != 2 {
 		t.Errorf("post-refresh requests ran %d total batches; want still 2", got)

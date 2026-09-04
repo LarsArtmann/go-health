@@ -30,7 +30,7 @@ The change is small, but it is a **behavior change**, not a refactor:
 - Construction stops at the first invalid source today; after, it returns
   everything. Better UX, but a different failure mode that a consumer could
   (legally) observe.
-- Error *messages* become multi-line. Any caller formatting construction
+- Error _messages_ become multi-line. Any caller formatting construction
   errors into single-line logs/panic messages would see wrapping change.
 
 Both belong in a minor release with a changelog callout, not a patch-window

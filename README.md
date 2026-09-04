@@ -65,7 +65,7 @@ What CI actually tests on every push — not what merely compiles:
 | Aggregate | same module version, tested in the same suite |
 
 Other OS/arch combinations (darwin, windows, arm64) are untested: the code is
-platform-independent Go (no cgo, no syscalls), so it is *expected* to work,
+platform-independent Go (no cgo, no syscalls), so it is _expected_ to work,
 but that is not a claim — run the test suite on your target before relying on
 it. A CI OS matrix is deliberately deferred: darwin can no longer evaluate
 the Nix flake at all (nixpkgs 26.11 dropped x86_64-darwin; see `flake.nix`),

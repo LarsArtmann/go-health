@@ -17,6 +17,7 @@
 shipped. Godoc examples: seven programmatic-API examples shipped in v0.1.2;
 the shutdown-grace, AsShutdowner, and aggregate examples landed right after
 (sit in `[Unreleased]`). Remaining raw ideas:
+
 - `AwaitReady` with a cache-aware poll interval (respect the source's
   refresh interval instead of a fixed 50ms poll)
 - Aggregate `Healthz` parity → promoted to a v0.2.0 candidate (Theme 7)

@@ -8,22 +8,22 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 
 ## Commands
 
-| Command               | Purpose                          |
-| --------------------- | -------------------------------- |
-| `nix run .#test`      | Run all tests                    |
-| `nix run .#test-race` | Run all tests with race detector |
-| `nix run .#lint`      | Run golangci-lint                |
-| `nix run .#vet`       | Run go vet                       |
-| `nix run .#coverage`  | Run tests with coverage report   |
-| `nix run .#fuzz`      | Run fuzz targets (short budget)  |
-| `nix run .#gates`     | Full pre-push gate sweep, fail-fast (subset: `nix run .#gates -- lint`) |
-| `nix run .#ci-emulation` | Re-run gates under a go-free PATH (CI emulation) |
-| `nix run .#fuzz-long` | Fuzz targets, 5 min each (weekly CI budget; override: `-- -fuzztime=10s`) |
-| `nix run .#vulncheck` | Run govulncheck                  |
-| `nix run .#security`  | Run gosec                        |
-| `nix run .#build`     | Build all packages               |
-| `nix fmt`             | Format code (gofumpt, goimports) |
-| `nix flake check`     | Validate flake + formatting      |
+| Command                  | Purpose                                                                   |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `nix run .#test`         | Run all tests                                                             |
+| `nix run .#test-race`    | Run all tests with race detector                                          |
+| `nix run .#lint`         | Run golangci-lint                                                         |
+| `nix run .#vet`          | Run go vet                                                                |
+| `nix run .#coverage`     | Run tests with coverage report                                            |
+| `nix run .#fuzz`         | Run fuzz targets (short budget)                                           |
+| `nix run .#gates`        | Full pre-push gate sweep, fail-fast (subset: `nix run .#gates -- lint`)   |
+| `nix run .#ci-emulation` | Re-run gates under a go-free PATH (CI emulation)                          |
+| `nix run .#fuzz-long`    | Fuzz targets, 5 min each (weekly CI budget; override: `-- -fuzztime=10s`) |
+| `nix run .#vulncheck`    | Run govulncheck                                                           |
+| `nix run .#security`     | Run gosec                                                                 |
+| `nix run .#build`        | Build all packages                                                        |
+| `nix fmt`                | Format code (gofumpt, goimports)                                          |
+| `nix flake check`        | Validate flake + formatting                                               |
 
 Uses `flake.nix` with `flake-parts` + `treefmt-nix`. Single dependency: `github.com/samber/do/v2 v2.1.0`.
 
@@ -168,28 +168,28 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 
 ## Project Documentation
 
-| File                                                                                      | Purpose                                                                                                                       |
-| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| [FEATURES.md](FEATURES.md)                                                                | Honest feature inventory by status                                                                                            |
-| [TODO_LIST.md](TODO_LIST.md)                                                              | Short-term actionable tasks                                                                                                   |
-| [ROADMAP.md](ROADMAP.md)                                                                  | Long-term direction and raw ideas                                                                                             |
-| [CHANGELOG.md](CHANGELOG.md)                                                              | What changed in each version                                                                                                  |
-| [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                                        | Domain terms (liveness, readiness, startup, critical, etc.)                                                                   |
-| [docs/timeout-design.md](docs/timeout-design.md)                                          | Batch-level vs per-service timeout analysis                                                                                   |
-| [docs/aggregate-source-name-design.md](docs/aggregate-source-name-design.md)              | Slash rejected in aggregate source names (G2): collision + grouping-axis rationale                                             |
-| [docs/errors-join-design.md](docs/errors-join-design.md)                                  | errors.Join for aggregate construction errors: deferred to v0.2.0 with verified spike                                          |
-| [docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md) | Per-source roll-up accessor: deferred to v0.2.0; labels/pseudo-checks rejected                                             |
-| [docs/announcements/](docs/announcements/)                                                | Announcement drafts with channels + publishing checklist (owner publishes)                                                     |
-| [docs/panic-recovery-design.md](docs/panic-recovery-design.md)                            | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces                                                |
-| [docs/middleware-design.md](docs/middleware-design.md)                                    | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard                                             |
-| [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)              | Metrics via `WithEvaluationHook` composition, never `client_golang`                                                           |
-| [docs/openapi-design.md](docs/openapi-design.md) + [docs/openapi.yaml](docs/openapi.yaml) | Static OpenAPI 3.1 spec over runtime generation                                                                               |
-| [docs/classification-2.0-design.md](docs/classification-2.0-design.md)                    | Rejected: weights, circuit-breaker, MaxConcurrent, per-service caching                                                        |
-| [docs/multi-tenant-design.md](docs/multi-tenant-design.md)                                | Rejected: child scopes, `WithProbeName`, runtime criticality toggles                                                          |
-| [docs/starting-status-design.md](docs/starting-status-design.md)                          | Rejected: fourth Status value, Status input validation                                                                        |
-| [docs/content-negotiation-design.md](docs/content-negotiation-design.md)                  | Why content negotiation / HTML rendering is rejected; composition pattern instead                                             |
-| [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md)              | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers                                                    |
-| [docs/deprecation-policy.md](docs/deprecation-policy.md)                                  | Deprecation checklist, symbol lifetime, SA1019 stance                                                                         |
-| [SECURITY.md](SECURITY.md)                                                                | Vulnerability disclosure path, in/out of scope, response targets                                                              |
-| [docs/adr/](docs/adr/)                                                                    | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003), recorder decoupling (004) |
-| [docs/status/](docs/status/)                                                              | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                  |
+| File                                                                                             | Purpose                                                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| [FEATURES.md](FEATURES.md)                                                                       | Honest feature inventory by status                                                                                            |
+| [TODO_LIST.md](TODO_LIST.md)                                                                     | Short-term actionable tasks                                                                                                   |
+| [ROADMAP.md](ROADMAP.md)                                                                         | Long-term direction and raw ideas                                                                                             |
+| [CHANGELOG.md](CHANGELOG.md)                                                                     | What changed in each version                                                                                                  |
+| [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                                               | Domain terms (liveness, readiness, startup, critical, etc.)                                                                   |
+| [docs/timeout-design.md](docs/timeout-design.md)                                                 | Batch-level vs per-service timeout analysis                                                                                   |
+| [docs/aggregate-source-name-design.md](docs/aggregate-source-name-design.md)                     | Slash rejected in aggregate source names (G2): collision + grouping-axis rationale                                            |
+| [docs/errors-join-design.md](docs/errors-join-design.md)                                         | errors.Join for aggregate construction errors: deferred to v0.2.0 with verified spike                                         |
+| [docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md) | Per-source roll-up accessor: deferred to v0.2.0; labels/pseudo-checks rejected                                                |
+| [docs/announcements/](docs/announcements/)                                                       | Announcement drafts with channels + publishing checklist (owner publishes)                                                    |
+| [docs/panic-recovery-design.md](docs/panic-recovery-design.md)                                   | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces                                                |
+| [docs/middleware-design.md](docs/middleware-design.md)                                           | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard                                             |
+| [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)                     | Metrics via `WithEvaluationHook` composition, never `client_golang`                                                           |
+| [docs/openapi-design.md](docs/openapi-design.md) + [docs/openapi.yaml](docs/openapi.yaml)        | Static OpenAPI 3.1 spec over runtime generation                                                                               |
+| [docs/classification-2.0-design.md](docs/classification-2.0-design.md)                           | Rejected: weights, circuit-breaker, MaxConcurrent, per-service caching                                                        |
+| [docs/multi-tenant-design.md](docs/multi-tenant-design.md)                                       | Rejected: child scopes, `WithProbeName`, runtime criticality toggles                                                          |
+| [docs/starting-status-design.md](docs/starting-status-design.md)                                 | Rejected: fourth Status value, Status input validation                                                                        |
+| [docs/content-negotiation-design.md](docs/content-negotiation-design.md)                         | Why content negotiation / HTML rendering is rejected; composition pattern instead                                             |
+| [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md)                     | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers                                                    |
+| [docs/deprecation-policy.md](docs/deprecation-policy.md)                                         | Deprecation checklist, symbol lifetime, SA1019 stance                                                                         |
+| [SECURITY.md](SECURITY.md)                                                                       | Vulnerability disclosure path, in/out of scope, response targets                                                              |
+| [docs/adr/](docs/adr/)                                                                           | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003), recorder decoupling (004) |
+| [docs/status/](docs/status/)                                                                     | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                  |

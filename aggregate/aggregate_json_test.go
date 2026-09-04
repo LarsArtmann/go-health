@@ -101,7 +101,7 @@ func TestAggregateReadiness_JSONSnapshot(t *testing.T) {
 	const golden = "testdata/aggregate_readiness_response.golden"
 
 	if *updateAggregateGolden {
-		if err := os.MkdirAll("testdata", 0o755); err != nil {
+		if err := os.MkdirAll("testdata", 0o750); err != nil {
 			t.Fatalf("create testdata dir: %v", err)
 		}
 

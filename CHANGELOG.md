@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `nix run .#gates` — one-command pre-push gate sweep (same gates as CI,
+  fail-fast, subsettable) and `nix run .#ci-emulation` — the same gates under
+  a go-free PATH, replacing the copy-paste CI-emulation recipe in
+  CONTRIBUTING.md. Both verified end-to-end on 2026-09-04.
+- `nix run .#fuzz-long` — 5-minute-per-target fuzz budget backing the new
+  weekly scheduled `Fuzz (weekly long)` workflow (corpus uploaded on failure).
+- Aggregate readiness JSON golden file
+  (`aggregate/testdata/aggregate_readiness_response.golden`, regenerate with
+  `go test ./aggregate -update`) locking the merged wire format through the
+  real handler path.
+- Aggregate merge benchmark `BenchmarkAggregateCachedResponse` (N=1,2,4,8
+  sources) and guard benchmark variants `BenchmarkGuardOverhead_HEADAllowed`
+  / `_AllowHeader`; baselines in FEATURES.md.
+- Throttle × Start tests: requests against the loop-refreshed cache trigger
+  zero batches, and a stale cached result triggers exactly one live
+  evaluation — the README paragraph is now test-backed.
+- Named regression tests pinning the instance_id UTF-8 sanitize fix
+  (unit + end-to-end no-500 path) and the aggregate never-started-source
+  merge behavior.
+- Aggregate godoc examples (`ExampleNew`, `ExampleNew_scalarsDropped`,
+  `ExampleAggregate_StartupHandler`) and root examples
+  (`ExampleWithShutdownGracePeriod`, `ExampleProbe_AsShutdowner`).
+- `tools/doanalyzerv2/run.sh` wrapper: validates the analyzer checkout,
+  honors `GO_HEALTH_BRANCHING_FLOW`, and prints actionable remediation
+  instead of a raw module-resolution failure.
+
 ### Changed
 
 - `aggregate.New` now rejects source names containing `/` (wrapped

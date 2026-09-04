@@ -2,6 +2,7 @@ package aggregate_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -77,6 +78,7 @@ func ExampleNew() {
 	merged := agg.CachedResponse()
 
 	fmt.Println(merged.Status)
+
 	for _, name := range []string{"api/cache", "api/db", "web/render"} {
 		fmt.Println(name, merged.Checks[name].Status)
 	}
@@ -88,12 +90,14 @@ func ExampleNew() {
 	// web/render pass
 }
 
+var errQueueDown = errors.New("connection refused")
+
 // Merging drops per-process scalars: version, instance_id, and uptime belong
 // to a single process and would lie in an aggregate view. The merged status
 // is the worst of the sources.
 func ExampleNew_scalarsDropped() {
 	degraded := health.NewWithHealthCheck(func(context.Context) map[string]error {
-		return map[string]error{"queue": fmt.Errorf("connection refused")}
+		return map[string]error{"queue": errQueueDown}
 	},
 		health.WithRefreshInterval(0),
 		health.WithLiveThrottle(time.Hour),

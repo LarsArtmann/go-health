@@ -160,6 +160,8 @@ func (p *Probe) buildStartupResponse(results map[string]error) Response {
 // marshalResponse is the single serialization seam for health responses.
 // It is a package variable only so tests can force the marshal-error branch;
 // production code must never swap it.
+//
+//nolint:gochecknoglobals // deliberate test seam; see handlers_internal_test.go
 var marshalResponse = func(resp Response) ([]byte, error) {
 	return json.Marshal(resp, json.Deterministic(true))
 }

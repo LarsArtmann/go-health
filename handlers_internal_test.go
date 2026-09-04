@@ -16,7 +16,9 @@ var errMarshalTestCause = errors.New("boom: unsupported type")
 // error branch and asserts the body carries the underlying cause, so a
 // future serialization regression is debuggable from the response alone.
 // Not parallel: it swaps the package-level marshal seam.
-func TestWriteResponse_MarshalErrorIncludesCause(t *testing.T) {
+func TestWriteResponse_MarshalErrorIncludesCause(
+	t *testing.T,
+) { //nolint:paralleltest // swaps the package marshal seam, not parallel-safe
 	original := marshalResponse
 	marshalResponse = func(Response) ([]byte, error) {
 		return nil, errMarshalTestCause

@@ -144,6 +144,7 @@ func assertMatrixCombo(t *testing.T, states map[string]state, critical map[strin
 		}
 
 		wantCheck := health.StatusPass
+
 		if !states[name].healthy {
 			if critical[name] {
 				wantCheck = health.StatusFail

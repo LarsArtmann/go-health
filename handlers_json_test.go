@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"testing"
+	"time"
 
 	health "github.com/larsartmann/go-health"
 )
@@ -75,5 +76,95 @@ func TestReadinessResponse_JSONOmitEmpty(t *testing.T) {
 	want := `{"status":"pass","shutting_down":false,"total_latency_ms":0,"checks":{}}`
 	if string(payload) != want {
 		t.Errorf("empty response shape: want %s, got %s", want, payload)
+	}
+}
+
+// TestResponseJSONRoundTripIdentity is the property complement to the golden
+// snapshot: for any Response the wire format must be a fixed point of
+// unmarshal → marshal (byte-identical), and the decoded value must equal the
+// original field-for-field. A failure means consumers re-serializing probe
+// payloads observe drift.
+func TestResponseJSONRoundTripIdentity(t *testing.T) {
+	t.Parallel()
+
+	stamped := time.Date(2026, 9, 4, 12, 0, 0, 0, time.UTC)
+
+	for name, resp := range map[string]health.Response{
+		"fully populated": {
+			Status:         health.StatusFail,
+			Version:        "1.2.3",
+			InstanceID:     "pod-7f9c",
+			Uptime:         "4m5s",
+			ShuttingDown:   true,
+			TotalLatencyMs: 42,
+			Timestamp:      stamped,
+			Checks: map[string]health.Check{
+				"cache": {Status: health.StatusWarn, Error: "connection refused"},
+				"db":    {Status: health.StatusFail, Error: `quote " backslash \ ` + "\n"},
+			},
+		},
+		"minimal pass": {
+			Status: health.StatusPass,
+			Checks: map[string]health.Check{},
+		},
+		"zero value with nil checks": {},
+		"warn degraded no timestamp": {
+			Status:         health.StatusWarn,
+			TotalLatencyMs: 7,
+			Checks: map[string]health.Check{
+				"cache": {Status: health.StatusWarn, Error: "timeout"},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			first, err := json.Marshal(resp, json.Deterministic(true))
+			if err != nil {
+				t.Fatalf("marshal: %v", err)
+			}
+
+			var decoded health.Response
+			if err := json.Unmarshal(first, &decoded); err != nil {
+				t.Fatalf("unmarshal: %v", err)
+			}
+
+			second, err := json.Marshal(decoded, json.Deterministic(true))
+			if err != nil {
+				t.Fatalf("re-marshal: %v", err)
+			}
+
+			if string(first) != string(second) {
+				t.Fatalf("wire identity broken:\nfirst:  %s\nsecond: %s", first, second)
+			}
+
+			if decoded.Status != resp.Status ||
+				decoded.Version != resp.Version ||
+				decoded.InstanceID != resp.InstanceID ||
+				decoded.Uptime != resp.Uptime ||
+				decoded.ShuttingDown != resp.ShuttingDown ||
+				decoded.TotalLatencyMs != resp.TotalLatencyMs {
+				t.Fatalf("scalar drift:\nwant: %+v\ngot:  %+v", resp, decoded)
+			}
+
+			if !decoded.Timestamp.Equal(resp.Timestamp) {
+				t.Fatalf("timestamp drift: want %v, got %v", resp.Timestamp, decoded.Timestamp)
+			}
+
+			if len(decoded.Checks) != len(resp.Checks) {
+				t.Fatalf("check count drift: want %d, got %d", len(resp.Checks), len(decoded.Checks))
+			}
+
+			for key, wantCheck := range resp.Checks {
+				gotCheck, ok := decoded.Checks[key]
+				if !ok {
+					t.Fatalf("check %q lost in round-trip", key)
+				}
+
+				if gotCheck != wantCheck {
+					t.Fatalf("check %q drift: want %+v, got %+v", key, wantCheck, gotCheck)
+				}
+			}
+		})
 	}
 }

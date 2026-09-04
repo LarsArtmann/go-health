@@ -95,3 +95,45 @@ func BenchmarkCachedResponse_ParallelReads(b *testing.B) {
 		}
 	})
 }
+
+// BenchmarkGuardOverhead measures the method-set guard's cost on the liveness
+// path across its three operating modes: no guard (handler returned bare),
+// method in the allowed set (map hit), and method unlisted (405 path). The
+// delta between no-guard and allowed is the guard's true overhead.
+func BenchmarkGuardOverhead(b *testing.B) {
+	cases := []struct {
+		name   string
+		opts   []health.Option
+		method string
+	}{
+		{name: "no-guard", method: http.MethodGet},
+		{name: "allowed", opts: []health.Option{health.WithAllowedMethods(http.MethodGet)}, method: http.MethodGet},
+		{name: "unlisted", opts: []health.Option{health.WithAllowedMethods(http.MethodGet)}, method: http.MethodPost},
+	}
+
+	for _, tc := range cases {
+		b.Run(tc.name, func(b *testing.B) {
+			probe := health.NewWithHealthCheck(
+				func(context.Context) map[string]error { return nil },
+				tc.opts...,
+			)
+
+			handler := probe.LivenessHandler()
+
+			r, err := http.NewRequestWithContext(context.Background(), tc.method, "/healthz", nil)
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			w := httptest.NewRecorder()
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for b.Loop() {
+				w.Body.Reset()
+				handler(w, r)
+			}
+		})
+	}
+}

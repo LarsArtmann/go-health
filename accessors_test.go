@@ -221,6 +221,8 @@ func TestProbe_HealthCheck_Conformance(t *testing.T) {
 func TestProbe_AsShutdowner(t *testing.T) {
 	t.Parallel()
 
+	probe, _ := newStressProbe(t)
+
 	shutdowner := probe.AsShutdowner()
 
 	if err := shutdowner.Shutdown(); err != nil {

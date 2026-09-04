@@ -33,25 +33,25 @@ Verified-first audit: read all 6 reports, checked every concrete claim against t
 
 | # | Task                          | What's done                                                                                    | What's missing                                                                                                                               | Effort |
 | - | ----------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 1 | **Annotation hash citations** | ~160 of ~174 verdicts cite commit hashes                                                       | ~12 verdicts for work landed in *later* daemon commits were written date-based (hash didn't exist yet) — violates the `done at <hash>` grammar. Hashes now exist (`7f489ac`, `db13aee`); needs a 10-min top-up pass. | S      |
-| 2 | **Annotation verification**   | Per-batch counts + grep sweeps after every multiedit + `nix fmt` no-op as table-shape proof    | No full human-style read-through of all 6 files post-annotation; one whitespace-equivalent edit was only indirectly verified.                     | M      |
-| 3 | **TODO_LIST Low discipline**  | Deduped on harvest (3 marshal-error duplicates → 1 row; lifecycle stress tests merged into 1) | Low section is 13 rows — borderline infra items (renovate, issue templates) are arguably ROADMAP fuel; risk of dumping-ground drift.              | S      |
-| 4 | **Quality-gate breadth**      | test, lint, vet, fmt, flake check all green                                                    | coverage, govulncheck, gosec, erraudit not re-run (no code changed, risk ≈ 0, but the gate wasn't full-width).                                    | S      |
+| 1 | **Annotation hash citations** | ~160 of ~174 verdicts cite commit hashes                                                       | ~12 verdicts for work landed in *later* daemon commits were written date-based (hash didn't exist yet) — violates the `done at <hash>` grammar. ~~Hashes now exist (`7f489ac`, `db13aee`); needs a 10-min top-up pass.~~ done — topped up in the 2026-09-04 marathon (P3: 0 date-only verdicts remain) and this run. | S      |
+| 2 | **Annotation verification**   | Per-batch counts + grep sweeps after every multiedit + `nix fmt` no-op as table-shape proof    | ~~No full human-style read-through of all 6 files post-annotation; one whitespace-equivalent edit was only indirectly verified.~~ done (covered by the 13-17 report §a P23-final/P24 agent sweep).                     | M      |
+| 3 | **TODO_LIST Low discipline**  | Deduped on harvest (3 marshal-error duplicates → 1 row; lifecycle stress tests merged into 1) | ~~Low section is 13 rows — borderline infra items (renovate, issue templates) are arguably ROADMAP fuel; risk of dumping-ground drift.~~ done — TODO_LIST rebuilt 2026-09-04 with capped sections.              | S      |
+| 4 | **Quality-gate breadth**      | test, lint, vet, fmt, flake check all green                                                    | ~~coverage, govulncheck, gosec, erraudit not re-run (no code changed, risk ≈ 0, but the gate wasn't full-width).~~ done (covered by the 13-17 report "Full gate sweep (all green)").                                    | S      |
 
 ## c) NOT STARTED
 
 All deliberate scope exclusions for this docs-only run (user: "DO NOT RESEARCH OTHER STUFF UNRELATED"). All are tracked in TODO_LIST with status:
 
-- GitHub Actions CI pipeline (High) — no `.github/workflows/`
-- `doanalyzerv2` (BLOCKED — not in nixpkgs, sandbox blocks `go install`)
-- `go.mod` `toolchain` directive — **a one-line fix I filed instead of doing**
-- Migration guide `WithPlugin` → `WithHealthRecorder`
-- Panic-recovery criticality decision (panicking critical service → `warn` today)
-- flake.nix per-app `meta.description`
-- Tests: property-based `classify`, lifecycle interleaving stress, restart-after-shutdown, JSON snapshot, fuzz, startup contention benchmark, README Quick Start as Example
-- `//nolint` err113/nonamedreturns refactors; ADRs; CONTRIBUTING testing strategy
-- renovate/dependabot; issue templates; `nix flake check --all-systems`
-- samber-do-auditlog consumer-compile verification
+- ~~GitHub Actions CI pipeline (High) — no `.github/workflows/`~~ done at `ea5dda0`
+- ~~`doanalyzerv2` (BLOCKED — not in nixpkgs, sandbox blocks `go install`)~~ done at `8e2b6e8` — local replace-module runner; 0 findings
+- ~~`go.mod` `toolchain` directive — **a one-line fix I filed instead of doing**~~ **Won't implement — moot: `go mod tidy` drops it; the flake pins the toolchain**
+- ~~Migration guide `WithPlugin` → `WithHealthRecorder`~~ done (covered by the 11-13 report §a P6)
+- ~~Panic-recovery criticality decision (panicking critical service → `warn` today)~~ done at `6bfac99` — fail closed
+- ~~flake.nix per-app `meta.description`~~ done at `eb67f1c`
+- ~~Tests: property-based `classify`, lifecycle interleaving stress, restart-after-shutdown, JSON snapshot, fuzz, startup contention benchmark, README Quick Start as Example~~ done at `99e7511`, `893d12f` (incl. the P13 Example)
+- ~~`//nolint` err113/nonamedreturns refactors; ADRs; CONTRIBUTING testing strategy~~ done at `6d1869f`, `87bab11`, `b2c0d6c` (nolints removed per 11-13 P14)
+- ~~renovate/dependabot; issue templates; `nix flake check --all-systems`~~ done at `79eb4f4`, `3f381b2`, `9bfa6b8`
+- ~~samber-do-auditlog consumer-compile verification~~ done (covered by the 11-13 report §a #8: does NOT import go-health; dashboard verified instead)
 
 ## d) TOTALLY FUCKED UP
 
@@ -79,16 +79,16 @@ All deliberate scope exclusions for this docs-only run (user: "DO NOT RESEARCH O
 
 | #  | Task                                                                          | Impact | Effort | Category      | Status/Route                  |
 | -- | ----------------------------------------------------------------------------- | ------ | ------ | ------------- | ----------------------------- |
-| 1  | GitHub Actions CI (test-race, vet, lint, vulncheck, gosec, flake check)        | High   | M      | Infra         | TODO_LIST (High)              |
-| 2  | Run `doanalyzerv2` to verify the DO-6 fix                                      | High   | S      | Quality       | TODO_LIST (BLOCKED)           |
-| 3  | Top up missing `done at <hash>` citations in `19-01`/`19-11` (hashes now exist) | High   | S      | Documentation | this report — new             |
-| 4  | Record gopls/jsonv2 false-positive gotcha in AGENTS.md                          | High   | S      | Documentation | this report — new             |
-| 5  | Add `go.mod` `toolchain` directive (one line)                                   | Med    | S      | Infra         | TODO_LIST (Med)               |
-| 6  | Decide: panic recovery → `fail` for critical services? (+ fail-path test)       | Med    | M      | Design        | TODO_LIST (Med)               |
-| 7  | Migration guide `WithPlugin` → `WithHealthRecorder`                             | Med    | S      | Documentation | TODO_LIST (Med)               |
-| 8  | flake.nix per-app `meta.description` (kills `nix flake check` warnings)         | Med    | S      | Infra         | TODO_LIST (Med)               |
-| 9  | Add `erraudit ./... --type-aware` to the gate/CI                                | Med    | S      | Quality       | this report — new             |
-| 10 | Verify samber-do-auditlog still compiles against this module                    | Med    | S      | Quality       | TODO_LIST (Low)               |
+| 1  | ~~GitHub Actions CI (test-race, vet, lint, vulncheck, gosec, flake check)~~ done at `ea5dda0`        | High   | M      | Infra         | done |
+| 2  | ~~Run `doanalyzerv2` to verify the DO-6 fix~~ done at `8e2b6e8`                                      | High   | S      | Quality       | done |
+| 3  | ~~Top up missing `done at <hash>` citations in `19-01`/`19-11` (hashes now exist)~~ done at the 2026-09-04 marathon P3 + this run | High   | S      | Documentation | done |
+| 4  | ~~Record gopls/jsonv2 false-positive gotcha in AGENTS.md~~ done — AGENTS.md carries the full gotcha (marathon P2) | High   | S      | Documentation | done |
+| 5  | ~~Add `go.mod` `toolchain` directive (one line)~~ **Won't implement — moot (`go mod tidy` drops it)**                                   | Med    | S      | Infra         | Won't |
+| 6  | ~~Decide: panic recovery → `fail` for critical services? (+ fail-path test)~~ done at `6bfac99`       | Med    | M      | Design        | done |
+| 7  | ~~Migration guide `WithPlugin` → `WithHealthRecorder`~~ done (11-13 P6)                             | Med    | S      | Documentation | done |
+| 8  | ~~flake.nix per-app `meta.description` (kills `nix flake check` warnings)~~ done at `eb67f1c`         | Med    | S      | Infra         | done |
+| 9  | ~~Add `erraudit ./... --type-aware` to the gate/CI~~ done — documented in CONTRIBUTING as a local gate; CI carries the nix gates (11-13 P17/P1) | Med    | S      | Quality       | done |
+| 10 | ~~Verify samber-do-auditlog still compiles against this module~~ done (11-13 §a #8)                    | Med    | S      | Quality       | done |
 
 ### Medium Impact
 

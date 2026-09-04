@@ -241,6 +241,15 @@ func statusRank(s health.Status) int {
 	}
 }
 
+// marshalResponse is the single serialization seam for aggregate responses.
+// It is a package variable only so tests can force the marshal-error branch;
+// production code must never swap it.
+//
+//nolint:gochecknoglobals // deliberate test seam; mirrors the root package's seam
+var marshalResponse = func(resp health.Response) ([]byte, error) {
+	return json.Marshal(health.SanitizeResponse(resp), json.Deterministic(true))
+}
+
 // writeResponse serialises the health response as JSON with the given status
 // code. Same wire format as the root package's handlers: deterministic key
 // order, no caching.
@@ -248,7 +257,7 @@ func writeResponse(w http.ResponseWriter, code int, resp health.Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
-	payload, err := json.Marshal(health.SanitizeResponse(resp), json.Deterministic(true))
+	payload, err := marshalResponse(resp)
 	if err != nil {
 		// Defensive: Response only contains basic types so json.Marshal
 		// cannot fail today. Mirrors the root package's guard, including

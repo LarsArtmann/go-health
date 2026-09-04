@@ -136,6 +136,9 @@ func (p *Probe) Healthz() http.HandlerFunc {
 		}
 
 		if !p.startupPassed.Load() && resp.Status != StatusFail {
+			// Defensive: buildChecks and CachedResponse never return a nil
+			// map today; the guard keeps this handler safe if a future read
+			// path changes that.
 			if resp.Checks == nil {
 				resp.Checks = map[string]Check{}
 			}

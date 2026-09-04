@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	health "github.com/larsartmann/go-health"
 	aggregate "github.com/larsartmann/go-health/aggregate"
@@ -242,6 +243,36 @@ func TestCachedResponse_ShutdownForcesFail(t *testing.T) {
 	// The healthy source's checks survive the merge.
 	if _, ok := resp.Checks["up/dependency"]; !ok {
 		t.Fatalf("healthy source checks lost in merge; got %v", resp.Checks)
+	}
+}
+
+func TestCachedResponse_TotalLatencyMsIsSlowestSource(t *testing.T) {
+	t.Parallel()
+
+	// A check that takes measurably long stamps its source's cached response
+	// with a non-zero TotalLatencyMs; the merge must propagate the max.
+	slow := health.NewWithHealthCheck(func(_ context.Context) map[string]error {
+		time.Sleep(2 * time.Millisecond)
+
+		return map[string]error{"db": nil}
+	}, health.WithRefreshInterval(0))
+
+	if err := slow.Start(context.Background()); err != nil {
+		t.Fatalf("slow.Start: %v", err)
+	}
+
+	slowCached := slow.CachedResponse()
+	if slowCached.TotalLatencyMs <= 0 {
+		t.Fatalf("test setup: slow source latency = %dms, want > 0", slowCached.TotalLatencyMs)
+	}
+
+	agg := mustAggregate(t,
+		aggregate.Source{Name: "slow", Probe: slow},
+		aggregate.Source{Name: "fast", Probe: newStartedProbe(t, false, false)},
+	)
+
+	if got := agg.CachedResponse().TotalLatencyMs; got != slowCached.TotalLatencyMs {
+		t.Fatalf("merged latency = %dms, want slowest source's %dms", got, slowCached.TotalLatencyMs)
 	}
 }
 

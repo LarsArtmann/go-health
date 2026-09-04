@@ -8,6 +8,12 @@
 > **Definition of "result"** for the Pareto math: a *trustworthy, releasable,
 > maintainable* library — every push verified by automation, quality gaps closed,
 > docs truthful, release cadence unblocked, roadmap themes ready to graduate.
+>
+> **COMPLETED 2026-09-04** — all 39 P-tasks executed. Phases 1–3 (P1–P24) plus
+> P25–P34 in the [11-13 marathon](../status/2026-09-04_11-13_pareto-execution-marathon-and-api-batch.md);
+> P35–P39 + P23/P24 + final sweep, CI green, and release v0.1.1 in the
+> [13-17 report](../status/2026-09-04_13-17_v011-release-deprecation-and-first-green-ci.md).
+> Leftover follow-ups live in TODO_LIST.md / ROADMAP.md.
 
 ---
 

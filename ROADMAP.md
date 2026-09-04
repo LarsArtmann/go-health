@@ -17,6 +17,8 @@ shipped. Remaining raw ideas:
 
 - Examples: custom `HealthRecorder`, two-phase shutdown, live-vs-cached mode
   (patterns exist in tests/docs; promoted examples are tracked in TODO_LIST)
+- `AwaitReady` with a cache-aware poll interval (respect the source's
+  refresh interval instead of a fixed 50ms poll)
 
 ### 2. Observability & Diagnostics
 
@@ -28,6 +30,8 @@ Raw ideas:
 
 - OpenTelemetry spans on Evaluate/checks (same seam: hook + trace context)
 - `Response.TotalLatencyMs` as `float64` for sub-millisecond precision
+- `Probe.Snapshot()`-style accessor for structured-logging consumers
+  (only with a concrete consumer need)
 - ~~Per-service latency in `Check`~~ — infeasible in core, `samber/do` owns
   the batch; see [classification-2.0-design.md](docs/classification-2.0-design.md) §4
 
@@ -71,6 +75,19 @@ public latch stays one-way), `WithNowFunc` clock seam (deterministic uptime,
 timestamps, and throttle windows), `WithAllowedMethods` method-set guard.
 Middleware: no library concept needed — handlers are plain `http.HandlerFunc`
 ([middleware-design.md](docs/middleware-design.md)).
+
+### 7. Release & Ecosystem Strategy
+
+How the v0.x line matures. Raw ideas, none scheduled:
+
+- v0.2.0 scoping: feature-driven vs date-based cadence
+- v1.0 criteria draft: API freeze list, stability promises, deprecation
+  burn-down (incl. the `WithGETOnly` removal timeline)
+- Release automation: actions-based tag→release flow (GoReleaser judged
+  overkill for a library); the manual tag flow has worked twice
+- Promote `erraudit` / `doanalyzerv2` from local gates to CI steps if either
+  tool ever becomes public
+- Track Go 1.26.x patch releases in the flake input (dependabot may cover)
 
 ## Non-goals
 

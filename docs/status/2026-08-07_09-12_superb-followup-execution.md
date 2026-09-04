@@ -205,33 +205,33 @@ done at `8e2b6e8` — unblocked in the 2026-09-04 marathon via a local replace-m
 
 ### Medium Priority
 
-14. Consider removing `do.Injector` from `HealthRecorder` interface signature. → ROADMAP (Theme 4)
-15. Add `Probe.Status() Status` method for programmatic health check without HTTP. → ROADMAP (Theme 1)
-16. Add `Probe.Alive() bool` / `Probe.Ready() bool` convenience helpers. → ROADMAP (Theme 1)
-17. Add debounce/throttle for live evaluation mode. → ROADMAP (Theme 3)
-18. Add `WithNowFunc(func() time.Time)` for testable uptime calculations. → ROADMAP (Theme 6)
+14. ~~Consider removing `do.Injector` from `HealthRecorder` interface signature.~~ **Won't implement for v0.x — ADR-004 froze the interface; revisit at v1.0.** `87bab11`
+15. ~~Add `Probe.Status() Status` method for programmatic health check without HTTP.~~ done at `f29a64a`
+16. ~~Add `Probe.Alive() bool` / `Probe.Ready() bool` convenience helpers.~~ done at `f29a64a`
+17. ~~Add debounce/throttle for live evaluation mode.~~ done at `f29a64a` (`WithLiveThrottle`)
+18. ~~Add `WithNowFunc(func() time.Time)` for testable uptime calculations.~~ done (covered by the 13-17 report §a P35; B100 determinism tests)
 19. Consider `Response.TotalLatencyMs` as `float64` for sub-ms precision. → ROADMAP (Theme 2)
-20. Add per-service latency to `Check` struct. → ROADMAP (Theme 2)
-21. Consider a "starting" `Status` (distinct from pass/warn/fail). → ROADMAP (Theme 5)
-22. Implement `do.HealthcheckerWithContext` on Probe for self-registration. → ROADMAP (Theme 4)
-23. Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle. → ROADMAP (Theme 4)
+20. ~~Add per-service latency to `Check` struct.~~ **Won't implement — infeasible in core: samber/do owns the batch (`docs/classification-2.0-design.md` §4).**
+21. ~~Consider a "starting" `Status` (distinct from pass/warn/fail).~~ **Won't implement — rejected in `docs/starting-status-design.md`.**
+22. ~~Implement `do.HealthcheckerWithContext` on Probe for self-registration.~~ done at `f29a64a`
+23. ~~Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle.~~ done at `f29a64a` (`AsShutdowner` / `ProbeShutdowner`)
 24. ~~Add `WithLogger(*slog.Logger)` option (only if observability is genuinely desired).~~ Won't implement — non-goal: libraries must not log
-25. Add `WithShutdownGracePeriod` for automatic two-phase shutdown. → ROADMAP (Theme 3)
-26. Add `Probe.AwaitReady(ctx)` blocking helper for startup orchestration. → ROADMAP (Theme 1)
-27. Add HTTP middleware support for auth/rate-limiting on probe endpoints. → ROADMAP (Theme 6)
-28. Add metrics integration hooks (Prometheus, OpenTelemetry). → ROADMAP (Theme 2)
-29. Consider `WithAllowedMethods(...string)` instead of boolean `WithGETOnly()`. → ROADMAP (Theme 6)
-30. Add custom response format support (e.g., Prometheus exposition format). → ROADMAP (Theme 5)
-31. Add health-check weights/priorities for nuanced classification. → ROADMAP (Theme 2)
-32. Consider `Probe.Healthz()` convenience handler (single combined endpoint). → ROADMAP (Theme 1)
-33. Consider child-scope isolation for multi-tenant health checks. → ROADMAP (Theme 4)
-34. Extract `classify` and `evaluateStartup` into a separate `classifier` type for testability. → ROADMAP (Theme 6)
-35. Add stress test for concurrent `Start()` + `Shutdown()` interleaving. → TODO_LIST (Low Impact)
-36. Add property-based test for `classify` (pass/warn/fail across all possible result maps). → TODO_LIST (Low Impact)
-37. Add snapshot test for full readiness JSON response shape. → TODO_LIST (Low Impact)
-38. Add fuzz tests for JSON marshaling edge cases. → TODO_LIST (Low Impact)
-39. Consider `Status` validation (reject unknown values at construction). → ROADMAP (Theme 5)
-40. Add `WithCriticalService(name string, critical bool)` for per-service toggle. → ROADMAP (Theme 4)
+25. ~~Add `WithShutdownGracePeriod` for automatic two-phase shutdown.~~ done at `f29a64a`
+26. ~~Add `Probe.AwaitReady(ctx)` blocking helper for startup orchestration.~~ done at `f29a64a`
+27. ~~Add HTTP middleware support for auth/rate-limiting on probe endpoints.~~ done (covered by the 13-17 report §a P39: handlers are plain `http.HandlerFunc`; `docs/middleware-design.md`)
+28. ~~Add metrics integration hooks (Prometheus, OpenTelemetry).~~ done at `f29a64a` (`WithEvaluationHook`; Prometheus composes on top)
+29. ~~Consider `WithAllowedMethods(...string)` instead of boolean `WithGETOnly()`.~~ done (covered by the 13-17 report §a P35)
+30. ~~Add custom response format support (e.g., Prometheus exposition format).~~ done (covered by the 13-17 report §a P36: composition via hook + exposition-writer spike)
+31. ~~Add health-check weights/priorities for nuanced classification.~~ **Won't implement — rejected in `docs/classification-2.0-design.md`.**
+32. ~~Consider `Probe.Healthz()` convenience handler (single combined endpoint).~~ done at `f29a64a`
+33. ~~Consider child-scope isolation for multi-tenant health checks.~~ **Won't implement — rejected in `docs/multi-tenant-design.md` (N probes + aggregate).**
+34. ~~Extract `classify` and `evaluateStartup` into a separate `classifier` type for testability.~~ done at `4d5e7a3`
+35. ~~Add stress test for concurrent `Start()` + `Shutdown()` interleaving.~~ done at `99e7511`
+36. ~~Add property-based test for `classify` (pass/warn/fail across all possible result maps).~~ done at `99e7511`
+37. ~~Add snapshot test for full readiness JSON response shape.~~ done at `99e7511`
+38. ~~Add fuzz tests for JSON marshaling edge cases.~~ done at `893d12f`
+39. ~~Consider `Status` validation (reject unknown values at construction).~~ **Won't implement — rejected: no injection boundary exists (`docs/starting-status-design.md`).**
+40. ~~Add `WithCriticalService(name string, critical bool)` for per-service toggle.~~ **Won't implement — rejected in `docs/multi-tenant-design.md` (classifier immutability is the lock-free feature).**
 
 ### Lower Priority
 

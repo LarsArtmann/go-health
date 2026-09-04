@@ -108,13 +108,13 @@ User asked me to view all `docs/status/2026-08-*` files, then run the `docs-heal
 
 ## c) NOT STARTED
 
-- No GitHub Actions CI pipeline created
+- ~~No GitHub Actions CI pipeline created~~ done at `ea5dda0` — 4-job nix CI; green on master and the v0.1.1 tag
 - ~~`flake.nix` still unverified (`nix develop`, `nix flake check` never run)~~ done — verified via `nix flake check` in the 19-11 session; FEATURES.md upgraded to FULLY_FUNCTIONAL.
-- `doanalyzerv2` still never run (4 sessions and counting)
+- ~~`doanalyzerv2` still never run (4 sessions and counting)~~ done at `8e2b6e8` — local replace-module runner; 0 findings
 - ~~`.golangci.yml` still cargo-culted from `go-sse`, not curated for this project~~ done at `3e7411b` — curated: 28 violations fixed to 0, `golangci-lint config verify` passes.
-- No `go.mod` `toolchain` directive
-- No migration guide from `WithPlugin` to `WithHealthRecorder`
-- No fuzz tests, property-based tests, or snapshot tests
+- ~~No `go.mod` `toolchain` directive~~ **Won't implement — moot: `go mod tidy` drops it; the flake pins the toolchain hermetically**
+- ~~No migration guide from `WithPlugin` to `WithHealthRecorder`~~ done (covered by the 11-13 report §a P6)
+- ~~No fuzz tests, property-based tests, or snapshot tests~~ done at `893d12f`, `99e7511`
 - ~~No release/tagging process~~ done — v0.0.1 and v0.0.2 tagged, pushed to origin, GitHub releases created.
 - ~~AGENTS.md not audited against endurance test (agents-quality-guide.md)~~ done at `7f489ac` — audited in the 2026-09-03 docs-health run.
 
@@ -187,12 +187,12 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 ### High Priority
 
 6. ~~**Verify `flake.nix` builds** — `nix develop -c bash -c "go test ./..."` and `nix flake check`. Written 2 sessions ago, never executed. May have hash mismatches.~~ done — `nix flake check` passed (19-11 session); re-verified in the 2026-09-03 run (report `bc20c90`).
-7. **Set up GitHub Actions CI pipeline** — `go test -race`, `go vet`, `golangci-lint run`, `govulncheck`, `gosec`, `nix flake check`.
-8. **Run `doanalyzerv2`** — 4 sessions unverified. Find a way: build from source outside sandbox, ask user, or use a nix overlay.
+7. ~~**Set up GitHub Actions CI pipeline** — `go test -race`, `go vet`, `golangci-lint run`, `govulncheck`, `gosec`, `nix flake check`.~~ done at `ea5dda0`
+8. ~~**Run `doanalyzerv2`** — 4 sessions unverified. Find a way: build from source outside sandbox, ask user, or use a nix overlay.~~ done at `8e2b6e8` — local replace-module runner; 0 findings for DO-1..DO-6
 9. ~~**Curate `.golangci.yml` for this project** — Don't blindly copy `go-sse`. Remove linters that don't add value for a 4-file library.~~ done at `3e7411b` — curated, 0 violations, config verified.
 10. ~~**Decide on `Start()` signature change** — Keep breaking change (ALPHA privilege) or revert. User hasn't answered.~~ resolved — kept; shipped in v0.0.1 (tag pushed, GitHub release published).
-11. **Create migration guide** from `WithPlugin` to `WithHealthRecorder` for samber-do-auditlog consumers.
-12. **Add `go.mod` toolchain directive** for reproducibility.
+11. ~~**Create migration guide** from `WithPlugin` to `WithHealthRecorder` for samber-do-auditlog consumers.~~ done (covered by the 11-13 report §a P6; `docs/migration-plugin-to-recorder.md`)
+12. ~~**Add `go.mod` toolchain directive** for reproducibility.~~ **Won't implement — moot: `go mod tidy` drops it; the flake pins the toolchain hermetically.**
 
 ### Medium Priority
 
@@ -200,43 +200,43 @@ At session end, `git status --short` shows `M AGENTS.md` (uncommitted). The auto
 14. ~~**Add commit hashes to CHANGELOG entries** — Each `[Unreleased]` item should cite the commit that introduced it.~~ **Won't implement — Keep a Changelog format; traceability via git log.**
 15. ~~**Add "See also" section to README** — Link to FEATURES.md, TODO_LIST.md, ROADMAP.md.~~ done at `7f489ac` — Project Docs section added (2026-09-03 docs-health run).
 16. ~~**Document `docs/status/` convention in CONTRIBUTING.md** — Naming pattern, when to write reports.~~ done at `7f489ac` — Status Reports section added (2026-09-03 docs-health run).
-17. **Decide: should panic recovery treat critical services as fail?** — A panicking critical service arguably should produce StatusFail, not StatusWarn. → TODO_LIST (Medium Impact)
-18. **Add `Probe.Status() Status` method** — Programmatic health query without HTTP overhead. → ROADMAP (Theme 1)
-19. **Add debounce/throttle for live evaluation mode** — `WithRefreshInterval(0)` has no DOS protection. → ROADMAP (Theme 3)
-20. **Remove `do.Injector` from `HealthRecorder` interface** — Decouples consumer code from container type. → ROADMAP (Theme 4)
-21. **Add `Probe.Alive() bool` / `Probe.Ready() bool`** — Convenience helpers. → ROADMAP (Theme 1)
-22. **Implement `do.HealthcheckerWithContext` on Probe** — Self-registration in the container it monitors. → ROADMAP (Theme 4)
-23. **Implement `do.ShutdownerWithError` on Probe** — Container-managed lifecycle. → ROADMAP (Theme 4)
-24. **Add `WithShutdownGracePeriod(d)`** — Automatic two-phase shutdown timing. → ROADMAP (Theme 3)
-25. **Add `Probe.AwaitReady(ctx)`** — Blocking helper for startup orchestration. → ROADMAP (Theme 1)
-26. **Add `WithCriticalService(name, critical bool)`** — Per-service toggle at runtime. → ROADMAP (Theme 4)
-27. **Add `Response.Timestamp`** — When the check was run. → ROADMAP (Theme 2)
-28. **Add per-service latency to `Check` struct** — Currently batch-level only. → ROADMAP (Theme 2)
+17. ~~**Decide: should panic recovery treat critical services as fail?** — A panicking critical service arguably should produce StatusFail, not StatusWarn.~~ done at `6bfac99` — all recovered panics fail closed (`docs/panic-recovery-design.md`)
+18. ~~**Add `Probe.Status() Status` method** — Programmatic health query without HTTP overhead.~~ done at `f29a64a`
+19. ~~**Add debounce/throttle for live evaluation mode** — `WithRefreshInterval(0)` has no DOS protection.~~ done at `f29a64a` (`WithLiveThrottle`)
+20. ~~**Remove `do.Injector` from `HealthRecorder` interface** — Decouples consumer code from container type.~~ **Won't implement for v0.x — ADR-004 froze the interface after live consumer verification; revisit at v1.0.** `87bab11`
+21. ~~**Add `Probe.Alive() bool` / `Probe.Ready() bool`** — Convenience helpers.~~ done at `f29a64a`
+22. ~~**Implement `do.HealthcheckerWithContext` on Probe** — Self-registration in the container it monitors.~~ done at `f29a64a`
+23. ~~**Implement `do.ShutdownerWithError` on Probe** — Container-managed lifecycle.~~ done at `f29a64a` (`AsShutdowner` / `ProbeShutdowner`)
+24. ~~**Add `WithShutdownGracePeriod(d)`** — Automatic two-phase shutdown timing.~~ done at `f29a64a`
+25. ~~**Add `Probe.AwaitReady(ctx)`** — Blocking helper for startup orchestration.~~ done at `f29a64a`
+26. ~~**Add `WithCriticalService(name, critical bool)`** — Per-service toggle at runtime.~~ **Won't implement — rejected in `docs/multi-tenant-design.md` (classifier immutability).**
+27. ~~**Add `Response.Timestamp`** — When the check was run.~~ done at `f29a64a`
+28. ~~**Add per-service latency to `Check` struct** — Currently batch-level only.~~ **Won't implement — infeasible in core: samber/do owns the batch (`docs/classification-2.0-design.md` §4).**
 29. **Consider `Response.TotalLatencyMs` as `float64`** — Sub-ms precision. → ROADMAP (Theme 2)
-30. **Consider a "starting" Status** — Distinct from pass/warn/fail for boot state. → ROADMAP (Theme 5)
-31. **Add metrics integration hooks** — Prometheus exposition, OpenTelemetry spans. → ROADMAP (Theme 2)
-32. **Add `WithNowFunc(func() time.Time)`** — Testable uptime calculations. → ROADMAP (Theme 6)
-33. **Add `Probe.Healthz()`** — Single combined endpoint for simpler deployments. → ROADMAP (Theme 1)
-34. **Consider `WithAllowedMethods(...string)`** — Instead of boolean `WithGETOnly()`. → ROADMAP (Theme 6)
-35. **Add custom response format support** — e.g. Prometheus exposition format. → ROADMAP (Theme 5)
-36. **Add health-check weights/priorities** — Nuanced classification beyond binary critical/non-critical. → ROADMAP (Theme 2)
-37. **Consider child-scope isolation** — Multi-tenant health checks. → ROADMAP (Theme 4)
-38. **Extract `classify` and `evaluateStartup` into a `classifier` type** — Testability. → ROADMAP (Theme 6)
-39. **Consider `Status` validation** — Reject unknown values at construction. → ROADMAP (Theme 5)
-40. **Consider `Response.InstanceID`** — Multi-replica identification. → ROADMAP (Theme 5)
-41. **Consider health-check result caching per-service** — Not just batch-level. → ROADMAP (Theme 3)
-42. **Add `WithMaxConcurrentChecks(n)`** — Limiting parallelism within a batch. → ROADMAP (Theme 3)
-43. **Consider OpenAPI schema generation** — For the health response contract. → ROADMAP (Theme 5)
-44. **Add `Probe.ResetStartupLatch()`** — Force re-evaluation for testing. → ROADMAP (Theme 6)
-45. **Consider `WithProbeName(string)`** — Multi-probe setups in one process. → ROADMAP (Theme 4)
+30. ~~**Consider a "starting" Status** — Distinct from pass/warn/fail for boot state.~~ **Won't implement — rejected in `docs/starting-status-design.md`.**
+31. ~~**Add metrics integration hooks** — Prometheus exposition, OpenTelemetry spans.~~ done at `f29a64a` (`WithEvaluationHook`) + 13-17 P36 exposition spike
+32. ~~**Add `WithNowFunc(func() time.Time)`** — Testable uptime calculations.~~ done (covered by the 13-17 report §a P35; B100 determinism tests)
+33. ~~**Add `Probe.Healthz()`** — Single combined endpoint for simpler deployments.~~ done at `f29a64a`
+34. ~~**Consider `WithAllowedMethods(...string)`** — Instead of boolean `WithGETOnly()`.~~ done (covered by the 13-17 report §a P35; `WithGETOnly` deprecated)
+35. ~~**Add custom response format support** — e.g. Prometheus exposition format.~~ done (covered by the 13-17 report §a P36: composition via hook + exposition-writer spike)
+36. ~~**Add health-check weights/priorities** — Nuanced classification beyond binary critical/non-critical.~~ **Won't implement — rejected in `docs/classification-2.0-design.md` (binary at every consumer boundary).**
+37. ~~**Consider child-scope isolation** — Multi-tenant health checks.~~ **Won't implement — rejected in `docs/multi-tenant-design.md` (N probes + aggregate).**
+38. ~~**Extract `classify` and `evaluateStartup` into a `classifier` type** — Testability.~~ done at `4d5e7a3`
+39. ~~**Consider `Status` validation** — Reject unknown values at construction.~~ **Won't implement — rejected: no injection boundary exists (`docs/starting-status-design.md`).**
+40. ~~**Consider `Response.InstanceID`** — Multi-replica identification.~~ done (covered by the 13-17 report §a P36)
+41. ~~**Consider health-check result caching per-service** — Not just batch-level.~~ **Won't implement — rejected in `docs/classification-2.0-design.md`.**
+42. ~~**Add `WithMaxConcurrentChecks(n)`** — Limiting parallelism within a batch.~~ **Won't implement — rejected in `docs/classification-2.0-design.md` (recorder is the escape hatch).**
+43. ~~**Consider OpenAPI schema generation** — For the health response contract.~~ done (covered by the 13-17 report §a P36: static spec `docs/openapi.yaml`)
+44. ~~**Add `Probe.ResetStartupLatch()`** — Force re-evaluation for testing.~~ done (covered by the 13-17 report §a B102: test-scoped only; public latch stays one-way)
+45. ~~**Consider `WithProbeName(string)`** — Multi-probe setups in one process.~~ **Won't implement — rejected in `docs/multi-tenant-design.md` (aggregate namespacing + `WithInstanceID`).**
 
 ### Lower Priority
 
 46. ~~**Add release/tagging workflow** — Semver via goreleaser or git tags.~~ done — git tags adopted: v0.0.1 and v0.0.2 tagged, pushed, GitHub releases created.
-47. **Add property-based test for `classify`** — Pass/warn/fail across all possible result maps + critical sets. → TODO_LIST (Low Impact)
-48. **Add stress test for concurrent `Start()` + `Shutdown()` interleaving.** → TODO_LIST (Low Impact)
-49. **Add snapshot test for full readiness JSON response shape.** → TODO_LIST (Low Impact)
-50. **Add fuzz tests for JSON marshaling edge cases.** → TODO_LIST (Low Impact)
+47. ~~**Add property-based test for `classify`** — Pass/warn/fail across all possible result maps + critical sets.~~ done at `99e7511`
+48. ~~**Add stress test for concurrent `Start()` + `Shutdown()` interleaving.**~~ done at `99e7511`
+49. ~~**Add snapshot test for full readiness JSON response shape.**~~ done at `99e7511`
+50. ~~**Add fuzz tests for JSON marshaling edge cases.**~~ done at `893d12f`
 
 ---
 

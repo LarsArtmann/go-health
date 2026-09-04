@@ -137,6 +137,5 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 | [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
 | [docs/panic-recovery-design.md](docs/panic-recovery-design.md)           | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces    |
 | [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md) | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers    |
-| [docs/adr/](docs/adr/)                                                   | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003) |
-| ADR-004 also covers the HealthRecorder decoupling decision (gate resolved: dashboard is a live consumer) |
+| [docs/adr/](docs/adr/)                                                   | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003), recorder decoupling (004) |
 | [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                      |

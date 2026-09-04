@@ -51,7 +51,7 @@ type healthCheckFunc func(ctx context.Context) map[string]error
 // Probe is safe for concurrent use by multiple goroutines.
 type Probe struct {
 	healthCheck healthCheckFunc
-	critical    map[string]struct{}
+	rollups     classifier
 
 	shuttingDown  atomic.Bool
 	startupPassed atomic.Bool
@@ -244,7 +244,7 @@ func buildConfig(opts []Option) config {
 func assemble(healthCheck healthCheckFunc, cfg config) *Probe {
 	return &Probe{
 		healthCheck:     healthCheck,
-		critical:        cfg.critical,
+		rollups:         classifier{critical: cfg.critical},
 		bootTime:        cfg.bootTime,
 		version:         cfg.version,
 		getOnly:         cfg.getOnly,
@@ -502,33 +502,7 @@ func recoverHealthChecks(fn func() map[string]error) map[string]error {
 //     non-critical service failed (degraded but still serving traffic).
 //   - StatusPass when every checked service is healthy.
 func (p *Probe) classify(results map[string]error, shuttingDown bool) Status {
-	if shuttingDown {
-		return StatusFail
-	}
-
-	hasWarning := false
-
-	for name, err := range results {
-		if err == nil {
-			continue
-		}
-
-		if errors.Is(err, ErrPanicDuringHealthCheck) {
-			return StatusFail
-		}
-
-		if _, critical := p.critical[name]; critical {
-			return StatusFail
-		}
-
-		hasWarning = true
-	}
-
-	if hasWarning {
-		return StatusWarn
-	}
-
-	return StatusPass
+	return p.rollups.classify(results, shuttingDown)
 }
 
 // StartupComplete returns true once all critical services have passed their
@@ -578,19 +552,7 @@ func (p *Probe) RefreshInterval() time.Duration {
 // evaluateStartup checks whether all critical services are present and healthy
 // in the results map. Returns true if the startup latch should be set.
 func (p *Probe) evaluateStartup(results map[string]error) bool {
-	if len(p.critical) == 0 {
-		return true
-	}
-
-	for name := range p.critical {
-		err, found := results[name]
-
-		if !found || err != nil {
-			return false
-		}
-	}
-
-	return true
+	return p.rollups.evaluateStartup(results)
 }
 
 // buildChecks converts the raw map[string]error from samber/do into typed
@@ -605,16 +567,7 @@ func (p *Probe) buildChecks(results map[string]error) map[string]Check {
 		check := Check{Status: StatusPass}
 
 		if err != nil {
-			if _, critical := p.critical[name]; critical {
-				check.Status = StatusFail
-			} else {
-				check.Status = StatusWarn
-			}
-
-			if errors.Is(err, ErrPanicDuringHealthCheck) {
-				check.Status = StatusFail
-			}
-
+			check.Status = p.rollups.grades(name, err)
 			check.Error = err.Error()
 		}
 

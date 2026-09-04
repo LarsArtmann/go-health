@@ -11,8 +11,8 @@ dependency cost: the health SDK no longer imports the audit library (and vice
 versa — verified 2026-09-04, `samber-do-auditlog` does not depend on
 go-health). The audit-specific option was replaced by a generic interface.
 
-| Before (samber-do-auditlog monolith) | After (go-health v0.0.1+)                    |
-| ------------------------------------ | -------------------------------------------- |
+| Before (samber-do-auditlog monolith)    | After (go-health v0.0.1+)                     |
+| --------------------------------------- | --------------------------------------------- |
 | `health.WithPlugin(p *auditlog.Plugin)` | `health.WithHealthRecorder(r HealthRecorder)` |
 
 `HealthRecorder` is a one-method interface:

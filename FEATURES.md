@@ -15,107 +15,107 @@
 
 ## Probe & Configuration
 
-| Feature                            | Status           | Notes                                                                                                                                    |
-| ---------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Probe creation (`New`)             | FULLY_FUNCTIONAL | Resolves health-check capability at construction; never stores injector. `probe.go`                                                      |
-| Injector-free construction         | FULLY_FUNCTIONAL | `NewWithHealthCheck(fn, opts...)` runs a probe from any batch function — no samber/do container required. `accessors.go`                  |
-| Functional options (13 total)      | FULLY_FUNCTIONAL | WithVersion, WithInstanceID, WithCriticalServices, WithHealthRecorder, WithRefreshInterval, WithTimeout, WithBootTime, WithGETOnly, WithNowFunc, WithAllowedMethods, WithEvaluationHook, WithLiveThrottle, WithShutdownGracePeriod. `probe.go` |
-| Config validation (`Validate`)     | FULLY_FUNCTIONAL | Checks timeout > 0 and refreshInterval >= 0. Enriched sentinel errors with offending value + remediation. `probe.go`                     |
-| Start returns error on bad config  | FULLY_FUNCTIONAL | `Start()` calls `Validate()` and returns `ErrInvalidTimeout` / `ErrInvalidRefreshInterval`. `probe.go`                                   |
+| Feature                           | Status           | Notes                                                                                                                                                                                                                                          |
+| --------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Probe creation (`New`)            | FULLY_FUNCTIONAL | Resolves health-check capability at construction; never stores injector. `probe.go`                                                                                                                                                            |
+| Injector-free construction        | FULLY_FUNCTIONAL | `NewWithHealthCheck(fn, opts...)` runs a probe from any batch function — no samber/do container required. `accessors.go`                                                                                                                       |
+| Functional options (13 total)     | FULLY_FUNCTIONAL | WithVersion, WithInstanceID, WithCriticalServices, WithHealthRecorder, WithRefreshInterval, WithTimeout, WithBootTime, WithGETOnly, WithNowFunc, WithAllowedMethods, WithEvaluationHook, WithLiveThrottle, WithShutdownGracePeriod. `probe.go` |
+| Config validation (`Validate`)    | FULLY_FUNCTIONAL | Checks timeout > 0 and refreshInterval >= 0. Enriched sentinel errors with offending value + remediation. `probe.go`                                                                                                                           |
+| Start returns error on bad config | FULLY_FUNCTIONAL | `Start()` calls `Validate()` and returns `ErrInvalidTimeout` / `ErrInvalidRefreshInterval`. `probe.go`                                                                                                                                         |
 
 ## Three-Probe HTTP Handlers
 
-| Feature                       | Status           | Notes                                                                                                                |
-| ----------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Liveness handler (`/healthz`) | FULLY_FUNCTIONAL | Always 200, zero dependency checks, microsecond response. `handlers.go`                                              |
-| Readiness handler (`/readyz`) | FULLY_FUNCTIONAL | Full health-check batch, critical/non-critical classification. Serves cached result when available. `handlers.go`    |
-| Startup handler (`/startupz`) | FULLY_FUNCTIONAL | Evaluates critical services until all pass, then latches. `handlers.go`                                              |
-| Combined endpoint (`Healthz`) | FULLY_FUNCTIONAL | Single handler answering "should traffic be routed here?" — 503 while booting/failing/draining, 200 otherwise. `accessors.go` |
-| Route registration helper     | FULLY_FUNCTIONAL | `RegisterRoutes(mux, routes)` + `DefaultRoutes()`. `handlers.go`                                                     |
+| Feature                       | Status           | Notes                                                                                                                                                                                                                    |
+| ----------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Liveness handler (`/healthz`) | FULLY_FUNCTIONAL | Always 200, zero dependency checks, microsecond response. `handlers.go`                                                                                                                                                  |
+| Readiness handler (`/readyz`) | FULLY_FUNCTIONAL | Full health-check batch, critical/non-critical classification. Serves cached result when available. `handlers.go`                                                                                                        |
+| Startup handler (`/startupz`) | FULLY_FUNCTIONAL | Evaluates critical services until all pass, then latches. `handlers.go`                                                                                                                                                  |
+| Combined endpoint (`Healthz`) | FULLY_FUNCTIONAL | Single handler answering "should traffic be routed here?" — 503 while booting/failing/draining, 200 otherwise. `accessors.go`                                                                                            |
+| Route registration helper     | FULLY_FUNCTIONAL | `RegisterRoutes(mux, routes)` + `DefaultRoutes()`. `handlers.go`                                                                                                                                                         |
 | Method-set enforcement        | FULLY_FUNCTIONAL | `WithAllowedMethods(methods...)` wraps handlers: non-allowed methods get 405 + sorted `Allow` header (GET always included). `WithGETOnly()` (deprecated v0.1.1) is the zero-arg equivalent, still functional. `probe.go` |
-| Custom route paths            | FULLY_FUNCTIONAL | `Routes` struct allows non-default paths. `handlers.go`                                                              |
-| HTTP middleware               | FULLY_FUNCTIONAL | By composition: handlers are plain `http.HandlerFunc`; verified spike with auth middleware. `middleware_example_test.go`, docs/middleware-design.md |
+| Custom route paths            | FULLY_FUNCTIONAL | `Routes` struct allows non-default paths. `handlers.go`                                                                                                                                                                  |
+| HTTP middleware               | FULLY_FUNCTIONAL | By composition: handlers are plain `http.HandlerFunc`; verified spike with auth middleware. `middleware_example_test.go`, docs/middleware-design.md                                                                      |
 
 ## Lifecycle & Shutdown
 
-| Feature                                 | Status           | Notes                                                                                                         |
-| --------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| Feature                                 | Status           | Notes                                                                                                                         |
+| --------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Background cache loop (`Start`)         | FULLY_FUNCTIONAL | Launches goroutine at configurable interval (default 1s). Idempotent; WaitGroup lifecycle race fixed (2026-09-04). `probe.go` |
-| Graceful shutdown (`Shutdown`)          | FULLY_FUNCTIONAL | Stops background loop, marks readiness 503, liveness stays 200. Restart-after-shutdown contract pinned by test. `probe.go` |
-| Two-phase drain (`MarkShuttingDown`)    | FULLY_FUNCTIONAL | Flips shutdown flag without stopping loop. Readiness immediately returns 503 from stale cache. `probe.go`     |
-| Shutdown grace period                   | FULLY_FUNCTIONAL | `WithShutdownGracePeriod(d)` for automatic two-phase shutdown timing. `probe.go`                              |
-| Startup latch query (`StartupComplete`) | FULLY_FUNCTIONAL | One-way atomic boolean. Returns true once all critical services passed. `probe.go`                            |
-| Test-scoped latch reset                 | FULLY_FUNCTIONAL | `ResetStartupLatchForTest()` (export_test.go, test builds only) clears the latch; public API keeps it one-way. |
+| Graceful shutdown (`Shutdown`)          | FULLY_FUNCTIONAL | Stops background loop, marks readiness 503, liveness stays 200. Restart-after-shutdown contract pinned by test. `probe.go`    |
+| Two-phase drain (`MarkShuttingDown`)    | FULLY_FUNCTIONAL | Flips shutdown flag without stopping loop. Readiness immediately returns 503 from stale cache. `probe.go`                     |
+| Shutdown grace period                   | FULLY_FUNCTIONAL | `WithShutdownGracePeriod(d)` for automatic two-phase shutdown timing. `probe.go`                                              |
+| Startup latch query (`StartupComplete`) | FULLY_FUNCTIONAL | One-way atomic boolean. Returns true once all critical services passed. `probe.go`                                            |
+| Test-scoped latch reset                 | FULLY_FUNCTIONAL | `ResetStartupLatchForTest()` (export_test.go, test builds only) clears the latch; public API keeps it one-way.                |
 
 ## Evaluation & Classification
 
-| Feature                            | Status               | Notes                                                                                                                                                                                                    |
-| ---------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public evaluation (`Evaluate`)     | FULLY_FUNCTIONAL     | Runs full health-check batch, returns `Response`. Usable outside HTTP. `probe.go`                                                                                                                        |
-| Three-state classify               | FULLY_FUNCTIONAL     | pass (all healthy) / warn (non-critical failures only) / fail (critical failure, recovered panic, or shutting down). 64-combination matrix test. `classifier.go`                                          |
-| Extracted classifier type          | FULLY_FUNCTIONAL     | Classification, startup evaluation, and grading live in a read-only `classifier` (constructed once, evaluated lock-free). `classifier.go`                                                                |
-| Critical service classification    | FULLY_FUNCTIONAL     | Critical failures = 503; non-critical failures = 200 degraded. `classifier.go`                                                                                                                           |
-| Panic recovery                     | PARTIALLY_FUNCTIONAL | Recorder-path panics recovered, wrapped in exported `ErrPanicDuringHealthCheck`, fail-closed (fail/503). Injector-path service panics are process-fatal — samber/do runs checks in goroutines. `probe.go`, docs/panic-recovery-design.md |
-| Evaluation hook                    | FULLY_FUNCTIONAL     | `WithEvaluationHook(fn)` observes every classified response synchronously (metrics/alerting seam). `probe.go`                                                                                             |
-| Deterministic clock seam           | FULLY_FUNCTIONAL     | `WithNowFunc` drives uptime, response timestamps, and live-throttle freshness — deterministic tests without sleeps. `probe.go`, `handlers.go`                                                             |
-| Cached response accessor           | FULLY_FUNCTIONAL     | `CachedResponse()` returns the last refreshed `Response` lock-free; overlays live shutdown state. `probe.go`                                                                                              |
-| Programmatic status query          | FULLY_FUNCTIONAL     | `Status()`, `Alive()`, `Ready()` — cached-view accessors with no dependency checks. `accessors.go`                                                                                                        |
-| Startup wait (`AwaitReady`)        | FULLY_FUNCTIONAL     | Blocks until ready or ctx done; never triggers checks itself. `accessors.go`                                                                                                                             |
-| do.HealthcheckerWithContext        | FULLY_FUNCTIONAL     | `Probe.HealthCheck(ctx)` lets the probe register as a service in its own injector; wraps `ErrProbeUnhealthy` on fail. `accessors.go`                                                                      |
-| do.ShutdownerWithError             | FULLY_FUNCTIONAL     | `AsShutdowner()` / `ProbeShutdowner` adapt the probe to container-managed shutdown. `accessors.go`                                                                                                       |
+| Feature                         | Status               | Notes                                                                                                                                                                                                                                    |
+| ------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public evaluation (`Evaluate`)  | FULLY_FUNCTIONAL     | Runs full health-check batch, returns `Response`. Usable outside HTTP. `probe.go`                                                                                                                                                        |
+| Three-state classify            | FULLY_FUNCTIONAL     | pass (all healthy) / warn (non-critical failures only) / fail (critical failure, recovered panic, or shutting down). 64-combination matrix test. `classifier.go`                                                                         |
+| Extracted classifier type       | FULLY_FUNCTIONAL     | Classification, startup evaluation, and grading live in a read-only `classifier` (constructed once, evaluated lock-free). `classifier.go`                                                                                                |
+| Critical service classification | FULLY_FUNCTIONAL     | Critical failures = 503; non-critical failures = 200 degraded. `classifier.go`                                                                                                                                                           |
+| Panic recovery                  | PARTIALLY_FUNCTIONAL | Recorder-path panics recovered, wrapped in exported `ErrPanicDuringHealthCheck`, fail-closed (fail/503). Injector-path service panics are process-fatal — samber/do runs checks in goroutines. `probe.go`, docs/panic-recovery-design.md |
+| Evaluation hook                 | FULLY_FUNCTIONAL     | `WithEvaluationHook(fn)` observes every classified response synchronously (metrics/alerting seam). `probe.go`                                                                                                                            |
+| Deterministic clock seam        | FULLY_FUNCTIONAL     | `WithNowFunc` drives uptime, response timestamps, and live-throttle freshness — deterministic tests without sleeps. `probe.go`, `handlers.go`                                                                                            |
+| Cached response accessor        | FULLY_FUNCTIONAL     | `CachedResponse()` returns the last refreshed `Response` lock-free; overlays live shutdown state. `probe.go`                                                                                                                             |
+| Programmatic status query       | FULLY_FUNCTIONAL     | `Status()`, `Alive()`, `Ready()` — cached-view accessors with no dependency checks. `accessors.go`                                                                                                                                       |
+| Startup wait (`AwaitReady`)     | FULLY_FUNCTIONAL     | Blocks until ready or ctx done; never triggers checks itself. `accessors.go`                                                                                                                                                             |
+| do.HealthcheckerWithContext     | FULLY_FUNCTIONAL     | `Probe.HealthCheck(ctx)` lets the probe register as a service in its own injector; wraps `ErrProbeUnhealthy` on fail. `accessors.go`                                                                                                     |
+| do.ShutdownerWithError          | FULLY_FUNCTIONAL     | `AsShutdowner()` / `ProbeShutdowner` adapt the probe to container-managed shutdown. `accessors.go`                                                                                                                                       |
 
 ## Caching & Performance
 
-| Feature                       | Status               | Notes                                                                                                                           |
-| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Lock-free cache reads         | FULLY_FUNCTIONAL     | `atomic.Pointer[Response]` for cached responses. `probe.go`                                                                     |
-| Configurable refresh interval | FULLY_FUNCTIONAL     | Default 1s. Set to 0 for live evaluation mode. `probe.go`                                                                       |
-| Live evaluation mode          | FULLY_FUNCTIONAL     | `WithRefreshInterval(0)` evaluates on every request; `WithLiveThrottle(d)` coalesces floods to one batch per window. `handlers.go` |
-| Batch-level timeout           | FULLY_FUNCTIONAL     | All services share one context deadline (default 5s). Per-service isolation via `do.WithHealthCheckTimeout`. `probe.go`         |
-| Sanitized wire output         | FULLY_FUNCTIONAL     | `SanitizeResponse` coerces invalid UTF-8 (fuzz-found, json/v2 rejects it) to valid UTF-8 at both write seams. `handlers.go`     |
+| Feature                       | Status           | Notes                                                                                                                              |
+| ----------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Lock-free cache reads         | FULLY_FUNCTIONAL | `atomic.Pointer[Response]` for cached responses. `probe.go`                                                                        |
+| Configurable refresh interval | FULLY_FUNCTIONAL | Default 1s. Set to 0 for live evaluation mode. `probe.go`                                                                          |
+| Live evaluation mode          | FULLY_FUNCTIONAL | `WithRefreshInterval(0)` evaluates on every request; `WithLiveThrottle(d)` coalesces floods to one batch per window. `handlers.go` |
+| Batch-level timeout           | FULLY_FUNCTIONAL | All services share one context deadline (default 5s). Per-service isolation via `do.WithHealthCheckTimeout`. `probe.go`            |
+| Sanitized wire output         | FULLY_FUNCTIONAL | `SanitizeResponse` coerces invalid UTF-8 (fuzz-found, json/v2 rejects it) to valid UTF-8 at both write seams. `handlers.go`        |
 
 ## Integration & Extensibility
 
-| Feature                      | Status           | Notes                                                                                                                 |
-| ---------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| HealthRecorder interface     | FULLY_FUNCTIONAL | Delegates health-check batches to any implementation. `samber-do-auditlog.Plugin` satisfies implicitly. `probe.go`    |
+| Feature                      | Status           | Notes                                                                                                                                                                                                                       |
+| ---------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HealthRecorder interface     | FULLY_FUNCTIONAL | Delegates health-check batches to any implementation. `samber-do-auditlog.Plugin` satisfies implicitly. `probe.go`                                                                                                          |
 | Consumer verification        | FULLY_FUNCTIONAL | `go-health-dashboard` (7 importing files) compiles against HEAD via replace; `auditlog.Plugin` passes `var _ health.HealthRecorder` and runs a live probe end-to-end. Dashboard release bump to v0.1.1 pending (TODO_LIST). |
-| Construction-time resolution | FULLY_FUNCTIONAL | Injector and recorder resolved in `New()` into a `healthCheckFunc`. Probe holds neither. `probe.go`                   |
-| Deterministic JSON output    | FULLY_FUNCTIONAL | `encoding/json/v2` with `json.Deterministic(true)`; map keys alphabetically ordered; wire format locked by golden file. `handlers.go`, `handlers_json_test.go` |
-| Multi-probe aggregation      | FULLY_FUNCTIONAL | `health/aggregate` merges N probes into one surface: namespaced `source/check` keys, worst-of-N roll-up, lock-free reads. `aggregate/aggregate.go` |
-| Prometheus exposition        | FULLY_FUNCTIONAL | By composition: `WithEvaluationHook` + ~40-line stdlib writer; verified example. `prometheus_example_test.go`, docs/prometheus-exposition-design.md |
-| OpenAPI description          | FULLY_FUNCTIONAL | Static OpenAPI 3.1 spec for the three probes, kept in lockstep with the golden-file test. `docs/openapi.yaml`, docs/openapi-design.md |
+| Construction-time resolution | FULLY_FUNCTIONAL | Injector and recorder resolved in `New()` into a `healthCheckFunc`. Probe holds neither. `probe.go`                                                                                                                         |
+| Deterministic JSON output    | FULLY_FUNCTIONAL | `encoding/json/v2` with `json.Deterministic(true)`; map keys alphabetically ordered; wire format locked by golden file. `handlers.go`, `handlers_json_test.go`                                                              |
+| Multi-probe aggregation      | FULLY_FUNCTIONAL | `health/aggregate` merges N probes into one surface: namespaced `source/check` keys, worst-of-N roll-up, lock-free reads. `aggregate/aggregate.go`                                                                          |
+| Prometheus exposition        | FULLY_FUNCTIONAL | By composition: `WithEvaluationHook` + ~40-line stdlib writer; verified example. `prometheus_example_test.go`, docs/prometheus-exposition-design.md                                                                         |
+| OpenAPI description          | FULLY_FUNCTIONAL | Static OpenAPI 3.1 spec for the three probes, kept in lockstep with the golden-file test. `docs/openapi.yaml`, docs/openapi-design.md                                                                                       |
 
 ## Data Model
 
-| Feature                      | Status           | Notes                                                                                          |
-| ---------------------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
-| Status enum (pass/fail/warn) | FULLY_FUNCTIONAL | String type with three constants; frozen — see docs/starting-status-design.md. `types.go`      |
-| Check struct                 | FULLY_FUNCTIONAL | Per-service: status + error message. `types.go`                                               |
+| Feature                      | Status           | Notes                                                                                                                                |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Status enum (pass/fail/warn) | FULLY_FUNCTIONAL | String type with three constants; frozen — see docs/starting-status-design.md. `types.go`                                            |
+| Check struct                 | FULLY_FUNCTIONAL | Per-service: status + error message. `types.go`                                                                                      |
 | Response struct              | FULLY_FUNCTIONAL | status, version, instance_id (WithInstanceID), uptime, shutting_down, total_latency_ms, timestamp (omitzero), checks map. `types.go` |
 
 ## Performance
 
 Baselines recorded 2026-09-04 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`).
 
-| Benchmark                             | Result                        | Notes                                                                                         |
-| ------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
-| `BenchmarkStartupHandler_Contention`  | 7755 ns/op · 4518 B/op · 66 allocs | Worst case: failing critical service keeps the latch open; every parallel request runs a full live batch. |
-| `BenchmarkStartupHandler_Unlatched`   | 919 ns/op · 1428 B/op · 16 allocs  | Serial loop; latches on first successful batch, subsequent ops measure the latch check only.  |
-| `BenchmarkCachedResponse_ParallelReads` | ~0.03 ns/op · 0 B/op · 0 allocs   | Lock-free atomic cache read under full contention.                                            |
-| `BenchmarkGuardOverhead/allowed`       | ~900 ns/op · 474 B/op · 9 allocs   | Method-set guard, method in the allowed set: ~0 overhead vs no-guard (same allocs). The 405 path (`unlisted`) is cheaper still (~220 ns — no response marshal). |
+| Benchmark                               | Result                             | Notes                                                                                                                                                           |
+| --------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BenchmarkStartupHandler_Contention`    | 7755 ns/op · 4518 B/op · 66 allocs | Worst case: failing critical service keeps the latch open; every parallel request runs a full live batch.                                                       |
+| `BenchmarkStartupHandler_Unlatched`     | 919 ns/op · 1428 B/op · 16 allocs  | Serial loop; latches on first successful batch, subsequent ops measure the latch check only.                                                                    |
+| `BenchmarkCachedResponse_ParallelReads` | ~0.03 ns/op · 0 B/op · 0 allocs    | Lock-free atomic cache read under full contention.                                                                                                              |
+| `BenchmarkGuardOverhead/allowed`        | ~900 ns/op · 474 B/op · 9 allocs   | Method-set guard, method in the allowed set: ~0 overhead vs no-guard (same allocs). The 405 path (`unlisted`) is cheaper still (~220 ns — no response marshal). |
 
 ## Infrastructure & Tooling
 
-| Feature                         | Status           | Notes                                                                                                                                                     |
-| ------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Nix devShell (`flake.nix`)      | FULLY_FUNCTIONAL | Verified: `nix flake check` passes. devShell + treefmt + all Nix apps working; `GOEXPERIMENT=jsonv2` exported hermetically (required — see AGENTS.md gotcha). `flake.nix` |
-| Linter config (`.golangci.yml`) | FULLY_FUNCTIONAL | 0 issues. Curated for this project: varnamelen accepts idiomatic `w`/`r`/`wg`, tagliatelle enforces snake_case JSON.                                       |
-| Fuzz targets                    | FULLY_FUNCTIONAL | Three targets (response marshal, handler round-trip, aggregate merge invariants); found and drove the UTF-8 sanitization fix and the `instance_id` sanitization fix. `handlers_fuzz_test.go`, `aggregate/aggregate_fuzz_test.go`    |
-| Stress & property tests         | FULLY_FUNCTIONAL | Concurrent Start/Shutdown stress, restart-after-shutdown, 64-combo classify matrix, JSON snapshot + omit-empty wire locks.                                  |
-| CI pipeline                     | FULLY_FUNCTIONAL | GitHub Actions (`.github/workflows/ci.yml`): test-race + short fuzz, vet+lint, govulncheck+gosec, flake check. Nix runners, SHA-pinned actions, goPkg toolchain pinned. Green on `master` and on the `v0.1.1` tag run. |
-| Security scanning               | FULLY_FUNCTIONAL | `govulncheck` (0 vulns) and `gosec` (0 issues), enforced by CI jobs and reproducible locally via `nix run .#vulncheck` / `.#security`.                                                                                   |
-| erraudit gate                   | FULLY_FUNCTIONAL | `erraudit ./... --type-aware` baseline 0 violations; `erraudit nolint-audit .` confirms 2 needed, 0 stale nolints. Local gate (private tool).               |
-| doanalyzerv2                    | FULLY_FUNCTIONAL | 0 findings baseline. Local gate.                                                                                                                          |
-| Dependency automation           | FULLY_FUNCTIONAL | dependabot.yml configured (weekly gomod + actions).                                                                                                       |
-| ADRs                            | FULLY_FUNCTIONAL | ADR-001..004 (three-state classification, batch timeout boundary, zero logging coupling, HealthRecorder interface freeze) + design notes under docs/.      |
+| Feature                         | Status           | Notes                                                                                                                                                                                                                            |
+| ------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nix devShell (`flake.nix`)      | FULLY_FUNCTIONAL | Verified: `nix flake check` passes. devShell + treefmt + all Nix apps working; `GOEXPERIMENT=jsonv2` exported hermetically (required — see AGENTS.md gotcha). `flake.nix`                                                        |
+| Linter config (`.golangci.yml`) | FULLY_FUNCTIONAL | 0 issues. Curated for this project: varnamelen accepts idiomatic `w`/`r`/`wg`, tagliatelle enforces snake_case JSON.                                                                                                             |
+| Fuzz targets                    | FULLY_FUNCTIONAL | Three targets (response marshal, handler round-trip, aggregate merge invariants); found and drove the UTF-8 sanitization fix and the `instance_id` sanitization fix. `handlers_fuzz_test.go`, `aggregate/aggregate_fuzz_test.go` |
+| Stress & property tests         | FULLY_FUNCTIONAL | Concurrent Start/Shutdown stress, restart-after-shutdown, 64-combo classify matrix, JSON snapshot + omit-empty wire locks.                                                                                                       |
+| CI pipeline                     | FULLY_FUNCTIONAL | GitHub Actions (`.github/workflows/ci.yml`): test-race + short fuzz, vet+lint, govulncheck+gosec, flake check. Nix runners, SHA-pinned actions, goPkg toolchain pinned. Green on `master` and on the `v0.1.1` tag run.           |
+| Security scanning               | FULLY_FUNCTIONAL | `govulncheck` (0 vulns) and `gosec` (0 issues), enforced by CI jobs and reproducible locally via `nix run .#vulncheck` / `.#security`.                                                                                           |
+| erraudit gate                   | FULLY_FUNCTIONAL | `erraudit ./... --type-aware` baseline 0 violations; `erraudit nolint-audit .` confirms 2 needed, 0 stale nolints. Local gate (private tool).                                                                                    |
+| doanalyzerv2                    | FULLY_FUNCTIONAL | 0 findings baseline. Local gate.                                                                                                                                                                                                 |
+| Dependency automation           | FULLY_FUNCTIONAL | dependabot.yml configured (weekly gomod + actions).                                                                                                                                                                              |
+| ADRs                            | FULLY_FUNCTIONAL | ADR-001..004 (three-state classification, batch timeout boundary, zero logging coupling, HealthRecorder interface freeze) + design notes under docs/.                                                                            |

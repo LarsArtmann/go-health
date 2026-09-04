@@ -11,7 +11,7 @@ specification?
 
 ## Decision: static spec in docs, not runtime generation
 
-The response schema is *frozen by the golden-file test*
+The response schema is _frozen by the golden-file test_
 (`TestReadinessResponse_JSONSnapshot`). A static OpenAPI document can be kept
 in lockstep with it, reviewed in the same PR, and served by any static file
 server. Runtime generation would add a code path whose only output is a

@@ -29,7 +29,7 @@ logged below as forgotten items, not yet fixed.
 - **Clock-seam completion (code fix beyond the plan)**: `Evaluate` stamped
   `resp.Timestamp = time.Now()` and the live-throttle freshness check used
   `time.Since(...)` — both bypassed the `WithNowFunc` seam. Now `p.now()`
-  drives uptime, timestamps, *and* throttle freshness; latency measurement
+  drives uptime, timestamps, _and_ throttle freshness; latency measurement
   deliberately stays on the real clock.
 - **B100**: 3 determinism tests (`TestWithNowFunc_UptimeIsDeterministic`,
   `_UptimeTracksClockAdvance`, `_DefaultClockUsedWhenUnset`).
@@ -176,16 +176,16 @@ green against HEAD via replace.
 
 1. **Pushed to CI before emulating CI.** The go-release skill explicitly says
    CI catches environment-dependent failures local runs skip, and the exact
-   same leak class (host PATH/env making gates pass) was *already documented
-   in AGENTS.md* from the GOEXPERIMENT incident. The `lint`, `vulncheck`, and
+   same leak class (host PATH/env making gates pass) was _already documented
+   in AGENTS.md_ from the GOEXPERIMENT incident. The `lint`, `vulncheck`, and
    `security` flake apps didn't include `goPkg`; on CI the tools fell back to
    an older bundled GOROOT and hard-failed on `GOEXPERIMENT=jsonv2`. Cost:
    one red first CI run on a fresh repo (permanent in the run history), one
    debug cycle, one extra push. The sanitized-`env -i` verification I ran
-   *afterwards* took 30 seconds and would have caught it before the push.
+   _afterwards_ took 30 seconds and would have caught it before the push.
 2. **`go mod tidy` vs `toolchain` directive fumble.** Added
    `toolchain go1.26.7`, immediately broke the build with "updates to go.mod
-   needed", needed two extra round trips to discover tidy *removes* a
+   needed", needed two extra round trips to discover tidy _removes_ a
    toolchain equal to the `go` line. Known semantics; should have been
    checked before editing.
 3. **Example-naming compile errors ×2.**
@@ -196,7 +196,7 @@ green against HEAD via replace.
    textbook — two wasted compile cycles.
 4. **Root-package confusion ×2.** Ran `go test ./health/` ("directory not
    found") and wrote the import as `.../go-health/health` before noticing
-   the root package *is* `health` (module path ≠ package directory). Should
+   the root package _is_ `health` (module path ≠ package directory). Should
    have read the layout once instead of assuming.
 5. **doanalyzerv2 runner heredoc fumbling.** ~4 bash round trips fighting
    shell escaping inside `python3 - <<EOF` string replacements before
@@ -241,7 +241,7 @@ green against HEAD via replace.
 8. **CHANGELOG ordering convention** — adopt canonical Keep-a-Changelog
    category order so future cuts are mechanical.
 9. **Coverage gap visibility** — 98.5% is recorded but the uncovered 1.5%
-   (which functions) was never enumerated; know *what* is uncovered, not just
+   (which functions) was never enumerated; know _what_ is uncovered, not just
    how much.
 10. **Reconcile editor LSP diagnostics with the CLI linter** — gopls/LSP
     showed wsl_v5/stdversion warnings all session while `nix run .#lint` was

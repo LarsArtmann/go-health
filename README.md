@@ -57,11 +57,11 @@ go get github.com/larsartmann/go-health
 
 What CI actually tests on every push — not what merely compiles:
 
-| Dimension        | Tested                                        |
-| ---------------- | --------------------------------------------- |
-| Go               | 1.26.x — CI runs go 1.26.7 on linux/amd64     |
-| samber/do        | v2.1.0 (the pinned `go.mod` dependency)       |
-| Aggregate        | same module version, tested in the same suite |
+| Dimension | Tested                                        |
+| --------- | --------------------------------------------- |
+| Go        | 1.26.x — CI runs go 1.26.7 on linux/amd64     |
+| samber/do | v2.1.0 (the pinned `go.mod` dependency)       |
+| Aggregate | same module version, tested in the same suite |
 
 Bare `go` commands outside this repo's flake need `GOEXPERIMENT=jsonv2`: the
 library imports `encoding/json/v2`, which go1.26 only exposes behind that

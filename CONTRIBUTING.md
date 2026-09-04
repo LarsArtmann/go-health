@@ -95,7 +95,7 @@ pattern. Checklist for a new `With*` option:
 6. **README Configuration Reference** — add the row (keep the table order
    matching `probe.go`), plus FEATURES.md when user-visible.
 7. **Godoc example** (`Example<Name>` in `example_test.go`) when the option
-   changes *how* callers use the probe, not just a value.
+   changes _how_ callers use the probe, not just a value.
 8. **Gates**: `nix run .#test-race`, `.#lint`, `nix fmt`, and the CI-emulation
    step above if any gate is affected.
 

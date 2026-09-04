@@ -30,7 +30,7 @@ stops being re-checked, reporting its cached verdict instead.
 
 **Verdict: rejected for core; dependency-wrapper is the correct seam.** A
 breaker is stateful policy (failure threshold, open duration, half-open
-probing) whose correct scope is *the dependency client*, not the probe: the
+probing) whose correct scope is _the dependency client_, not the probe: the
 same flapping dependency that poisons health checks also poisons request
 paths, and both want the same breaker instance. Wrapping the service's
 `HealthCheck` method (or its client) at `do.ProvideNamed` registration time
@@ -63,14 +63,14 @@ execution and returns only `map[string]error`.** The probe never sees
 per-service timing or completion moments, and do v2 exposes no per-service
 hook. Concretely:
 
-- *Per-service latency* is infeasible in core. Viable paths, in order of
+- _Per-service latency_ is infeasible in core. Viable paths, in order of
   preference: (a) time inside the service's own `HealthCheck` and expose it
   in the error string or via the service's own metrics; (b) a timing
   `HealthRecorder` (it sees the batch result, though not per-service splits —
   only batch wall time); (c) upstream `samber/do` feature.
-- *Per-service caching* would require splitting the batch do runs — same
+- _Per-service caching_ would require splitting the batch do runs — same
   blocker — and the payoff is marginal: batch-level caching (1s refresh)
-  already bounds dependency load to one evaluation per second *total*, and
+  already bounds dependency load to one evaluation per second _total_, and
   kubelet probe intervals are seconds. A caching `HealthRecorder` is the
   composition-layer answer if a deployment ever needs asymmetric TTLs.
 

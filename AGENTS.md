@@ -155,24 +155,24 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 
 ## Project Documentation
 
-| File                                                                     | Purpose                                                                           |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| [FEATURES.md](FEATURES.md)                                               | Honest feature inventory by status                                                |
-| [TODO_LIST.md](TODO_LIST.md)                                             | Short-term actionable tasks                                                       |
-| [ROADMAP.md](ROADMAP.md)                                                 | Long-term direction and raw ideas                                                 |
-| [CHANGELOG.md](CHANGELOG.md)                                             | What changed in each version                                                      |
-| [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                       | Domain terms (liveness, readiness, startup, critical, etc.)                       |
-| [docs/timeout-design.md](docs/timeout-design.md)                         | Batch-level vs per-service timeout analysis                                       |
-| [docs/panic-recovery-design.md](docs/panic-recovery-design.md)           | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces    |
-| [docs/middleware-design.md](docs/middleware-design.md)                   | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard |
-| [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md) | Metrics via `WithEvaluationHook` composition, never `client_golang`           |
-| [docs/openapi-design.md](docs/openapi-design.md) + [docs/openapi.yaml](docs/openapi.yaml) | Static OpenAPI 3.1 spec over runtime generation                |
-| [docs/classification-2.0-design.md](docs/classification-2.0-design.md)  | Rejected: weights, circuit-breaker, MaxConcurrent, per-service caching            |
-| [docs/multi-tenant-design.md](docs/multi-tenant-design.md)              | Rejected: child scopes, `WithProbeName`, runtime criticality toggles              |
-| [docs/starting-status-design.md](docs/starting-status-design.md)        | Rejected: fourth Status value, Status input validation                            |
-| [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
-| [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md) | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers    |
-| [docs/deprecation-policy.md](docs/deprecation-policy.md)                 | Deprecation checklist, symbol lifetime, SA1019 stance                            |
-| [SECURITY.md](SECURITY.md)                                               | Vulnerability disclosure path, in/out of scope, response targets                 |
-| [docs/adr/](docs/adr/)                                                   | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003), recorder decoupling (004) |
-| [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                      |
+| File                                                                                      | Purpose                                                                                                                       |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| [FEATURES.md](FEATURES.md)                                                                | Honest feature inventory by status                                                                                            |
+| [TODO_LIST.md](TODO_LIST.md)                                                              | Short-term actionable tasks                                                                                                   |
+| [ROADMAP.md](ROADMAP.md)                                                                  | Long-term direction and raw ideas                                                                                             |
+| [CHANGELOG.md](CHANGELOG.md)                                                              | What changed in each version                                                                                                  |
+| [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                                        | Domain terms (liveness, readiness, startup, critical, etc.)                                                                   |
+| [docs/timeout-design.md](docs/timeout-design.md)                                          | Batch-level vs per-service timeout analysis                                                                                   |
+| [docs/panic-recovery-design.md](docs/panic-recovery-design.md)                            | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces                                                |
+| [docs/middleware-design.md](docs/middleware-design.md)                                    | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard                                             |
+| [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)              | Metrics via `WithEvaluationHook` composition, never `client_golang`                                                           |
+| [docs/openapi-design.md](docs/openapi-design.md) + [docs/openapi.yaml](docs/openapi.yaml) | Static OpenAPI 3.1 spec over runtime generation                                                                               |
+| [docs/classification-2.0-design.md](docs/classification-2.0-design.md)                    | Rejected: weights, circuit-breaker, MaxConcurrent, per-service caching                                                        |
+| [docs/multi-tenant-design.md](docs/multi-tenant-design.md)                                | Rejected: child scopes, `WithProbeName`, runtime criticality toggles                                                          |
+| [docs/starting-status-design.md](docs/starting-status-design.md)                          | Rejected: fourth Status value, Status input validation                                                                        |
+| [docs/content-negotiation-design.md](docs/content-negotiation-design.md)                  | Why content negotiation / HTML rendering is rejected; composition pattern instead                                             |
+| [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md)              | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers                                                    |
+| [docs/deprecation-policy.md](docs/deprecation-policy.md)                                  | Deprecation checklist, symbol lifetime, SA1019 stance                                                                         |
+| [SECURITY.md](SECURITY.md)                                                                | Vulnerability disclosure path, in/out of scope, response targets                                                              |
+| [docs/adr/](docs/adr/)                                                                    | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003), recorder decoupling (004) |
+| [docs/status/](docs/status/)                                                              | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                  |

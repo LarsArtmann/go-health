@@ -14,11 +14,11 @@ and handlers lose the ability to warn humans while keeping traffic flowing.
 
 `classify` rolls every health-check batch into exactly one of three states:
 
-| Status | Meaning | Readiness HTTP | Triggered by |
-| ------ | ------- | -------------- | ------------ |
-| `pass`  | fully healthy | 200 | every checked service healthy |
-| `warn`  | degraded but serving | 200 | ≥1 non-critical failure, no critical failure |
-| `fail`  | cannot serve | 503 | any critical failure, shutdown, or recovered panic |
+| Status | Meaning              | Readiness HTTP | Triggered by                                       |
+| ------ | -------------------- | -------------- | -------------------------------------------------- |
+| `pass` | fully healthy        | 200            | every checked service healthy                      |
+| `warn` | degraded but serving | 200            | ≥1 non-critical failure, no critical failure       |
+| `fail` | cannot serve         | 503            | any critical failure, shutdown, or recovered panic |
 
 Criticality is a static, construction-time set (`WithCriticalServices`).
 The startup probe consumes the same results through a latch (first

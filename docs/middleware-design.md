@@ -43,7 +43,7 @@ returns 200 (liveness, open), 401 (readiness, missing token), and 200
 
 ## Library invariants middleware must not break
 
-- Middleware runs *before* the guard (`WithGETOnly` / `WithAllowedMethods`);
+- Middleware runs _before_ the guard (`WithGETOnly` / `WithAllowedMethods`);
   a 401/429 from middleware is unaffected by method enforcement.
 - The shutdown overlay and startup latch live inside the handlers, so no
   middleware can accidentally bypass them by construction — but middleware

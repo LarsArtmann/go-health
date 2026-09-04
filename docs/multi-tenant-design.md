@@ -32,7 +32,7 @@ merging is lock-free on read).
 
 ## 2. `WithProbeName` — redundant with aggregate namespacing and `WithInstanceID`
 
-A probe-name string on every response would identify *which* probe produced
+A probe-name string on every response would identify _which_ probe produced
 it. But: single-probe deployments already identify the response (it is the
 only one); multi-probe deployments are aggregate deployments, where
 `Source.Name` already prefixes every check key; and replica identity — the
@@ -49,7 +49,7 @@ while evaluators read it concurrently. Today the `classifier` (extracted in
 P34) is written once at construction and read lock-free — the evaluate path
 touches no mutex for classification. A toggle needs a synchronization
 scheme (RWMutex or atomic map copy) on every evaluation to support a
-configuration change that is better expressed as *rebuild the probe*: probes
+configuration change that is better expressed as _rebuild the probe_: probes
 are value-cheap, construction validates eagerly, and the old probe's cache
 dies with it instead of leaving half-toggled state. Kubernetes config reload
 patterns (rebuild and swap on the mux) compose with this; in-place mutation

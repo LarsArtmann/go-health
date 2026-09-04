@@ -5,10 +5,10 @@
 go-health is pre-v1: only the latest release line receives security fixes.
 Please keep your `go get` pin current.
 
-| Version | Supported |
-| ------- | --------- |
-| latest release on this repo | yes |
-| older releases | no |
+| Version                     | Supported |
+| --------------------------- | --------- |
+| latest release on this repo | yes       |
+| older releases              | no        |
 
 ## Reporting a vulnerability
 

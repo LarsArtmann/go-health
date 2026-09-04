@@ -26,13 +26,13 @@ paths:
         empty. Used by kubelet to decide container restarts.
       operationId: liveness
       responses:
-        '200':
+        "200":
           description: The process is alive.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/HealthResponse' }
-        '405':
-          $ref: '#/components/responses/MethodNotAllowed'
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
   /readyz:
     get:
       summary: Readiness
@@ -41,18 +41,18 @@ paths:
         down. Served from the background cache when refresh interval is set.
       operationId: readiness
       responses:
-        '200':
+        "200":
           description: Ready (pass) or degraded (warn, non-critical failure).
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/HealthResponse' }
-        '503':
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+        "503":
           description: A critical service failed or the probe is shutting down.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/HealthResponse' }
-        '405':
-          $ref: '#/components/responses/MethodNotAllowed'
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
   /startupz:
     get:
       summary: Startup
@@ -60,18 +60,18 @@ paths:
         then latches to 200 permanently (per process) without re-checking.
       operationId: startup
       responses:
-        '200':
+        "200":
           description: Startup complete (latched).
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/HealthResponse' }
-        '503':
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+        "503":
           description: Boot still in progress (latch unset).
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/HealthResponse' }
-        '405':
-          $ref: '#/components/responses/MethodNotAllowed'
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
 components:
   responses:
     MethodNotAllowed:
@@ -121,7 +121,7 @@ components:
         checks:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/Check'
+            $ref: "#/components/schemas/Check"
           description: Always present (possibly empty). Keyed by service name.
     Check:
       type: object

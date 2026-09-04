@@ -166,6 +166,53 @@
                   trash-put coverage.out 2>/dev/null || true
                   go clean -testcache
                 '';
+
+            # One command before every push: runs the same gates CI runs,
+            # fail-fast, reusing the app definitions above as the single
+            # source of truth (no copied gate commands to drift). Pass a
+            # subset to run less: nix run .#gates -- test-race lint
+            gates =
+              mkApp "gates" "Run the full pre-push gate sweep, fail-fast (same gates as CI)" [ pkgs.nix ]
+                ''
+                  gates="''${*:-test-race vet lint vulncheck security fuzz}"
+                  # shellcheck disable=SC2086 # word splitting over gate names is intended
+                  for gate in $gates; do
+                    echo "=== gate: $gate ==="
+                    nix run ".#$gate"
+                  done
+                  echo "=== gate: flake check ==="
+                  nix flake check
+                  echo "all gates green"
+                '';
+
+            # CI machines have no host Go on PATH; gates that shell out to a
+            # `go` binary fall back to whatever toolchain that binary was
+            # compiled with and can fail there while passing locally. This
+            # wrapper re-runs the gates with nix and gcc as the only external
+            # tools on PATH — the same leak class that produced the first red
+            # CI run. Subset: nix run .#ci-emulation -- lint
+            ci-emulation =
+              mkApp "ci-emulation" "Re-run gates under a PATH without the host Go toolchain (CI emulation)"
+                [
+                  pkgs.coreutils
+                  pkgs.gcc
+                  pkgs.nix
+                ]
+                ''
+                  tmpbin="$(mktemp -d)"
+                  trap 'rm -rf "$tmpbin"' EXIT
+                  ln -s "$(command -v nix)" "$tmpbin/nix"
+                  ln -s "$(command -v gcc)" "$tmpbin/gcc"
+                  gates="''${*:-test-race fuzz lint vet vulncheck security}"
+                  # shellcheck disable=SC2086 # word splitting over gate names is intended
+                  for gate in $gates; do
+                    echo "=== ci-emulation: $gate (no host go on PATH) ==="
+                    env PATH="$tmpbin:/usr/bin:/bin" nix run ".#$gate"
+                  done
+                  echo "=== ci-emulation: flake check ==="
+                  env PATH="$tmpbin:/usr/bin:/bin" nix flake check
+                  echo "all emulated gates green"
+                '';
           };
         };
     };

@@ -9,7 +9,7 @@
 format:
 
 1. **Collision-free keys** — two sources can never produce the same check key.
-2. **Stable grouping axis** — the part before the *first* `/` is the source
+2. **Stable grouping axis** — the part before the _first_ `/` is the source
    name, giving dashboards a way to group merged checks.
 
 Both claims are only true if source names never contain `/`. The original

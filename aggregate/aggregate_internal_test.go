@@ -35,9 +35,9 @@ func TestStatusRank(t *testing.T) {
 // TestWriteResponse_MarshalError forces the defensive encode-failure branch:
 // the client gets a plain-text 500 carrying the underlying cause, never a
 // half-written JSON body with a committed health status.
+//
+//nolint:paralleltest // swaps the package marshal seam, not parallel-safe
 func TestWriteResponse_MarshalError(t *testing.T) {
-	t.Parallel()
-
 	original := marshalResponse
 
 	t.Cleanup(func() { marshalResponse = original })

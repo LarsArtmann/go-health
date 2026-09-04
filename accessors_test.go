@@ -444,13 +444,22 @@ func assertTimestampOf(t *testing.T, body string, want time.Time) {
 	}
 
 	if !decoded.Timestamp.Equal(want) {
-		t.Errorf("response timestamp not stamped from fake clock: want %v, got %v", want, decoded.Timestamp)
+		t.Errorf(
+			"response timestamp not stamped from fake clock: want %v, got %v",
+			want,
+			decoded.Timestamp,
+		)
 	}
 }
 
 // assertFrozenWindow fires concurrent requests with the clock frozen and
 // verifies every one serves wantBody byte-identically.
-func assertFrozenWindow(t *testing.T, handler http.HandlerFunc, path, wantBody string, requests int) {
+func assertFrozenWindow(
+	t *testing.T,
+	handler http.HandlerFunc,
+	path, wantBody string,
+	requests int,
+) {
 	t.Helper()
 
 	var wg sync.WaitGroup
@@ -458,7 +467,11 @@ func assertFrozenWindow(t *testing.T, handler http.HandlerFunc, path, wantBody s
 	for range requests {
 		wg.Go(func() {
 			if body := requestReadiness(t, handler, path); body != wantBody {
-				t.Errorf("frozen-clock body drift within window:\n want %s\n got  %s", wantBody, body)
+				t.Errorf(
+					"frozen-clock body drift within window:\n want %s\n got  %s",
+					wantBody,
+					body,
+				)
 			}
 		})
 	}

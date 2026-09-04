@@ -39,7 +39,14 @@ func main() {
 	}
 
 	for _, d := range detections {
-		fmt.Printf("%s:%d: [%s] %s\n  %s\n", d.FilePath, d.Line, d.PatternName(), d.Message, d.Suggestion)
+		fmt.Printf(
+			"%s:%d: [%s] %s\n  %s\n",
+			d.FilePath,
+			d.Line,
+			d.PatternName(),
+			d.Message,
+			d.Suggestion,
+		)
 	}
 
 	fmt.Printf("doanalyzerv2: %d finding(s)\n", len(detections))

@@ -272,7 +272,11 @@ func TestCachedResponse_TotalLatencyMsIsSlowestSource(t *testing.T) {
 	)
 
 	if got := agg.CachedResponse().TotalLatencyMs; got != slowCached.TotalLatencyMs {
-		t.Fatalf("merged latency = %dms, want slowest source's %dms", got, slowCached.TotalLatencyMs)
+		t.Fatalf(
+			"merged latency = %dms, want slowest source's %dms",
+			got,
+			slowCached.TotalLatencyMs,
+		)
 	}
 }
 

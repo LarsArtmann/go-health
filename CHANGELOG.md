@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.3] - 2026-09-04
 
 ### Added
 
@@ -43,6 +43,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   documented grouping axis. Check names may still contain `/`; everything
   before the first slash in a merged key is the source name. Rationale and
   migration guidance in `docs/aggregate-source-name-design.md`.
+
+## [Unreleased]
+
+### Added
+
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
 
 ## [0.1.2] - 2026-09-04
 
@@ -233,7 +243,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/larsartmann/go-health/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/larsartmann/go-health/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/larsartmann/go-health/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/larsartmann/go-health/releases/tag/v0.1.0

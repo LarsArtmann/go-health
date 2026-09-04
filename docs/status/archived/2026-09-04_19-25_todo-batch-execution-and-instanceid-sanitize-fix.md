@@ -38,23 +38,23 @@
 
 | # | Item                              | Works                                                                                                                         | Remains                                                                                                                                                | Effort |
 | - | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| 1 | **CI-emulation coverage**         | lint, vet, vulncheck, security verified under go-free PATH                                                                    | `test-race`, `fuzz`, `flake check` not yet run emulated (they bind goPkg directly, risk lower — but unproven)                                          | S      |
-| 2 | **Aggregate "/"-name contract**   | hazard documented in fuzz doc comment: a source name containing `/` can alias another source's check namespace; fuzz skips it | `aggregate.New` still accepts such names — reject-or-document decision + implementation open                                                           | M      |
-| 3 | **nolint-audit baseline**         | 3 new `//nolint` directives added (gochecknoglobals seam, paralleltest ×1) with rationale                                     | `erraudit nolint-audit .` not re-run; the "2 needed / 0 stale" baseline is now stale                                                                   | S      |
-| 4 | **Consumer re-verification**      | dashboard verified compiling against HEAD pre-session                                                                         | not re-run after the instance_id fix (fix is sanitize-additive; risk minimal)                                                                          | S      |
-| 5 | **5th CI job (openapi)**          | spec lints clean locally via `bun x @redocly/cli`                                                                             | job never executed on GitHub (no push this session)                                                                                                    | S      |
-| 6 | **Aggregate fuzz scenario space** | started+cached sources fully fuzzed                                                                                           | merge over never-started probes (zero-value `CachedResponse` fallback) untested; also handler fuzz in aggregate not combined with throttle/cache modes | S      |
+| ~~1~~ | ~~**CI-emulation coverage**~~ done — covered by the 21-31 report §a9 — test-race, fuzz, flake check emulated green | ~~lint, vet, vulncheck, security verified under go-free PATH~~ | ~~`test-race`, `fuzz`, `flake check` not yet run emulated (they bind goPkg directly, risk lower — but unproven)~~ | ~~S~~ |
+| ~~2~~ | ~~**Aggregate "/"-name contract**~~ done — strict rejection implemented (21-31 §a4; CHANGELOG [Unreleased]) | ~~hazard documented in fuzz doc comment: a source name containing `/` can alias another source's check namespace; fuzz skips it~~ | ~~`aggregate.New` still accepts such names — reject-or-document decision + implementation open~~ | ~~M~~ |
+| ~~3~~ | ~~**nolint-audit baseline**~~ done — covered by the 21-31 report §a6 — 2 needed / 0 stale | ~~3 new `//nolint` directives added (gochecknoglobals seam, paralleltest ×1) with rationale~~ | ~~`erraudit nolint-audit .` not re-run; the "2 needed / 0 stale" baseline is now stale~~ | ~~S~~ |
+| ~~4~~ | ~~**Consumer re-verification**~~ done — covered by the 21-31 report §a7/§a8 | ~~dashboard verified compiling against HEAD pre-session~~ | ~~not re-run after the instance_id fix (fix is sanitize-additive; risk minimal)~~ | ~~S~~ |
+| ~~5~~ | ~~**5th CI job (openapi)**~~ done — covered by the 21-31 report §a3 — 5/5 green incl. OpenAPI | ~~spec lints clean locally via `bun x @redocly/cli`~~ | ~~job never executed on GitHub (no push this session)~~ | ~~S~~ |
+| ~~6~~ | ~~**Aggregate fuzz scenario space**~~ done — never-started path unit-pinned (21-31 §a15); throttle/cache-mode fuzz combination routed to ROADMAP Theme 6 | ~~started+cached sources fully fuzzed~~ | ~~merge over never-started probes (zero-value `CachedResponse` fallback) untested; also handler fuzz in aggregate not combined with throttle/cache modes~~ | ~~S~~ |
 
 ## c) NOT STARTED
 
 | # | Item                                                                                                            | Why it hasn't started                                                               |
 | - | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 1 | Branch protection on `master` (require the 5 checks + linear history)                                           | Owner/admin repo settings — blocked, unchanged                                      |
-| 2 | `go-health-dashboard` bump to v0.1.1+                                                                           | Owner sign-off on that repo's cadence — blocked                                     |
-| 3 | SA1019 policy **recorded decision**                                                                             | Policy stance now drafted in deprecation-policy.md; formal confirmation still yours |
-| 4 | CI coverage threshold (fail < 97%?) + dependabot auto-merge rules                                               | Policy calls; baseline number now exists (99.7%)                                    |
-| 5 | v0.1.2 cut (instance_id fix), v0.2.0 scoping, v1.0 criteria, release-automation evaluation, v0.1.1 announcement | Strategic — awaiting direction                                                      |
-| 6 | Aggregate slash-name validation (see b2), aggregate golden snapshot, merge-cost benchmark (f-items)             | Surfaced this session; not started                                                  |
+| ~~1~~ | ~~Branch protection on `master` (require the 5 checks + linear history)~~ done — routed to TODO_LIST — owner decision G3 | ~~Owner/admin repo settings — blocked, unchanged~~ |
+| ~~2~~ | ~~`go-health-dashboard` bump to v0.1.1+~~ done — covered by the 21-31 report §a8 — dashboard at released v0.1.2 | ~~Owner sign-off on that repo's cadence — blocked~~ |
+| ~~3~~ | ~~SA1019 policy **recorded decision**~~ done — G5 confirmed (21-31 §a24) | ~~Policy stance now drafted in deprecation-policy.md; formal confirmation still yours~~ |
+| ~~4~~ | ~~CI coverage threshold (fail < 97%?) + dependabot auto-merge rules~~ done — coverage routed to TODO_LIST (owner); auto-merge routed to ROADMAP Theme 7 | ~~Policy calls; baseline number now exists (99.7%)~~ |
+| ~~5~~ | ~~v0.1.2 cut (instance_id fix), v0.2.0 scoping, v1.0 criteria, release-automation evaluation, v0.1.1 announcement~~ done — v0.1.2 cut (21-31 §a1); v0.2.0/v1.0/release-automation decided in ROADMAP Theme 7; announcement drafted (21-31 §a22) | ~~Strategic — awaiting direction~~ |
+| ~~6~~ | ~~Aggregate slash-name validation (see b2), aggregate golden snapshot, merge-cost benchmark (f-items)~~ done — slash-name strict (21-31 §a4); golden (21-31 §a14); merge benchmark (21-31 §a16) | ~~Surfaced this session; not started~~ |
 
 ## d) TOTALLY FUCKED UP
 
@@ -67,58 +67,65 @@
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Exit-code-safe gate loops** — every multi-gate shell loop should run `set -o pipefail` or capture rc before piping (this session's near-miss). Concrete: bake a `.#gates` flake app that runs all gates with pipefail and stops on first failure.
-2. **Artifacts before builds** — new tool dirs get their `.gitignore` entry (or `-o /tmp` output) before the first `go build`. The 9.5 MB blob is the receipt.
-3. **Verify-then-document** — doc commands are executed verbatim before being written down; the CONTRIBUTING runner one-liner was wrong until final verification caught it.
-4. **Fuzz-signature evolution gotcha** — changing a fuzz target's parameters invalidates saved corpus files; update `testdata/fuzz/*` in the same commit. Worth an AGENTS.md line.
-5. **Commit granularity** — the daemon produced 12 mixed `chore: auto-commit` commits for this session, which makes review and bisect miserable. Proposal: milestone commits with detailed messages at phase boundaries (daemon keeps catching stragglers). Your call — it's your daemon.
-6. **Machine-specific replace path** — `tools/doanalyzerv2/go.mod` hardcodes `/home/lars/projects/branching-flow`; a startup guard printing a helpful error (or an env-var-overridable path) would save the next machine migration.
-7. **Emulation as an app** — the verified go-free-PATH recipe should become `nix run .#ci-emulation` instead of CONTRIBUTING copy-paste, so it can't drift from what I actually verified.
-8. **Seam duplication (root vs aggregate)** — intentional mirror, now cross-referenced; revisit only if a third write seam appears (then extract `internal/healthjson`).
+1. ~~**Exit-code-safe gate loops** — every multi-gate shell loop should run `set -o pipefail` or capture rc before piping (this session's near-miss). Concrete: bake a `.#gates` flake app that runs all gates with pipefail and stops on first failure.~~ done (done — the .#gates app is exactly this (21-31 §a10))
+2. ~~**Artifacts before builds** — new tool dirs get their `.gitignore` entry (or `-o /tmp` output) before the first `go build`. The 9.5 MB blob is the receipt.~~ done (standing practice — gitignore-before-build; run.sh + .gitignore cover the tools dir)
+3. ~~**Verify-then-document** — doc commands are executed verbatim before being written down; the CONTRIBUTING runner one-liner was wrong until final verification caught it.~~ done (standing practice)
+4. ~~**Fuzz-signature evolution gotcha** — changing a fuzz target's parameters invalidates saved corpus files; update `testdata/fuzz/*` in the same commit. Worth an AGENTS.md line.~~ done (done — AGENTS 'Fuzz signature changes invalidate the testdata corpus' gotcha)
+5. ~~**Commit granularity** — the daemon produced 12 mixed `chore: auto-commit` commits for this session, which makes review and bisect miserable. Proposal: milestone commits with detailed messages at phase boundaries (daemon keeps catching stragglers). Your call — it's your daemon.~~ **Won't implement — daemon behavior is the owner's call; milestone commits remain a standing recommendation..**
+6. ~~**Machine-specific replace path** — `tools/doanalyzerv2/go.mod` hardcodes `/home/lars/projects/branching-flow`; a startup guard printing a helpful error (or an env-var-overridable path) would save the next machine migration.~~ done (done — run.sh validates the checkout and honors GO_HEALTH_BRANCHING_FLOW (21-31 §a23))
+7. ~~**Emulation as an app** — the verified go-free-PATH recipe should become `nix run .#ci-emulation` instead of CONTRIBUTING copy-paste, so it can't drift from what I actually verified.~~ done (done — the .#ci-emulation app (21-31 §a11))
+8. ~~**Seam duplication (root vs aggregate)** — intentional mirror, now cross-referenced; revisit only if a third write seam appears (then extract `internal/healthjson`).~~ done (standing practice — ROADMAP 'Internal architecture' records the revisit trigger)
 
 ## f) NEXT TASKS (harvest-ready — ranked; feeds docs-health HARVEST)
 
 | #  | Task                                                                                                                                  | Impact | Effort | Category                 |
 | -- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------------------ |
-| 1  | Fix or formally reject "/" in aggregate source names (namespace aliasing hazard; `aggregate.New` change + tests)                      | High   | M      | Bug                      |
-| 2  | Cut **v0.1.2** with the instance_id sanitize fix (released bug in v0.1.1) — needs your cadence call                                   | High   | S      | Release                  |
-| 3  | Push to trigger CI; verify the new openapi job runs green remotely (branch protection depends on the 5 check names existing)          | High   | S      | Quality                  |
-| 4  | Branch protection on master: require 5 checks + linear history                                                                        | High   | S      | Infra (blocked: owner)   |
-| 5  | Bump go-health-dashboard to v0.1.1+, drop replace directive                                                                           | High   | M      | Release (blocked: owner) |
-| 6  | Re-run `erraudit nolint-audit .`; refresh the stale "2 needed / 0 stale" baseline in CONTRIBUTING                                     | Medium | S      | Quality                  |
-| 7  | Emulate the remaining gates (test-race, fuzz, flake check) under go-free PATH                                                         | Medium | S      | Infra                    |
-| 8  | Extract the verified emulation recipe into `nix run .#ci-emulation` app                                                               | Medium | S      | Infra                    |
-| 9  | Add a `.#gates` app: all gates, pipefail, fail-fast (one-command pre-push)                                                            | Medium | M      | Infra                    |
-| 10 | Regression unit test pinning `SanitizeResponse` coerces InstanceID (fuzz seed covers it today; named test documents it)               | Medium | S      | Quality                  |
-| 11 | Aggregate golden snapshot locking the merged JSON shape (scalars dropped)                                                             | Medium | S      | Quality                  |
-| 12 | Extend aggregate fuzz: never-started source probes (zero-value cache merge path)                                                      | Medium | S      | Quality                  |
-| 13 | Test the documented WithLiveThrottle × Start interaction (loop-refreshed cache under throttle) so the README paragraph is test-backed | Medium | S      | Quality                  |
-| 14 | Benchmark aggregate `CachedResponse` merge cost vs source count; baseline into FEATURES                                               | Medium | S      | Quality                  |
-| 15 | Re-verify dashboard consumer against HEAD post-fix (replace build, exit 0)                                                            | Medium | S      | Quality                  |
-| 16 | CI coverage threshold decision (fail < 97%?) + gate job                                                                               | Medium | S      | Policy (blocked)         |
-| 17 | Weekly long-budget fuzz job (e.g. 5 min/target)                                                                                       | Medium | S      | Policy                   |
-| 18 | Godoc examples for `aggregate` package (currently none)                                                                               | Medium | S      | Documentation            |
-| 19 | Go 1.27 compatibility check when it lands; update GOEXPERIMENT gotchas                                                                | Medium | S      | Compatibility            |
-| 20 | Explicit OS-support statement (linux/amd64 tested; darwin/windows untested) in README matrix or CI matrix job                         | Medium | S      | Compatibility (decision) |
-| 21 | Runtime guard in tools/doanalyzerv2 for missing replace target, with actionable error                                                 | Low    | S      | Infra                    |
-| 22 | `ExampleWithShutdownGracePeriod` + `ExampleAsShutdowner` godoc examples                                                               | Low    | S      | Documentation            |
-| 23 | README aggregate section: state explicitly that instance_id/uptime/version never survive a merge                                      | Low    | S      | Documentation            |
-| 24 | Guard benchmark: HEAD-allowed variant + Allow-header build cost                                                                       | Low    | S      | Quality                  |
-| 25 | Benchmark throttled live path under contention (parallel)                                                                             | Low    | S      | Quality                  |
-| 26 | `-count=5` stress for the seam test in CI (race robustness)                                                                           | Low    | S      | Quality                  |
-| 27 | `aggregate.New` error reporting: consider errors.Join for multiple invalid sources                                                    | Low    | S      | Feature                  |
-| 28 | Per-source roll-up visibility in aggregate responses (design note first)                                                              | Low    | M      | Feature (ROADMAP)        |
-| 29 | Dependabot auto-merge rules decision                                                                                                  | Low    | S      | Policy (blocked)         |
-| 30 | v0.1.1 announcement + v0.2.0 scoping + v1.0 criteria draft                                                                            | Low    | M      | Strategy (blocked)       |
-| 31 | Release-automation evaluation (manual tag flow worked twice)                                                                          | Low    | M      | Strategy                 |
-| 32 | Fuzz throttle-window boundary under concurrency with fake clock                                                                       | Low    | M      | Quality                  |
-| 33 | ROADMAP: record the "shared marshal seam package" as considered-and-rejected                                                          | Low    | S      | Documentation            |
-| 34 | AGENTS.md gotcha: fuzz-signature changes invalidate `testdata/fuzz` corpus entries                                                    | Low    | S      | Documentation            |
+| ~~1~~  | ~~Fix or formally reject "/" in aggregate source names (namespace aliasing hazard; `aggregate.New` change + tests)~~ done — strict rejection (21-31 §a4; CHANGELOG [Unreleased]) | ~~High~~ | ~~M~~ | ~~Bug~~ |
+| ~~2~~  | ~~Cut **v0.1.2** with the instance_id sanitize fix (released bug in v0.1.1) — needs your cadence call~~ done at `4b3ca9c` | ~~High~~ | ~~S~~ | ~~Release~~ |
+| ~~3~~  | ~~Push to trigger CI; verify the new openapi job runs green remotely (branch protection depends on the 5 check names existing)~~ done — covered by the 21-31 report §a3 — 5/5 CI jobs green | ~~High~~ | ~~S~~ | ~~Quality~~ |
+| ~~4~~  | ~~Branch protection on master: require 5 checks + linear history~~ done — routed to TODO_LIST — owner decision G3 | ~~High~~ | ~~S~~ | ~~Infra (blocked: owner)~~ |
+| ~~5~~  | ~~Bump go-health-dashboard to v0.1.1+, drop replace directive~~ done — covered by the 21-31 report §a8 — at released v0.1.2, no replace | ~~High~~ | ~~M~~ | ~~Release (blocked: owner)~~ |
+| ~~6~~  | ~~Re-run `erraudit nolint-audit .`; refresh the stale "2 needed / 0 stale" baseline in CONTRIBUTING~~ done — covered by the 21-31 report §a6 — 2 needed / 0 stale | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~7~~  | ~~Emulate the remaining gates (test-race, fuzz, flake check) under go-free PATH~~ done — covered by the 21-31 report §a9 | ~~Medium~~ | ~~S~~ | ~~Infra~~ |
+| ~~8~~  | ~~Extract the verified emulation recipe into `nix run .#ci-emulation` app~~ done — covered by the 21-31 report §a11 | ~~Medium~~ | ~~S~~ | ~~Infra~~ |
+| ~~9~~  | ~~Add a `.#gates` app: all gates, pipefail, fail-fast (one-command pre-push)~~ done — covered by the 21-31 report §a10 | ~~Medium~~ | ~~M~~ | ~~Infra~~ |
+| ~~10~~ | ~~Regression unit test pinning `SanitizeResponse` coerces InstanceID (fuzz seed covers it today; named test documents it)~~ done — covered by the 21-31 report §a5 | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~11~~ | ~~Aggregate golden snapshot locking the merged JSON shape (scalars dropped)~~ done — covered by the 21-31 report §a14 | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~12~~ | ~~Extend aggregate fuzz: never-started source probes (zero-value cache merge path)~~ done — never-started path unit-pinned (21-31 §a15; AGENTS fuzz-corpus gotcha records why the fuzz signature stayed narrow) | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~13~~ | ~~Test the documented WithLiveThrottle × Start interaction (loop-refreshed cache under throttle) so the README paragraph is test-backed~~ done — covered by the 21-31 report §a13 | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~14~~ | ~~Benchmark aggregate `CachedResponse` merge cost vs source count; baseline into FEATURES~~ done — covered by the 21-31 report §a16 | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~15~~ | ~~Re-verify dashboard consumer against HEAD post-fix (replace build, exit 0)~~ done — covered by the 21-31 report §a7/§a8 | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~16~~ | ~~CI coverage threshold decision (fail < 97%?) + gate job~~ done — routed to TODO_LIST — owner policy decision | ~~Medium~~ | ~~S~~ | ~~Policy (blocked)~~ |
+| ~~17~~ | ~~Weekly long-budget fuzz job (e.g. 5 min/target)~~ done — covered by the 21-31 report §a12 — .#fuzz-long + weekly workflow | ~~Medium~~ | ~~S~~ | ~~Policy~~ |
+| ~~18~~ | ~~Godoc examples for `aggregate` package (currently none)~~ done — covered — aggregate godoc examples in CHANGELOG [Unreleased] | ~~Medium~~ | ~~S~~ | ~~Documentation~~ |
+| ~~19~~ | ~~Go 1.27 compatibility check when it lands; update GOEXPERIMENT gotchas~~ done — covered by the 21-31 report §a25 | ~~Medium~~ | ~~S~~ | ~~Compatibility~~ |
+| ~~20~~ | ~~Explicit OS-support statement (linux/amd64 tested; darwin/windows untested) in README matrix or CI matrix job~~ done — covered by the 21-31 report §a26 | ~~Medium~~ | ~~S~~ | ~~Compatibility (decision)~~ |
+| ~~21~~ | ~~Runtime guard in tools/doanalyzerv2 for missing replace target, with actionable error~~ done — covered by the 21-31 report §a23 — run.sh guard | ~~Low~~ | ~~S~~ | ~~Infra~~ |
+| ~~22~~ | ~~`ExampleWithShutdownGracePeriod` + `ExampleAsShutdowner` godoc examples~~ done — covered — ExampleWithShutdownGracePeriod + ExampleProbe_AsShutdowner in CHANGELOG [Unreleased] | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
+| ~~23~~ | ~~README aggregate section: state explicitly that instance_id/uptime/version never survive a merge~~ done — README aggregate section states scalars never survive a merge | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
+| ~~24~~ | ~~Guard benchmark: HEAD-allowed variant + Allow-header build cost~~ done — covered by the 21-31 report §a17 | ~~Low~~ | ~~S~~ | ~~Quality~~ |
+| ~~25~~ | ~~Benchmark throttled live path under contention (parallel)~~ done — routed to ROADMAP Theme 6 raw idea | ~~Low~~ | ~~S~~ | ~~Quality~~ |
+| ~~26~~ | ~~`-count=5` stress for the seam test in CI (race robustness)~~ done — routed to ROADMAP Theme 6 raw idea | ~~Low~~ | ~~S~~ | ~~Quality~~ |
+| ~~27~~ | ~~`aggregate.New` error reporting: consider errors.Join for multiple invalid sources~~ done — deferred to v0.2.0 — docs/errors-join-design.md (ROADMAP Theme 7) | ~~Low~~ | ~~S~~ | ~~Feature~~ |
+| ~~28~~ | ~~Per-source roll-up visibility in aggregate responses (design note first)~~ done — deferred to v0.2.0 — docs/aggregate-per-source-visibility-design.md (ROADMAP Theme 7) | ~~Low~~ | ~~M~~ | ~~Feature (ROADMAP)~~ |
+| ~~29~~ | ~~Dependabot auto-merge rules decision~~ done — routed to ROADMAP Theme 7 raw idea | ~~Low~~ | ~~S~~ | ~~Policy (blocked)~~ |
+| ~~30~~ | ~~v0.1.1 announcement + v0.2.0 scoping + v1.0 criteria draft~~ done — announcement drafted (21-31 §a22); v0.2.0 scoping + v1.0 criteria in ROADMAP Theme 7 | ~~Low~~ | ~~M~~ | ~~Strategy (blocked)~~ |
+| ~~31~~ | ~~Release-automation evaluation (manual tag flow worked twice)~~ done — decided — manual tag flow adopted (ROADMAP Theme 7; 21-31 §a21) | ~~Low~~ | ~~M~~ | ~~Strategy~~ |
+| ~~32~~ | ~~Fuzz throttle-window boundary under concurrency with fake clock~~ done — routed to ROADMAP Theme 6 raw idea | ~~Low~~ | ~~M~~ | ~~Quality~~ |
+| ~~33~~ | ~~ROADMAP: record the "shared marshal seam package" as considered-and-rejected~~ done — ROADMAP 'Internal architecture — seam extraction rejected 2026-09-04' | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
+| ~~34~~ | ~~AGENTS.md gotcha: fuzz-signature changes invalidate `testdata/fuzz` corpus entries~~ done — AGENTS 'Fuzz signature changes invalidate the testdata corpus' gotcha (verified this run) | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
 
 _(34 curated; all are HARVEST-eligible — bounded items → TODO_LIST, strategy/design items → ROADMAP.)_
 
 ## g) QUESTIONS (I cannot answer these myself)
 
-1. **Release cadence:** v0.1.1 has a real, fuzz-found bug (invalid-UTF-8 instance_id 500s every endpoint). Do you want **v0.1.2 cut now** with just this fix, or batch it into a later release? I checked CHANGELOG/ROADMAP — no cadence policy is recorded anywhere.
-2. **Aggregate API strictness:** should `aggregate.New` **reject source names containing "/"** (stricter validation, could break a consumer already passing such names) or stay lenient and only document the aliasing hazard? Both are defensible for a v0.x; the consumer impact call is yours.
-3. **Process preferences:** should I keep letting the daemon produce heuristic `chore` commits for session work (12 this session, mixed content), or do you want **milestone commits with detailed messages** at phase boundaries? Related: this report is `.md` per your instruction — the status-report skill's canonical format is styled HTML; keep `.md` as your default for future reports?
+1. ~~**Release cadence:** v0.1.1 has a real, fuzz-found bug (invalid-UTF-8 instance_id 500s every endpoint). Do you want **v0.1.2 cut now** with just this fix, or batch it into a later release? I checked CHANGELOG/ROADMAP — no cadence policy is recorded anywhere.~~ done (resolved — v0.1.2 cut same day (21-31 §a1); the slash-contract vehicle is now a TODO_LIST owner decision)
+2. ~~**Aggregate API strictness:** should `aggregate.New` **reject source names containing "/"** (stricter validation, could break a consumer already passing such names) or stay lenient and only document the aliasing hazard? Both are defensible for a v0.x; the consumer impact call is yours.~~ done (resolved — strict, decided as G2 (21-31 §a4); release vehicle = TODO_LIST owner decision)
+3. ~~**Process preferences:** should I keep letting the daemon produce heuristic `chore` commits for session work (12 this session, mixed content), or do you want **milestone commits with detailed messages** at phase boundaries? Related: this report is `.md` per your instruction — the status-report skill's canonical format is styled HTML; keep `.md` as your default for future reports?~~ done (partially resolved — .md reconfirmed by owner instruction in this evening's run; daemon commit style stays the owner's call)
+
+## Completion (2026-09-04 evening docs-health run)
+
+Every §b/§c/§e/§f/§g item now carries an inline verdict: shipped by the 21-31
+session (v0.1.2 released), routed to TODO_LIST (owner decisions G3/coverage)
+or ROADMAP raw ideas, or explicitly Won't-implement. Report fully resolved and
+archived to `docs/status/archived/`.

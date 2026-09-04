@@ -89,6 +89,8 @@ Raw ideas (quality polish, none scheduled):
 - Feed golden-fixture inputs into the aggregate fuzz seed corpus
 - Benchmark the throttled live path under contention (parallel load)
 - Fuzz the throttle-window boundary under concurrency with a fake clock
+- Combine the aggregate handler fuzz with throttle/cache modes (currently
+  fuzzed only over started+cached sources)
 - `-count=N` race-suite stress in CI if flakiness stays at zero
 
 ### 7. Release & Ecosystem Strategy

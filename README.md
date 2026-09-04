@@ -247,6 +247,8 @@ The aggregate is passive: it adds no goroutines and merges on read (one lock-fre
 
 When a `HealthRecorder` is provided via `WithHealthRecorder`, every health-check batch is delegated to the recorder instead of the raw injector. [`samber-do-auditlog`](https://github.com/larsartmann/samber-do-auditlog)'s `*Plugin` satisfies the interface implicitly:
 
+> Coming from the pre-extraction API? See [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md) for the `WithPlugin` → `WithHealthRecorder` rename.
+
 ```go
 plugin, _ := auditlog.New(auditlog.Config{Enabled: true})
 injector := do.NewWithOpts(plugin.Opts())

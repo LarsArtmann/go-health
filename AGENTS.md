@@ -135,4 +135,7 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 | [docs/DOMAIN_LANGUAGE.md](docs/DOMAIN_LANGUAGE.md)                       | Domain terms (liveness, readiness, startup, critical, etc.)                       |
 | [docs/timeout-design.md](docs/timeout-design.md)                         | Batch-level vs per-service timeout analysis                                       |
 | [docs/content-negotiation-design.md](docs/content-negotiation-design.md) | Why content negotiation / HTML rendering is rejected; composition pattern instead |
+| [docs/panic-recovery-design.md](docs/panic-recovery-design.md)           | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces    |
+| [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md) | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers    |
+| [docs/adr/](docs/adr/)                                                   | Architecture decision records: stdlib errors (001), zero logging (002), three-state classify (003) |
 | [docs/status/](docs/status/)                                             | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                      |

@@ -34,7 +34,6 @@
 | Add benchmark: startup handler under contention                   | TODO   | Low    | 20min  | Only the unlatched variant exists. `probe_test.go:1422`                                                      |
 | Verify README Quick Start compiles (as an `Example` function)      | TODO   | Low    | 15min  | README example drifted from `ExampleNew` once already. `README.md:53`, `example_test.go:23`                   |
 | Re-evaluate the two `//nolint` suppressions in panic recovery      | TODO   | Low    | 30min  | `err113` could use a static sentinel; `nonamedreturns` could be refactored away. Suppressed with justification at `probe.go:382`. |
-| Add ADRs for key decisions                                        | TODO   | Low    | 1h     | Stdlib errors, no-logging, and three-state classify decisions live only in AGENTS.md prose. No `docs/adr/`.   |
 | Add renovate.json or dependabot.yml                               | TODO   | Low    | 15min  | No automated dependency updates. Only one direct dependency, so value is modest.                              |
 | Top up `done at <hash>` citations in reports `19-01`/`19-11`       | TODO   | Low    | 10min  | ~12 verdicts cite dates instead of hashes; hashes now exist. `docs/status/2026-08-07_19-01*`, `_19-11*`       |
 | Curate TODO_LIST Low section                                       | TODO   | Low    | 15min  | Cap at ~8 actionable rows; move infra-noise (renovate, templates) to ROADMAP until scheduled.                   |

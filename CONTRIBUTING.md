@@ -70,7 +70,7 @@ real finding, not noise.
    replace-module runner checked in under `tools/doanalyzerv2`:
 
 ```bash
-(cd tools/doanalyzerv2 && go run . ..)   # requires the go-design-smells checkout at /home/lars/projects/branching-flow
+tools/doanalyzerv2/run.sh ..   # requires the go-design-smells checkout (default /home/lars/projects/branching-flow, override with GO_HEALTH_BRANCHING_FLOW)
 ```
 
 7. Submit a pull request

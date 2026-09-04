@@ -7,9 +7,12 @@
 // sandbox cannot fetch, so it cannot become a flake app; instead it runs as
 // a library via the local replace directive in go.mod. See CONTRIBUTING.md.
 //
-// Usage (from the repo root or tools/doanalyzerv2):
+// Prefer the wrapper over bare `go run`: it validates the analyzer checkout
+// and honors GO_HEALTH_BRANCHING_FLOW (see run.sh).
 //
-//	go run . /path/to/target
+// Usage (from the repo root):
+//
+//	tools/doanalyzerv2/run.sh ..
 package main
 
 import (

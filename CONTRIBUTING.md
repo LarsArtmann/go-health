@@ -52,7 +52,52 @@ Bare `go` commands outside the flake need `GOEXPERIMENT=jsonv2` — the code
 imports `encoding/json/v2`, which go1.26 only exposes behind that experiment.
 The flake exports it for every gate; a fresh shell does not.
 
-5. Submit a pull request
+5. Emulate CI once before pushing — CI machines have no host Go on `PATH`, so
+   gates that shell out to `go` fall back to whatever toolchain the binary was
+   built with and can fail there while passing locally (this exact leak
+   produced the first red CI run). Run the three affected gates with a `PATH`
+   that contains `nix` but not `go`:
+
+```bash
+NIX_BIN="$(dirname "$(command -v nix)")"
+for gate in lint vulncheck security; do
+  env PATH="$NIX_BIN:/usr/bin:/bin" nix run .#$gate
+done
+```
+
+6. If you changed anything touching samber/do usage patterns, re-run the
+   doanalyzerv2 audit (baseline: 0 findings, DO-1..DO-6). The analyzer lives
+   in a private repo the nix sandbox cannot fetch, so it runs as a local
+   replace-module runner checked in under `tools/doanalyzerv2`:
+
+```bash
+go run ./tools/doanalyzerv2 .   # requires the go-design-smells checkout at /home/lars/projects/branching-flow
+```
+
+7. Submit a pull request
+
+## Adding a New Option
+
+Options are the library's entire configuration surface; they follow one
+pattern. Checklist for a new `With*` option:
+
+1. **Write to `config`, never to `Probe`** — add the option function in
+   `probe.go`, setting a field on the construction-only `config` struct.
+2. **Wire through `assemble`** — copy the field into the `Probe` only if it is
+   read at runtime; construction-only state stays on `config` and is discarded.
+3. **Validate in `Validate()`** if a zero/negative value would degrade
+   silently — `Start()` fail-fast depends on it.
+4. **Test in `probe_options_test.go`** — default behavior, option applied, and
+   every option it composes with (order-dependence is a real bug class: see
+   `WithGETOnly` × `WithAllowedMethods`).
+5. **Document the interaction** with the background cache when the option
+   affects evaluation (see `WithLiveThrottle` in the README).
+6. **README Configuration Reference** — add the row (keep the table order
+   matching `probe.go`), plus FEATURES.md when user-visible.
+7. **Godoc example** (`Example<Name>` in `example_test.go`) when the option
+   changes *how* callers use the probe, not just a value.
+8. **Gates**: `nix run .#test-race`, `.#lint`, `nix fmt`, and the CI-emulation
+   step above if any gate is affected.
 
 ## Status Reports
 
@@ -84,9 +129,15 @@ ships elsewhere, and archive fully-resolved reports under `docs/status/archived/
   (field order, `json.Deterministic` key sorting, json/v2's
   ignore-`omitempty`-on-scalars behavior). Regenerate with `go test . -update`
   and call the change out in the changelog — the wire format is frozen.
-- **Coverage** — baseline is **97.6%** statements (2026-09-04, post-
-  json/v2 migration and aggregate package). The main gap is the defensive
-  shutdown-overlay branch in `CachedResponse` plus aggregate error paths.
+- **Coverage** — baseline is **99.7%** statements (2026-09-04, after closing
+  the aggregate gaps). The single uncovered statement is the documented
+  defensive nil-`Checks` guard in `Healthz` (accessors.go), unreachable via
+  the public API today. `nix run .#coverage` must not regress below this.
+- **Fuzzing** — `nix run .#fuzz` runs all three targets (root marshal,
+  handler input, aggregate merge invariants) on a 10s budget each; the
+  aggregate fuzz additionally pins instance_id round-trips and the
+  worst-of/shutdown merge rules. Fuzz failures land in `testdata/fuzz/` and
+  must be fixed, never deleted.
 - **Error-handling audit** — `erraudit ./... --type-aware` baseline is
   **0 violations**. The two intentional `_, _ = w.Write` swallows carry
   `//nolint:erraudit` with rationale; `erraudit nolint-audit .` verifies the

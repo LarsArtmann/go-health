@@ -132,7 +132,14 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
   An older revision of this file claimed no GOEXPERIMENT was needed — that claim was an
   artifact of the host shell leaking `GOEXPERIMENT=jsonv2` into every nix invocation.
   The flake now sets it explicitly in every app and the devShell, so the gates are
-  hermetic; only bare `go` commands outside the flake need it manually. gopls' stdversion
+  hermetic; only bare `go` commands outside the flake need it manually.
+  **Per-version truth (verified 2026-09-04 against nixpkgs go_1_27 = 1.27.0):** under
+  go1.27 no experiment is needed — the library builds and the full test suite PASSES
+  (`go test -vet=off ./...`, both packages ok). The only go1.27 complaint is the
+  stdversion vet check demanding a `go 1.27` directive for files calling json/v2
+  functions. Adoption path when 1.26 support drops: bump the go.mod directive to 1.27,
+  remove the experiment from flake apps/devShell — no code changes. The flake keeps
+  go_1_26 pinned until then. gopls' stdversion
   warning ("json.Marshal requires go1.27") is expected and benign while the experiment is
   enabled — it reflects the stabilized json/v2 landing in go1.27, not a real build failure.
   Set `GOWORK=off` to avoid workspace interference.

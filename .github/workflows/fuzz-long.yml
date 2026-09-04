@@ -1,0 +1,45 @@
+# Weekly long-budget fuzzing. The per-push CI fuzz run is capped at 10s per
+# target; this workflow gives each target 5 minutes to find slow-burn
+# regressions. Plain-log output by design: a fuzz crash fails the job and the
+# failing input lands in testdata/fuzz/, which the artifact upload preserves
+# for triage — SARIF would add plumbing without adding signal.
+#
+# Local dry run of the exact gate: nix run .#fuzz-long -- -fuzztime=10s
+name: Fuzz (weekly long)
+
+on:
+  schedule:
+    - cron: "17 4 * * 1" # Mondays 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-long-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz-long:
+    name: Fuzz (5m/target)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+
+      - name: Fuzz all three targets, 5 minutes each
+        run: nix run .#fuzz-long
+
+      - name: Upload failing fuzz corpus
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: fuzz-corpus
+          path: |
+            testdata/fuzz/
+            aggregate/testdata/fuzz/
+          if-no-files-found: ignore

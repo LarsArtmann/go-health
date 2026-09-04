@@ -60,13 +60,24 @@ What CI actually tests on every push — not what merely compiles:
 | Dimension | Tested                                        |
 | --------- | --------------------------------------------- |
 | Go        | 1.26.x — CI runs go 1.26.7 on linux/amd64     |
+| OS/arch   | linux/amd64 — the only configuration CI tests |
 | samber/do | v2.1.0 (the pinned `go.mod` dependency)       |
 | Aggregate | same module version, tested in the same suite |
 
-Bare `go` commands outside this repo's flake need `GOEXPERIMENT=jsonv2`: the
-library imports `encoding/json/v2`, which go1.26 only exposes behind that
-experiment. Building through the flake, or with Go 1.27+ where json/v2 is
-stable, needs nothing special.
+Other OS/arch combinations (darwin, windows, arm64) are untested: the code is
+platform-independent Go (no cgo, no syscalls), so it is *expected* to work,
+but that is not a claim — run the test suite on your target before relying on
+it. A CI OS matrix is deliberately deferred: darwin can no longer evaluate
+the Nix flake at all (nixpkgs 26.11 dropped x86_64-darwin; see `flake.nix`),
+so those jobs would assert nothing.
+
+Bare `go` commands outside this repo's flake need `GOEXPERIMENT=jsonv2` on
+Go 1.26: the library imports `encoding/json/v2`, which go1.26 only exposes
+behind that experiment. Building through the flake, or with Go 1.27+ where
+json/v2 is stable, needs nothing special. Verified against go1.27.0: the
+library builds and the full test suite passes without the experiment — the
+only noise is go1.27's stdversion vet check asking for a `go 1.27` directive
+(and this go.mod stays at 1.26 until 1.26 support is dropped).
 
 Older Go toolchains are unsupported. Other samber/do v2.x versions are
 expected to work but are not covered by CI — if you bump it, run the test

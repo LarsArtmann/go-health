@@ -30,10 +30,13 @@ Uses `flake.nix` with `flake-parts` + `treefmt-nix`. Single dependency: `github.
 Single-package library (`health`) with these source files:
 
 ```
-doc.go      — Package doc comment (quick start, three-probe rationale, caching, shutdown)
-types.go    — Status enum (pass/fail/warn), Check, Response data model
-probe.go    — Probe struct, config struct, 7 Option functional options (write to config), HealthRecorder interface, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start returns error/Shutdown/MarkShuttingDown), Evaluate, CachedResponse (lock-free cache read + shutdown overlay), RefreshInterval accessor, runHealthChecks (with panic recovery), classify (three-state), evaluateStartup, buildChecks
-handlers.go — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, writeResponse
+doc.go           — Package doc comment (quick start, three-probe rationale, caching, shutdown)
+types.go         — Status enum (pass/fail/warn, frozen), Check, Response data model (incl. instance_id, timestamp omitzero)
+probe.go         — Probe struct, config struct, 13 Option functional options (write to config), HealthRecorder interface, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate, CachedResponse (lock-free read + shutdown overlay), accessors, runHealthChecks (with panic recovery), buildChecks
+classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
+handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + SanitizeResponse (UTF-8 coercion)
+accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz
+export_test.go   — ResetStartupLatchForTest (test builds only; public latch stays one-way)
 ```
 
 Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
@@ -50,7 +53,8 @@ fail, startup 503 until all latches), `RegisterRoutes`.
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching by default** (1s refresh) — kubelet/LB polling doesn't hammer dependencies. Set `WithRefreshInterval(0)` for live mode.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200.
-- **GET-only enforcement** — `WithGETOnly()` wraps all handlers to reject non-GET with 405 + `Allow: GET` header. Off by default.
+- **Method-set enforcement** — `WithGETOnly()` or `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse). Off by default. Middleware composes outside this guard (see docs/middleware-design.md).
+- **Deterministic clock seam** — `p.now()` (backed by `WithNowFunc`) drives uptime, `Response.Timestamp`, and live-throttle freshness. Latency measurement stays on the real clock. Tests inject a fixed clock instead of sleeping.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly.
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down).
 - **`aggregate` is passive and lock-free by construction** — merge-on-read: every read performs

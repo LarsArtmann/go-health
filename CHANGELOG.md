@@ -17,6 +17,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   restart-after-shutdown contract test, and JSON golden snapshot tests
   (`testdata/readiness_response.golden`, regenerate with `go test . -update`).
 
+- Programmatic health API (purely additive): `Probe.Status()`, `Probe.Alive()`,
+  `Probe.Ready()` cached-view accessors; `Probe.AwaitReady(ctx)` blocking
+  startup wait; `Probe.Healthz()` combined single-endpoint handler; and
+  `Probe.HealthCheck(ctx)` — the probe now satisfies
+  `do.HealthcheckerWithContext` for self-registration, wrapping the new
+  exported `ErrProbeUnhealthy` sentinel when the roll-up is fail.
+
+- Injector-free construction: `NewWithHealthCheck(fn, opts...)` plus the
+  exported `HealthCheckFunc` type — run a probe from any batch function,
+  no samber/do container required.
+
+- New options: `WithEvaluationHook(fn)` (observe every classified response
+  synchronously — the metrics/alerting seam), `WithLiveThrottle(d)` (coalesce
+  live-mode request floods to one batch per window), `WithShutdownGracePeriod(d)`
+  (two-phase shutdown timing), `WithNowFunc(fn)` (deterministic clock for
+  uptime, response timestamps, and throttle freshness in tests),
+  `WithAllowedMethods(methods...)` (method-set guard replacing the GET-only
+  boolean; 405 responses carry a sorted `Allow` header, GET always included),
+  and `WithInstanceID(id)` (replica identifier in every response:
+  `instance_id`).
+
+- `Response.Timestamp` — RFC 3339 evaluation completion time, omitted from
+  JSON until the first evaluation (`omitzero`).
+
+- Conformance helpers: `ProbeShutdowner` / `Probe.AsShutdowner()` adapt a
+  probe to `do.ShutdownerWithError`; `SanitizeResponse` coerces invalid UTF-8
+  (which `encoding/json/v2` rejects — found by fuzzing) to valid UTF-8,
+  restoring v1 wire behavior for malformed error strings.
+
+- `ResetStartupLatchForTest()` (test builds only, `export_test.go`): clears
+  the one-way startup latch so tests can exercise the full latch lifecycle.
+  The public latch remains strictly one-way.
+
+- Middleware, Prometheus, and OpenAPI guidance with verified spikes:
+  `ExampleProbe_ReadinessHandler_middleware` (auth-wrapped readiness),
+  `prometheus_example_test.go` (hook + stdlib exposition writer), and a static
+  `docs/openapi.yaml` kept in lockstep with the golden-file test. Design
+  notes: `docs/middleware-design.md`, `docs/prometheus-exposition-design.md`,
+  `docs/openapi-design.md`, `docs/classification-2.0-design.md`,
+  `docs/multi-tenant-design.md`, `docs/starting-status-design.md`.
+
 ### Changed
 
 - Recovered health-check panics now roll up to `fail` (readiness 503)
@@ -31,6 +72,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Lifecycle race: concurrent `Start` and `Shutdown` could trigger
   `sync: WaitGroup is reused before previous Wait has returned`. The
   WaitGroup `Add` and `Wait` are now serialized under the probe mutex.
+
+- Wire-format regression from the v0.1.0 `encoding/json/v2` migration: v2
+  rejects invalid UTF-8 where v1 replaced it, so a service returning a
+  malformed error string could turn a health endpoint into a 500.
+  `SanitizeResponse` now coerces responses to valid UTF-8 at both write
+  seams (root and aggregate) before marshaling. Found by fuzzing.
 
 ## [0.1.0] - 2026-09-04
 

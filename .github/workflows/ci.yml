@@ -38,6 +38,9 @@ jobs:
       - name: Run tests with race detector
         run: nix run .#test-race
 
+      - name: Short fuzz run
+        run: nix run .#fuzz
+
   static-analysis:
     name: Vet + Lint
     runs-on: ubuntu-latest

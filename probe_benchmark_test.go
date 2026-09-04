@@ -12,23 +12,23 @@ import (
 	do "github.com/samber/do/v2"
 )
 
-// BenchmarkStartupHandler_Contention measures the startup handler with many
-// goroutines requesting concurrently while the latch is still open, so every
-// request runs a live evaluation batch. This is the worst-case startup shape
-// (pre-latch), complementing BenchmarkStartupHandler_Unlatched's serial loop.
-// Recorded baseline (2026-09-04, go1.26.7 linux/amd64, 8 cores):
-//
-//	BenchmarkStartupHandler_Contention-8   proportional to service count;
-//	per-op cost ≈ one full health-check batch, lock-free on p.startupPassed.
+// BenchmarkStartupHandler_Contention measures the startup handler's true
+// worst case: a failing critical service keeps the startup latch open, so
+// every concurrent request runs a full live evaluation batch (and gets 503).
+// It complements BenchmarkStartupHandler_Unlatched, whose first successful
+// batch latches the probe and therefore only measures the latch check.
+// Recorded baseline (2026-09-04, go1.26.7 linux/amd64, 32 threads): see
+// FEATURES.md "Performance".
 func BenchmarkStartupHandler_Contention(b *testing.B) {
 	injector := do.New()
-	b.Cleanup(func() { injector.Shutdown() })
 
-	provideHealthy(injector, "db")
-	do.MustInvokeNamed[*healthyService](injector, "db")
+	provideUnhealthy(injector, "db", "still booting")
+	do.MustInvokeNamed[*unhealthyService](injector, "db")
 
 	provideHealthy(injector, "cache")
 	do.MustInvokeNamed[*healthyService](injector, "cache")
+
+	b.Cleanup(func() { injector.Shutdown() })
 
 	probe := health.New(injector,
 		health.WithCriticalServices("db", "cache"),
@@ -58,14 +58,16 @@ func BenchmarkStartupHandler_Contention(b *testing.B) {
 // full contention: the upper bound every other read path should stay near.
 func BenchmarkCachedResponse_ParallelReads(b *testing.B) {
 	injector := do.New()
-	b.Cleanup(func() { injector.Shutdown() })
 
 	provideHealthy(injector, "db")
 	do.MustInvokeNamed[*healthyService](injector, "db")
 
-	probe := health.New(injector,
+	probe := health.New(
+		injector,
 		health.WithCriticalServices("db"),
-		health.WithRefreshInterval(50*time.Millisecond), // background cache, cheap relative to the loop
+		health.WithRefreshInterval(
+			50*time.Millisecond,
+		), // background cache, cheap relative to the loop
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())

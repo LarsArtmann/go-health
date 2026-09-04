@@ -124,6 +124,11 @@
               gosec ./...
             '';
 
+            fuzz = mkApp "fuzz" "Run fuzz targets with a short time budget" [ goPkg ] ''
+              go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=10s
+              go test . -run '^$' -fuzz=FuzzHandlerInput -fuzztime=10s
+            '';
+
             clean =
               mkApp "clean" "Remove coverage artifacts and clear the test cache"
                 [

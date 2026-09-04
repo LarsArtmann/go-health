@@ -508,7 +508,7 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 	}
 
 	resp.Status = p.classify(results, resp.ShuttingDown)
-	resp.Timestamp = time.Now()
+	resp.Timestamp = p.now()
 
 	if p.evalHook != nil {
 		p.evalHook(resp)

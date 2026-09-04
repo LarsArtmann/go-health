@@ -5,7 +5,6 @@ import (
 	"encoding/json/v2"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // Routes configures the URL paths for [Probe.RegisterRoutes].
@@ -154,7 +153,7 @@ func (p *Probe) throttledLiveResponse(ctx context.Context) Response {
 	p.throttleMu.Lock()
 	defer p.throttleMu.Unlock()
 
-	if cached := p.latest.Load(); cached != nil && time.Since(cached.Timestamp) < p.liveThrottle {
+	if cached := p.latest.Load(); cached != nil && p.now().Sub(cached.Timestamp) < p.liveThrottle {
 		return *cached
 	}
 

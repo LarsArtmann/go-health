@@ -1,0 +1,124 @@
+# Status Report: TODO-List Batch Execution + instance_id Sanitize Bug (fuzz-found)
+
+**Date:** 2026-09-04 19:25 CEST · **Branch:** `master` · **Scope:** single session — executed all 18 actionable TODO_LIST items (post-v0.1.1 curation), found and fixed one released-code bug, hardened CI and docs.
+**Session commits:** `51a4498`…`db2de47` (12 heuristic auto-daemon commits) + one corrective commit (binary untrack) at report time.
+
+**Final gate state (all green):** build ✅ · test-race ✅ · vet ✅ · lint **0 issues** · coverage **99.7%** (aggregate **100%**) · fuzz **3 targets PASS** · `nix flake check` ✅ · erraudit **0 violations** · doanalyzerv2 **0 findings** · Redocly spec lint ✅
+
+---
+
+## a) FULLY DONE
+
+| # | Work | Evidence |
+| - | ---- | -------- |
+| 1 | **pkg.go.dev renders v0.1.1** incl. the `WithGETOnly` Deprecated section (TODO f1 closed) | live fetch of `pkg.go.dev/...@v0.1.1`, both index + body deprecation markers |
+| 2 | **`getOnly bool` collapsed into the method set** — `WithGETOnly()` now seeds `allowedMethods{GET}`; `guard` single-flag; composes in any order; all 4 deprecated-path pin tests still green | `51a4498` (probe.go); full suite green |
+| 3 | **Fake-clock determinism test for live-throttle freshness** — frozen clock ⇒ 25/25 requests serve one stored response byte-identically; window crossing ⇒ exactly one new batch; zero sleeps; race-clean | `67f8b33`, refactored `bf0c69b`; `TestWithLiveThrottle_FakeClockFreshnessDeterministic` |
+| 4 | **Aggregate fuzz target** (`FuzzAggregateMergeInvariants`) — worst-of status, shutdown-forces-fail, `source/check` namespacing + value identity, scalar dropping, handler codes; registered in `nix run .#fuzz` | `573bc59`, flake `eaa68ea`, final shape `3bc1dd6`; 30s live fuzz = **3.88M execs, 0 failures** |
+| 5 | **instance_id-populated fuzz seeds** — signature extended to 4 params, seeds incl. invalid-UTF-8 IDs; saved corpus entry updated in lockstep | `eaa68ea` (incl. `testdata/fuzz/58b20d015136c6e5`) |
+| 6 | **BUG FIXED: invalid UTF-8 `WithInstanceID` 500'd every endpoint** — `SanitizeResponse` missed `InstanceID`; now coerced like other string fields | `ac0a1bc` (handlers.go); seed repro → fix verified (seeds + 10s live fuzz + race suite) |
+| 7 | **JSON round-trip property test** — unmarshal→marshal byte identity + field identity across 4 response shapes (fully populated, minimal, zero/nil-checks, degraded) | `ac0a1bc` (`handlers_json_test.go`) |
+| 8 | **Guard-overhead benchmark** — no-guard vs allowed vs unlisted; result: guard ≈ free (~35 ns noise, 0 extra allocs), 405 path cheaper (~220 ns) | `ac0a1bc`; baseline recorded in FEATURES Performance (`db2de47`) |
+| 9 | **Coverage gaps enumerated and closed** — the never-itemized 1.5% was 4 blocks: latency-max merge (new slow-source test), statusRank default (new internal table test), aggregate marshal-error branch (new seam + 500 test mirroring root pattern), Healthz nil-Checks guard (documented defensive). **98.5% → 99.7% total, aggregate 100%** | `56b58b7`; `nix run .#coverage` |
+| 10 | **7 godoc examples** — `ExampleNewWithHealthCheck`, `ExampleProbe_Healthz`, `ExampleWithEvaluationHook`, `ExampleProbe_AwaitReady`, `ExampleWithHealthRecorder`, `ExampleProbe_MarkShuttingDown`, `ExampleProbe_CachedResponse` | `56b58b7`; all 12 root examples PASS |
+| 11 | **Persisted doanalyzerv2 runner** — `tools/doanalyzerv2/` replace-module runner; verified twice: **0 findings, DO-1..DO-6** | `6435a6c`, cleanup `3bc1dd6`; `(cd tools/doanalyzerv2 && go run . ..)` |
+| 12 | **CONTRIBUTING: CI-emulation step** — go-free PATH recipe (nix+gcc symlinks), **empirically verified** on lint/vet/vulncheck/security | `5c760e5` + `db2de47`; `env PATH=… nix run .#vet` exit 0 with `command -v go` empty |
+| 13 | **CONTRIBUTING: "Adding a New Option" checklist** (8 steps incl. compose-order testing) + refreshed coverage/fuzz baselines | `5c760e5`, `db2de47` |
+| 14 | **SECURITY.md** — private disclosure path, in/out of scope (probe-contract focus), response targets, hardening guidance | `5c760e5` |
+| 15 | **PR template** — gates checklist, wire-format/API-change callouts, option checklist reference | `5c760e5` |
+| 16 | **openapi.yaml made Redocly-clean + 5th CI job** — fixed 4 errors + 1 warning (MIT license, explicit `security: []` no-auth posture, relative `servers`); `openapi` job added to ci.yml (header updated to five checks) | `97c4d21`; local Redocly: "Woohoo! Your API description is valid."; ci.yml YAML-validated |
+| 17 | **README: compatibility matrix** (Go 1.26.7 linux/amd64 × samber/do v2.1.0 — tested, not aspirational + GOEXPERIMENT note) and **WithLiveThrottle × Start-cache interaction paragraph**; deprecation-policy cross-link | `97c4d21` |
+| 18 | **docs/deprecation-policy.md** — v0.x no-removal, v1.x two-minor rule, deprecation checklist (godoc/README/CHANGELOG/working), SA1019 stance (verified: exactly 4 pin call-sites in 2 test files) | `97c4d21` |
+| 19 | **Living docs synced** — CHANGELOG `[Unreleased]` (Added ×6, Fixed ×1), AGENTS.md (runner note, seam-parallel gotcha, docs table rows), FEATURES.md (guard baseline, fuzz row "three targets"), TODO_LIST.md (18 done items deleted per lifecycle; blocked rows retained) | `97c4d21`, `db2de47` |
+| 20 | **9.5 MB stray binary untracked** — the compiled runner binary the daemon swept into `6435a6c` was `git rm --cached` + trashed + gitignored | corrective commit at report time |
+
+---
+
+## b) PARTIALLY DONE
+
+| # | Item | Works | Remains | Effort |
+| - | ---- | ----- | ------- | ------ |
+| 1 | **CI-emulation coverage** | lint, vet, vulncheck, security verified under go-free PATH | `test-race`, `fuzz`, `flake check` not yet run emulated (they bind goPkg directly, risk lower — but unproven) | S |
+| 2 | **Aggregate "/"-name contract** | hazard documented in fuzz doc comment: a source name containing `/` can alias another source's check namespace; fuzz skips it | `aggregate.New` still accepts such names — reject-or-document decision + implementation open | M |
+| 3 | **nolint-audit baseline** | 3 new `//nolint` directives added (gochecknoglobals seam, paralleltest ×1) with rationale | `erraudit nolint-audit .` not re-run; the "2 needed / 0 stale" baseline is now stale | S |
+| 4 | **Consumer re-verification** | dashboard verified compiling against HEAD pre-session | not re-run after the instance_id fix (fix is sanitize-additive; risk minimal) | S |
+| 5 | **5th CI job (openapi)** | spec lints clean locally via `bun x @redocly/cli` | job never executed on GitHub (no push this session) | S |
+| 6 | **Aggregate fuzz scenario space** | started+cached sources fully fuzzed | merge over never-started probes (zero-value `CachedResponse` fallback) untested; also handler fuzz in aggregate not combined with throttle/cache modes | S |
+
+## c) NOT STARTED
+
+| # | Item | Why it hasn't started |
+| - | ---- | --------------------- |
+| 1 | Branch protection on `master` (require the 5 checks + linear history) | Owner/admin repo settings — blocked, unchanged |
+| 2 | `go-health-dashboard` bump to v0.1.1+ | Owner sign-off on that repo's cadence — blocked |
+| 3 | SA1019 policy **recorded decision** | Policy stance now drafted in deprecation-policy.md; formal confirmation still yours |
+| 4 | CI coverage threshold (fail < 97%?) + dependabot auto-merge rules | Policy calls; baseline number now exists (99.7%) |
+| 5 | v0.1.2 cut (instance_id fix), v0.2.0 scoping, v1.0 criteria, release-automation evaluation, v0.1.1 announcement | Strategic — awaiting direction |
+| 6 | Aggregate slash-name validation (see b2), aggregate golden snapshot, merge-cost benchmark (f-items) | Surfaced this session; not started |
+
+## d) TOTALLY FUCKED UP
+
+1. **9.5 MB compiled binary committed to git** (`6435a6c`: `tools/doanalyzerv2/doanalyzerv2-runner`). Severity: permanent repo-history bloat; every clone pays it. Root cause: I ran `go build .` inside the new tools dir without gitignoring the output first; the auto-daemon committed it within its sweep window. Mitigation: untracked + trashed + gitignored this session; history rewrite is banned by policy, so the blob stays in history. **Lesson applied: gitignore before building, always.**
+2. **I introduced a parallel-seam race.** The new aggregate marshal-seam test called `t.Parallel()` while swapping package-global `marshalResponse` — concurrently running handler tests observed the swapped seam and failed with spurious **500s** (`TestStartupHandler_LatchesWhenAllSourcesComplete`: "500, want 503"). Root cause: global mutation + parallelism. Cost: one debug cycle + one full re-verify. Fixed by dropping `t.Parallel()` (mirroring the root package's `//nolint:paralleltest` pattern) and recorded as an AGENTS.md gotcha. `bf0c69b`, `3bc1dd6`.
+3. **The runner's documented invocation was wrong.** I wrote `go run ./tools/doanalyzerv2 .` into CONTRIBUTING/AGENTS before ever running it from the root — a nested module makes that path unrunnable. Caught by final-verification discipline; fixed to `(cd tools/doanalyzerv2 && go run . ..)`. **Lesson: never document a command you haven't executed verbatim.** `db2de47`.
+4. **CI-emulation recipe took three attempts.** v1 (`dirname nix` on PATH) still leaked host go on NixOS (system profile shares the dir); v2 stripped gcc too and the vet gate hard-failed (`cgo: C compiler "gcc" not found`); v3 (nix + gcc symlinks) verified. Cost: two wasted cycles; caught a real blind spot in the documented process.
+5. **Exit-code masking nearly shipped 10 lint findings as "green".** `nix run .#lint | tail -1` swallows the gate's exit code; I initially read a failing run as passing (cyclop/err113/exhaustive/gocognit/varnamelen/wsl ×10 across my new files) and only caught it on a later grep. All fixed, but the pattern is dangerous. **Lesson: `set -o pipefail` or capture `$?` before piping.**
+6. Minor self-inflicted churn, all caught same-session: multiedit merged a comment+func line in probe.go (syntax error, fixed immediately); unused `errors` import after refactor (vet caught); a dead draft helper briefly shipped in the fuzz rewrite; the first fuzz draft referenced undefined helpers (rewritten before any commit).
+
+## e) WHAT WE SHOULD IMPROVE
+
+1. **Exit-code-safe gate loops** — every multi-gate shell loop should run `set -o pipefail` or capture rc before piping (this session's near-miss). Concrete: bake a `.#gates` flake app that runs all gates with pipefail and stops on first failure.
+2. **Artifacts before builds** — new tool dirs get their `.gitignore` entry (or `-o /tmp` output) before the first `go build`. The 9.5 MB blob is the receipt.
+3. **Verify-then-document** — doc commands are executed verbatim before being written down; the CONTRIBUTING runner one-liner was wrong until final verification caught it.
+4. **Fuzz-signature evolution gotcha** — changing a fuzz target's parameters invalidates saved corpus files; update `testdata/fuzz/*` in the same commit. Worth an AGENTS.md line.
+5. **Commit granularity** — the daemon produced 12 mixed `chore: auto-commit` commits for this session, which makes review and bisect miserable. Proposal: milestone commits with detailed messages at phase boundaries (daemon keeps catching stragglers). Your call — it's your daemon.
+6. **Machine-specific replace path** — `tools/doanalyzerv2/go.mod` hardcodes `/home/lars/projects/branching-flow`; a startup guard printing a helpful error (or an env-var-overridable path) would save the next machine migration.
+7. **Emulation as an app** — the verified go-free-PATH recipe should become `nix run .#ci-emulation` instead of CONTRIBUTING copy-paste, so it can't drift from what I actually verified.
+8. **Seam duplication (root vs aggregate)** — intentional mirror, now cross-referenced; revisit only if a third write seam appears (then extract `internal/healthjson`).
+
+## f) NEXT TASKS (harvest-ready — ranked; feeds docs-health HARVEST)
+
+| # | Task | Impact | Effort | Category |
+| - | ---- | ------ | ------ | -------- |
+| 1 | Fix or formally reject "/" in aggregate source names (namespace aliasing hazard; `aggregate.New` change + tests) | High | M | Bug |
+| 2 | Cut **v0.1.2** with the instance_id sanitize fix (released bug in v0.1.1) — needs your cadence call | High | S | Release |
+| 3 | Push to trigger CI; verify the new openapi job runs green remotely (branch protection depends on the 5 check names existing) | High | S | Quality |
+| 4 | Branch protection on master: require 5 checks + linear history | High | S | Infra (blocked: owner) |
+| 5 | Bump go-health-dashboard to v0.1.1+, drop replace directive | High | M | Release (blocked: owner) |
+| 6 | Re-run `erraudit nolint-audit .`; refresh the stale "2 needed / 0 stale" baseline in CONTRIBUTING | Medium | S | Quality |
+| 7 | Emulate the remaining gates (test-race, fuzz, flake check) under go-free PATH | Medium | S | Infra |
+| 8 | Extract the verified emulation recipe into `nix run .#ci-emulation` app | Medium | S | Infra |
+| 9 | Add a `.#gates` app: all gates, pipefail, fail-fast (one-command pre-push) | Medium | M | Infra |
+| 10 | Regression unit test pinning `SanitizeResponse` coerces InstanceID (fuzz seed covers it today; named test documents it) | Medium | S | Quality |
+| 11 | Aggregate golden snapshot locking the merged JSON shape (scalars dropped) | Medium | S | Quality |
+| 12 | Extend aggregate fuzz: never-started source probes (zero-value cache merge path) | Medium | S | Quality |
+| 13 | Test the documented WithLiveThrottle × Start interaction (loop-refreshed cache under throttle) so the README paragraph is test-backed | Medium | S | Quality |
+| 14 | Benchmark aggregate `CachedResponse` merge cost vs source count; baseline into FEATURES | Medium | S | Quality |
+| 15 | Re-verify dashboard consumer against HEAD post-fix (replace build, exit 0) | Medium | S | Quality |
+| 16 | CI coverage threshold decision (fail < 97%?) + gate job | Medium | S | Policy (blocked) |
+| 17 | Weekly long-budget fuzz job (e.g. 5 min/target) | Medium | S | Policy |
+| 18 | Godoc examples for `aggregate` package (currently none) | Medium | S | Documentation |
+| 19 | Go 1.27 compatibility check when it lands; update GOEXPERIMENT gotchas | Medium | S | Compatibility |
+| 20 | Explicit OS-support statement (linux/amd64 tested; darwin/windows untested) in README matrix or CI matrix job | Medium | S | Compatibility (decision) |
+| 21 | Runtime guard in tools/doanalyzerv2 for missing replace target, with actionable error | Low | S | Infra |
+| 22 | `ExampleWithShutdownGracePeriod` + `ExampleAsShutdowner` godoc examples | Low | S | Documentation |
+| 23 | README aggregate section: state explicitly that instance_id/uptime/version never survive a merge | Low | S | Documentation |
+| 24 | Guard benchmark: HEAD-allowed variant + Allow-header build cost | Low | S | Quality |
+| 25 | Benchmark throttled live path under contention (parallel) | Low | S | Quality |
+| 26 | `-count=5` stress for the seam test in CI (race robustness) | Low | S | Quality |
+| 27 | `aggregate.New` error reporting: consider errors.Join for multiple invalid sources | Low | S | Feature |
+| 28 | Per-source roll-up visibility in aggregate responses (design note first) | Low | M | Feature (ROADMAP) |
+| 29 | Dependabot auto-merge rules decision | Low | S | Policy (blocked) |
+| 30 | v0.1.1 announcement + v0.2.0 scoping + v1.0 criteria draft | Low | M | Strategy (blocked) |
+| 31 | Release-automation evaluation (manual tag flow worked twice) | Low | M | Strategy |
+| 32 | Fuzz throttle-window boundary under concurrency with fake clock | Low | M | Quality |
+| 33 | ROADMAP: record the "shared marshal seam package" as considered-and-rejected | Low | S | Documentation |
+| 34 | AGENTS.md gotcha: fuzz-signature changes invalidate `testdata/fuzz` corpus entries | Low | S | Documentation |
+
+_(34 curated; all are HARVEST-eligible — bounded items → TODO_LIST, strategy/design items → ROADMAP.)_
+
+## g) QUESTIONS (I cannot answer these myself)
+
+1. **Release cadence:** v0.1.1 has a real, fuzz-found bug (invalid-UTF-8 instance_id 500s every endpoint). Do you want **v0.1.2 cut now** with just this fix, or batch it into a later release? I checked CHANGELOG/ROADMAP — no cadence policy is recorded anywhere.
+2. **Aggregate API strictness:** should `aggregate.New` **reject source names containing "/"** (stricter validation, could break a consumer already passing such names) or stay lenient and only document the aliasing hazard? Both are defensible for a v0.x; the consumer impact call is yours.
+3. **Process preferences:** should I keep letting the daemon produce heuristic `chore` commits for session work (12 this session, mixed content), or do you want **milestone commits with detailed messages** at phase boundaries? Related: this report is `.md` per your instruction — the status-report skill's canonical format is styled HTML; keep `.md` as your default for future reports?

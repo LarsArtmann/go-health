@@ -14,18 +14,19 @@ import (
 // FuzzResponseMarshalDeterministic fuzzes Response string fields through the
 // production marshal path. Invariants under any input: no panic, two
 // consecutive marshals are byte-identical (Deterministic), and the payload
-// round-trips status and check entries intact.
+// round-trips status, instance_id, and check entries intact.
 func FuzzResponseMarshalDeterministic(f *testing.F) {
-	f.Add("pass", "db", "")
-	f.Add("warn", "cache", "connection refused")
-	f.Add("fail", "db", "context deadline exceeded")
-	f.Add("", "", "")
+	f.Add("pass", "db", "", "")
+	f.Add("warn", "cache", "connection refused", "pod-1")
+	f.Add("fail", "db", "context deadline exceeded", "i-0abc123def")
+	f.Add("", "", "", "replica-7.example.internal")
 	f.Add("pass", "a/b c", `quote " backslash \ newline
-`)
+`, "pod-\xff\xfe")
 
-	f.Fuzz(func(t *testing.T, status, checkName, checkErr string) {
+	f.Fuzz(func(t *testing.T, status, checkName, checkErr, instanceID string) {
 		resp := health.Response{
-			Status: health.Status(status),
+			Status:     health.Status(status),
+			InstanceID: instanceID,
 			Checks: map[string]health.Check{
 				checkName: {Status: health.Status(status), Error: checkErr},
 			},
@@ -56,6 +57,10 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 
 		if decoded.Status != resp.Status {
 			t.Fatalf("status round-trip: want %q, got %q", resp.Status, decoded.Status)
+		}
+
+		if decoded.InstanceID != resp.InstanceID {
+			t.Fatalf("instance_id round-trip: want %q, got %q", resp.InstanceID, decoded.InstanceID)
 		}
 
 		for name, wantCheck := range resp.Checks {

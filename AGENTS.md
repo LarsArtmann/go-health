@@ -68,6 +68,8 @@ fail, startup 503 until all latches), `RegisterRoutes`.
 - **Panic recovery in health checks, fail closed** — `runHealthChecks` recovers panics from the recoverable surface (recorder implementations, batch machinery) and converts them to a synthetic `health-check` error wrapping `ErrPanicDuringHealthCheck`; `classify` maps any recovered panic to `fail` (503), never `warn`. Service `HealthCheck` panics on the injector path are process-fatal: samber/do runs each check in its own goroutine, so no probe-side recover can catch them. See [docs/panic-recovery-design.md](docs/panic-recovery-design.md).
 - **Validate-on-Start** — `Start()` calls `Validate()` and returns an error on invalid configuration (zero/negative timeout, negative refresh interval). Fail-fast instead of silent runtime degradation.
 - **Zero logging coupling** — the library does not import `log/slog` or any logging package. HTTP write failures (client disconnect) are silently swallowed. A library must not make logging decisions for the host application.
+- **Observability via hook, not library** — `WithEvaluationHook` is the metrics/alerting seam; Prometheus/OpenTelemetry formats are consumer composition (docs/prometheus-exposition-design.md). No client_golang dependency.
+- **Programmatic API mirrors handlers** — `Status/Alive/Ready/AwaitReady` read the cached view (never trigger checks); `Healthz` answers "route traffic here?"; `HealthCheck`/`AsShutdowner` make the probe a first-class do citizen.
 
 ### Decoupling from samber-do-auditlog
 
@@ -91,7 +93,8 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 
 - `shuttingDown` and `startupPassed` are `atomic.Bool` — no mutex needed.
 - `latest` is `atomic.Pointer[Response]` — lock-free cache reads.
-- `mu` protects only `cancel` (background loop lifecycle).
+- `mu` protects `cancel` and serializes WaitGroup Add/Wait (lifecycle race fix, 2026-09-04).
+- `throttleMu` serializes throttled live evaluations; the `classifier` is read-only after construction (no lock on the evaluate path).
 - All handlers are safe for concurrent use.
 
 ---

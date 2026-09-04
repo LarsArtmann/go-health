@@ -23,6 +23,7 @@ Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a s
 - [Key Features](#key-features)
 - [Configuration Reference](#configuration-reference)
 - [Shutdown Awareness](#shutdown-awareness)
+- [Programmatic Health API](#programmatic-health-api)
 - [Aggregating Multiple Probes](#aggregating-multiple-probes)
 - [Audit Integration](#audit-integration)
 - [Kubernetes Wiring](#kubernetes-wiring)
@@ -149,9 +150,13 @@ func main() {
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching** (1s default) — kubelet/LB polling doesn't hammer dependencies.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
-- **GET-only enforcement** — `WithGETOnly()` rejects non-GET with 405.
+- **GET-only enforcement** — `WithGETOnly()` rejects non-GET with 405; `WithAllowedMethods(...)` extends it with a method set and a sorted `Allow` header.
+- **Programmatic health API** — `Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)`, `Healthz()` — query health without spinning up HTTP; register the probe in its own injector via `HealthCheck`.
+- **Observability seam** — `WithEvaluationHook(fn)` observes every classified response; Prometheus exposition and OpenTelemetry compose on top without new dependencies.
 - **Panic-hardened** — panics from misbehaving recorders are recovered, reported as a failed check wrapping `health.ErrPanicDuringHealthCheck`, and roll readiness up to 503 (fail closed) instead of crashing your process or lying with a 200. (Note: a service whose own `HealthCheck` panics on the raw-injector path crashes the process — samber/do runs each check in a goroutine; keep service checks total.)
 - **Read-only accessors** — `CachedResponse()` and `RefreshInterval()` let dashboards and middleware read cached health state without triggering a synchronous evaluation.
+- **Flood-safe live mode** — `WithLiveThrottle(d)` coalesces live-mode request floods into one evaluation per window.
+- **Deterministic tests** — `WithNowFunc(fn)` drives uptime, timestamps, and throttle freshness from an injected clock; no sleeps.
 - **Config validation** — `Start()` validates configuration and returns an error on invalid settings (zero/negative timeout, negative refresh interval).
 - **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch.
 
@@ -200,6 +205,34 @@ Overrides the boot timestamp used to compute uptime. Defaults to the time `New()
 
 Wraps all handlers to reject non-GET requests with 405 Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces misconfigurations (e.g. a load balancer sending HEAD or POST) early.
 
+### `WithAllowedMethods(methods ...string)`
+
+Method-set variant of `WithGETOnly`: the listed methods are accepted too (GET is always allowed). Rejected requests get a 405 whose `Allow` header lists the full set, sorted:
+
+```go
+health.WithAllowedMethods(http.MethodHead) // kubelet GET + LB HEAD both pass
+```
+
+### `WithInstanceID(id string)`
+
+Sets a replica identifier echoed in every response as `instance_id`. Use it when several instances serve behind one load balancer and dashboards must attribute a response to the pod that produced it.
+
+### `WithEvaluationHook(fn func(Response))`
+
+Registers a callback invoked synchronously after every evaluation with the fully classified response — the seam for metrics (e.g. a Prometheus gauge) and alerting without polling. The hook must be fast and must not mutate the response.
+
+### `WithLiveThrottle(d time.Duration)`
+
+Coalesces live-mode request floods: within the throttle window, requests are served the stored result of the previous evaluation instead of each starting its own batch. One evaluation per window, no matter how many requests arrive.
+
+### `WithShutdownGracePeriod(d time.Duration)`
+
+Automatic two-phase shutdown timing: `Shutdown()` first marks the probe as draining (readiness 503) and stops the loop after the grace period, replacing the manual `MarkShuttingDown()` + sleep + `Shutdown()` sequence.
+
+### `WithNowFunc(fn func() time.Time)`
+
+Overrides the clock used for uptime, response timestamps, and live-throttle freshness. Defaults to `time.Now`. Inject a fixed clock in tests for fully deterministic assertions.
+
 ### `WithHealthRecorder(r HealthRecorder)`
 
 Wires a `HealthRecorder` so every health-check batch is observable by an external system. When nil (the default), checks run against the raw injector.
@@ -218,6 +251,35 @@ probe.MarkShuttingDown()
 
 // Phase 2: stop background loop
 probe.Shutdown()
+```
+
+## Programmatic Health API
+
+Not every consumer speaks HTTP. CLIs, background workers, and test harnesses can query the same cached state the handlers serve — with zero dependency checks:
+
+```go
+if probe.Ready() {
+    serveTraffic()
+}
+
+// Block until the instance can serve, or give up after 30s.
+ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+defer cancel()
+if err := probe.AwaitReady(ctx); err != nil {
+    log.Fatal("instance never became ready: ", err)
+}
+```
+
+For deployments that expose a single health endpoint (external load balancers, composition layers), `Healthz()` answers one question — "should traffic be routed here?" — combining the startup latch, readiness roll-up, and shutdown state into one 200/503 answer.
+
+The probe is also a first-class samber/do citizen: `HealthCheck(ctx)` satisfies `do.HealthcheckerWithContext` (register the probe in its own injector; it wraps `health.ErrProbeUnhealthy` when the roll-up is fail), and `AsShutdowner()` adapts it to `do.ShutdownerWithError` for container-managed shutdown.
+
+No samber/do injector? Build a probe from any batch function:
+
+```go
+probe := health.NewWithHealthCheck(func(ctx context.Context) map[string]error {
+    return map[string]error{"database": db.PingContext(ctx)}
+}, health.WithCriticalServices("database"))
 ```
 
 ## Aggregating Multiple Probes

@@ -28,6 +28,15 @@
 | Status                | Three-value enum: `pass` (healthy), `warn` (degraded), `fail` (unhealthy or shutting down).                                                | `types.go:4`                           |
 | Check                 | Per-service health result: a `Status` and optional error message.                                                                          | `types.go:17`                          |
 | Response              | Aggregate health response served by all probe handlers: status, version, uptime, shutting_down flag, total latency, checks map.            | `types.go:25`                          |
+| Combined endpoint     | `Healthz()` — one handler answering "should traffic be routed here?": 503 while booting, failing, or draining; 200 otherwise.               | `accessors.go` (`Healthz`)             |
+| Programmatic accessors| `Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)` — read the cached view; never trigger dependency checks.                                | `accessors.go`                         |
+| Live throttle         | `WithLiveThrottle(d)` coalesces live-mode request floods: one evaluation per window, stored result served in between.                       | `handlers.go` (`throttledLiveResponse`)| 
+| Evaluation hook       | `WithEvaluationHook(fn)` — synchronous observer of every classified response; the metrics/alerting seam.                                    | `probe.go` (`WithEvaluationHook`)      |
+| Clock seam            | `p.now()`, backed by `WithNowFunc` — drives uptime, response timestamps, and throttle freshness; tests inject a fixed clock.                | `probe.go` (`now`, `uptime`)           |
+| Method-set guard      | `WithGETOnly` / `WithAllowedMethods` handler wrapper; rejects non-allowed methods with 405 + sorted `Allow` header (GET always included).   | `probe.go` (`guard`)                   |
+| Instance ID           | Replica identifier via `WithInstanceID`, echoed in every response as `instance_id`; distinguishes pods behind one load balancer.            | `types.go` (`Response.InstanceID`)     |
+| Self-registration     | `HealthCheck(ctx)` makes the Probe itself a `do.HealthcheckerWithContext` in its own injector; wraps `ErrProbeUnhealthy` on fail.           | `accessors.go` (`HealthCheck`)         |
+| Classifier            | Read-only type owning classification, startup evaluation, and grading. Constructed once; evaluated lock-free.                              | `classifier.go`                        |
 
 ## Bounded contexts
 

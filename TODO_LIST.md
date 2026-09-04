@@ -36,7 +36,6 @@
 | Re-evaluate the two `//nolint` suppressions in panic recovery      | TODO   | Low    | 30min  | `err113` could use a static sentinel; `nonamedreturns` could be refactored away. Suppressed with justification at `probe.go:382`. |
 | Add ADRs for key decisions                                        | TODO   | Low    | 1h     | Stdlib errors, no-logging, and three-state classify decisions live only in AGENTS.md prose. No `docs/adr/`.   |
 | Add renovate.json or dependabot.yml                               | TODO   | Low    | 15min  | No automated dependency updates. Only one direct dependency, so value is modest.                              |
-| Add `.github/ISSUE_TEMPLATE/`                                     | TODO   | Low    | 15min  | No bug report / feature request templates.                                                                   |
 | Verify `nix flake check --all-systems`                            | TODO   | Low    | 10min  | Flake declares all systems via `systems` input but checks have only been run on x86_64-linux. `flake.nix`      |
 | Top up `done at <hash>` citations in reports `19-01`/`19-11`       | TODO   | Low    | 10min  | ~12 verdicts cite dates instead of hashes; hashes now exist. `docs/status/2026-08-07_19-01*`, `_19-11*`       |
 | Curate TODO_LIST Low section                                       | TODO   | Low    | 15min  | Cap at ~8 actionable rows; move infra-noise (renovate, templates) to ROADMAP until scheduled.                   |

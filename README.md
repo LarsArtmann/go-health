@@ -2,14 +2,13 @@
 
 [![CI](https://github.com/larsartmann/go-health/actions/workflows/ci.yml/badge.svg)](https://github.com/larsartmann/go-health/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-health.svg)](https://pkg.go.dev/github.com/larsartmann/go-health)
-[![Go Report Card](https://goreportcard.com/badge/github.com/larsartmann/go-health)](https://goreportcard.com/report/github.com/larsartmann/go-health)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 containers.
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.1.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+> **Stability:** v0.1.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
 
 ---
 
@@ -24,6 +23,8 @@ Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a s
 - [Configuration Reference](#configuration-reference)
 - [Shutdown Awareness](#shutdown-awareness)
 - [Programmatic Health API](#programmatic-health-api)
+- [Metrics](#metrics)
+- [Middleware](#middleware)
 - [Aggregating Multiple Probes](#aggregating-multiple-probes)
 - [Audit Integration](#audit-integration)
 - [Kubernetes Wiring](#kubernetes-wiring)

@@ -91,8 +91,8 @@ func New(sources ...Source) (*Aggregate, error) {
 // checks are namespaced "source/check"; a shutting-down source forces the
 // aggregate to report ShuttingDown with overall fail, mirroring
 // [health.Probe] semantics. TotalLatencyMs is the slowest source's batch.
-// Version and Uptime are zero: they are per-process scalars and do not
-// survive a merge.
+// Version, Uptime, and InstanceID are zero: they are per-process scalars and
+// do not survive a merge.
 func (a *Aggregate) CachedResponse() health.Response {
 	checks := make(map[string]health.Check)
 	status := health.StatusPass

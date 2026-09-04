@@ -42,6 +42,49 @@
 //
 //	probe := health.New(injector, health.WithHealthRecorder(plugin))
 //
+// # Programmatic Health API
+//
+// Not every consumer speaks HTTP. [Probe.Status], [Probe.Alive], and
+// [Probe.Ready] read the cached view without triggering dependency checks;
+// [Probe.AwaitReady] blocks until the instance can serve or the context is
+// done; [Probe.Healthz] combines the startup latch, readiness roll-up, and
+// shutdown state into one 200/503 handler for deployments that expose a
+// single endpoint.
+//
+// No samber/do injector? Build a probe from any batch function:
+//
+//	probe := health.NewWithHealthCheck(func(ctx context.Context) map[string]error {
+//	    return map[string]error{"database": db.PingContext(ctx)}
+//	}, health.WithCriticalServices("database"))
+//
+// The probe is also a first-class samber/do citizen: [Probe.HealthCheck]
+// satisfies do.HealthcheckerWithContext (register the probe in its own
+// injector) and [Probe.AsShutdowner] adapts it to do.ShutdownerWithError.
+//
+// # Observability
+//
+// [WithEvaluationHook] registers a synchronous callback invoked with every
+// classified response — the seam for metrics and alerting. Prometheus
+// exposition and OpenTelemetry compose on top without new dependencies.
+//
+// # Live Evaluation and Throttling
+//
+// [WithRefreshInterval] with zero disables the background cache: readiness
+// evaluates live on every request. Pair it with [WithLiveThrottle] to coalesce
+// request floods into one batch per window.
+//
+// # Method-Set Guard
+//
+// [WithAllowedMethods] restricts the HTTP methods the handlers accept;
+// rejected requests get 405 with a sorted Allow header (GET is always
+// allowed). [WithGETOnly] is the deprecated zero-argument equivalent.
+//
+// # Instance Identity
+//
+// [WithInstanceID] stamps every response with a replica identifier
+// (instance_id) so dashboards can attribute responses to the pod that
+// produced them behind a shared load balancer.
+//
 // # Why Three Probes?
 //
 // A single /health endpoint conflates "process alive" with "dependencies

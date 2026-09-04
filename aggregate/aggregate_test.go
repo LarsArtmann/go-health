@@ -239,13 +239,13 @@ func TestCachedResponse_NeverStartedSource(t *testing.T) {
 		return map[string]error{"svc": nil}
 	}, health.WithRefreshInterval(0))
 
-	real := newPrimedSource(t, func(context.Context) map[string]error {
+	started := newPrimedSource(t, func(context.Context) map[string]error {
 		return map[string]error{"svc": nil}
 	}, "pod-1")
 
 	agg, err := aggregate.New(
 		aggregate.Source{Name: "ghost", Probe: neverStarted},
-		aggregate.Source{Name: "real", Probe: real},
+		aggregate.Source{Name: "real", Probe: started},
 	)
 	if err != nil {
 		t.Fatalf("aggregate.New: %v", err)

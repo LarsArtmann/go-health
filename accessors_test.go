@@ -482,15 +482,15 @@ func assertFrozenWindow(
 // --- Throttle × Start-cache interaction (README "Flood-safe live mode") ---.
 
 // awaitLoopBatches polls until the background refresh loop has stored at
-// least minBatches batches, then returns the count. Fails the test on timeout.
-func awaitLoopBatches(t *testing.T, batches *atomic.Int64, minBatches int64) int64 {
+// least minBatches batches. Fails the test on timeout.
+func awaitLoopBatches(t *testing.T, batches *atomic.Int64, minBatches int64) {
 	t.Helper()
 
 	deadline := time.Now().Add(2 * time.Second)
 
 	for {
-		if got := batches.Load(); got >= minBatches {
-			return got
+		if batches.Load() >= minBatches {
+			return
 		}
 
 		if time.Now().After(deadline) {

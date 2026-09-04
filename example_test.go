@@ -414,8 +414,7 @@ func ExampleWithShutdownGracePeriod() {
 		health.WithShutdownGracePeriod(100*time.Millisecond),
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := context.Background()
 
 	if err := probe.Start(ctx); err != nil {
 		log.Fatal(err)

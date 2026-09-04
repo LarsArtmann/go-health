@@ -2,6 +2,7 @@ package health_test
 
 import (
 	"context"
+	"encoding/json/v2"
 	"errors"
 	"net/http"
 	"strings"
@@ -333,6 +334,129 @@ func TestWithLiveThrottle_CoalescesLiveEvaluations(t *testing.T) {
 
 	if after := batches.Load(); after != before+1 {
 		t.Errorf("post-window batches: want %d, got %d", before+1, after)
+	}
+}
+
+// mutableClock is a controllable clock for determinism tests. Evaluate stamps
+// Response.Timestamp from it and the live throttle compares freshness against
+// it, so tests advance it explicitly instead of sleeping.
+type mutableClock struct {
+	nowNs atomic.Int64
+}
+
+func newMutableClock(t time.Time) *mutableClock {
+	c := &mutableClock{}
+	c.nowNs.Store(t.UnixNano())
+
+	return c
+}
+
+func (c *mutableClock) Now() time.Time { return time.Unix(0, c.nowNs.Load()) }
+
+func (c *mutableClock) Advance(d time.Duration) { c.nowNs.Add(int64(d)) }
+
+func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
+	t.Parallel()
+
+	const window = time.Second
+
+	var batches atomic.Int64
+
+	epoch := time.Date(2026, 9, 4, 12, 0, 0, 0, time.UTC)
+	clock := newMutableClock(epoch)
+
+	probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		batches.Add(1)
+
+		return map[string]error{"svc": nil}
+	},
+		health.WithCriticalServices("svc"),
+		health.WithRefreshInterval(0),
+		health.WithLiveThrottle(window),
+		health.WithBootTime(epoch),
+		health.WithNowFunc(clock.Now),
+	)
+
+	handler := probe.ReadinessHandler()
+	routes := health.DefaultRoutes()
+
+	rec := doRequest(t, handler, routes.Readiness)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("first request: want 200, got %d", rec.Code)
+	}
+
+	if got := batches.Load(); got != 1 {
+		t.Fatalf("first request batches: want 1, got %d", got)
+	}
+
+	first := rec.Body.String()
+
+	var firstResp struct {
+		Timestamp time.Time `json:"timestamp"`
+	}
+
+	if err := json.Unmarshal([]byte(first), &firstResp); err != nil {
+		t.Fatalf("unmarshal first response: %v", err)
+	}
+
+	if !firstResp.Timestamp.Equal(epoch) {
+		t.Errorf(
+			"first response timestamp not stamped from fake clock: want %v, got %v",
+			epoch,
+			firstResp.Timestamp,
+		)
+	}
+
+	// With the clock frozen, any number of requests must serve the stored
+	// result byte-identically: one batch total, one response.
+	var wg sync.WaitGroup
+
+	for range 25 {
+		wg.Go(func() {
+			r := doRequest(t, handler, routes.Readiness)
+			if r.Code != http.StatusOK {
+				t.Errorf("frozen-clock status: want 200, got %d", r.Code)
+			}
+
+			if body := r.Body.String(); body != first {
+				t.Errorf("frozen-clock body drift within window:\n want %s\n got  %s", first, body)
+			}
+		})
+	}
+
+	wg.Wait()
+
+	if got := batches.Load(); got != 1 {
+		t.Errorf("25 frozen-clock requests ran %d batches; want exactly 1", got)
+	}
+
+	// Crossing the freshness boundary (now - Timestamp >= window) must run
+	// exactly one new batch; the new result is then frozen the same way.
+	clock.Advance(window + time.Millisecond)
+
+	rec = doRequest(t, handler, routes.Readiness)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("post-window request: want 200, got %d", rec.Code)
+	}
+
+	if got := batches.Load(); got != 2 {
+		t.Fatalf("post-window batches: want 2, got %d", got)
+	}
+
+	second := rec.Body.String()
+	if second == first {
+		t.Error("post-window body equals pre-window body; freshness marker did not advance")
+	}
+
+	for range 10 {
+		r := doRequest(t, handler, routes.Readiness)
+		if body := r.Body.String(); body != second {
+			t.Errorf("re-frozen body drift:\n want %s\n got  %s", second, body)
+		}
+	}
+
+	if got := batches.Load(); got != 2 {
+		t.Errorf("post-window re-frozen requests ran %d batches; want still 2", got)
 	}
 }
 

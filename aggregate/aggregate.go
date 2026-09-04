@@ -248,7 +248,7 @@ func writeResponse(w http.ResponseWriter, code int, resp health.Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
-	payload, err := json.Marshal(resp, json.Deterministic(true))
+	payload, err := json.Marshal(health.SanitizeResponse(resp), json.Deterministic(true))
 	if err != nil {
 		// Defensive: Response only contains basic types so json.Marshal
 		// cannot fail today. Mirrors the root package's guard, including

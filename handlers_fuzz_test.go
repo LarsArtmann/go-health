@@ -31,9 +31,13 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 			},
 		}
 
+		// Mirror the production write seam: sanitize, then marshal. Invalid
+		// UTF-8 (which json/v2 rejects, unlike v1) must never break serving.
+		resp = health.SanitizeResponse(resp)
+
 		first, err := json.Marshal(resp, json.Deterministic(true))
 		if err != nil {
-			t.Fatalf("marshal must not fail for string-only response: %v", err)
+			t.Fatalf("marshal must not fail after sanitize: %v", err)
 		}
 
 		second, err := json.Marshal(resp, json.Deterministic(true))
@@ -54,13 +58,15 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 			t.Fatalf("status round-trip: want %q, got %q", resp.Status, decoded.Status)
 		}
 
-		check, ok := decoded.Checks[checkName]
-		if !ok {
-			t.Fatalf("check %q lost in round-trip", checkName)
-		}
+		for name, wantCheck := range resp.Checks {
+			check, ok := decoded.Checks[name]
+			if !ok {
+				t.Fatalf("check %q lost in round-trip", name)
+			}
 
-		if check.Error != checkErr {
-			t.Fatalf("check error round-trip: want %q, got %q", checkErr, check.Error)
+			if check.Error != wantCheck.Error {
+				t.Fatalf("check error round-trip: want %q, got %q", wantCheck.Error, check.Error)
+			}
 		}
 	})
 }
@@ -77,11 +83,11 @@ func FuzzHandlerInput(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, method, target string) {
 		injector := do.New()
-		t.Cleanup(func() { injector.Shutdown() })
 
 		provideHealthy(injector, "db")
-
 		invoke[*healthyService](t, injector, "db")
+
+		t.Cleanup(func() { injector.Shutdown() })
 
 		probe := health.New(injector,
 			health.WithCriticalServices("db"),

@@ -131,3 +131,39 @@ func ExampleProbe_RegisterRoutes() {
 	// /readyz: 200
 	// /startupz: 200
 }
+
+// ExampleProbe_Start mirrors the README Quick Start's lifecycle: validate
+// and start the background cache, register the kubelet routes, and shut down
+// cleanly. The HTTP listen step from the README cannot run inside an example.
+func ExampleProbe_Start() {
+	injector := do.New()
+
+	do.ProvideNamed(injector, "database", func(_ do.Injector) (*exampleDB, error) {
+		return &exampleDB{}, nil
+	})
+	_ = do.MustInvokeNamed[*exampleDB](injector, "database")
+
+	probe := health.New(injector,
+		health.WithCriticalServices("database", "redis"),
+		health.WithVersion("1.0.0"),
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := probe.Start(ctx); err != nil {
+		fmt.Println("start:", err)
+
+		return
+	}
+
+	defer probe.Shutdown()
+
+	mux := http.NewServeMux()
+	probe.RegisterRoutes(mux, health.DefaultRoutes())
+
+	fmt.Println("routes registered: 3")
+
+	// Output:
+	// routes registered: 3
+}

@@ -1,6 +1,7 @@
 package health
 
 import (
+	"strings"
 	"context"
 	"encoding/json/v2"
 	"net/http"
@@ -166,17 +167,44 @@ var marshalResponse = func(resp Response) ([]byte, error) {
 	return json.Marshal(resp, json.Deterministic(true))
 }
 
+// SanitizeResponse coerces every string field to valid UTF-8, replacing
+// invalid bytes with U+FFFD. encoding/json/v2 refuses to marshal invalid
+// UTF-8 (v1 replaced it silently), so without this a dependency emitting a
+// malformed error string could turn a health endpoint into a 500. Applying
+// it at the write seam keeps the served bytes valid under both v1 and v2
+// semantics for any input.
+func SanitizeResponse(resp Response) Response {
+	resp.Status = Status(strings.ToValidUTF8(string(resp.Status), "\uFFFD"))
+	resp.Version = strings.ToValidUTF8(resp.Version, "\uFFFD")
+	resp.Uptime = strings.ToValidUTF8(resp.Uptime, "\uFFFD")
+
+	if resp.Checks != nil {
+		checks := make(map[string]Check, len(resp.Checks))
+
+		for name, check := range resp.Checks {
+			check.Status = Status(strings.ToValidUTF8(string(check.Status), "\uFFFD"))
+			check.Error = strings.ToValidUTF8(check.Error, "\uFFFD")
+
+			checks[strings.ToValidUTF8(name, "\uFFFD")] = check
+		}
+
+		resp.Checks = checks
+	}
+
+	return resp
+}
+
 // writeResponse serialises the health response as JSON with the given status code.
 func writeResponse(w http.ResponseWriter, code int, resp Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
-	payload, err := marshalResponse(resp)
+	payload, err := marshalResponse(SanitizeResponse(resp))
 	if err != nil {
-		// Defensive: Response only contains basic types (string, bool, int64,
-		// map[string]Check) so json.Marshal cannot fail today. This branch
-		// guards against future fields that might introduce marshal errors,
-		// and includes the underlying cause so a regression is debuggable.
+		// Defensive: SanitizeResponse removes the one known marshal failure
+		// mode (invalid UTF-8). This branch guards against future fields
+		// that might introduce marshal errors, and includes the underlying
+		// cause so a regression is debuggable.
 		http.Error(
 			w,
 			"health: failed to encode response: "+err.Error(),

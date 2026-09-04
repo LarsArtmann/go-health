@@ -453,9 +453,13 @@ func ExampleProbe_AsShutdowner() {
 
 	injector := do.New()
 
-	do.ProvideNamed(injector, "probe-shutdowner", func(do.Injector) (do.ShutdownerWithError, error) {
-		return probe.AsShutdowner(), nil
-	})
+	do.ProvideNamed(
+		injector,
+		"probe-shutdowner",
+		func(do.Injector) (do.ShutdownerWithError, error) {
+			return probe.AsShutdowner(), nil
+		},
+	)
 
 	service := do.MustInvokeNamed[do.ShutdownerWithError](injector, "probe-shutdowner")
 

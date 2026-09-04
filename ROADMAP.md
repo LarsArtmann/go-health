@@ -80,13 +80,59 @@ Middleware: no library concept needed — handlers are plain `http.HandlerFunc`
 
 ### 7. Release & Ecosystem Strategy
 
-How the v0.x line matures. Raw ideas, none scheduled:
+How the v0.x line matures.
 
-- v0.2.0 scoping: feature-driven vs date-based cadence
-- v1.0 criteria draft: API freeze list, stability promises, deprecation
-  burn-down (incl. the `WithGETOnly` removal timeline)
-- Release automation: actions-based tag→release flow (GoReleaser judged
-  overkill for a library); the manual tag flow has worked twice
+#### v0.2.0 candidates (feature-driven, unscheduled)
+
+Scoped 2026-09-04 from the open idea inventory. Each is additive and carries
+a written design:
+
+- `errors.Join` in `aggregate.New` — report all invalid sources instead of
+  the first ([docs/errors-join-design.md](docs/errors-join-design.md), spike verified)
+- `Aggregate.SourceStatuses()` — per-source roll-up accessor
+  ([docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md))
+- Aggregate `Healthz` parity: one combined endpoint across all sources
+  (decide whether worst-of-N belongs in a single 200/503 answer)
+- Toolchain floor bump: go.mod directive → 1.27, drop
+  `GOEXPERIMENT=jsonv2` from the flake — verified to need no code changes
+  (see AGENTS.md GOEXPERIMENT gotcha); ship when 1.26 support is dropped
+
+#### v1.0 criteria draft
+
+What "1.0" will mean here — none of this is promised yet:
+
+- **API freeze:** the JSON wire format, the three-probe contract, and the
+  full public surface (options, `Response`, `Probe` methods, the aggregate
+  API) carry explicit backward-compatibility promises
+- **Deprecation burn-down:** `WithGETOnly` removal happens no earlier than
+  v1.0 (it is kept through all of v0.x per
+  [docs/deprecation-policy.md](docs/deprecation-policy.md)); the
+  `HealthRecorder` signature revisit (ADR-004) lands here if at all
+- **Toolchain floor:** go.mod ≥ 1.27 so json/v2 needs no experiment
+- **Consumer proof:** at least the known consumer
+  (go-health-dashboard) running the released module without a replace
+
+#### Release automation — DECIDED 2026-09-04: manual tag flow adopted
+
+Rationale: this is a pure-Go library — no binaries, archives, or checksums
+to produce, which is the work GoReleaser automates. The manual flow
+(CHANGELOG cut → `nix run .#gates` → annotated tag → `gh release create` →
+proxy/pkg.go.dev verify) has shipped three releases cleanly (v0.1.0–v0.1.2).
+GoReleaser would add config and CI surface for zero deliverables. Revisit
+triggers: shipping a CLI binary, or a sustained cadence above ~4
+releases/year.
+
+#### Internal architecture — seam extraction rejected 2026-09-04
+
+The root and aggregate packages each carry a ~15-line `marshalResponse` /
+`writeResponse` seam. Extracting a shared internal package would couple the
+two packages' evolution to deduplicate code that is duplicated on purpose:
+each package stays independently readable, and the aggregate deliberately
+mirrors root semantics without importing root internals. Revisit only if a
+third write seam appears.
+
+Raw ideas, none scheduled:
+
 - Promote `erraudit` / `doanalyzerv2` from local gates to CI steps if either
   tool ever becomes public
 - Track Go 1.26.x patch releases in the flake input (dependabot may cover)

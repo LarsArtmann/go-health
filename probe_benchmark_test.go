@@ -193,7 +193,12 @@ func BenchmarkGuardOverhead_AllowHeader(b *testing.B) {
 
 	// Warm the guard once and capture the handler it returns so the
 	// benchmark measures only a 405 write, not the guard's map hit.
-	r405, err := http.NewRequestWithContext(context.Background(), http.MethodDelete, "/healthz", nil)
+	r405, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodDelete,
+		"/healthz",
+		nil,
+	)
 	if err != nil {
 		b.Fatal(err)
 	}

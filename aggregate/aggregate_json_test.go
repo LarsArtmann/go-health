@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/larsartmann/go-health/aggregate"
 	health "github.com/larsartmann/go-health"
+	"github.com/larsartmann/go-health/aggregate"
 )
 
 // updateAggregateGolden regenerates the aggregate golden file when
@@ -23,7 +23,11 @@ var updateAggregateGolden = flag.Bool("update", false, "rewrite aggregate testda
 // throttled live path stores its evaluation into `latest`, which is what the
 // aggregate's merge-on-read consumes. Without the priming request the probe
 // reports an empty cached view.
-func newPrimedSource(t *testing.T, results func(context.Context) map[string]error, instanceID string) *health.Probe {
+func newPrimedSource(
+	t *testing.T,
+	results func(context.Context) map[string]error,
+	instanceID string,
+) *health.Probe {
 	t.Helper()
 
 	probe := health.NewWithHealthCheck(results,
@@ -112,6 +116,10 @@ func TestAggregateReadiness_JSONSnapshot(t *testing.T) {
 	}
 
 	if string(payload) != string(want) {
-		t.Errorf("aggregate wire format drifted from golden file:\nwant: %s\ngot:  %s", want, payload)
+		t.Errorf(
+			"aggregate wire format drifted from golden file:\nwant: %s\ngot:  %s",
+			want,
+			payload,
+		)
 	}
 }

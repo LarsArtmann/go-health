@@ -156,6 +156,15 @@
               go test ./aggregate -run '^$' -fuzz=FuzzAggregateMergeInvariants -fuzztime=10s
             '';
 
+            # Weekly deep fuzz (see .github/workflows/fuzz-long.yml). A
+            # trailing -fuzztime argument wins over the 5m default, so a
+            # local dry run is `nix run .#fuzz-long -- -fuzztime=10s`.
+            fuzz-long = mkApp "fuzz-long" "Run fuzz targets with a 5-minute budget each" [ goPkg ] ''
+              go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=5m "$@"
+              go test . -run '^$' -fuzz=FuzzHandlerInput -fuzztime=5m "$@"
+              go test ./aggregate -run '^$' -fuzz=FuzzAggregateMergeInvariants -fuzztime=5m "$@"
+            '';
+
             clean =
               mkApp "clean" "Remove coverage artifacts and clear the test cache"
                 [

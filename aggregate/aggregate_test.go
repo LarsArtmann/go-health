@@ -285,7 +285,10 @@ func TestCachedResponse_NeverStartedSource(t *testing.T) {
 	agg.ReadinessHandler()(readyRec, fuzzRequest(t))
 
 	if readyRec.Code != http.StatusOK {
-		t.Errorf("readiness status = %d, want 200 (pass fold; the documented sharp edge)", readyRec.Code)
+		t.Errorf(
+			"readiness status = %d, want 200 (pass fold; the documented sharp edge)",
+			readyRec.Code,
+		)
 	}
 }
 

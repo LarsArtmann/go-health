@@ -124,6 +124,16 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
   warning ("json.Marshal requires go1.27") is expected and benign while the experiment is
   enabled — it reflects the stabilized json/v2 landing in go1.27, not a real build failure.
   Set `GOWORK=off` to avoid workspace interference.
+- **Tools that shell out to `go` need `goPkg` in their flake app** —
+  `golangci-lint`, `govulncheck`, and `gosec` load packages by invoking a `go`
+  binary from PATH. Their apps originally declared only the tool, so CI (no Go
+  on PATH) fell back to the GOROOT the binary was compiled with — an older Go
+  that hard-fails on `GOEXPERIMENT=jsonv2` ("unknown GOEXPERIMENT jsonv2").
+  First CI run caught it; the fix puts `goPkg` in every such app's
+  `runtimeInputs` (verified by running the gates with the host Go removed
+  from PATH). Rule of thumb: any new flake app that indirectly runs `go` must
+  list `goPkg` — the same leak class as the GOEXPERIMENT gotcha above, one
+  layer down.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
 - **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.
 - **`WithTimeout` is batch-level, not per-service** — the deadline is shared across all services in one evaluation. A slow dependency steals time from every other check. samber/do exposes `HealthCheckTimeout` (per-service) via `InjectorOpts` at injector creation time. See [docs/timeout-design.md](docs/timeout-design.md) for the full analysis, including why HTTP query-param timeout overrides are rejected (DoS amplifier + breaks caching).

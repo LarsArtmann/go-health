@@ -60,3 +60,6 @@ result-*
 .envrc
 .direnv/
 # <<< buildflow-managed (.gitignore) <<<
+
+## Local tool builds
+/tools/doanalyzerv2/doanalyzerv2-runner

@@ -27,29 +27,29 @@ v0.1.3, and I skipped the documented ci-emulation pre-push step.
 
 ## a) FULLY DONE
 
-| # | Work | Evidence |
-| - | ---- | -------- |
-| 1 | **go-release skill loaded first**; release shape classified (one `go.mod` → single-module library, one tag) | session start |
-| 2 | **Phase 0–1 hygiene**: no `replace` directives, no pseudo-versions, module path correct, CHANGELOG drift check (v0.1.2 section exists), version stated: v0.1.3 (owner-decided vehicle for the unreleased contract) | session output |
-| 3 | **Dirty tree adjudicated before touching anything** — 8 modified files I had not authored turned out to be a formatting-only pass (markdown table re-flow, `*`→`_` emphasis); diff-reviewed, declared safe, NOT silently mixed into release commits | `git diff` review |
-| 4 | **CHANGELOG cut atomically** — `[Unreleased]` → `[0.1.3] - 2026-09-04` (verbatim move), `[Unreleased]` reset with "Nothing yet." placeholders, compare links updated (v0.1.3...HEAD, v0.1.2...v0.1.3) | python replace with verbatim assertions |
-| 5 | **Daemon race WON on the release commit** — CHANGELOG cut committed instantly as `274d19f` with a real message ("cut v0.1.3 changelog — aggregate source-name contract ships") instead of riding a heuristic commit like v0.1.2 did (21-31 §d2 lesson applied) | `git log` |
-| 6 | **Full local gate sweep green** — `nix run .#gates`: test-race, vet, lint, vulncheck, gosec, fuzz, flake check, all pass | background shell 0F4 |
-| 7 | **CI green on the exact release commit before tagging** — run `33915761900` success on `274d19f` (Phase 4.4: never tag while red/in-progress — the v0.1.1 mistake avoided) | `gh run watch` |
-| 8 | **Annotated tag created and verified** — `git tag --points-at HEAD` → v0.1.3 on `274d19f`; `git show v0.1.3:go.mod` sanity check; pushed | session output |
-| 9 | **Module proxy serves v0.1.3** — `go list -m -versions` lists `v0.0.1 … v0.1.3` | session output |
-| 10 | **Definitive consumer test passed** — clean-dir module, `go get …@v0.1.3`, executed a program calling `aggregate.New` with `"bad/name"`: rejected with the enriched error (`source name "bad/name" must not contain '/'…`) — proves the *released artifact* carries the headline contract | `/tmp/release-verify-v013` run |
-| 11 | **GitHub release published** — v0.1.3, curated notes (headline + bullets + consumer guidance), `prerelease=false` (repo convention v0.1.0–v0.1.2), marked **Latest** | `gh release view` |
-| 12 | **Tag-CI green** — run `33916222446` success on the v0.1.3 tag push | `gh run list` |
-| 13 | **Consumer bumped: go-health-dashboard → v0.1.3** (`773b0ed` in that repo) — source names verified slash-free (`api`, `web`), build green, all go-health-related tests green | dashboard repo session |
-| 14 | **Failure attributed with rigor, not vibes** — dashboard's 3 failing CSP tests downgraded back to v0.1.2: identical failures → pre-existing, unrelated to go-health (Datastar bundle pin), documented in the bump commit message | `go get @v0.1.2` + targeted test reruns |
-| 15 | **Post-release doc sync** — README + AGENTS stability lines → v0.1.3; AGENTS consumer-verification paragraph rewritten for the v0.1.3 verification (incl. the CSP pre-existing note); TODO_LIST release-vehicle row resolved out, header note refreshed; committed `f5d1e34`, pushed, CI green (`33916588288`) | `git log`, `gh run view` |
-| 16 | **pkg.go.dev fetch triggered** for v0.1.3 (404 at trigger time = propagation lag; the proxy itself is verified, and `go get` works — the definitive test) | fetch attempt |
+| #  | Work                                                                                                                                                                                                                                                                                                           | Evidence                                |
+| -- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| 1  | **go-release skill loaded first**; release shape classified (one `go.mod` → single-module library, one tag)                                                                                                                                                                                                    | session start                           |
+| 2  | **Phase 0–1 hygiene**: no `replace` directives, no pseudo-versions, module path correct, CHANGELOG drift check (v0.1.2 section exists), version stated: v0.1.3 (owner-decided vehicle for the unreleased contract)                                                                                             | session output                          |
+| 3  | **Dirty tree adjudicated before touching anything** — 8 modified files I had not authored turned out to be a formatting-only pass (markdown table re-flow, `*`→`_` emphasis); diff-reviewed, declared safe, NOT silently mixed into release commits                                                            | `git diff` review                       |
+| 4  | **CHANGELOG cut atomically** — `[Unreleased]` → `[0.1.3] - 2026-09-04` (verbatim move), `[Unreleased]` reset with "Nothing yet." placeholders, compare links updated (v0.1.3...HEAD, v0.1.2...v0.1.3)                                                                                                          | python replace with verbatim assertions |
+| 5  | **Daemon race WON on the release commit** — CHANGELOG cut committed instantly as `274d19f` with a real message ("cut v0.1.3 changelog — aggregate source-name contract ships") instead of riding a heuristic commit like v0.1.2 did (21-31 §d2 lesson applied)                                                 | `git log`                               |
+| 6  | **Full local gate sweep green** — `nix run .#gates`: test-race, vet, lint, vulncheck, gosec, fuzz, flake check, all pass                                                                                                                                                                                       | background shell 0F4                    |
+| 7  | **CI green on the exact release commit before tagging** — run `33915761900` success on `274d19f` (Phase 4.4: never tag while red/in-progress — the v0.1.1 mistake avoided)                                                                                                                                     | `gh run watch`                          |
+| 8  | **Annotated tag created and verified** — `git tag --points-at HEAD` → v0.1.3 on `274d19f`; `git show v0.1.3:go.mod` sanity check; pushed                                                                                                                                                                       | session output                          |
+| 9  | **Module proxy serves v0.1.3** — `go list -m -versions` lists `v0.0.1 … v0.1.3`                                                                                                                                                                                                                                | session output                          |
+| 10 | **Definitive consumer test passed** — clean-dir module, `go get …@v0.1.3`, executed a program calling `aggregate.New` with `"bad/name"`: rejected with the enriched error (`source name "bad/name" must not contain '/'…`) — proves the _released artifact_ carries the headline contract                      | `/tmp/release-verify-v013` run          |
+| 11 | **GitHub release published** — v0.1.3, curated notes (headline + bullets + consumer guidance), `prerelease=false` (repo convention v0.1.0–v0.1.2), marked **Latest**                                                                                                                                           | `gh release view`                       |
+| 12 | **Tag-CI green** — run `33916222446` success on the v0.1.3 tag push                                                                                                                                                                                                                                            | `gh run list`                           |
+| 13 | **Consumer bumped: go-health-dashboard → v0.1.3** (`773b0ed` in that repo) — source names verified slash-free (`api`, `web`), build green, all go-health-related tests green                                                                                                                                   | dashboard repo session                  |
+| 14 | **Failure attributed with rigor, not vibes** — dashboard's 3 failing CSP tests downgraded back to v0.1.2: identical failures → pre-existing, unrelated to go-health (Datastar bundle pin), documented in the bump commit message                                                                               | `go get @v0.1.2` + targeted test reruns |
+| 15 | **Post-release doc sync** — README + AGENTS stability lines → v0.1.3; AGENTS consumer-verification paragraph rewritten for the v0.1.3 verification (incl. the CSP pre-existing note); TODO_LIST release-vehicle row resolved out, header note refreshed; committed `f5d1e34`, pushed, CI green (`33916588288`) | `git log`, `gh run view`                |
+| 16 | **pkg.go.dev fetch triggered** for v0.1.3 (404 at trigger time = propagation lag; the proxy itself is verified, and `go get` works — the definitive test)                                                                                                                                                      | fetch attempt                           |
 
 ## b) PARTIALLY DONE
 
 1. **Announcement draft not updated for v0.1.3** — `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`
-   predates this release; publishing is the owner's action, but *updating the draft*
+   predates this release; publishing is the owner's action, but _updating the draft_
    is mine and it's stale. A `TODO_LIST` row text ("v0.1.1/v0.1.2 announcement") is
    likewise stale. Both are 5-minute fixes I deferred instead of doing.
 2. **pkg.go.dev render unverified** — proxy + `go get` proven; the human-visible page
@@ -87,7 +87,7 @@ v0.1.3, and I skipped the documented ci-emulation pre-push step.
    mid-way through writing. This failure mode is documented twice (21-31 §d2, my own
    22-15 report §e6) and I walked straight into it anyway. The save: the CHANGELOG
    cut five minutes later was edit→commit in one motion (`274d19f`). The rule is now
-   proven in both directions — it only works when applied *before* composing, not
+   proven in both directions — it only works when applied _before_ composing, not
    after.
 2. **Skipped the documented ci-emulation pre-push step.** CONTRIBUTING Workflow step
    5 says "Emulate CI once before pushing"; the 13-17 session's red first CI run

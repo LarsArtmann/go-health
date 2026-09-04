@@ -3,13 +3,14 @@
 > Long-term direction and raw ideas. Items here are NOT actionable tasks.
 > When an idea is refined into bounded work, it moves to TODO_LIST.md.
 >
-> Pruned 2026-09-04 after the Pareto master-plan execution: ideas shipped in
-> v0.1.0 moved to FEATURES.md/CHANGELOG.md; ideas decided against now live in
-> the Non-goals section with design-note links.
+> Re-curated 2026-09-04 evening (docs-health run): ideas shipped through v0.1.2
+> moved to FEATURES.md/CHANGELOG.md; decided-against ideas live in the Non-goals
+> section and theme notes with design-note links; unharvested report ideas
+> routed into the theme raw-idea lists below.
 
 ## Themes
 
-### 1. Programmatic Health API — SHIPPED in v0.1.0
+### 1. Programmatic Health API — core shipped in v0.1.0
 
 `Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)`, `Healthz()`,
 `NewWithHealthCheck(fn, opts...)`, and `Probe.HealthCheck` conformance all
@@ -18,8 +19,7 @@ the shutdown-grace, AsShutdowner, and aggregate examples landed right after
 (sit in `[Unreleased]`). Remaining raw ideas:
 - `AwaitReady` with a cache-aware poll interval (respect the source's
   refresh interval instead of a fixed 50ms poll)
-- Aggregate-level `Healthz` parity: one combined endpoint across all sources
-  (decide whether worst-of-N belongs in a single 200/503 answer)
+- Aggregate `Healthz` parity → promoted to a v0.2.0 candidate (Theme 7)
 
 ### 2. Observability & Diagnostics
 
@@ -66,16 +66,16 @@ Shipped: `Response.InstanceID` + `WithInstanceID`, static OpenAPI spec
 ([docs/openapi.yaml](docs/openapi.yaml)), Prometheus exposition via composition
 ([docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)).
 
-Decided against (see [starting-status-design.md](docs/starting-status-design.md)):
-"starting" Status, Status validation (no injection boundary exists).
-
 Raw ideas:
 
 - ETag/`If-None-Match` caching headers on health endpoints — write the
   rejection note (caching is a proxy/CDN composition concern) before someone
   asks for it
 
-### 6. Testability & Internal Architecture — SHIPPED in v0.1.0
+Decided against (see [starting-status-design.md](docs/starting-status-design.md)):
+"starting" Status, Status validation (no injection boundary exists).
+
+### 6. Testability & Internal Architecture — core shipped in v0.1.0
 
 `classifier` extraction, `ResetStartupLatchForTest` (test builds only; the
 public latch stays one-way), `WithNowFunc` clock seam (deterministic uptime,
@@ -99,15 +99,17 @@ How the v0.x line matures.
 
 #### v0.2.0 candidates (feature-driven, unscheduled)
 
-Scoped 2026-09-04 from the open idea inventory. Each is additive and carries
-a written design:
+Scoped 2026-09-04 from the open idea inventory. All are additive;
+the first two carry a written design, the `Healthz` parity decision note is
+still to be written:
 
 - `errors.Join` in `aggregate.New` — report all invalid sources instead of
   the first ([docs/errors-join-design.md](docs/errors-join-design.md), spike verified)
 - `Aggregate.SourceStatuses()` — per-source roll-up accessor
   ([docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md))
 - Aggregate `Healthz` parity: one combined endpoint across all sources
-  (decide whether worst-of-N belongs in a single 200/503 answer)
+  (decide whether worst-of-N belongs in a single 200/503 answer; no design
+  note yet — write it before implementing)
 - Toolchain floor bump: go.mod directive → 1.27, drop
   `GOEXPERIMENT=jsonv2` from the flake — verified to need no code changes
   (see AGENTS.md GOEXPERIMENT gotcha); ship when 1.26 support is dropped
@@ -150,15 +152,15 @@ Raw ideas, none scheduled:
 
 - Promote `erraudit` / `doanalyzerv2` from local gates to CI steps if either
   tool ever becomes public
-- Dependabot/Renovate coverage for flake inputs + pinned action SHAs
-  (auto-merge rules are a separate policy decision)
+- Dependency automation: extend Dependabot/Renovate to flake inputs + pinned
+  action SHAs (subsumes Go 1.26.x patch tracking; auto-merge rules are a
+  separate policy decision)
 - Non-nix CI matrix job (plain `go test`) to widen the honestly-tested OS/arch
   statement beyond linux/amd64; arm64 native runner evaluation if QEMU stays
   too slow for race jobs
 - Raise the per-push fuzz budget above 10s/target if CI cost allows
 - Editor-experience: suppress the gopls stdversion warning while GOEXPERIMENT
   stays enabled (AGENTS gotcha documents it as benign; noise only)
-- Track Go 1.26.x patch releases in the flake input (dependabot may cover)
 
 ## Non-goals
 

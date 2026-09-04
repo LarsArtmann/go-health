@@ -178,26 +178,7 @@ func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 // resolved here at construction time, so the returned Probe holds only the
 // resolved function — never the container itself.
 func New(injector do.Injector, opts ...Option) *Probe {
-	cfg := config{
-		critical:        make(map[string]struct{}),
-		bootTime:        time.Now(),
-		timeout:         defaultTimeout,
-		refreshInterval: defaultRefreshInterval,
-	}
-
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-
-	return &Probe{
-		healthCheck:     resolveHealthCheck(cfg.recorder, injector),
-		critical:        cfg.critical,
-		bootTime:        cfg.bootTime,
-		version:         cfg.version,
-		getOnly:         cfg.getOnly,
-		refreshInterval: cfg.refreshInterval,
-		timeout:         cfg.timeout,
-	}
+	return newProbe(resolveHealthCheck(nil, injector), opts...) // placeholder, replaced below
 }
 
 // resolveHealthCheck captures the health-check capability at construction

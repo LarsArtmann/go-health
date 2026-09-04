@@ -9,7 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- Exhaustive classify matrix test (8 health-state assignments × 8 critical
+  sets, asserted against an independent spec), lifecycle stress tests for
+  concurrent `Start`/`Shutdown`/`MarkShuttingDown` interleavings, a
+  restart-after-shutdown contract test, and JSON golden snapshot tests
+  (`testdata/readiness_response.golden`, regenerate with `go test . -update`).
+
+### Changed
+
+- Recovered health-check panics now roll up to `fail` (readiness 503)
+  instead of `warn`, via the new `ErrPanicDuringHealthCheck` sentinel; the
+  synthetic `health-check` JSON entry is graded `fail` to match. Rationale
+  in `docs/panic-recovery-design.md`. Injector-path service panics remain
+  process-fatal (samber/do runs checks in goroutines).
+- `writeResponse` marshal-failure body now includes the underlying cause.
+
+### Fixed
+
+- Lifecycle race: concurrent `Start` and `Shutdown` could trigger
+  `sync: WaitGroup is reused before previous Wait has returned`. The
+  WaitGroup `Add` and `Wait` are now serialized under the probe mutex.
 
 ## [0.1.0] - 2026-09-04
 

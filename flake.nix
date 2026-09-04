@@ -110,36 +110,45 @@
               go vet ./...
             '';
 
-            lint = mkApp "lint" "Run golangci-lint" [
-              pkgs.golangci-lint
-              # golangci-lint shells out to a `go` binary for package
-              # loading; without goPkg on PATH it falls back to the GOROOT
-              # it was compiled with (an older Go that rejects
-              # GOEXPERIMENT=jsonv2) and fails on any machine whose host
-              # PATH does not already provide Go 1.26.
-              goPkg
-            ] ''
-              golangci-lint run ./...
-            '';
+            lint =
+              mkApp "lint" "Run golangci-lint"
+                [
+                  pkgs.golangci-lint
+                  # golangci-lint shells out to a `go` binary for package
+                  # loading; without goPkg on PATH it falls back to the GOROOT
+                  # it was compiled with (an older Go that rejects
+                  # GOEXPERIMENT=jsonv2) and fails on any machine whose host
+                  # PATH does not already provide Go 1.26.
+                  goPkg
+                ]
+                ''
+                  golangci-lint run ./...
+                '';
 
             coverage = mkApp "coverage" "Run tests with coverage report" [ goPkg ] ''
               go test ./... -coverprofile=coverage.out -covermode=atomic "$@"
               go tool cover -func=coverage.out
             '';
 
-            vulncheck = mkApp "vulncheck" "Run govulncheck vulnerability scan" [
-              pkgs.govulncheck
-              goPkg
-            ] ''
-              govulncheck ./...
-            '';
+            vulncheck =
+              mkApp "vulncheck" "Run govulncheck vulnerability scan"
+                [
+                  pkgs.govulncheck
+                  goPkg
+                ]
+                ''
+                  govulncheck ./...
+                '';
 
-            security = mkApp "security" "Run gosec security scan" [
-              pkgs.gosec
-              goPkg
-            ] ''
-              gosec ./...
-            '';
+            security =
+              mkApp "security" "Run gosec security scan"
+                [
+                  pkgs.gosec
+                  goPkg
+                ]
+                ''
+                  gosec ./...
+                '';
 
             fuzz = mkApp "fuzz" "Run fuzz targets with a short time budget" [ goPkg ] ''
               go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=10s

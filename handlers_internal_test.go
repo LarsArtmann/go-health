@@ -67,7 +67,7 @@ func TestSanitizeResponse_CoercesInstanceID(t *testing.T) {
 			Checks:     map[string]Check{},
 		}).InstanceID},
 		{name: "version", sanitized: SanitizeResponse(Response{
-			Status: StatusPass,
+			Status:  StatusPass,
 			Version: invalidUTF8,
 			Checks:  map[string]Check{},
 		}).Version},
@@ -103,7 +103,11 @@ func TestSanitizeResponse_CoercesInstanceID(t *testing.T) {
 			}
 
 			if tt.sanitized != "pod-\uFFFD" {
-				t.Fatalf("sanitized = %q, want %q (one U+FFFD per invalid run)", tt.sanitized, "pod-\uFFFD")
+				t.Fatalf(
+					"sanitized = %q, want %q (one U+FFFD per invalid run)",
+					tt.sanitized,
+					"pod-\uFFFD",
+				)
 			}
 		})
 	}

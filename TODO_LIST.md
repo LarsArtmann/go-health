@@ -4,6 +4,10 @@
 > For long-term vision and unrefined ideas, use ROADMAP.md.
 > Items are ranked by impact. Status is verified, not assumed.
 
+> Curated 2026-09-04 after the Pareto master-plan execution (P1–P39):
+> the 39-task plan is complete; remaining items below are user decisions,
+> first-push follow-ups, and cosmetics.
+
 ## Status legend
 
 | Status      | Meaning                                                     |
@@ -15,26 +19,35 @@
 
 ## High Impact
 
-| Task                                  | Status  | Impact | Effort | Evidence                                                                                                                                                          |
-| ------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Task                                                           | Status  | Impact | Effort | Evidence                                                                                        |
+| -------------------------------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------- |
+| Push `master` to GitHub and watch the CI workflow's first run  | BLOCKED | High   | 5min   | Workflow exists (`.github/workflows/ci.yml`) but has never executed — it requires a push. Awaiting user authorization. |
+| Decide release version for the API batch (v0.1.1 vs v0.2.0)    | BLOCKED | High   | 5min   | P25–P32 added additive public API (`Healthz`, `AwaitReady`, `NewWithHealthCheck`, options, sentinels). Additive → v0.2.0 per semver orthodoxy; `[Unreleased]` in CHANGELOG is ready either way. |
+| Sign off new API names before downstream adoption              | BLOCKED | Med    | 10min  | `Healthz`, `AsShutdowner`, `WithEvaluationHook`, `WithLiveThrottle`, `NewWithHealthCheck`, `SanitizeResponse`, `ErrProbeUnhealthy`, `ResetStartupLatchForTest`. Names are documented in FEATURES/CHANGELOG. |
 
 ## Medium Impact
 
-| Task                                                            | Status | Impact | Effort | Evidence                                                                                                                                                     |
-| --------------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Add `go.mod` toolchain directive                                | TODO   | Med    | 5min   | `go.mod:3` says `go 1.26.7` but has no `toolchain` line pinning the exact toolchain for reproducibility.                                                      |
-| Add `meta.description` to all Nix apps                          | TODO   | Med    | 15min  | Apps in `flake.nix` carry no `meta.description`; `nix flake check` emits warnings for every app.                                                              |
-| Scope v0.0.3 release                                            | TODO   | Med    | 15min  | json/v2 migration + toolchain bump sit unreleased in `[Unreleased]`. Decide content, tag, release. `CHANGELOG.md`                                              |
+| Task                                                 | Status | Impact | Effort | Evidence                                                                                     |
+| ---------------------------------------------------- | ------ | ------ | ------ | ---------------------------------------------------------------------------------------------- |
+| Re-verify the dashboard consumer against the new API | TODO   | Med    | 15min  | Last consumer compile-check ran before the P25–P32 API batch; re-compile + run against `master`. |
 
 ## Low Impact
 
-| Task                                                              | Status | Impact | Effort | Evidence                                                                                                    |
-| ----------------------------------------------------------------- | ------ | ------ | ------ | ----------------------------------------------------------------------------------------------------------- |
-| Add fuzz tests for JSON marshaling edge cases                     | TODO   | Low    | 1h     | No fuzz tests exist. `handlers.go:165`                                                                       |
-| Add benchmark: startup handler under contention                   | TODO   | Low    | 20min  | Only the unlatched variant exists. `probe_test.go:1422`                                                      |
-| Verify README Quick Start compiles (as an `Example` function)      | TODO   | Low    | 15min  | README example drifted from `ExampleNew` once already. `README.md:53`, `example_test.go:23`                   |
-| Re-evaluate the two `//nolint` suppressions in panic recovery      | TODO   | Low    | 30min  | `err113` could use a static sentinel; `nonamedreturns` could be refactored away. Suppressed with justification at `probe.go:382`. |
-| Add renovate.json or dependabot.yml                               | TODO   | Low    | 15min  | No automated dependency updates. Only one direct dependency, so value is modest.                              |
-| Top up `done at <hash>` citations in reports `19-01`/`19-11`       | TODO   | Low    | 10min  | ~12 verdicts cite dates instead of hashes; hashes now exist. `docs/status/2026-08-07_19-01*`, `_19-11*`       |
-| Curate TODO_LIST Low section                                       | TODO   | Low    | 15min  | Cap at ~8 actionable rows; move infra-noise (renovate, templates) to ROADMAP until scheduled.                   |
-| Full read-through verification of all 6 annotated reports          | TODO   | Low    | 30min  | Annotation verification relied on grep sweeps; one whitespace-equivalent edit only indirectly verified.         |
+| Task                                                         | Status | Impact | Effort | Evidence                                                                              |
+| ------------------------------------------------------------ | ------ | ------ | ------ | --------------------------------------------------------------------------------------- |
+| Top up `done at <hash>` citations in reports `19-01`/`19-11` | TODO   | Low    | 10min  | ~12 verdicts cite dates instead of hashes; hashes now exist. `docs/status/2026-08-07_19-01*`, `_19-11*` |
+| Add examples: custom recorder, two-phase shutdown, live vs cached | TODO | Low | 30min | Examples exist for Quick Start, Prometheus, middleware; these three patterns live only in tests/docs. ROADMAP Theme 1. |
+
+## Resolved this cycle (kept for traceability, delete at next curation)
+
+- ~~go.mod toolchain directive~~ — `go mod tidy` drops a `toolchain` line equal
+  to the `go` directive (verified: added, tidy removed it, build green). The
+  hermetic pin lives in `flake.nix`; nothing to do for consumers.
+- ~~`meta.description` on Nix apps~~ — done in flake; `nix flake check` passes
+  warning-free.
+- ~~Fuzz tests, contention benchmark, README-as-Example, `//nolint` removals,
+  dependabot, issue templates, CI workflow, ADRs, CONTRIBUTING, migration
+  guide, coverage re-run, erraudit gate, doanalyzerv2 baseline, full
+  read-through of annotated reports, TODO curation~~ — all completed in the
+  2026-09-04 Pareto execution; see `CHANGELOG.md` `[Unreleased]` and
+  `docs/status/2026-09-04_11-13_pareto-execution-marathon-and-api-batch.md`.

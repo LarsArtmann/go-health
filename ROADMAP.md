@@ -2,96 +2,98 @@
 
 > Long-term direction and raw ideas. Items here are NOT actionable tasks.
 > When an idea is refined into bounded work, it moves to TODO_LIST.md.
+>
+> Pruned 2026-09-04 after the Pareto master-plan execution: ideas shipped in
+> v0.1.0 moved to FEATURES.md/CHANGELOG.md; ideas decided against now live in
+> the Non-goals section with design-note links.
 
 ## Themes
 
-### 1. Programmatic Health API
+### 1. Programmatic Health API — SHIPPED in v0.1.0
 
-Today the library exposes health exclusively through HTTP handlers. A programmatic
-API would let non-HTTP consumers (CLIs, background workers, test harnesses) query
-health state without spinning up an HTTP server.
+`Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)`, `Healthz()`,
+`NewWithHealthCheck(fn, opts...)`, and `Probe.HealthCheck` conformance all
+shipped. Remaining raw ideas:
 
-Raw ideas:
-
-- `Probe.Status() Status` — roll-up status without HTTP overhead
-- `Probe.Alive() bool` / `Probe.Ready() bool` — convenience booleans
-- `Probe.AwaitReady(ctx)` — blocking helper for startup orchestration
-- `Probe.Healthz()` — single combined endpoint for simpler deployments
-- Export `healthCheckFunc` and add `NewWithHealthCheck(fn, opts...)` for injector-free testing
+- Examples: custom `HealthRecorder`, two-phase shutdown, live-vs-cached mode
+  (patterns exist in tests/docs; promoted examples are tracked in TODO_LIST)
 
 ### 2. Observability & Diagnostics
 
-The library deliberately has zero logging coupling and no metrics export. As the
-library matures, structured hooks could let host applications observe internals
-without the library making observability decisions.
+The library deliberately has zero logging coupling and no metrics export.
+`WithEvaluationHook` (shipped) is the observability seam; formats are a
+composition concern (see [prometheus-exposition-design.md](docs/prometheus-exposition-design.md)).
 
 Raw ideas:
 
-- Per-service latency in `Check` struct (currently batch-level only)
-- `Response.Timestamp` for when the check was run
-- Metrics integration hooks (Prometheus exposition, OpenTelemetry spans)
+- OpenTelemetry spans on Evaluate/checks (same seam: hook + trace context)
 - `Response.TotalLatencyMs` as `float64` for sub-millisecond precision
-- Health-check weights or priorities for nuanced classification beyond binary critical/non-critical
+- ~~Per-service latency in `Check`~~ — infeasible in core, `samber/do` owns
+  the batch; see [classification-2.0-design.md](docs/classification-2.0-design.md) §4
 
 ### 3. Operational Hardening
 
-The current design assumes a well-behaved kubelet polling at reasonable intervals.
-Real-world deployments may benefit from additional protective mechanisms.
+Shipped: `WithLiveThrottle` (request-flood coalescing) and
+`WithShutdownGracePeriod` (two-phase shutdown timing).
 
-Raw ideas:
-
-- Debounce/throttle for live evaluation mode (`WithRefreshInterval(0)` has no DOS protection)
-- `WithShutdownGracePeriod(d)` for automatic two-phase shutdown timing
-- Circuit-breaker pattern for flapping dependencies (failsafe-go or similar)
-- `WithMaxConcurrentChecks(n)` for limiting parallelism within a batch
-- Per-service health-check result caching (not just batch-level)
+Decided against (see [classification-2.0-design.md](docs/classification-2.0-design.md)):
+circuit-breaker in core, `WithMaxConcurrentChecks`, per-service result
+caching. Escape hatch for all three: a custom `HealthRecorder` owns batch
+execution.
 
 ### 4. Container & Ecosystem Integration
 
-The Probe monitors a `samber/do` injector but does not participate in the
-container lifecycle itself. Deeper integration would enable self-registration and
-container-managed health.
+Shipped: `Probe.HealthCheck` (do.HealthcheckerWithContext self-registration),
+`AsShutdowner` / `ProbeShutdowner` (do.ShutdownerWithError).
 
 Raw ideas:
 
-- Implement `do.HealthcheckerWithContext` on Probe for self-registration
-- Implement `do.ShutdownerWithError` on Probe for container-managed lifecycle
-- Remove `do.Injector` from the `HealthRecorder` interface signature (the current `RecordHealthCheckWithContext(ctx, injector)` shape forces every consumer to know the container type, even after the Probe itself stopped holding one)
-- `WithCriticalService(name string, critical bool)` for per-service toggle at runtime
-- Child-scope isolation for multi-tenant health checks
-- `WithProbeName(string)` for multi-probe setups in one process
+- Remove `do.Injector` from the `HealthRecorder` interface signature —
+  deferred: ADR-004 froze the interface for v0.x; revisit at v1.0
+
+Decided against (see [multi-tenant-design.md](docs/multi-tenant-design.md)):
+`WithCriticalService` runtime toggle, child-scope isolation (N probes +
+aggregate), `WithProbeName` (aggregate namespacing + `WithInstanceID` cover it).
 
 ### 5. Protocol & Format Flexibility
 
-Currently the library hardcodes JSON output with a fixed `Response` shape. Some
-deployments may need alternative formats or stricter contracts.
+Shipped: `Response.InstanceID` + `WithInstanceID`, static OpenAPI spec
+([docs/openapi.yaml](docs/openapi.yaml)), Prometheus exposition via composition
+([docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)).
 
-Raw ideas:
+Decided against (see [starting-status-design.md](docs/starting-status-design.md)):
+"starting" Status, Status validation (no injection boundary exists).
 
-- Custom response formats (e.g., Prometheus exposition, plain text)
-- `Response.InstanceID` for multi-replica identification
-- OpenAPI schema generation for the health response
-- `Status` validation (reject unknown values at construction)
-- A "starting" `Status` distinct from pass/warn/fail for finer-grained boot state
+### 6. Testability & Internal Architecture — SHIPPED in v0.1.0
 
-### 6. Testability & Internal Architecture
-
-The classify and evaluate logic is coupled to the Probe type. Extracting it would
-improve testability and enable alternative classification strategies.
-
-Raw ideas:
-
-- Extract `classify` and `evaluateStartup` into a separate `classifier` type
-- `Probe.ResetStartupLatch()` for testing (force re-evaluation)
-- `WithNowFunc(func() time.Time)` for testable uptime calculations
-- `WithAllowedMethods(...string)` instead of boolean `WithGETOnly()`
-- HTTP middleware support for auth/rate-limiting on probe endpoints
+`classifier` extraction, `ResetStartupLatchForTest` (test builds only; the
+public latch stays one-way), `WithNowFunc` clock seam (deterministic uptime,
+timestamps, and throttle windows), `WithAllowedMethods` method-set guard.
+Middleware: no library concept needed — handlers are plain `http.HandlerFunc`
+([middleware-design.md](docs/middleware-design.md)).
 
 ## Non-goals
 
 Things we are deliberately NOT pursuing and why:
 
-- **Per-service timeout within this library:** samber/do already provides `do.WithHealthCheckTimeout`. This library controls only the outer batch deadline. Duplicating per-service logic here adds complexity for no benefit.
-- **Direct logging:** Libraries must not make logging decisions for the host application. Observability should be injected, not hardcoded. A `WithLogger` option was considered and rejected as anti-pattern coupling.
-- **Error library adoption:** Sentinel errors via stdlib `errors.New` / `fmt.Errorf` are sufficient for config-validation errors matched via `errors.Is`. Adopting oops, go-error-family, or cockroachdb/errors adds a dependency for marginal value.
-- **Non-stdlib serialization:** Responses serialize through the stdlib `encoding/json/v2` package (migrated from `encoding/json` in v0.0.2+). Third-party JSON or serialization libraries stay out of scope.
+- **Per-service timeout within this library:** samber/do already provides
+  `do.WithHealthCheckTimeout`. This library controls only the outer batch
+  deadline. See [docs/timeout-design.md](docs/timeout-design.md).
+- **Direct logging:** Libraries must not make logging decisions for the host
+  application. A `WithLogger` option was considered and rejected as
+  anti-pattern coupling.
+- **Error library adoption:** Sentinel errors via stdlib `errors.New` /
+  `fmt.Errorf` are sufficient for config-validation errors matched via
+  `errors.Is`. See AGENTS.md "Stdlib errors by design".
+- **Non-stdlib serialization:** Responses serialize through the stdlib
+  `encoding/json/v2` package. Third-party serialization stays out of scope.
+- **Content negotiation / HTML rendering:** formats are a composition
+  concern. See [docs/content-negotiation-design.md](docs/content-negotiation-design.md).
+- **Health-check weights, in-probe circuit breakers, per-service caching,
+  batch concurrency limits:** analyzed and rejected;
+  see [docs/classification-2.0-design.md](docs/classification-2.0-design.md).
+- **Multi-tenant primitives (child scopes, probe names, runtime criticality
+  toggles):** N probes + health/aggregate composition covers the topology;
+  see [docs/multi-tenant-design.md](docs/multi-tenant-design.md).
+- **Fourth Status value ("starting") and Status input validation:**
+  see [docs/starting-status-design.md](docs/starting-status-design.md).

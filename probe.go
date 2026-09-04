@@ -60,7 +60,6 @@ type Probe struct {
 
 	bootTime time.Time
 	version  string
-	getOnly  bool
 
 	latest          atomic.Pointer[Response]
 	refreshInterval time.Duration
@@ -92,7 +91,6 @@ type config struct {
 	bootTime        time.Time
 	refreshInterval time.Duration
 	timeout         time.Duration
-	getOnly         bool
 	evalHook        func(Response)
 	liveThrottle    time.Duration
 	shutdownGrace   time.Duration
@@ -228,26 +226,31 @@ func WithBootTime(t time.Time) Option {
 // Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces
 // misconfigurations (e.g. a load balancer sending HEAD or POST) early.
 //
+// It is the zero-argument spelling of the accepted-method set: calling it seeds
+// the set with GET, exactly like [WithAllowedMethods] with no arguments, so
+// the two compose in any order without one clobbering the other.
+//
 // Deprecated: use [WithAllowedMethods] instead — it is the method-set
 // superset (WithAllowedMethods() with no arguments behaves identically) and
 // the option to extend later without switching. WithGETOnly keeps working;
 // there is no removal planned in the v0.x line.
 func WithGETOnly() Option {
-	return func(c *config) { c.getOnly = true }
+	return func(cfg *config) {
+		if cfg.allowedMethods == nil {
+			cfg.allowedMethods = map[string]struct{}{http.MethodGet: {}}
+		}
+	}
 }
 
-// guard wraps a handler with method enforcement when WithGETOnly or
-// WithAllowedMethods is active. The accepted set is GET plus any explicitly
-// allowed methods; the Allow response header names the full set.
+// guard wraps a handler with method enforcement when a method set is
+// configured via [WithAllowedMethods] or [WithGETOnly]. The accepted set is
+// GET plus any explicitly allowed methods; the Allow response header names
+// the full set.
 func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 	allowed := p.allowedMethods
 
-	if allowed == nil && !p.getOnly {
-		return handler
-	}
-
 	if allowed == nil {
-		allowed = map[string]struct{}{http.MethodGet: {}}
+		return handler
 	}
 
 	allowList := make([]string, 0, len(allowed))
@@ -319,7 +322,6 @@ func assemble(healthCheck healthCheckFunc, cfg config) *Probe {
 		rollups:         classifier{critical: cfg.critical},
 		bootTime:        cfg.bootTime,
 		version:         cfg.version,
-		getOnly:         cfg.getOnly,
 		refreshInterval: cfg.refreshInterval,
 		timeout:         cfg.timeout,
 		evalHook:        cfg.evalHook,

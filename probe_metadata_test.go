@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json/v2"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -356,6 +357,46 @@ func TestNewWithDetailedCheck_DurationCarriedAndStatusGraded(t *testing.T) {
 	wantSearch := (250 * time.Millisecond).Nanoseconds()
 	if got := resp.Checks["search"].DurationNanos; got != wantSearch {
 		t.Errorf("search duration: want 250ms, got %v", time.Duration(got))
+	}
+}
+
+// TestReadinessHandler_DetailedCheckWirePayload exercises the full handler
+// path (evaluate → sanitize → deterministic marshal → write) with both
+// metadata fields populated, locking the served bytes a dashboard sees:
+// since + duration_ns present for the failing critical check, since-only for
+// the healthy one.
+func TestReadinessHandler_DetailedCheckWirePayload(t *testing.T) {
+	t.Parallel()
+
+	epoch := time.Date(2026, 9, 15, 14, 2, 0, 0, time.UTC)
+
+	probe := health.NewWithDetailedCheck(func(context.Context) map[string]health.CheckDetail {
+		return map[string]health.CheckDetail{
+			"db":    {Err: errUnhealthy, Duration: 2 * time.Millisecond},
+			"cache": {Duration: 300 * time.Microsecond},
+		}
+	},
+		health.WithCriticalServices("db"),
+		health.WithInstanceID("pod-1"),
+		health.WithRefreshInterval(0),
+		health.WithNowFunc(func() time.Time { return epoch }),
+	)
+
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("readiness status: want 503 (critical db failed), got %d", w.Code)
+	}
+
+	body := w.Body.String()
+
+	for _, want := range []string{
+		`"db":{"status":"fail","error":"service unhealthy","since":"2026-09-15T14:02:00Z","duration_ns":2000000}`,
+		`"cache":{"status":"pass","since":"2026-09-15T14:02:00Z","duration_ns":300000}`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("body %s missing %s", body, want)
+		}
 	}
 }
 

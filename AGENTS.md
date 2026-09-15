@@ -35,11 +35,12 @@ Single-package library (`health`) with these source files:
 
 ```
 doc.go           — Package doc comment (quick start, three-probe rationale, caching, shutdown)
-types.go         — Status enum (pass/fail/warn, frozen), Check, Response data model (incl. instance_id, timestamp omitzero)
-probe.go         — Probe struct, config struct, 13 Option functional options (write to config), HealthRecorder interface, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate, CachedResponse (lock-free read + shutdown overlay), accessors, runHealthChecks (with panic recovery), buildChecks
+types.go         — Status enum (pass/fail/warn, frozen), Check (incl. Since, DurationNanos), CheckDetail, Response data model (incl. instance_id, timestamp omitzero)
+probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate, CachedResponse (lock-free read + shutdown overlay), accessors, runHealthChecks (with panic recovery), buildChecks (Since stamping + duration carry), errorsOf/detailOf adapters
+tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.Since inside buildChecks (probe-observed, prunes absent checks)
 classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
 handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + SanitizeResponse (UTF-8 coercion)
-accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz
+accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, DetailedHealthCheckFunc, NewWithDetailedCheck, Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz
 export_test.go   — ResetStartupLatchForTest (test builds only; public latch stays one-way)
 ```
 
@@ -75,6 +76,8 @@ fail, startup 503 until all latches), `RegisterRoutes`.
 - **Zero logging coupling** — the library does not import `log/slog` or any logging package. HTTP write failures (client disconnect) are silently swallowed. A library must not make logging decisions for the host application.
 - **Observability via hook, not library** — `WithEvaluationHook` is the metrics/alerting seam; Prometheus/OpenTelemetry formats are consumer composition (docs/prometheus-exposition-design.md). No client_golang dependency.
 - **Programmatic API mirrors handlers** — `Status/Alive/Ready/AwaitReady` read the cached view (never trigger checks); `Healthz` answers "route traffic here?"; `HealthCheck`/`AsShutdowner` make the probe a first-class do citizen.
+- **Per-check Since is probe-observed** — a `transitionTracker` stamps `Check.Since` inside `buildChecks` on every evaluation path (refresh, live, startup): the first batch reporting the current status, carried while it holds, restarted on change/reappearance, reset on process restart. Never service-reported (services cannot know their graded status). Liveness's empty checks and the Healthz synthetic `startup` check never carry Since.
+- **Per-check Duration is executor-reported, opt-in** — `CheckDetail{Err, Duration}` is the internal seam; plain `map[string]error` sources are adapted with zero duration. `NewWithDetailedCheck` and the optional `DetailedHealthRecorder` interface populate `Check.DurationNanos` (int64 ns, omitzero). The raw injector path cannot: do's `HealthCheckWithContext` returns only errors (see docs/check-metadata-design.md).
 
 ### Decoupling from samber-do-auditlog
 
@@ -106,6 +109,7 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 - `latest` is `atomic.Pointer[Response]` — lock-free cache reads.
 - `mu` protects `cancel` and serializes WaitGroup Add/Wait (lifecycle race fix, 2026-09-04).
 - `throttleMu` serializes throttled live evaluations; the `classifier` is read-only after construction (no lock on the evaluate path).
+- `transitions` (transitionTracker) serializes Since stamping per batch inside `buildChecks`; never touched on cached-read paths. Overlapping evaluations (refresh loop + unlatched startup probes) serialize on it; out-of-order completions may attribute a transition to the later batch's clock (bounded by batch duration, self-correcting — see docs/check-metadata-design.md).
 - All handlers are safe for concurrent use.
 
 ---
@@ -158,6 +162,7 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
   list `goPkg` — the same leak class as the GOEXPERIMENT gotcha above, one
   layer down.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
+- **`encoding/json/v2` cannot marshal `time.Duration` AT ALL** — no default representation exists (go.dev/issue/71631, undecided upstream) and no struct-tag format is accepted (verified empirically on go1.26.7: `int`, `ns`, `nanoseconds`, … all rejected); the only escape is the per-call `json.FormatDurationAsNano` option, which every re-marshaling consumer would have to know to pass. That is why `Check.DurationNanos` is a plain `int64` while the in-process seam `CheckDetail.Duration` stays `time.Duration`, converted once in `buildChecks`. Pinned by `TestCheck_JSONOmitZero`. Related v2 trap: scalar `omitempty` (bool/int) is not honored — only strings and `omitzero` omit; see `TestReadinessResponse_JSONOmitEmpty`.
 - **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.
 - **`WithTimeout` is batch-level, not per-service** — the deadline is shared across all services in one evaluation. A slow dependency steals time from every other check. samber/do exposes `HealthCheckTimeout` (per-service) via `InjectorOpts` at injector creation time. See [docs/timeout-design.md](docs/timeout-design.md) for the full analysis, including why HTTP query-param timeout overrides are rejected (DoS amplifier + breaks caching).
 - **`aggregate` sources must be eagerly invoked too** — the samber/do lazy-service gotcha applies per source: a source probe whose services were never invoked health-checks as pass, and the aggregate propagates that false confidence. Invoke critical services at boot.
@@ -181,6 +186,7 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 | [docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md) | Per-source roll-up accessor: deferred to v0.2.0; labels/pseudo-checks rejected                                                |
 | [docs/announcements/](docs/announcements/)                                                       | Announcement drafts with channels + publishing checklist (owner publishes)                                                    |
 | [docs/panic-recovery-design.md](docs/panic-recovery-design.md)                                   | Panic criticality decision: fail closed; recoverable vs process-fatal surfaces                                                |
+| [docs/check-metadata-design.md](docs/check-metadata-design.md)                                   | Per-check Since/DurationNanos semantics (issue #2): probe-observed transitions, executor-reported duration, `duration_ns` wire rationale |
 | [docs/middleware-design.md](docs/middleware-design.md)                                           | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard                                             |
 | [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)                     | Metrics via `WithEvaluationHook` composition, never `client_golang`                                                           |
 | [docs/openapi-design.md](docs/openapi-design.md) + [docs/openapi.yaml](docs/openapi.yaml)        | Static OpenAPI 3.1 spec over runtime generation                                                                               |

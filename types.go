@@ -21,6 +21,39 @@ type Check struct {
 	Status Status `json:"status"`
 	// Error contains the failure message when Status is not pass.
 	Error string `json:"error,omitempty"`
+	// Since is when this check entered its current status, as observed by
+	// the probe: the time of the first batch that reported the current
+	// value, carried forward unchanged while the status holds. It is
+	// stamped on every evaluation path (background refresh, live requests,
+	// startup probes) and resets when the status changes, when a check
+	// reappears after being absent, or when the process restarts. Zero —
+	// and omitted from JSON via omitzero — when unknown (checks the probe
+	// never built, e.g. liveness's empty set or Healthz's synthetic
+	// startup entry). See docs/check-metadata-design.md.
+	Since time.Time `json:"since,omitzero"`
+	// Duration is how long the most recent execution of this check took,
+	// as reported by its executor. Zero — and omitted from JSON via
+	// omitzero — when the executor does not report timing: the raw
+	// samber/do injector path cannot measure per-check duration, so only
+	// detailed sources ([NewWithDetailedCheck], [DetailedHealthRecorder])
+	// populate it.
+	Duration time.Duration `json:"duration,omitzero"`
+}
+
+// CheckDetail is the executor's raw report for one service check: the outcome
+// plus execution metadata only the executor can know. It is the metadata-rich
+// input accepted by [NewWithDetailedCheck] and [DetailedHealthRecorder].
+// The probe still owns classification: Err is graded against the critical set
+// exactly like a plain map[string]error result, and Since is probe-observed,
+// so a detail cannot influence Status, Error text, or Since.
+type CheckDetail struct {
+	// Err is the check outcome: nil means the service is healthy. Non-nil
+	// errors are graded (critical → fail, non-critical → warn) and their
+	// message becomes the check's Error field.
+	Err error
+	// Duration is how long this execution of the check took. Zero means
+	// unknown and is omitted from the wire response.
+	Duration time.Duration
 }
 
 // Response is the aggregate health-check response served by all probe handlers.

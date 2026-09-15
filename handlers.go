@@ -105,7 +105,7 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 
 		results := p.runHealthChecks(ctx)
 
-		if p.evaluateStartup(results) {
+		if p.evaluateStartup(errorsOf(results)) {
 			p.startupPassed.Store(true)
 		}
 
@@ -169,12 +169,12 @@ func (p *Probe) throttledLiveResponse(ctx context.Context) Response {
 }
 
 // buildStartupResponse assembles the response for a startup probe evaluation.
-func (p *Probe) buildStartupResponse(results map[string]error) Response {
+func (p *Probe) buildStartupResponse(details map[string]CheckDetail) Response {
 	resp := Response{
 		Version:      p.version,
 		InstanceID:   p.instanceID,
 		Uptime:       p.uptime(),
-		Checks:       p.buildChecks(results),
+		Checks:       p.buildChecks(details),
 		ShuttingDown: p.shuttingDown.Load(),
 	}
 

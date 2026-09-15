@@ -19,6 +19,13 @@ import (
 // `go test ./aggregate -update` runs.
 var updateAggregateGolden = flag.Bool("update", false, "rewrite aggregate testdata golden files")
 
+// goldenClock pins the primed probes' evaluation clock so the per-check
+// `since` timestamps (transition-tracker stamps) are stable in the golden
+// file instead of wall-clock dependent.
+var goldenClock = func() time.Time {
+	return time.Date(2026, 9, 15, 12, 0, 0, 0, time.UTC)
+}
+
 // newPrimedSource builds a probe whose cache is populated exactly once: the
 // throttled live path stores its evaluation into `latest`, which is what the
 // aggregate's merge-on-read consumes. Without the priming request the probe
@@ -34,6 +41,7 @@ func newPrimedSource(
 		health.WithRefreshInterval(0),
 		health.WithLiveThrottle(time.Hour),
 		health.WithInstanceID(instanceID),
+		health.WithNowFunc(goldenClock),
 	)
 
 	if err := probe.Start(context.Background()); err != nil {

@@ -18,6 +18,31 @@ var ErrProbeUnhealthy = errors.New("health: probe reports fail")
 // [NewWithHealthCheck] to run a probe without any injector at all.
 type HealthCheckFunc func(ctx context.Context) map[string]error
 
+// DetailedHealthCheckFunc is the metadata-rich variant of [HealthCheckFunc]:
+// each report carries the outcome plus how long the execution took, which
+// surfaces as [Check].Duration in every response. Use it when the check
+// executor can self-time its dependencies (composed checks, external
+// probes); classification stays with the probe, exactly like the plain
+// variant.
+type DetailedHealthCheckFunc func(ctx context.Context) map[string]CheckDetail
+
+// NewWithDetailedCheck creates a [Probe] whose health-check batches are
+// produced by the given metadata-rich function — the [NewWithHealthCheck]
+// equivalent that also reports per-check execution time. Each
+// [CheckDetail.Err] is graded against the critical set like a plain result;
+// each [CheckDetail.Duration] is carried into the served response unchanged
+// (zero means unknown and is omitted from JSON).
+//
+// The function must be safe for concurrent use; a panic inside it is
+// recovered and reported as a fail-closed synthetic error, exactly like the
+// other check sources.
+func NewWithDetailedCheck(fn DetailedHealthCheckFunc, opts ...Option) *Probe {
+	cfg := buildConfig(opts)
+	cfg.recorder = nil
+
+	return assemble(func(ctx context.Context) map[string]CheckDetail { return fn(ctx) }, cfg)
+}
+
 // NewWithHealthCheck creates a [Probe] whose health-check batches are
 // produced by the given function, with no samber/do injector involved. Use it
 // for injectors other than samber/do, for composed or external checks, or for
@@ -35,7 +60,7 @@ func NewWithHealthCheck(fn HealthCheckFunc, opts ...Option) *Probe {
 	cfg := buildConfig(opts)
 	cfg.recorder = nil
 
-	return assemble(func(ctx context.Context) map[string]error { return fn(ctx) }, cfg)
+	return assemble(adaptPlainChecks(fn), cfg)
 }
 
 // Status returns the cached roll-up status: pass, warn, or fail. It performs

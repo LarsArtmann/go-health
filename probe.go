@@ -24,6 +24,16 @@ type HealthRecorder interface {
 	RecordHealthCheckWithContext(ctx context.Context, injector do.Injector) map[string]error
 }
 
+// DetailedHealthRecorder is an optional interface a [HealthRecorder] can
+// implement to report per-check execution metadata. When the configured
+// recorder implements it, the probe uses the detailed batch and each
+// [Check].Duration reflects the recorder's measurement; otherwise Duration
+// stays zero (unknown) and the recorder is used via its plain method.
+// Implementations must be safe for concurrent use, like HealthRecorder itself.
+type DetailedHealthRecorder interface {
+	RecordDetailedHealthCheckWithContext(ctx context.Context, injector do.Injector) map[string]CheckDetail
+}
+
 const (
 	// defaultTimeout is the per-request deadline for health-check batches.
 	defaultTimeout = 5 * time.Second
@@ -36,9 +46,10 @@ const (
 )
 
 // healthCheckFunc runs a single health-check batch and returns the per-service
-// results. It is resolved once at construction time (see [New]) so the Probe
-// holds the resolved capability rather than the injector container itself.
-type healthCheckFunc func(ctx context.Context) map[string]error
+// raw reports (outcome plus executor-known metadata such as Duration). It is
+// resolved once at construction time (see [New]) so the Probe holds the
+// resolved capability rather than the injector container itself.
+type healthCheckFunc func(ctx context.Context) map[string]CheckDetail
 
 // Probe orchestrates health checks against a samber/do v2 injector and exposes
 // three distinct HTTP endpoints: liveness, readiness, and startup.
@@ -54,6 +65,7 @@ type healthCheckFunc func(ctx context.Context) map[string]error
 type Probe struct {
 	healthCheck healthCheckFunc
 	rollups     classifier
+	transitions transitionTracker
 
 	shuttingDown  atomic.Bool
 	startupPassed atomic.Bool
@@ -334,16 +346,55 @@ func assemble(healthCheck healthCheckFunc, cfg config) *Probe {
 }
 
 // resolveHealthCheck captures the health-check capability at construction
-// time. When a recorder is configured, checks delegate through it; otherwise
-// they call the injector's HealthCheckWithContext directly.
+// time. A recorder that also satisfies [DetailedHealthRecorder] delegates
+// through its metadata-rich method so per-check durations survive; a plain
+// recorder delegates through its own method; without a recorder, checks call
+// the injector's HealthCheckWithContext directly. Plain map[string]error
+// results are adapted to [CheckDetail] with zero Duration.
 func resolveHealthCheck(recorder HealthRecorder, injector do.Injector) healthCheckFunc {
-	if recorder != nil {
-		return func(ctx context.Context) map[string]error {
-			return recorder.RecordHealthCheckWithContext(ctx, injector)
+	switch r := recorder.(type) {
+	case nil:
+		return adaptPlainChecks(injector.HealthCheckWithContext)
+	case DetailedHealthRecorder:
+		return func(ctx context.Context) map[string]CheckDetail {
+			return r.RecordDetailedHealthCheckWithContext(ctx, injector)
 		}
+	default:
+		return adaptPlainChecks(func(ctx context.Context) map[string]error {
+			return r.RecordHealthCheckWithContext(ctx, injector)
+		})
+	}
+}
+
+// adaptPlainChecks lifts a map[string]error batch into the CheckDetail seam.
+// Zero Duration: a plain executor cannot know per-check timing.
+func adaptPlainChecks(fn func(ctx context.Context) map[string]error) healthCheckFunc {
+	return func(ctx context.Context) map[string]CheckDetail {
+		return detailOf(fn(ctx))
+	}
+}
+
+// detailOf converts plain per-service errors into [CheckDetail] reports.
+func detailOf(results map[string]error) map[string]CheckDetail {
+	details := make(map[string]CheckDetail, len(results))
+
+	for name, err := range results {
+		details[name] = CheckDetail{Err: err}
 	}
 
-	return injector.HealthCheckWithContext
+	return details
+}
+
+// errorsOf projects a detail batch back onto the plain error view the
+// classifier consumes.
+func errorsOf(details map[string]CheckDetail) map[string]error {
+	results := make(map[string]error, len(details))
+
+	for name, detail := range details {
+		results[name] = detail.Err
+	}
+
+	return results
 }
 
 // ErrInvalidTimeout is returned by [Probe.Validate] when the configured timeout
@@ -514,14 +565,15 @@ func (p *Probe) MarkShuttingDown() {
 func (p *Probe) Evaluate(ctx context.Context) Response {
 	start := time.Now()
 
-	results := p.runHealthChecks(ctx)
+	details := p.runHealthChecks(ctx)
+	results := errorsOf(details)
 
 	resp := Response{
 		Version:        p.version,
 		InstanceID:     p.instanceID,
 		Uptime:         p.uptime(),
 		ShuttingDown:   p.shuttingDown.Load(),
-		Checks:         p.buildChecks(results),
+		Checks:         p.buildChecks(details),
 		TotalLatencyMs: time.Since(start).Milliseconds(),
 	}
 
@@ -546,29 +598,29 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 // panic to fail: the interrupted batch leaves every not-yet-checked service
 // unverified, and a panic that hit a critical service must not degrade to a
 // 200 warn. See docs/panic-recovery-design.md for the full rationale.
-func (p *Probe) runHealthChecks(ctx context.Context) map[string]error {
-	return recoverHealthChecks(func() map[string]error { return p.healthCheck(ctx) })
+func (p *Probe) runHealthChecks(ctx context.Context) map[string]CheckDetail {
+	return recoverHealthChecks(func() map[string]CheckDetail { return p.healthCheck(ctx) })
 }
 
 // recoverHealthChecks runs fn and converts a panic into a synthetic result
 // map. The inner closure confines the deferred recover to one frame whose
 // result is captured in an outer variable, so no named return is needed.
-func recoverHealthChecks(fn func() map[string]error) map[string]error {
-	var results map[string]error
+func recoverHealthChecks(fn func() map[string]CheckDetail) map[string]CheckDetail {
+	var details map[string]CheckDetail
 
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				results = map[string]error{
-					"health-check": fmt.Errorf("%w: %v", ErrPanicDuringHealthCheck, r),
+				details = map[string]CheckDetail{
+					"health-check": {Err: fmt.Errorf("%w: %v", ErrPanicDuringHealthCheck, r)},
 				}
 			}
 		}()
 
-		results = fn()
+		details = fn()
 	}()
 
-	return results
+	return details
 }
 
 // classify computes the roll-up status from health-check results:
@@ -633,24 +685,29 @@ func (p *Probe) evaluateStartup(results map[string]error) bool {
 	return p.rollups.evaluateStartup(results)
 }
 
-// buildChecks converts the raw map[string]error from samber/do into typed
-// Check entries. A nil error means the service passed; a non-nil error
-// populates the Error field. Failures on critical services are marked
-// StatusFail; failures on non-critical services are marked StatusWarn to
-// distinguish "degraded but functional" from "take this pod out of rotation".
-func (p *Probe) buildChecks(results map[string]error) map[string]Check {
-	checks := make(map[string]Check, len(results))
+// buildChecks converts the raw per-service reports into typed Check entries.
+// A nil error means the service passed; a non-nil error populates the Error
+// field. Failures on critical services are marked StatusFail; failures on
+// non-critical services are marked StatusWarn to distinguish "degraded but
+// functional" from "take this pod out of rotation". Executor-reported
+// durations are carried through, and every check is stamped with Since —
+// when the probe first observed its current status — via the transition
+// tracker.
+func (p *Probe) buildChecks(details map[string]CheckDetail) map[string]Check {
+	checks := make(map[string]Check, len(details))
 
-	for name, err := range results {
-		check := Check{Status: StatusPass}
+	for name, detail := range details {
+		check := Check{Status: StatusPass, Duration: detail.Duration}
 
-		if err != nil {
-			check.Status = p.rollups.grades(name, err)
-			check.Error = err.Error()
+		if detail.Err != nil {
+			check.Status = p.rollups.grades(name, detail.Err)
+			check.Error = detail.Err.Error()
 		}
 
 		checks[name] = check
 	}
+
+	p.transitions.stamp(checks, p.now())
 
 	return checks
 }

@@ -18,7 +18,7 @@ updates:
     groups:
       actions:
         patterns:
-          - '*'
+          - "*"
   - package-ecosystem: gomod
     directory: /tools/doanalyzerv2
     schedule:

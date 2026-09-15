@@ -14,7 +14,7 @@ wrong" but not:
 
 The go-health-dashboard rendered placeholders for both and approximated a
 status-changes timeline from its own sampling clock — a client-side guess that
-resets when the *dashboard* restarts and quantizes to the poll interval.
+resets when the _dashboard_ restarts and quantizes to the poll interval.
 
 ## Decision
 
@@ -41,7 +41,7 @@ contract.)
 ### Field 1: `Since` — probe-observed transition time
 
 **Semantics:** the time of the first batch that reported the check in its
-*current* status, as observed by this probe. While the status is unchanged,
+_current_ status, as observed by this probe. While the status is unchanged,
 every response carries the same `Since`; the moment a batch reports a
 different status, `Since` restarts at that batch's clock.
 
@@ -54,14 +54,14 @@ the `WithNowFunc` clock seam, so tests get deterministic transitions.
 
 **What it honestly is not:**
 
-- *Not service-reported.* The check seam (`map[string]error`) cannot carry a
+- _Not service-reported._ The check seam (`map[string]error`) cannot carry a
   timestamp, and no service knows its own roll-up status (critical vs
   non-critical grading happens in the probe). One source of truth: the probe.
-- *Not restart-surviving.* The tracker is in-process memory. After a process
+- _Not restart-surviving._ The tracker is in-process memory. After a process
   restart, `Since` is the restart-time observation. This is still strictly
   better than the dashboard's sampling clock, which also resets — but on the
-  *dashboard's* restarts, not the checked service's.
-- *Not serialized across concurrent batches.* Overlapping evaluations (refresh
+  _dashboard's_ restarts, not the checked service's.
+- _Not serialized across concurrent batches._ Overlapping evaluations (refresh
   loop + unlatched startup probes) stamp under one lock; an out-of-order
   completion can attribute a transition to the later batch's clock. The error
   is bounded by batch duration and self-corrects on the next transition.

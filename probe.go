@@ -31,7 +31,10 @@ type HealthRecorder interface {
 // stays zero (unknown) and the recorder is used via its plain method.
 // Implementations must be safe for concurrent use, like HealthRecorder itself.
 type DetailedHealthRecorder interface {
-	RecordDetailedHealthCheckWithContext(ctx context.Context, injector do.Injector) map[string]CheckDetail
+	RecordDetailedHealthCheckWithContext(
+		ctx context.Context,
+		injector do.Injector,
+	) map[string]CheckDetail
 }
 
 const (
@@ -697,7 +700,7 @@ func (p *Probe) buildChecks(details map[string]CheckDetail) map[string]Check {
 	checks := make(map[string]Check, len(details))
 
 	for name, detail := range details {
-		check := Check{Status: StatusPass, Duration: detail.Duration}
+		check := Check{Status: StatusPass, DurationNanos: detail.Duration.Nanoseconds()}
 
 		if detail.Err != nil {
 			check.Status = p.rollups.grades(name, detail.Err)

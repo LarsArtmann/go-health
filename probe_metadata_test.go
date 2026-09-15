@@ -97,6 +97,7 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 	}
 
 	failingAt := epoch.Add(2 * time.Hour)
+
 	clock.Advance(2 * time.Hour)
 	healthy = false
 
@@ -110,9 +111,10 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 		t.Fatalf("Since while still failing: want %v, got %v", failingAt, got)
 	}
 
-	recoveredAt := failingAt.Add(30 * time.Minute)
 	clock.Advance(5 * time.Minute)
 	healthy = true
+
+	recoveredAt := failingAt.Add(35 * time.Minute)
 
 	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(recoveredAt) {
 		t.Fatalf("Since after fail→pass: want %v, got %v", recoveredAt, got)
@@ -145,10 +147,12 @@ func TestEvaluate_SinceRestartsWhenCheckReappears(t *testing.T) {
 
 	clock.Advance(time.Hour)
 	includeCache = false
+
 	probe.Evaluate(context.Background())
 
 	clock.Advance(time.Hour)
 	includeCache = true
+
 	resp := probe.Evaluate(context.Background())
 
 	want := epoch.Add(2 * time.Hour)
@@ -175,6 +179,7 @@ func TestEvaluate_SinceTrackedAcrossErrorTextChanges(t *testing.T) {
 	resp := probe.Evaluate(context.Background())
 
 	clock.Advance(10 * time.Minute)
+
 	reason = "dns lookup failed"
 
 	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(epoch) {
@@ -248,7 +253,11 @@ func TestStartupHandler_SinceStampedOnStartupEvaluations(t *testing.T) {
 	clock.Advance(9 * time.Minute)
 
 	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(epoch) {
-		t.Errorf("readiness must carry Since stamped by the startup batch: want %v, got %v", epoch, got)
+		t.Errorf(
+			"readiness must carry Since stamped by the startup batch: want %v, got %v",
+			epoch,
+			got,
+		)
 	}
 }
 
@@ -326,21 +335,23 @@ func TestNewWithDetailedCheck_DurationCarriedAndStatusGraded(t *testing.T) {
 		t.Fatalf("roll-up: want fail (critical db failed), got %s", resp.Status)
 	}
 
-	db := resp.Checks["db"]
-	if db.Status != health.StatusFail || db.Error != errUnhealthy.Error() {
-		t.Errorf("db check: want fail with error, got %+v", db)
+	dbCheck := resp.Checks["db"]
+	if dbCheck.Status != health.StatusFail || dbCheck.Error != errUnhealthy.Error() {
+		t.Errorf("db check: want fail with error, got %+v", dbCheck)
 	}
 
-	if db.Duration != 1500*time.Microsecond {
-		t.Errorf("db duration: want 1500µs, got %v", db.Duration)
+	if dbCheck.DurationNanos != (1500 * time.Microsecond).Nanoseconds() {
+		t.Errorf("db duration: want 1500µs, got %v", time.Duration(dbCheck.DurationNanos))
 	}
 
-	if got := resp.Checks["cache"].Duration; got != 400*time.Microsecond {
-		t.Errorf("cache duration: want 400µs, got %v", got)
+	wantCache := (400 * time.Microsecond).Nanoseconds()
+	if got := resp.Checks["cache"].DurationNanos; got != wantCache {
+		t.Errorf("cache duration: want 400µs, got %v", time.Duration(got))
 	}
 
-	if got := resp.Checks["search"].Duration; got != 250*time.Millisecond {
-		t.Errorf("search duration: want 250ms, got %v", got)
+	wantSearch := (250 * time.Millisecond).Nanoseconds()
+	if got := resp.Checks["search"].DurationNanos; got != wantSearch {
+		t.Errorf("search duration: want 250ms, got %v", time.Duration(got))
 	}
 }
 
@@ -358,7 +369,7 @@ func TestNew_DurationZeroOnPlainInjectorPath(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if got := resp.Checks["db"].Duration; got != 0 {
+	if got := resp.Checks["db"].DurationNanos; got != 0 {
 		t.Errorf("injector-path duration: want 0 (unknown), got %v", got)
 	}
 }
@@ -367,6 +378,7 @@ func TestNew_DurationZeroOnPlainInjectorPath(t *testing.T) {
 // methods so the optional-interface upgrade path can be exercised.
 type mockDetailedRecorder struct {
 	mockRecorder
+
 	details map[string]health.CheckDetail
 }
 
@@ -397,7 +409,8 @@ func TestWithHealthRecorder_DetailedRecorderDurationsFlow(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if got := resp.Checks["db"].Duration; got != 3*time.Millisecond {
+	wantDuration := (3 * time.Millisecond).Nanoseconds()
+	if got := resp.Checks["db"].DurationNanos; got != wantDuration {
 		t.Errorf("detailed recorder duration: want 3ms, got %v", got)
 	}
 
@@ -420,7 +433,7 @@ func TestWithHealthRecorder_PlainRecorderDurationsStayZero(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if got := resp.Checks["db"].Duration; got != 0 {
+	if got := resp.Checks["db"].DurationNanos; got != 0 {
 		t.Errorf("plain recorder duration: want 0 (unknown), got %v", got)
 	}
 }
@@ -429,7 +442,10 @@ func TestWithHealthRecorder_PlainRecorderDurationsStayZero(t *testing.T) {
 
 // TestCheck_JSONOmitZero pins the issue #2 open question: under jsonv2,
 // omitzero gives strict absence for both fields — zero Since and zero
-// Duration disappear instead of marshaling as "0001-01-01T00:00:00Z" / 0.
+// duration disappear instead of marshaling as "0001-01-01T00:00:00Z" / 0.
+// Duration is a plain int64 (nanoseconds) because jsonv2 cannot marshal
+// time.Duration at all without per-call options (verified:
+// go.dev/issue/71631 — no valid tag format exists).
 func TestCheck_JSONOmitZero(t *testing.T) {
 	t.Parallel()
 
@@ -447,16 +463,16 @@ func TestCheck_JSONOmitZero(t *testing.T) {
 	stamped := time.Date(2026, 9, 15, 14, 2, 0, 0, time.UTC)
 
 	payload, err = json.Marshal(health.Check{
-		Status:   health.StatusFail,
-		Error:    "down",
-		Since:    stamped,
-		Duration: 1500 * time.Microsecond,
+		Status:        health.StatusFail,
+		Error:         "down",
+		Since:         stamped,
+		DurationNanos: (1500 * time.Microsecond).Nanoseconds(),
 	}, json.Deterministic(true))
 	if err != nil {
 		t.Fatalf("marshal populated check: %v", err)
 	}
 
-	want := `{"status":"fail","error":"down","since":"2026-09-15T14:02:00Z","duration":1500000}`
+	want := `{"status":"fail","error":"down","since":"2026-09-15T14:02:00Z","duration_ns":1500000}`
 	if string(payload) != want {
 		t.Errorf("populated check wire format:\nwant: %s\ngot:  %s", want, payload)
 	}

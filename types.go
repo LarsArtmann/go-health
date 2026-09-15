@@ -31,13 +31,16 @@ type Check struct {
 	// never built, e.g. liveness's empty set or Healthz's synthetic
 	// startup entry). See docs/check-metadata-design.md.
 	Since time.Time `json:"since,omitzero"`
-	// Duration is how long the most recent execution of this check took,
-	// as reported by its executor. Zero — and omitted from JSON via
-	// omitzero — when the executor does not report timing: the raw
-	// samber/do injector path cannot measure per-check duration, so only
+	// DurationNanos is how long the most recent execution of this check
+	// took, in nanoseconds, as reported by its executor. Zero — and omitted
+	// from JSON via omitzero — when the executor does not report timing: the
+	// raw samber/do injector path cannot measure per-check duration, so only
 	// detailed sources ([NewWithDetailedCheck], [DetailedHealthRecorder])
-	// populate it.
-	Duration time.Duration `json:"duration,omitzero"`
+	// populate it. Nanoseconds (not milliseconds) so sub-millisecond checks
+	// — the common case — survive losslessly; a Go time.Duration is not used
+	// here because encoding/json/v2 has no default (or tag-format)
+	// representation for it, which would break consumer re-marshaling.
+	DurationNanos int64 `json:"duration_ns,omitzero"`
 }
 
 // CheckDetail is the executor's raw report for one service check: the outcome

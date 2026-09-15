@@ -61,6 +61,15 @@
 // satisfies do.HealthcheckerWithContext (register the probe in its own
 // injector) and [Probe.AsShutdowner] adapts it to do.ShutdownerWithError.
 //
+// # Per-Check Metadata
+//
+// Every check reports Since — when the probe first observed its current
+// status ("failing since 14:02"), carried forward while the status holds and
+// restarted on every change. Checks whose executor reports timing (via
+// [NewWithDetailedCheck] or a [DetailedHealthRecorder]) also carry
+// DurationNanos. Both are omitted from JSON when unknown.
+// See docs/check-metadata-design.md for the semantics and their limits.
+//
 // # Observability
 //
 // [WithEvaluationHook] registers a synchronous callback invoked with every

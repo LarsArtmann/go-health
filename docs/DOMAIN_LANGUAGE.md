@@ -39,6 +39,11 @@
 | Classifier             | Read-only type owning classification, startup evaluation, and grading. Constructed once; evaluated lock-free.                                            | `classifier.go`                         |
 | Aggregate              | Merge of N in-process probes into one health surface: worst-of status, `source/check`-namespaced checks, AND of startup latches.                         | `aggregate/aggregate.go`                |
 | Deprecation            | Godoc `// Deprecated:` marker plus README/CHANGELOG note (see `WithGETOnly`); deprecated options keep working with no removal planned in v0.x.           | `probe.go:235` (`WithGETOnly`)          |
+| Since                  | Probe-observed time a check entered its current status: stamped by the transition tracker on the first batch reporting the status, carried while it holds, restarted on change or reappearance, reset on process restart. Not service-reported. | `tracker.go` (`transitionTracker`)      |
+| DurationNanos           | Executor-reported execution time of one check (nanoseconds, omitted when unknown). Only detailed sources populate it; do's batch API cannot measure per-check timing. | `types.go` (`Check.DurationNanos`)      |
+| Transition tracker      | Mutex-guarded per-probe map `name → {status, firstSeen}` stamped inside `buildChecks` on every evaluation path.                                              | `tracker.go`                            |
+| CheckDetail             | Executor's raw report for one check (outcome error + duration); the metadata-rich input of `NewWithDetailedCheck` and `DetailedHealthRecorder`. Classification stays with the probe. | `types.go`                              |
+| Detailed source         | A check function or recorder that reports per-check `CheckDetail` (duration) instead of plain `map[string]error`.                                            | `accessors.go`, `probe.go`              |
 
 ## Bounded contexts
 
@@ -49,3 +54,4 @@
 | Configuration | Option pattern, config struct, validation                     | `Option`, `config`, `Validate`            |
 | Lifecycle     | Background loop, shutdown, startup latch                      | `Start`, `Shutdown`, `MarkShuttingDown`   |
 | Integration   | HealthRecorder interface, capability resolution               | `HealthRecorder`, `resolveHealthCheck`    |
+| Metadata      | Per-check Since/DurationNanos, transition tracking            | `transitionTracker`, `CheckDetail`        |

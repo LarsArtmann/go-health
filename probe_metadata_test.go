@@ -99,6 +99,7 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 	failingAt := epoch.Add(2 * time.Hour)
 
 	clock.Advance(2 * time.Hour)
+
 	healthy = false
 
 	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(failingAt) {
@@ -112,6 +113,7 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 	}
 
 	clock.Advance(5 * time.Minute)
+
 	healthy = true
 
 	recoveredAt := failingAt.Add(35 * time.Minute)
@@ -146,11 +148,13 @@ func TestEvaluate_SinceRestartsWhenCheckReappears(t *testing.T) {
 	probe.Evaluate(context.Background())
 
 	clock.Advance(time.Hour)
+
 	includeCache = false
 
 	probe.Evaluate(context.Background())
 
 	clock.Advance(time.Hour)
+
 	includeCache = true
 
 	resp := probe.Evaluate(context.Background())

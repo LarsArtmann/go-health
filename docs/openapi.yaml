@@ -134,3 +134,19 @@ components:
           type: string
           description: Failure message when the check did not pass; omitted
             otherwise.
+        since:
+          type: string
+          format: date-time
+          description: RFC 3339 time the probe first observed this check in
+            its current status; carried forward unchanged while the status
+            holds, restarted on every status change. Absent (omitzero) for
+            checks the probe never built (liveness's empty set, the Healthz
+            synthetic startup entry). Resets on process restart.
+        duration_ns:
+          type: integer
+          format: int64
+          description: Nanoseconds the most recent execution of this check
+            took, as reported by its executor. Absent (omitzero) when
+            unknown — the raw samber/do injector path cannot measure
+            per-check duration, so only detailed sources
+            (NewWithDetailedCheck, DetailedHealthRecorder) populate it.

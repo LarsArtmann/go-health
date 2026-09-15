@@ -191,6 +191,39 @@ func ExampleNewWithHealthCheck() {
 	// checks: 1
 }
 
+// ExampleNewWithDetailedCheck shows the metadata-rich check function: each
+// report carries its execution duration (surfaced as Check.DurationNanos),
+// while classification stays with the probe. Combined with the automatic
+// Check.Since transition tracking, dashboards can answer "failing since
+// when?" and "how slow is it?" without instrumenting every dependency.
+func ExampleNewWithDetailedCheck() {
+	probe := health.NewWithDetailedCheck(func(ctx context.Context) map[string]health.CheckDetail {
+		start := time.Now()
+
+		err := pingDatabase(ctx)
+
+		return map[string]health.CheckDetail{
+			"database": {Err: err, Duration: time.Since(start)},
+		}
+	},
+		health.WithCriticalServices("database"),
+	)
+
+	resp := probe.Evaluate(context.Background())
+
+	fmt.Println("status:", resp.Status)
+	fmt.Println("database failing:", resp.Checks["database"].Since.IsZero())
+	fmt.Println("database timed:", resp.Checks["database"].DurationNanos > 0)
+
+	// Output:
+	// status: pass
+	// database failing: false
+	// database timed: true
+}
+
+// pingDatabase stands in for a real dependency ping.
+func pingDatabase(context.Context) error { return nil }
+
 // ExampleProbe_Healthz shows the single-endpoint combined health handler:
 // one URL answering "should traffic be routed here?". It stays 503 until the
 // startup latch is set, then follows readiness.

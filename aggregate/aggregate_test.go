@@ -403,6 +403,47 @@ func TestCachedResponse_TotalLatencyMsIsSlowestSource(t *testing.T) {
 	}
 }
 
+// TestCachedResponse_CheckMetadataSurvivesMerge pins that per-check metadata
+// added in go-health issue #2 survives the namespaced merge: Since and
+// DurationNanos belong to the Check value each source contributed and must
+// arrive in the merged view unchanged.
+func TestCachedResponse_CheckMetadataSurvivesMerge(t *testing.T) {
+	t.Parallel()
+
+	epoch := time.Date(2026, 9, 15, 12, 0, 0, 0, time.UTC)
+
+	// Detailed source reporting a per-check duration; the fixed clock makes
+	// the transition-tracker's Since deterministic. Priming via one throttled
+	// readiness request stores the evaluation the merge reads.
+	detailed := health.NewWithDetailedCheck(func(context.Context) map[string]health.CheckDetail {
+		return map[string]health.CheckDetail{
+			"db": {Duration: 4 * time.Millisecond},
+		}
+	},
+		health.WithRefreshInterval(0),
+		health.WithLiveThrottle(time.Hour),
+		health.WithNowFunc(func() time.Time { return epoch }),
+	)
+
+	rec := httptest.NewRecorder()
+	detailed.ReadinessHandler()(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
+	agg := mustAggregate(t,
+		aggregate.Source{Name: "api", Probe: detailed},
+		aggregate.Source{Name: "web", Probe: newStartedProbe(t, false, false)},
+	)
+
+	merged := agg.CachedResponse().Checks["api/db"]
+
+	if !merged.Since.Equal(epoch) {
+		t.Errorf("merged Since: want %v, got %v", epoch, merged.Since)
+	}
+
+	if want := (4 * time.Millisecond).Nanoseconds(); merged.DurationNanos != want {
+		t.Errorf("merged DurationNanos: want %d, got %d", want, merged.DurationNanos)
+	}
+}
+
 // --- Handlers ---.
 
 func TestLivenessHandler_AlwaysPass(t *testing.T) {

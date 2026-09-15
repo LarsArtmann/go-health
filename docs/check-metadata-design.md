@@ -28,9 +28,10 @@ type Check struct {
     // Since is when the probe first observed this check in its current
     // status. Zero (and omitted from JSON) when unknown.
     Since time.Time `json:"since,omitzero"`
-    // Duration is how long the most recent execution of this check took.
-    // Zero (and omitted from JSON) when the executor did not report it.
-    Duration time.Duration `json:"duration,omitzero"`
+    // DurationNanos is how long the most recent execution of this check
+    // took, in nanoseconds. Zero (and omitted from JSON) when the
+    // executor did not report it.
+    DurationNanos int64 `json:"duration_ns,omitzero"`
 }
 ```
 
@@ -67,7 +68,7 @@ the `WithNowFunc` clock seam, so tests get deterministic transitions.
   Sequencing evaluations globally would couple startup probes to the refresh
   loop — not worth it.
 
-### Field 2: `Duration` — executor-reported execution time
+### Field 2: `DurationNanos` — executor-reported execution time
 
 **Semantics:** how long the most recent execution of this check took, as
 measured by whatever executed it. Zero means unknown and is omitted.
@@ -100,21 +101,34 @@ critical set exactly like plain results; a detailed source cannot set its own
 On the raw-injector path `Duration` stays zero (unknown). If samber/do ever
 exposes richer batch results, that path can populate it without a wire change.
 
-### Wire format: `omitzero`, not pointers
+### Wire format: `omitzero`, `int64` nanoseconds, no pointers
 
 The issue's open question — zero `time.Time` still marshals under
 `omitempty`, so strict absence needs a pointer or encoder gymnastics — is
 answered by `encoding/json/v2`'s `omitzero`, already the house mechanism
 (`Response.Timestamp`): it consults `IsZero()` (`time.Time` has it) or the
-type's zero value (`time.Duration` == 0). Both fields therefore disappear
-cleanly when unknown, no pointers, and every existing golden payload stays
+type's zero value (`int64` == 0). Both fields therefore disappear cleanly
+when unknown, no pointers, and every existing golden payload stays
 byte-identical because existing construction paths leave them zero.
 
-Note `time.Duration` marshals as integer nanoseconds. Milliseconds were
-rejected: sub-millisecond checks are the common case (a warm cache ping), and
-`duration_ms: 0` would erase exactly the signal the field exists to carry.
-Consumers format for display; the wire stays lossless. (`total_latency_ms`
-predates this decision and keeps its unit for compatibility.)
+A second wire constraint, discovered while implementing (and pinned by
+`TestCheck_JSONOmitZero`): **jsonv2 cannot marshal `time.Duration` at all**
+— no default representation exists ([go.dev/issue/71631]), no struct-tag
+format is accepted (verified empirically against go1.26.7: `int`, `ns`,
+`nanoseconds`, … all rejected), and the only escape hatch is the per-call
+`json.FormatDurationAsNano` option. A wire field that every consumer must
+remember to encode with a special flag — or their re-marshal of a go-health
+payload fails — is hostile, and the default representation is an explicitly
+undecided stdlib question we must not couple our wire contract to. So the
+wire field is a plain `int64` in nanoseconds (`duration_ns`), while the
+in-process seam (`CheckDetail.Duration`) stays a Go-idiomatic
+`time.Duration`, converted once at `buildChecks`.
+
+Nanoseconds rather than milliseconds (the unit of the pre-existing
+`total_latency_ms`, which keeps its unit for compatibility): sub-millisecond
+checks are the common case — a warm cache ping is ~400µs — and
+`duration_ms` would truncate exactly the signal the field exists to carry
+to "unknown". Consumers format for display; the wire stays lossless.
 
 ## What this unlocks downstream (per issue #2)
 
@@ -123,6 +137,8 @@ predates this decision and keeps its unit for compatibility.)
 - status-change timelines reported by the checked process
 - honest "stable for 6h" summaries for healthy groups
 - per-check latency wherever the executor reports it
+
+[go.dev/issue/71631]: https://go.dev/issue/71631
 
 ## Rejected alternatives
 
@@ -135,6 +151,10 @@ predates this decision and keeps its unit for compatibility.)
   `HealthCheckNamedWithContext`, forking do's pool/timeout/scope semantics.
   Rejected for the same class of reason as the panic-recovery split: go-health
   must not silently re-implement samber/do's execution model.
-- **`Since`/`Duration` pointers** — `omitzero` achieves strict absence without
-  nil-handling spreading to every consumer.
+- **`Since`/`DurationNanos` pointers** — `omitzero` achieves strict absence
+  without nil-handling spreading to every consumer.
+- **`time.Duration` on the wire** — jsonv2 has no marshalable default (or
+  tag-format) representation for it; every consumer re-marshaling a payload
+  would need `json.FormatDurationAsNano`, and the eventual default is an
+  undecided stdlib question (issue 71631).
 - **Millisecond `duration_ms`** — truncates sub-millisecond checks to "unknown".

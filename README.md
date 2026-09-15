@@ -145,14 +145,18 @@ func main() {
   "uptime": "5m32s",
   "total_latency_ms": 15,
   "checks": {
-    "database": { "status": "pass" },
-    "redis": { "status": "pass" },
-    "metrics-exporter": { "status": "warn", "error": "connection refused" }
+    "database": { "status": "pass", "since": "2026-09-15T12:04:02Z" },
+    "redis": { "status": "pass", "since": "2026-09-15T12:04:02Z" },
+    "metrics-exporter": {
+      "status": "warn",
+      "error": "connection refused",
+      "since": "2026-09-15T12:19:47Z"
+    }
   }
 }
 ```
 
-**Critical failure (503):**
+**Critical failure (503), with executor-reported duration:**
 
 ```json
 {
@@ -161,11 +165,21 @@ func main() {
   "uptime": "5m32s",
   "total_latency_ms": 5004,
   "checks": {
-    "database": { "status": "fail", "error": "context deadline exceeded" },
-    "redis": { "status": "pass" }
+    "database": {
+      "status": "fail",
+      "error": "context deadline exceeded",
+      "since": "2026-09-15T12:27:33Z",
+      "duration_ns": 5000000000
+    },
+    "redis": { "status": "pass", "since": "2026-09-15T12:04:02Z" }
   }
 }
 ```
+
+Every check carries `since` — when the probe first observed the current
+status ("failing since 12:27") — and, when the check executor reports it,
+`duration_ns`. Both are omitted (`omitzero`) when unknown; see
+[docs/check-metadata-design.md](docs/check-metadata-design.md).
 
 ## Three Probes
 
@@ -180,6 +194,7 @@ func main() {
 - **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
 - **Readiness gates on critical services only** — non-critical failures set status to `warn` (HTTP 200, degraded).
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
+- **Per-check metadata** — every check reports `since` (how long it has been in its current status, probe-observed transition tracking) and `duration_ns` when its executor reports timing (`NewWithDetailedCheck`, `DetailedHealthRecorder`); both omitted when unknown.
 - **Background caching** (1s default) — kubelet/LB polling doesn't hammer dependencies.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
 - **Method-set enforcement** — `WithAllowedMethods(...)` rejects non-allowed methods with 405 and a sorted `Allow` header (`WithGETOnly` is the deprecated zero-arg equivalent).

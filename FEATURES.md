@@ -92,6 +92,8 @@
 | ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Status enum (pass/fail/warn) | FULLY_FUNCTIONAL | String type with three constants; frozen — see docs/starting-status-design.md. `types.go`                                            |
 | Check struct                 | FULLY_FUNCTIONAL | Per-service: status + error message. `types.go`                                                                                      |
+| Check.Since transition tracking | FULLY_FUNCTIONAL | Probe-observed "entered current status at" per check, stamped on every evaluation path, carried while status holds, pruned on absence; resets on process restart. `tracker.go`, docs/check-metadata-design.md. Issue #2. |
+| Check.DurationNanos + detailed sources | FULLY_FUNCTIONAL | Executor-reported per-check execution time (nanoseconds, omitzero) via `NewWithDetailedCheck` / optional `DetailedHealthRecorder`; zero (unknown) on the raw injector path. `types.go`, `accessors.go`, `probe.go`. Issue #2. |
 | Response struct              | FULLY_FUNCTIONAL | status, version, instance_id (WithInstanceID), uptime, shutting_down, total_latency_ms, timestamp (omitzero), checks map. `types.go` |
 
 ## Performance

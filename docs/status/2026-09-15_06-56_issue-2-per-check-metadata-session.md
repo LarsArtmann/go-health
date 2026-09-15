@@ -10,21 +10,21 @@
 
 ## a) FULLY DONE
 
-| Item | Evidence |
-| --- | --- |
-| **Research**: issue, dashboard expectations (draft doc + repo), samber/do v2.1.0 API limits (no per-check timing through `map[string]error` batches), jsonv2 omission semantics | session; `/tmp` probes since trashed |
-| **Design doc** `docs/check-metadata-design.md` — Since semantics (probe-observed), DurationNanos (executor-reported, opt-in), wire rationale, rejected alternatives | committed |
-| **Data model**: `Check.Since time.Time` (`since,omitzero`), `Check.DurationNanos int64` (`duration_ns,omitzero`), `CheckDetail{Err, Duration}` | `types.go` |
-| **Transition tracker** (`tracker.go`): mutex-guarded, stamped in `buildChecks` on every evaluation path, prunes absent checks, zero-value usable | `tracker.go` |
-| **Internal seam rework**: `healthCheckFunc` returns `map[string]CheckDetail`; `resolveHealthCheck` type-switch (detailed recorder → plain recorder → injector); `adaptPlainChecks`/`detailOf`/`errorsOf` adapters; panic recovery adapted | `probe.go`, `handlers.go` |
-| **New public API**: `NewWithDetailedCheck` + `DetailedHealthCheckFunc` (`accessors.go`), optional `DetailedHealthRecorder` interface (`probe.go`) — all additive, classification stays with the probe | committed |
+| Item                                                                                                                                                                                                                                                                                                                                                                                                                | Evidence                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Research**: issue, dashboard expectations (draft doc + repo), samber/do v2.1.0 API limits (no per-check timing through `map[string]error` batches), jsonv2 omission semantics                                                                                                                                                                                                                                     | session; `/tmp` probes since trashed                    |
+| **Design doc** `docs/check-metadata-design.md` — Since semantics (probe-observed), DurationNanos (executor-reported, opt-in), wire rationale, rejected alternatives                                                                                                                                                                                                                                                 | committed                                               |
+| **Data model**: `Check.Since time.Time` (`since,omitzero`), `Check.DurationNanos int64` (`duration_ns,omitzero`), `CheckDetail{Err, Duration}`                                                                                                                                                                                                                                                                      | `types.go`                                              |
+| **Transition tracker** (`tracker.go`): mutex-guarded, stamped in `buildChecks` on every evaluation path, prunes absent checks, zero-value usable                                                                                                                                                                                                                                                                    | `tracker.go`                                            |
+| **Internal seam rework**: `healthCheckFunc` returns `map[string]CheckDetail`; `resolveHealthCheck` type-switch (detailed recorder → plain recorder → injector); `adaptPlainChecks`/`detailOf`/`errorsOf` adapters; panic recovery adapted                                                                                                                                                                           | `probe.go`, `handlers.go`                               |
+| **New public API**: `NewWithDetailedCheck` + `DetailedHealthCheckFunc` (`accessors.go`), optional `DetailedHealthRecorder` interface (`probe.go`) — all additive, classification stays with the probe                                                                                                                                                                                                               | committed                                               |
 | **Tests** (14 new): first-observation stamp, carry-forward, transition both directions, error-text-change ≠ status change, prune/reappear restart, startup-path participation, concurrency race test, liveness/Healthz zero-Since, detailed-func durations + grading, injector-path zero duration, detailed + plain recorder paths, wire omitzero lock, full handler-path payload lock, aggregate merge passthrough | `probe_metadata_test.go`, `aggregate/aggregate_test.go` |
-| **Golden files**: root golden byte-unchanged (back-compat proven); aggregate golden regenerated deterministically (fixed clock) to lock merged `since` | `testdata/`, `aggregate/testdata/` |
-| **Godoc example** `ExampleNewWithDetailedCheck` | `example_test.go` |
-| **Docs sweep**: README (samples + feature bullets), doc.go section, CHANGELOG `[Unreleased]`, FEATURES.md rows, DOMAIN_LANGUAGE entries (5), openapi.yaml Check schema (`since`, `duration_ns`), AGENTS.md (file list, 2 design decisions, concurrency model, new gotcha, doc table) | committed |
-| **Gates** (subset, individually): test, test-race, lint (0 issues), vet, fmt, `nix flake check`, fuzz (short budget) | all green |
-| **Key discovery documented**: jsonv2 **cannot marshal `time.Duration` at all** (go.dev/issue/71631; no tag format; only per-call `FormatDurationAsNano`) → plain int64 ns on the wire; pinned by `TestCheck_JSONOmitZero` + AGENTS.md gotcha | session |
-| **Real consumer verification**: go-health-dashboard cloned, built, and **full test suite passed** against local go-health via replace directive | /tmp clone since trashed |
+| **Golden files**: root golden byte-unchanged (back-compat proven); aggregate golden regenerated deterministically (fixed clock) to lock merged `since`                                                                                                                                                                                                                                                              | `testdata/`, `aggregate/testdata/`                      |
+| **Godoc example** `ExampleNewWithDetailedCheck`                                                                                                                                                                                                                                                                                                                                                                     | `example_test.go`                                       |
+| **Docs sweep**: README (samples + feature bullets), doc.go section, CHANGELOG `[Unreleased]`, FEATURES.md rows, DOMAIN_LANGUAGE entries (5), openapi.yaml Check schema (`since`, `duration_ns`), AGENTS.md (file list, 2 design decisions, concurrency model, new gotcha, doc table)                                                                                                                                | committed                                               |
+| **Gates** (subset, individually): test, test-race, lint (0 issues), vet, fmt, `nix flake check`, fuzz (short budget)                                                                                                                                                                                                                                                                                                | all green                                               |
+| **Key discovery documented**: jsonv2 **cannot marshal `time.Duration` at all** (go.dev/issue/71631; no tag format; only per-call `FormatDurationAsNano`) → plain int64 ns on the wire; pinned by `TestCheck_JSONOmitZero` + AGENTS.md gotcha                                                                                                                                                                        | session                                                 |
+| **Real consumer verification**: go-health-dashboard cloned, built, and **full test suite passed** against local go-health via replace directive                                                                                                                                                                                                                                                                     | /tmp clone since trashed                                |
 
 ## b) PARTIALLY DONE
 
@@ -156,7 +156,7 @@ Self-review (the 11 questions, condensed):
 13. HARVEST this report's items 1–5/7–25 into TODO_LIST.md / ROADMAP.md
     (docs-health HARVEST).
 14. Consider a `TestCheck_JSONOmitZero` companion asserting
-    `duration_ns:0` is absent *inside a full response* through
+    `duration_ns:0` is absent _inside a full response_ through
     `writeResponse` (plain injector path e2e).
 15. Startup handler godoc: mention checks carry `since` (one line).
 16. Fix the openapi.yaml `info.version` (still 0.1.0 — pre-existing drift).
@@ -201,6 +201,6 @@ Self-review (the 11 questions, condensed):
 
 ---
 
-*Point-in-time snapshot; annotate, never rewrite (docs-health ANNOTATE for
+_Point-in-time snapshot; annotate, never rewrite (docs-health ANNOTATE for
 updates). Report written by the session that did the work; no unrelated
-project audit was performed.*
+project audit was performed._

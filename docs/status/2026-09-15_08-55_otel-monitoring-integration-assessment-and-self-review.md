@@ -6,33 +6,33 @@
 
 ## a) FULLY DONE
 
-| # | Item | Evidence |
-|---|------|----------|
+| # | Item                                                                                                                                                                                                                                                                                                                                                                                                                              | Evidence                               |
+| - | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | 1 | **SystemNix monitoring inventory** — SigNoz (OTLP 4317/4318, ClickHouse, embedded alertmanager), signoz-otel-collector prometheus receiver (the ONLY scraper; no standalone Prometheus server), node_exporter + textfile collectors, Gatus (~70 endpoints → Discord + PapDashboard), monitor365 (agent :9191 / server :3001), plus smartd/watchdogd/systemd watchdogs/scripts. No Grafana/Loki/Jaeger/Tempo/uptime-kuma anywhere. | agent sweep over all SystemNix `*.nix` |
-| 2 | **go-health observability surface audit** — `WithEvaluationHook` (sync, per-eval, `probe.go:149`), metrics-ready data model (`Check.Status/Since/DurationNanos`, `types.go:19-88`), Prometheus-by-composition decision (`docs/prometheus-exposition-design.md`), OTEL explicitly deferred to the same seam (design doc line 63). | file reads + grep |
-| 3 | **Seam verification, non-vacuous** — first pass used `nix run .#test -- -run ...` which could have passed vacuously; re-ran with `-v`: `TestWithEvaluationHook_InvokedPerEvaluation`, `ExampleWithEvaluationHook`, `ExampleWithEvaluationHook_metrics` all genuinely RUN and PASS. | `go test -v` output |
-| 4 | **Production consumer confirmed** — cv.nix:707 wires a go-health probe (`/health/live`) into Gatus with `[STATUS] == 200` + response-time conditions; Gatus is SystemNix's kubelet-equivalent. | cv.nix read |
-| 5 | **Assessment delivered** — per-solution fit matrix, verdict (design matches SystemNix's collector-side architecture), 3 ranked actions, top gap identified: no verified OTEL composition path. | previous message |
-| 6 | **Consumer version-drift check (added during self-review)** — SystemNix flake.lock holds THREE go-health pins: two at `274d19f` (= the v0.1.3 release commit exactly) and one STALE at `3d26c49` (v0.0.2-era, 2026-08-06, pre-aggregate, pre-hook). | flake.lock + local tag mapping |
+| 2 | **go-health observability surface audit** — `WithEvaluationHook` (sync, per-eval, `probe.go:149`), metrics-ready data model (`Check.Status/Since/DurationNanos`, `types.go:19-88`), Prometheus-by-composition decision (`docs/prometheus-exposition-design.md`), OTEL explicitly deferred to the same seam (design doc line 63).                                                                                                  | file reads + grep                      |
+| 3 | **Seam verification, non-vacuous** — first pass used `nix run .#test -- -run ...` which could have passed vacuously; re-ran with `-v`: `TestWithEvaluationHook_InvokedPerEvaluation`, `ExampleWithEvaluationHook`, `ExampleWithEvaluationHook_metrics` all genuinely RUN and PASS.                                                                                                                                                | `go test -v` output                    |
+| 4 | **Production consumer confirmed** — cv.nix:707 wires a go-health probe (`/health/live`) into Gatus with `[STATUS] == 200` + response-time conditions; Gatus is SystemNix's kubelet-equivalent.                                                                                                                                                                                                                                    | cv.nix read                            |
+| 5 | **Assessment delivered** — per-solution fit matrix, verdict (design matches SystemNix's collector-side architecture), 3 ranked actions, top gap identified: no verified OTEL composition path.                                                                                                                                                                                                                                    | previous message                       |
+| 6 | **Consumer version-drift check (added during self-review)** — SystemNix flake.lock holds THREE go-health pins: two at `274d19f` (= the v0.1.3 release commit exactly) and one STALE at `3d26c49` (v0.0.2-era, 2026-08-06, pre-aggregate, pre-hook).                                                                                                                                                                               | flake.lock + local tag mapping         |
 
 ## b) PARTIALLY DONE
 
-| # | Item | What's missing |
-|---|------|----------------|
-| 1 | **OTEL verdict** — assessed as "seam exists, no verified path"; the actual spike was offered but not executed (awaiting decision). | The spike itself. |
-| 2 | **monitor365 fit** — claimed "generic HTTP only, nothing obviously missing" WITHOUT verifying whether monitor365 has an HTTP-check/collector mechanism that could consume probes natively. Assertion, not verification. | Read monitor365's collector surface. |
-| 3 | **Gatus capability claims** — asserted `[BODY] pat(...)` works for JSON status assertions; did not verify against the Gatus version SystemNix actually pins. | Version-checked confirmation. |
-| 4 | **Consumer enumeration** — found cv via `rg "go-health"`; services vendored as flakes (discordsync, bank-sync, overview) wouldn't match that string in SystemNix. The stale `go-health_3` pin PROVES at least one more consumer exists that I did not identify. | Identify the stale-pin consumer. |
-| 5 | **signoz-coverage interaction** — never checked whether a go-health-only service would pass SystemNix's eval-time coverage registry (every service must emit traces/logs). If it wouldn't, "integrates well" is only half-true for OTEL-first services. | Registry wiring-class check. |
+| # | Item                                                                                                                                                                                                                                                            | What's missing                       |
+| - | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1 | **OTEL verdict** — assessed as "seam exists, no verified path"; the actual spike was offered but not executed (awaiting decision).                                                                                                                              | The spike itself.                    |
+| 2 | **monitor365 fit** — claimed "generic HTTP only, nothing obviously missing" WITHOUT verifying whether monitor365 has an HTTP-check/collector mechanism that could consume probes natively. Assertion, not verification.                                         | Read monitor365's collector surface. |
+| 3 | **Gatus capability claims** — asserted `[BODY] pat(...)` works for JSON status assertions; did not verify against the Gatus version SystemNix actually pins.                                                                                                    | Version-checked confirmation.        |
+| 4 | **Consumer enumeration** — found cv via `rg "go-health"`; services vendored as flakes (discordsync, bank-sync, overview) wouldn't match that string in SystemNix. The stale `go-health_3` pin PROVES at least one more consumer exists that I did not identify. | Identify the stale-pin consumer.     |
+| 5 | **signoz-coverage interaction** — never checked whether a go-health-only service would pass SystemNix's eval-time coverage registry (every service must emit traces/logs). If it wouldn't, "integrates well" is only half-true for OTEL-first services.         | Registry wiring-class check.         |
 
 ## c) NOT STARTED
 
-| # | Item |
-|---|------|
+| # | Item                                                                                                                                                 |
+| - | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1 | OTEL composition example (hook → OTLP gauges/logs via Go SDK, separate example module to keep go.mod single-dependency) — **the identified top gap** |
-| 2 | `docs/gatus-integration.md` recipe extracted from the proven cv.nix pattern |
-| 3 | node_exporter textfile-collector snippet alongside the Prometheus example |
-| 4 | HARVEST of this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` (docs-health loop-closure — deferred per "wait for instructions") |
+| 2 | `docs/gatus-integration.md` recipe extracted from the proven cv.nix pattern                                                                          |
+| 3 | node_exporter textfile-collector snippet alongside the Prometheus example                                                                            |
+| 4 | HARVEST of this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` (docs-health loop-closure — deferred per "wait for instructions")            |
 
 ## d) TOTALLY FUCKED UP
 
@@ -52,7 +52,7 @@ Nothing data-destroying, but three honest failures:
 
 **Product (go-health, from this assessment):**
 
-4. **OTEL is the real gap, and it's bigger than "missing example":** SystemNix's coverage registry *enforces* OTEL per service. go-health's composition story is documented for Prometheus but only asserted for OTEL — the exact environment where the library will be consumed demands the unproven path.
+4. **OTEL is the real gap, and it's bigger than "missing example":** SystemNix's coverage registry _enforces_ OTEL per service. go-health's composition story is documented for Prometheus but only asserted for OTEL — the exact environment where the library will be consumed demands the unproven path.
 5. **The hook's blocking-contract vs OTEL's network reality is undocumented tension.** `WithEvaluationHook` must be "fast and must not block" (probe.go:146), but an OTLP exporter is a network client. Consumers need a documented non-blocking handoff pattern (channel + draining goroutine + batch exporter), not just the raw seam.
 6. **Hook panic safety is untested.** A panicking evalHook on the refresh-loop path — does it kill the loop? Panic recovery exists for health CHECKS (`runHealthChecks`) but I saw no evidence it wraps the hook call. One bad consumer callback could silently freeze the cache.
 7. **Docs split-brain risk:** Prometheus has a design doc + verified example; Gatus/OTEL/textfile would each add a doc. Without one canonical "Integrations" index, the composition story fragments across files.
@@ -129,4 +129,4 @@ Nothing data-destroying, but three honest failures:
 
 ---
 
-*Format note: user explicitly requested Markdown; the status-report skill default is HTML. Honored per-user instruction. HARVEST into TODO_LIST.md/ROADMAP.md intentionally deferred — session told to wait for instructions after reporting.*
+_Format note: user explicitly requested Markdown; the status-report skill default is HTML. Honored per-user instruction. HARVEST into TODO_LIST.md/ROADMAP.md intentionally deferred — session told to wait for instructions after reporting._

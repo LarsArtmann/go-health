@@ -20,76 +20,101 @@ import (
 func FuzzResponseMarshalDeterministic(f *testing.F) {
 	f.Add("pass", "db", "", "", int64(0), int64(0))
 	f.Add("warn", "cache", "connection refused", "pod-1", int64(0), int64(0))
-	f.Add("fail", "db", "context deadline exceeded", "i-0abc123def", int64(1784000000_000000000), int64(1500000))
+	f.Add(
+		"fail",
+		"db",
+		"context deadline exceeded",
+		"i-0abc123def",
+		int64(1784000000_000000000),
+		int64(1500000),
+	)
 	f.Add("", "", "", "replica-7.example.internal", int64(0), int64(0))
 	f.Add("pass", "a/b c", `quote " backslash \ newline
 `, "pod-\xff\xfe", int64(-42_000000000), int64(1))
 	f.Add("pass", "db", "", "", int64(1<<62), int64(1<<62))
 
-	f.Fuzz(func(t *testing.T, status, checkName, checkErr, instanceID string, sinceNanos, durationNanos int64) {
-		resp := health.Response{
-			Status:     health.Status(status),
-			InstanceID: instanceID,
-			Checks: map[string]health.Check{
-				checkName: {
-					Status:        health.Status(status),
-					Error:         checkErr,
-					Since:         time.Unix(0, sinceNanos).UTC(),
-					DurationNanos: durationNanos,
+	f.Fuzz(
+		func(t *testing.T, status, checkName, checkErr, instanceID string, sinceNanos, durationNanos int64) {
+			resp := health.Response{
+				Status:     health.Status(status),
+				InstanceID: instanceID,
+				Checks: map[string]health.Check{
+					checkName: {
+						Status:        health.Status(status),
+						Error:         checkErr,
+						Since:         time.Unix(0, sinceNanos).UTC(),
+						DurationNanos: durationNanos,
+					},
 				},
-			},
-		}
-
-		// Mirror the production write seam: sanitize, then marshal. Invalid
-		// UTF-8 (which json/v2 rejects, unlike v1) must never break serving.
-		resp = health.SanitizeResponse(resp)
-
-		first, err := json.Marshal(resp, json.Deterministic(true))
-		if err != nil {
-			t.Fatalf("marshal must not fail after sanitize: %v", err)
-		}
-
-		second, err := json.Marshal(resp, json.Deterministic(true))
-		if err != nil {
-			t.Fatalf("marshal must not fail on second pass: %v", err)
-		}
-
-		if string(first) != string(second) {
-			t.Fatalf("non-deterministic output:\n%s\n%s", first, second)
-		}
-
-		var decoded health.Response
-		if err := json.Unmarshal(first, &decoded); err != nil {
-			t.Fatalf("round-trip unmarshal: %v", err)
-		}
-
-		if decoded.Status != resp.Status {
-			t.Fatalf("status round-trip: want %q, got %q", resp.Status, decoded.Status)
-		}
-
-		if decoded.InstanceID != resp.InstanceID {
-			t.Fatalf("instance_id round-trip: want %q, got %q", resp.InstanceID, decoded.InstanceID)
-		}
-
-		for name, wantCheck := range resp.Checks {
-			check, ok := decoded.Checks[name]
-			if !ok {
-				t.Fatalf("check %q lost in round-trip", name)
 			}
 
-			if check.Error != wantCheck.Error {
-				t.Fatalf("check error round-trip: want %q, got %q", wantCheck.Error, check.Error)
+			// Mirror the production write seam: sanitize, then marshal. Invalid
+			// UTF-8 (which json/v2 rejects, unlike v1) must never break serving.
+			resp = health.SanitizeResponse(resp)
+
+			first, err := json.Marshal(resp, json.Deterministic(true))
+			if err != nil {
+				t.Fatalf("marshal must not fail after sanitize: %v", err)
 			}
 
-			if !check.Since.Equal(wantCheck.Since) {
-				t.Fatalf("check since round-trip: want %v, got %v", wantCheck.Since, check.Since)
+			second, err := json.Marshal(resp, json.Deterministic(true))
+			if err != nil {
+				t.Fatalf("marshal must not fail on second pass: %v", err)
 			}
 
-			if check.DurationNanos != wantCheck.DurationNanos {
-				t.Fatalf("check duration round-trip: want %d, got %d", wantCheck.DurationNanos, check.DurationNanos)
+			if string(first) != string(second) {
+				t.Fatalf("non-deterministic output:\n%s\n%s", first, second)
 			}
-		}
-	})
+
+			var decoded health.Response
+			if err := json.Unmarshal(first, &decoded); err != nil {
+				t.Fatalf("round-trip unmarshal: %v", err)
+			}
+
+			if decoded.Status != resp.Status {
+				t.Fatalf("status round-trip: want %q, got %q", resp.Status, decoded.Status)
+			}
+
+			if decoded.InstanceID != resp.InstanceID {
+				t.Fatalf(
+					"instance_id round-trip: want %q, got %q",
+					resp.InstanceID,
+					decoded.InstanceID,
+				)
+			}
+
+			for name, wantCheck := range resp.Checks {
+				check, ok := decoded.Checks[name]
+				if !ok {
+					t.Fatalf("check %q lost in round-trip", name)
+				}
+
+				if check.Error != wantCheck.Error {
+					t.Fatalf(
+						"check error round-trip: want %q, got %q",
+						wantCheck.Error,
+						check.Error,
+					)
+				}
+
+				if !check.Since.Equal(wantCheck.Since) {
+					t.Fatalf(
+						"check since round-trip: want %v, got %v",
+						wantCheck.Since,
+						check.Since,
+					)
+				}
+
+				if check.DurationNanos != wantCheck.DurationNanos {
+					t.Fatalf(
+						"check duration round-trip: want %d, got %d",
+						wantCheck.DurationNanos,
+						check.DurationNanos,
+					)
+				}
+			}
+		},
+	)
 }
 
 // FuzzHandlerInput fuzzes HTTP method and request target against all three

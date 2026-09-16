@@ -83,7 +83,8 @@ func (p *Probe) ReadinessHandler() http.HandlerFunc {
 // present and healthy. Once that condition is met, the latch flips and all
 // subsequent calls return 200 immediately without re-checking. This allows
 // Kubernetes to use a generous failureThreshold for slow-booting applications
-// without affecting liveness or readiness sensitivity.
+// without affecting liveness or readiness sensitivity. Each served check
+// carries its probe-observed Since transition time.
 func (p *Probe) StartupHandler() http.HandlerFunc {
 	return p.guard(func(w http.ResponseWriter, r *http.Request) {
 		if p.startupPassed.Load() {

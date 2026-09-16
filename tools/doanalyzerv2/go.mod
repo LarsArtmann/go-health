@@ -10,7 +10,7 @@ require (
 	github.com/go-faster/errors v0.8.0 // indirect
 	github.com/go-faster/jx v1.2.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
-	github.com/larsartmann/go-error-family v0.10.0 // indirect
+	github.com/larsartmann/go-error-family v0.10.1 // indirect
 	github.com/larsartmann/go-finding v1.10.0 // indirect
 	github.com/larsartmann/samber-linter v0.1.1 // indirect
 	github.com/samber/mo v1.17.0 // indirect

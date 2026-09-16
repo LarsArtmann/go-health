@@ -5,6 +5,7 @@ import (
 	"encoding/json/v2"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -520,5 +521,37 @@ func TestCheck_JSONOmitZero(t *testing.T) {
 	want := `{"status":"fail","error":"down","since":"2026-09-15T14:02:00Z","duration_ns":1500000}`
 	if string(payload) != want {
 		t.Errorf("populated check wire format:\nwant: %s\ngot:  %s", want, payload)
+	}
+}
+
+// TestReadinessHandler_WireOmitZeroOnInjectorPath is the end-to-end
+// companion to TestCheck_JSONOmitZero: through the real handler write path,
+// a plain-injector probe serves checks whose probe-observed since is present
+// while the unknown duration_ns stays absent — never a literal
+// "duration_ns":0.
+func TestReadinessHandler_WireOmitZeroOnInjectorPath(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	provideHealthy(injector, "db")
+	invoke[*healthyService](t, injector, "db")
+
+	probe := health.New(injector, health.WithRefreshInterval(0))
+
+	w := httptest.NewRecorder()
+	probe.ReadinessHandler()(w, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("readiness: want 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+
+	if !strings.Contains(body, `"since"`) {
+		t.Errorf("probe-observed since must be served, got %s", body)
+	}
+
+	if strings.Contains(body, "duration_ns") {
+		t.Errorf("unknown duration must be omitted, got %s", body)
 	}
 }

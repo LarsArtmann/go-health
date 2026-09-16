@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	health "github.com/larsartmann/go-health"
 	do "github.com/samber/do/v2"
@@ -14,21 +15,28 @@ import (
 // FuzzResponseMarshalDeterministic fuzzes Response string fields through the
 // production marshal path. Invariants under any input: no panic, two
 // consecutive marshals are byte-identical (Deterministic), and the payload
-// round-trips status, instance_id, and check entries intact.
+// round-trips status, instance_id, and check entries intact — including the
+// per-check metadata (Since as nanoseconds-since-Unix-epoch, DurationNanos).
 func FuzzResponseMarshalDeterministic(f *testing.F) {
-	f.Add("pass", "db", "", "")
-	f.Add("warn", "cache", "connection refused", "pod-1")
-	f.Add("fail", "db", "context deadline exceeded", "i-0abc123def")
-	f.Add("", "", "", "replica-7.example.internal")
+	f.Add("pass", "db", "", "", int64(0), int64(0))
+	f.Add("warn", "cache", "connection refused", "pod-1", int64(0), int64(0))
+	f.Add("fail", "db", "context deadline exceeded", "i-0abc123def", int64(1784000000_000000000), int64(1500000))
+	f.Add("", "", "", "replica-7.example.internal", int64(0), int64(0))
 	f.Add("pass", "a/b c", `quote " backslash \ newline
-`, "pod-\xff\xfe")
+`, "pod-\xff\xfe", int64(-42_000000000), int64(1))
+	f.Add("pass", "db", "", "", int64(1<<62), int64(1<<62))
 
-	f.Fuzz(func(t *testing.T, status, checkName, checkErr, instanceID string) {
+	f.Fuzz(func(t *testing.T, status, checkName, checkErr, instanceID string, sinceNanos, durationNanos int64) {
 		resp := health.Response{
 			Status:     health.Status(status),
 			InstanceID: instanceID,
 			Checks: map[string]health.Check{
-				checkName: {Status: health.Status(status), Error: checkErr},
+				checkName: {
+					Status:        health.Status(status),
+					Error:         checkErr,
+					Since:         time.Unix(0, sinceNanos).UTC(),
+					DurationNanos: durationNanos,
+				},
 			},
 		}
 
@@ -71,6 +79,14 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 
 			if check.Error != wantCheck.Error {
 				t.Fatalf("check error round-trip: want %q, got %q", wantCheck.Error, check.Error)
+			}
+
+			if !check.Since.Equal(wantCheck.Since) {
+				t.Fatalf("check since round-trip: want %v, got %v", wantCheck.Since, check.Since)
+			}
+
+			if check.DurationNanos != wantCheck.DurationNanos {
+				t.Fatalf("check duration round-trip: want %d, got %d", wantCheck.DurationNanos, check.DurationNanos)
 			}
 		}
 	})

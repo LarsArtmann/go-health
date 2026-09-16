@@ -12,6 +12,12 @@
 > (`docs/status/2026-09-04_21-31_pareto-plan-v2-full-execution-v012-released.md`
 > §b/§f) harvested in. v0.1.2 is released; the aggregate slash-name contract
 > sits unreleased in CHANGELOG `[Unreleased]` awaiting its release vehicle.
+>
+> Harvested 2026-09-16: issue #2 (per-check Since/DurationNanos) closed
+> after verification (gates green, fuzz re-seeded, e2e omitzero test added,
+> analyzer 0 findings, dashboard consumer build verified). Remaining
+> follow-ups from `docs/status/2026-09-15_06-56_issue-2-per-check-metadata-session.md`
+> §f routed into the tables below.
 
 ## Status legend
 
@@ -25,6 +31,7 @@
 
 | Task                                                             | Status  | Impact | Effort | Evidence                                                                                                                                                                                                                        |
 | ---------------------------------------------------------------- | ------- | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Release vehicle for the issue-#2 metadata work: v0.1.4 now or batch? | BLOCKED | High   | 30min  | CHANGELOG `[Unreleased]` carries the whole Since/DurationNanos feature; dashboard consumer verified compatible (2026-09-16). Owner decision; then tag + proxy-verify per go-release skill.                                        |
 | Enable branch protection on `master` (5 checks + linear history) | BLOCKED | High   | 10min  | Needs owner/admin repo settings (decision G3). Ready-to-run command below. ⚠️ required status checks block direct pushes for non-admins; `enforce_admins: false` keeps your admin bypass. See `.github/workflows/ci.yml` header. |
 | Coverage-threshold CI job (fail < 97%)?                          | BLOCKED | Medium | 20min  | Policy call (decision G3 follow-up). CONTRIBUTING states the 99.7% baseline; a red-failing threshold job is a maintainer preference, not a default.                                                                             |
 
@@ -73,3 +80,16 @@ Check names are the exact `name:` fields CI reports. To revert:
 | Aggregate property tests: merge idempotence + source-order commutativity     | TODO   | Medium | 45min  | Two reads of `CachedResponse` identical; merge result independent of source order. `21-31` §f16–17. `aggregate/aggregate.go`                                          |
 | OpenAPI ↔ golden-file lockstep check in CI (currently a manual eyeball)      | TODO   | Low    | 45min  | The golden test and `docs/openapi.yaml` can drift silently. `21-31` §f23.                                                                                             |
 | README: short "which probe should I hit?" decision table for newcomers       | TODO   | Low    | 30min  | Three-probe choice is explained in prose only. `21-31` §f25.                                                                                                          |
+| Dashboard: render "failing since HH:MM (Nm)" from `check.since`              | TODO   | High   | 2h     | Wire fields shipped (unreleased); dashboard renders placeholders. Own repo: `go-health-dashboard`. `09-15` §f2.                                                        |
+| Dashboard: status-changes timeline from `since` (kill sampling-clock guess)  | TODO   | High   | 4h     | Same wire source. `09-15` §f3.                                                                                                                                        |
+| Dashboard: render `duration_ns` adaptively (µs/ms), hide when absent         | TODO   | Medium | 1h     | `09-15` §f4.                                                                                                                                                          |
+| Dashboard: "stable for Xh" collapse summaries for healthy groups             | TODO   | Medium | 2h     | `09-15` §f5.                                                                                                                                                          |
+| `BenchmarkEvaluate` before/after tracker + FEATURES.md delta; re-baseline existing rows | TODO   | Medium | 1h     | Since stamping adds one mutex'd batch pass; unmeasured. `09-15` §f8–9.                                                                                                |
+| File samber/do upstream: richer batch results (per-service timing)           | TODO   | Medium | 30min  | Would let the injector path populate `duration_ns` (currently zero). `09-15` §f11.                                                                                    |
+| samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor)   | TODO   | Medium | 1h     | It already times checks internally. `09-15` §f12.                                                                                                                     |
+| Dashboard integration test pinning `since`/`duration_ns` rendering           | TODO   | Low    | 45min  | After dashboard adopts. `09-15` §f24.                                                                                                                                 |
+| Make `ExampleNewWithDetailedCheck` output deterministic                      | TODO   | Low    | 15min  | Assert non-negative duration instead of printing raw timing. `09-15` §f17.                                                                                            |
+| Detailed-checks cookbook (self-timing + `NewWithDetailedCheck` composition)  | TODO   | Low    | 1h     | README or docs/. `09-15` §f22–23.                                                                                                                                     |
+| Prose review: `middleware_example_test.go` / `prometheus_example_test.go` wire examples | TODO   | Low    | 20min  | They pass; docs-only sweep. `09-15` §f27.                                                                                                                             |
+| golangci `nolint_filter` warning for `//nolint:erraudit` (unknown linter)    | TODO   | Low    | 15min  | erraudit is a standalone tool honoring `//nolint`; golangci doesn't know it (warning, exit 0). Accept or find a suppression path. Found 2026-09-16.                   |
+| ADR: unify latency units (`total_latency_ms` vs `duration_ns`) in v0.2       | TODO   | Low    | 30min  | Dual units forever or one breaking unification while alpha. `09-15` §f25.                                                                                             |

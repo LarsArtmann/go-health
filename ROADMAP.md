@@ -20,7 +20,7 @@ the shutdown-grace, AsShutdowner, and aggregate examples landed right after
 
 - `AwaitReady` with a cache-aware poll interval (respect the source's
   refresh interval instead of a fixed 50ms poll)
-- Aggregate `Healthz` parity → promoted to a v0.2.0 candidate (Theme 7)
+- Aggregate `Healthz` parity → promoted to a v0.3.0 candidate (Theme 7)
 
 ### 2. Observability & Diagnostics
 
@@ -98,7 +98,7 @@ Raw ideas (quality polish, none scheduled):
 
 How the v0.x line matures.
 
-#### v0.2.0 candidates (feature-driven, unscheduled)
+#### v0.3.0 candidates (feature-driven, unscheduled)
 
 Scoped 2026-09-04 from the open idea inventory. All are additive;
 the first two carry a written design, the `Healthz` parity decision note is

@@ -1,6 +1,6 @@
 # Per-Source Roll-up Visibility — design note
 
-> Decided: 2026-09-04 · Status: DEFERRED to v0.2.0 (additive accessor candidate) · Resolves: open idea "aggregate observability / per-source roll-up"
+> Decided: 2026-09-04 · Status: DEFERRED to v0.3.0 (additive accessor candidate) · Resolves: open idea "aggregate observability / per-source roll-up"
 
 ## Problem
 
@@ -34,7 +34,7 @@ reimplementing the worst-of fold the package already owns.
 
 The accessor is purely additive and could ship in a patch, but nothing
 currently demands it — the only known consumer (go-health-dashboard) folds
-prefixes itself today. Shipping it as a v0.2.0 headline (together with the
+prefixes itself today. Shipping it as a v0.3.0 headline (together with the
 `errors.Join` construction errors) keeps each release purposeful. If a
 second consumer appears earlier, promote it.
 

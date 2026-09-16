@@ -17,7 +17,8 @@
 > after verification (gates green, fuzz re-seeded, e2e omitzero test added,
 > analyzer 0 findings, dashboard consumer build verified). Remaining
 > follow-ups from `docs/status/2026-09-15_06-56_issue-2-per-check-metadata-session.md`
-> §f routed into the tables below.
+> §f routed into the tables below. Release vehicle decided same day:
+> shipped as v0.2.0 (owner decision, tag + proxy-verify per go-release skill).
 
 ## Status legend
 
@@ -31,7 +32,6 @@
 
 | Task                                                                 | Status  | Impact | Effort | Evidence                                                                                                                                                                                                                        |
 | -------------------------------------------------------------------- | ------- | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Release vehicle for the issue-#2 metadata work: v0.1.4 now or batch? | BLOCKED | High   | 30min  | CHANGELOG `[Unreleased]` carries the whole Since/DurationNanos feature; dashboard consumer verified compatible (2026-09-16). Owner decision; then tag + proxy-verify per go-release skill.                                      |
 | Enable branch protection on `master` (5 checks + linear history)     | BLOCKED | High   | 10min  | Needs owner/admin repo settings (decision G3). Ready-to-run command below. ⚠️ required status checks block direct pushes for non-admins; `enforce_admins: false` keeps your admin bypass. See `.github/workflows/ci.yml` header. |
 | Coverage-threshold CI job (fail < 97%)?                              | BLOCKED | Medium | 20min  | Policy call (decision G3 follow-up). CONTRIBUTING states the 99.7% baseline; a red-failing threshold job is a maintainer preference, not a default.                                                                             |
 
@@ -92,4 +92,4 @@ Check names are the exact `name:` fields CI reports. To revert:
 | Detailed-checks cookbook (self-timing + `NewWithDetailedCheck` composition)             | TODO   | Low    | 1h     | README or docs/. `09-15` §f22–23.                                                                                                                                     |
 | Prose review: `middleware_example_test.go` / `prometheus_example_test.go` wire examples | TODO   | Low    | 20min  | They pass; docs-only sweep. `09-15` §f27.                                                                                                                             |
 | golangci `nolint_filter` warning for `//nolint:erraudit` (unknown linter)               | TODO   | Low    | 15min  | erraudit is a standalone tool honoring `//nolint`; golangci doesn't know it (warning, exit 0). Accept or find a suppression path. Found 2026-09-16.                   |
-| ADR: unify latency units (`total_latency_ms` vs `duration_ns`) in v0.2                  | TODO   | Low    | 30min  | Dual units forever or one breaking unification while alpha. `09-15` §f25.                                                                                             |
+| ADR: unify latency units (`total_latency_ms` vs `duration_ns`) in v0.3                | TODO   | Low    | 30min  | Dual units forever or one breaking unification while alpha. `09-15` §f25.                                                                                             |

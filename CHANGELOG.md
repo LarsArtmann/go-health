@@ -5,6 +5,47 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+## [0.2.0] - 2026-09-16
+
+### Added
+
+- Per-check metadata answering "how long has it been failing?" and "how
+  slow is it?" (issue #2): `Check.Since` (probe-observed time the check
+  entered its current status — carried forward while the status holds,
+  restarted on change, reset on process restart) and `Check.DurationNanos`
+  (executor-reported execution time, nanoseconds). Both omitted from JSON
+  via `omitzero` when unknown, so existing wire payloads are unchanged on
+  paths that do not produce them. Full semantics:
+  `docs/check-metadata-design.md`.
+- `CheckDetail` (executor's raw report: outcome + duration) with two opt-in
+  sources: `NewWithDetailedCheck(fn)` for injector-free probes and the
+  optional `DetailedHealthRecorder` interface a `HealthRecorder` can
+  implement to pass per-check durations through. Classification stays with
+  the probe on both paths. The raw samber/do injector path reports zero
+  duration (unknown): do's batch API cannot measure per-check timing.
+- Wire-format note: the per-check duration is `duration_ns` (int64
+  nanoseconds), not a `time.Duration` — `encoding/json/v2` cannot marshal
+  `time.Duration` at all (go.dev/issue/71631; no tag format exists), so a
+  plain lossless integer keeps every consumer's re-marshal working. The
+  aggregate golden file now deterministically locks the merged `since`
+  fields (primed sources use a fixed clock).
+
+### Changed
+
+- The `go` directive is relaxed from `1.26.7` to `1.26`: any go1.26.x
+  toolchain now builds the module. The `GOEXPERIMENT=jsonv2` requirement on
+  go1.26 is unchanged. Toolchain-only; no API or behavior change.
+
 ## [0.1.3] - 2026-09-04
 
 ### Added
@@ -43,35 +84,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   documented grouping axis. Check names may still contain `/`; everything
   before the first slash in a merged key is the source name. Rationale and
   migration guidance in `docs/aggregate-source-name-design.md`.
-
-## [Unreleased]
-
-### Added
-
-- Per-check metadata answering "how long has it been failing?" and "how
-  slow is it?" (issue #2): `Check.Since` (probe-observed time the check
-  entered its current status — carried forward while the status holds,
-  restarted on change, reset on process restart) and `Check.DurationNanos`
-  (executor-reported execution time, nanoseconds). Both omitted from JSON
-  via `omitzero` when unknown, so existing wire payloads are unchanged on
-  paths that do not produce them. Full semantics:
-  `docs/check-metadata-design.md`.
-- `CheckDetail` (executor's raw report: outcome + duration) with two opt-in
-  sources: `NewWithDetailedCheck(fn)` for injector-free probes and the
-  optional `DetailedHealthRecorder` interface a `HealthRecorder` can
-  implement to pass per-check durations through. Classification stays with
-  the probe on both paths. The raw samber/do injector path reports zero
-  duration (unknown): do's batch API cannot measure per-check timing.
-- Wire-format note: the per-check duration is `duration_ns` (int64
-  nanoseconds), not a `time.Duration` — `encoding/json/v2` cannot marshal
-  `time.Duration` at all (go.dev/issue/71631; no tag format exists), so a
-  plain lossless integer keeps every consumer's re-marshal working. The
-  aggregate golden file now deterministically locks the merged `since`
-  fields (primed sources use a fixed clock).
-
-### Changed
-
-- Nothing yet.
 
 ## [0.1.2] - 2026-09-04
 

@@ -1,6 +1,6 @@
 # errors.Join for aggregate.New — design note
 
-> Decided: 2026-09-04 · Status: DEFERRED to v0.2.0 (spike verified) · Resolves: open idea "better construction errors"
+> Decided: 2026-09-04 · Status: DEFERRED to v0.3.0 (spike verified) · Resolves: open idea "better construction errors"
 
 ## Problem
 
@@ -23,7 +23,7 @@ Joining wrapped sentinels —
 3. **Cost:** stdlib, zero allocations beyond the joined tree; no new
    dependency (the project is deliberately stdlib-errors — see ADR-001).
 
-## Decision: defer to v0.2.0
+## Decision: defer to v0.3.0
 
 The change is small, but it is a **behavior change**, not a refactor:
 
@@ -34,7 +34,7 @@ The change is small, but it is a **behavior change**, not a refactor:
   errors into single-line logs/panic messages would see wrapping change.
 
 Both belong in a minor release with a changelog callout, not a patch-window
-drive-by. v0.2.0 candidate:
+drive-by. v0.3.0 candidate:
 
 > `aggregate.New` validates all sources and returns a joined error listing
 > every problem (one line each), instead of failing on the first. `errors.Is`

@@ -534,6 +534,7 @@ func TestCachedResponse_FetchTimeout(t *testing.T) {
 
 	slow := newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
 		time.Sleep(500 * time.Millisecond)
+
 		_, _ = w.Write([]byte(`{"status":"pass","checks":{}}`))
 	})
 
@@ -566,6 +567,7 @@ func TestCachedResponse_ConcurrentReads(t *testing.T) {
 
 	upstream := newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
 		requests.Add(1)
+
 		_, _ = w.Write([]byte(`{"status":"pass","checks":{"db":{"status":"pass"}}}`))
 	})
 

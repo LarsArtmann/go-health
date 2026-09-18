@@ -3,7 +3,6 @@ package federation_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 
@@ -34,7 +33,9 @@ func ExampleNew() {
 		},
 	)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error:", err)
+
+		return
 	}
 
 	mux := http.NewServeMux()

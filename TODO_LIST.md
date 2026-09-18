@@ -19,6 +19,14 @@
 > follow-ups from `docs/status/2026-09-15_06-56_issue-2-per-check-metadata-session.md`
 > §f routed into the tables below. Release vehicle decided same day:
 > shipped as v0.2.0 (owner decision, tag + proxy-verify per go-release skill).
+>
+> Note 2026-09-18 (hardening pass): aggregate merge property tests,
+> aggregate HTTP / Evaluate-scaling / tracker-stamp benchmarks, ADR-005, the
+> OpenAPI aggregate coverage, the README "which probe?" decision table, and
+> the `ExampleNewWithDetailedCheck` label fix shipped (see CHANGELOG
+> `[Unreleased]`); their rows below are resolved and can be harvested. New
+> task surfaced: implement `Aggregate.Healthz()` per
+> `docs/aggregate-healthz-design.md` (v0.3.0 candidate).
 
 ## Status legend
 

@@ -9,11 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- Aggregate merge property tests (`aggregate/aggregate_property_test.go`):
+  idempotence, source-order commutativity, namespaced-union completeness and
+  disjointness, worst-of roll-up (status/shutdown/latency), an absorbing
+  shutdown invariant, and handler-status mirroring — enumerated over every
+  source topology of up to three distinct cached states (pass, warn, fail,
+  shutting down, never-started).
+- Benchmarks covering previously unmeasured paths: `BenchmarkAggregateHandlers`
+  (the aggregate HTTP path per handler), `BenchmarkEvaluate_Scaling`
+  (injector-free evaluation vs. check count), and
+  `BenchmarkTransitionTrackerStamp` (the per-batch Since-stamp cost).
+  Baselines recorded in FEATURES.md.
+- ADR-005: the aggregate source-name contract (`/` rejected) promoted from a
+  design note into the formal ADR series.
+- Design note for proposed aggregate `Healthz()` parity
+  (`docs/aggregate-healthz-design.md`) — the single-endpoint handler the
+  aggregate lacks; implementation deferred to v0.3.0.
+- README "Which probe should I hit?" decision table mapping each consumer
+  (kubelet probes, load balancer, dashboard, in-process code) to its probe.
 
 ### Changed
 
-- Nothing yet.
+- The OpenAPI spec now states explicitly that it covers the aggregate
+  endpoints (same paths and schemas), documenting the body-level differences:
+  `source/check` keys, dropped per-process scalars, slowest-source latency,
+  and absorbing shutdown. Spec version bumped to 0.2.0.
+- `ExampleNewWithDetailedCheck` output label corrected: it asserts the `since`
+  transition timestamp is set, not a failure state.
+- `Status.Rank` switch made exhaustive (explicit `StatusPass` case) to satisfy
+  the `exhaustive` linter; behavior unchanged.
 
 ## [0.2.0] - 2026-09-16
 

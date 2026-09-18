@@ -98,7 +98,7 @@
 
 ## Performance
 
-Baselines recorded 2026-09-04 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`).
+Baselines recorded 2026-09-04; `*_Scaling`/handlers/tracker rows recorded 2026-09-18 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`).
 
 | Benchmark                                        | Result                                                                                                      | Notes                                                                                                                                                           |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -109,6 +109,9 @@ Baselines recorded 2026-09-04 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`
 | `BenchmarkGuardOverhead_HEADAllowed`             | ~790 ns/op · 474 B/op · 9 allocs                                                                            | Two-method set (GET+HEAD), HEAD request: same cost class as the single-method set; multi-method guards are free.                                                |
 | `BenchmarkGuardOverhead_AllowHeader`             | ~250 ns/op · 88 B/op · 5 allocs                                                                             | The 405 response's Allow-header construction (sorted join over a 3-method set): the entire marginal cost of an unlisted-method reply.                           |
 | `BenchmarkAggregateCachedResponse` (median of 3) | 1 src: 390 ns · 504 B · 5 allocs; 2: 506 ns · 544 B · 8; 4: 1.26 µs · 1560 B · 17; 8: 2.79 µs · 3544 B · 31 | Merge-on-read cost scales ~linearly with source count (~330 ns + 1 map-entry insert per check per source). `aggregate/aggregate_benchmark_test.go`.             |
+| `BenchmarkAggregateHandlers/readiness`            | 1 src: ~5.7 µs · 3768 B · 29 allocs; 4 srcs: ~13.2 µs · 8307 B · 61 allocs                                 | Full aggregate HTTP path: merge + sanitize + deterministic marshal + write. `liveness` is the empty-check floor; `startup_unlatched` is the 503 branch.          |
+| `BenchmarkEvaluate_Scaling`                      | 1 svc: ~897 ns · 2027 B · 10 allocs; 8: ~2.4 µs · 3518 B · 20; 64: ~14.7 µs · 34973 B · 84                | Injector-free full evaluation (batch + checks + tracker stamp + classify) vs. check count. Complements the 2-service `BenchmarkEvaluate`.                       |
+| `BenchmarkTransitionTrackerStamp`                | 1 check: ~142 ns · 528 B · 2 allocs; 8: ~507 ns · 528 B · 2; 64: ~4.3 µs · 8280 B · 4                      | Per-batch Since stamp: a fresh tracked map plus one mutex-guarded pass. Warm (stable statuses); a transition adds one struct alloc.                              |
 
 ## Infrastructure & Tooling
 

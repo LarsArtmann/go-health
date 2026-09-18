@@ -26,6 +26,8 @@ func (s Status) Rank() int {
 		return 0
 	case StatusWarn:
 		return 1
+	case StatusPass:
+		return 2
 	default:
 		return 2
 	}

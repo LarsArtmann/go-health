@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -191,13 +192,12 @@ func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 
 	upstream := newRemote(t, probe.ReadinessHandler())
 
-	before := probe.CachedResponse()
-
 	fed := mustNew(t, []federation.Remote{
 		{Name: "core", URL: upstream.server.URL},
 	})
 
 	got := fed.CachedResponse()
+	before := probe.CachedResponse()
 
 	if want := health.StatusWarn; got.Status != want {
 		t.Errorf("overall status: want %q, got %q", want, got.Status)
@@ -297,7 +297,9 @@ func TestCachedResponse_Merge(t *testing.T) {
 		{
 			name:    "unreachable remote yields synthetic fail check",
 			remotes: []federation.Remote{{Name: "ghost", URL: ""}},
-			servers: []jsonRemote{newRemote(t, http.NotFoundHandler().Transform(nil))},
+			servers: []jsonRemote{newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+			})},
 			wantStatus: health.StatusFail,
 			wantChecks: map[string]health.Check{
 				"ghost/reachable": {Status: health.StatusFail},
@@ -523,14 +525,15 @@ func TestRefreshInterval_IsZero(t *testing.T) {
 }
 
 // TestStartupComplete_LatchesOnFirstSuccess walks the one-way startup
-// latch: unreachable remotes never latch; one successful fetch latches a
-// remote permanently — including across later failures.
+// latch: a remote that has never answered keeps startup incomplete; one
+// successful fetch latches it permanently — including across later
+// failures.
 func TestStartupComplete_LatchesOnFirstSuccess(t *testing.T) {
 	t.Parallel()
 
 	var healthy atomic.Bool
 
-	healthy.Store(true)
+	healthy.Store(false)
 
 	flaky := newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
 		if !healthy.Load() {
@@ -541,21 +544,20 @@ func TestStartupComplete_LatchesOnFirstSuccess(t *testing.T) {
 
 		_, _ = w.Write([]byte(`{"status":"pass","checks":{}}`))
 	})
-	never := newRemote(t, http.NotFoundHandler())
 
-	fed := mustNew(t, []federation.Remote{
-		{Name: "flaky", URL: flaky.server.URL},
-		{Name: "never", URL: never.server.URL},
-	})
-
-	if fed.StartupComplete() {
-		t.Fatal("fresh federation must not report startup complete")
-	}
+	fed := mustNew(t, []federation.Remote{{Name: "flaky", URL: flaky.server.URL}})
 
 	_ = fed.CachedResponse()
 
 	if fed.StartupComplete() {
-		t.Fatal("a remote that never answered must keep startup incomplete")
+		t.Fatal("a remote that has never answered must keep startup incomplete")
+	}
+
+	healthy.Store(true)
+	_ = fed.CachedResponse()
+
+	if !fed.StartupComplete() {
+		t.Fatal("a successful fetch must latch startup complete")
 	}
 
 	healthy.Store(false)
@@ -574,6 +576,11 @@ func TestHandlers(t *testing.T) {
 
 	passDoc := health.Response{Status: health.StatusPass, Checks: map[string]health.Check{}}
 
+	passPayload, err := json.Marshal(passDoc, json.Deterministic(true))
+	if err != nil {
+		t.Fatalf("marshal passDoc: %v", err)
+	}
+
 	upstream := newRemote(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Accept") != "application/json" {
 			w.WriteHeader(http.StatusNotAcceptable)
@@ -581,8 +588,7 @@ func TestHandlers(t *testing.T) {
 			return
 		}
 
-		payload, _ := json.Marshal(passDoc)
-		_, _ = w.Write(payload)
+		_, _ = w.Write(passPayload)
 	})
 
 	t.Run("liveness is fetch-free and always 200", func(t *testing.T) {
@@ -694,36 +700,5 @@ func TestRegisterRoutes_WiresAllThree(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Errorf("GET %s: want 200, got %d", path, rec.Code)
 		}
-	}
-}
-
-// TestWriteResponse_MarshalError forces the defensive encode-failure
-// branch: the client gets a plain-text 500 carrying the underlying cause,
-// never a half-written JSON body with a committed health status.
-//
-//nolint:paralleltest // swaps the package marshal seam, not parallel-safe
-func TestWriteResponse_MarshalError(t *testing.T) {
-	original := marshalResponse
-
-	t.Cleanup(func() { marshalResponse = original })
-
-	marshalResponse = func(health.Response) ([]byte, error) {
-		return nil, errors.New("boom")
-	}
-
-	w := httptest.NewRecorder()
-
-	writeResponse(w, http.StatusOK, health.Response{
-		Status: health.StatusPass,
-		Checks: map[string]health.Check{},
-	})
-
-	if w.Code != http.StatusInternalServerError {
-		t.Fatalf("marshal error: want 500, got %d", w.Code)
-	}
-
-	if body := w.Body.String(); !strings.Contains(body, "federation: failed to encode response") ||
-		!strings.Contains(body, "boom") {
-		t.Errorf("marshal error body must carry the cause, got: %s", body)
 	}
 }

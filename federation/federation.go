@@ -37,6 +37,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -155,6 +156,12 @@ func New(remotes []Remote, opts ...Option) (*Prober, error) {
 		switch {
 		case remote.Name == "":
 			return nil, fmt.Errorf("%w: remote name must not be empty", ErrInvalidRemote)
+		case strings.Contains(remote.Name, "/"):
+			return nil, fmt.Errorf(
+				"%w: remote name %q must not contain '/' (names become \"name/check\" key prefixes)",
+				ErrInvalidRemote,
+				remote.Name,
+			)
 		case remote.URL == "":
 			return nil, fmt.Errorf("%w: remote %q has an empty URL", ErrInvalidRemote, remote.Name)
 		}

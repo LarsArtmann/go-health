@@ -1,9 +1,9 @@
 # Aggregate `Healthz` parity — design note
 
-|            |                                                                       |
-| ---------- | --------------------------------------------------------------------- |
-| **Date**   | 2026-09-18                                                            |
-| **Status** | PROPOSED — v0.3.0 candidate; design note required before implementing  |
+|            |                                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| **Date**   | 2026-09-18                                                                                         |
+| **Status** | PROPOSED — v0.3.0 candidate; design note required before implementing                              |
 | **Inputs** | `Probe.Healthz()` ([accessors.go](../../accessors.go)), `aggregate` merge-on-read, ROADMAP Theme 7 |
 
 ## Problem
@@ -46,7 +46,7 @@ Aggregate.Healthz() == 503  iff  any source has an unset startup latch
 
 Worst-of-N belongs in a single answer because that is the question the
 endpoint exists to answer: a load balancer routing to this process must not
-route while *any* embedded source is booting, failing, or draining. `warn`
+route while _any_ embedded source is booting, failing, or draining. `warn`
 (non-critical degradation) stays 200, matching `Probe.Healthz()` and
 `Aggregate.ReadinessHandler()`.
 

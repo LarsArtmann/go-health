@@ -13,7 +13,7 @@ Two invariants are claimed for that format, and both depend on source names
 never containing `/`:
 
 1. **Collision-free keys** — two sources can never produce the same key.
-2. **Stable grouping axis** — everything before the *first* `/` is the source
+2. **Stable grouping axis** — everything before the _first_ `/` is the source
    name, giving dashboards a way to attribute checks.
 
 Before the strict rule, an aliasing hazard was silent and produced a wrong

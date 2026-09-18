@@ -22,10 +22,10 @@ github.com/google/pprof v0.0.0-20260709232956-b9395ee17fa0 h1:du0WGc8xSKq/++e0cg
 github.com/google/pprof v0.0.0-20260709232956-b9395ee17fa0/go.mod h1:MxpfABSjhmINe3F1It9d+8exIHFvUqtLIRCdOGNXqiI=
 github.com/larsartmann/go-error-family v0.10.1 h1:lf1RNjpdK7k+tCzphkg5qRolAY76U8OGEc09ZsZ5S6A=
 github.com/larsartmann/go-error-family v0.10.1/go.mod h1:SYSVwVMTkw2GcqXI4khjMYOg7ey39o8sh7rXC9LfNcY=
-github.com/larsartmann/go-finding v1.10.0 h1:TDV0K1Vg3frcR5zNB439M0IBq3EmwG05G8zKfl46bEs=
-github.com/larsartmann/go-finding v1.10.0/go.mod h1:RstMuPBVk89IU581aR7AutJR+WrseYLLRDz1Dejyt7Y=
-github.com/larsartmann/samber-linter v0.1.1 h1:/jmkSyZMrbSAhi5AG7DrXwy/xphNXb12ShD8yqTTL30=
-github.com/larsartmann/samber-linter v0.1.1/go.mod h1:2tjtTwTwYlCe2hO3oaW+4XVQO/l/T7vV++iKT7IPeQc=
+github.com/larsartmann/go-finding v1.12.0 h1:meOBoZbghWFJDSO5FSQJgP3VyLzfKqhl1X118zGj35s=
+github.com/larsartmann/go-finding v1.12.0/go.mod h1:oCnnUf+B9OVHv9grXF5+UpWajhf3wyNVs8Ze71LSDmM=
+github.com/larsartmann/samber-linter v0.2.1 h1:GumMlOVE4skm9DIhKRusVB6xCgO2oEL0NU7R8Y1P/7I=
+github.com/larsartmann/samber-linter v0.2.1/go.mod h1:UWs6lM4j/Sta9q8k2EEbZtH7cywLs/EWJyoXFdvgDZM=
 github.com/onsi/ginkgo/v2 v2.32.1 h1:6tlvcDm/3sE8lGJbZ4+d4mO3RLy24/tQWOFzVSQNIfw=
 github.com/onsi/ginkgo/v2 v2.32.1/go.mod h1:+aXOY+vzZ5mu2iI2HpTZUPmM//oQfsNFX6gU9kNcA44=
 github.com/onsi/gomega v1.43.0 h1:VlG/1FxqNxhSO+lq/OHBNaaqwiBK/mO8JbVkX9Y+FeU=

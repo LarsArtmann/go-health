@@ -1,9 +1,9 @@
 # Federation Design — Pulling Remote go-health Instances Into One Surface
 
-|            |                                                                                                          |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
-| **Date**   | 2026-09-18                                                                                                |
-| **Status** | Design note — implemented as `health/federation` (v0.3.0)                                                 |
+|            |                                                                                                                                                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Date**   | 2026-09-18                                                                                                                                                                                                          |
+| **Status** | Design note — implemented as `health/federation` (v0.3.0)                                                                                                                                                           |
 | **Inputs** | Federation spike (2026-09-03, `docs/planning/archived/2026-09-03_v03-cycle-decisions-notes.md`); the `aggregate` merge-on-read precedent; the dashboard's `Prober` consumer interface and `GroupBySource` rendering |
 
 ## Problem
@@ -21,15 +21,15 @@ designs the go-health side.
 ## Topology
 
 ```
-                ┌─ health.home.lan ────────────────────────────────┐
-                │  fed := federation.New(remotes)                  │
-                │  dash := dashboard.New(fed, GroupBySource, ...)  │
-                └───────┬──────────────┬──────────────┬────────────┘
-                        │ HTTP GET     │              │
-                        ▼              ▼              ▼
-                  jellyfin:9101   nas:9102       pihole:9103
-                  go-health       go-health      go-health
-                  /readyz (JSON)  /readyz (JSON) /readyz (JSON)
+┌─ health.home.lan ────────────────────────────────┐
+│  fed := federation.New(remotes)                  │
+│  dash := dashboard.New(fed, GroupBySource, ...)  │
+└───────┬──────────────┬──────────────┬────────────┘
+        │ HTTP GET     │              │
+        ▼              ▼              ▼
+  jellyfin:9101   nas:9102       pihole:9103
+  go-health       go-health      go-health
+  /readyz (JSON)  /readyz (JSON) /readyz (JSON)
 ```
 
 Each remote is any endpoint that answers with a go-health `Response`
@@ -70,11 +70,11 @@ upgrade. The pull cost is bounded by the hub's read cadence.
 
 ### Merge rules (per `CachedResponse`)
 
-| Input                                   | Contribution                                                             |
-| --------------------------------------- | ------------------------------------------------------------------------ |
-| Remote answers with a valid response    | Its overall `Status` feeds worst-of; its checks land as `name/check`; `Since`/`DurationNanos` are preserved verbatim; `ShuttingDown` is OR-ed in |
-| Remote fails (network, timeout, non-200, undecodable, empty status) | One synthetic check `name/reachable` with status `fail` and the cause as `Error`; contributes overall `fail`; its cached/last state is NOT used |
-| Any remote `ShuttingDown`               | Overall status forced to `fail`, mirroring `aggregate` (and `Probe`) semantics |
+| Input                                                               | Contribution                                                                                                                                     |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Remote answers with a valid response                                | Its overall `Status` feeds worst-of; its checks land as `name/check`; `Since`/`DurationNanos` are preserved verbatim; `ShuttingDown` is OR-ed in |
+| Remote fails (network, timeout, non-200, undecodable, empty status) | One synthetic check `name/reachable` with status `fail` and the cause as `Error`; contributes overall `fail`; its cached/last state is NOT used  |
+| Any remote `ShuttingDown`                                           | Overall status forced to `fail`, mirroring `aggregate` (and `Probe`) semantics                                                                   |
 
 Worst-of uses `Status.Rank()` (fail < warn < pass, unknown ranks as
 pass), shared with `aggregate` — one severity ordering for the module.

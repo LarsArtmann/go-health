@@ -2,6 +2,7 @@ package health_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -212,5 +213,40 @@ func BenchmarkGuardOverhead_AllowHeader(b *testing.B) {
 		w.Body.Reset()
 		w.Header().Del("Allow")
 		guard(w, r405)
+	}
+}
+
+// BenchmarkEvaluate measures the full in-process evaluation: the health-check
+// batch (a fresh map per call), Check construction, the transition tracker's
+// per-batch Since stamp, and classification. It is the CPU cost the background
+// cache loop pays on every refresh, independent of HTTP.
+//
+// Recorded baseline (2026-09-18, go1.26.7 linux/amd64, 32 threads): see
+// FEATURES.md "Performance".
+func BenchmarkEvaluate(b *testing.B) {
+	for _, services := range []int{1, 8, 64} {
+		b.Run(fmt.Sprintf("services=%d", services), func(b *testing.B) {
+			probe := health.NewWithHealthCheck(
+				func(context.Context) map[string]error {
+					results := make(map[string]error, services)
+
+					for i := range services {
+						results[fmt.Sprintf("svc%02d", i)] = nil
+					}
+
+					return results
+				},
+				health.WithRefreshInterval(0),
+			)
+
+			ctx := context.Background()
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for range b.N {
+				_ = probe.Evaluate(ctx)
+			}
+		})
 	}
 }

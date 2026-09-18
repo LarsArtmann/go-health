@@ -237,19 +237,10 @@ func (a *Aggregate) RegisterRoutes(mux *http.ServeMux, routes health.Routes) {
 }
 
 // statusRank orders statuses by severity so merges can pick the worst:
-// lower rank wins. Unknown values rank as healthy — the Status type is
-// validated at the boundaries and unknowns must not fail an aggregate.
+// lower rank wins. Delegates to [health.Status.Rank] — the module-wide
+// severity ordering shared with federation.
 func statusRank(s health.Status) int {
-	switch s {
-	case health.StatusFail:
-		return 0
-	case health.StatusWarn:
-		return 1
-	case health.StatusPass:
-		return 2
-	default:
-		return 2
-	}
+	return s.Rank()
 }
 
 // marshalResponse is the single serialization seam for aggregate responses.

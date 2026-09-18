@@ -72,3 +72,39 @@ func BenchmarkAggregateCachedResponse(b *testing.B) {
 		})
 	}
 }
+
+// BenchmarkAggregateHandlers measures the aggregate HTTP path per handler:
+// merge + UTF-8 sanitize + deterministic JSON marshal + write. Liveness is
+// the constant-time floor (empty checks, no merge); readiness is the merge
+// cost plus a marshaled body; startup is the unlatched 503 branch (no source
+// has run its startup probe). Complements BenchmarkAggregateCachedResponse,
+// which isolates the merge from the wire path.
+func BenchmarkAggregateHandlers(b *testing.B) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/readyz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	for _, sourceCount := range []int{1, 4} {
+		b.Run(fmt.Sprintf("sources=%d", sourceCount), func(b *testing.B) {
+			agg := benchAggregate(b, sourceCount)
+
+			for _, handler := range []struct {
+				name string
+				fn   http.HandlerFunc
+			}{
+				{name: "liveness", fn: agg.LivenessHandler()},
+				{name: "readiness", fn: agg.ReadinessHandler()},
+				{name: "startup_unlatched", fn: agg.StartupHandler()},
+			} {
+				b.Run(handler.name, func(b *testing.B) {
+					b.ReportAllocs()
+
+					for range b.N {
+						handler.fn(httptest.NewRecorder(), req)
+					}
+				})
+			}
+		})
+	}
+}

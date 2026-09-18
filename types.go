@@ -15,6 +15,22 @@ const (
 	StatusWarn Status = "warn"
 )
 
+// Rank orders statuses by severity so merges can pick the worst: a lower
+// rank is worse (fail 0, warn 1, pass 2). Unknown values rank as pass:
+// the Status type is validated at the boundaries, and an unknown must not
+// fail a merge ([aggregate.Aggregate], [federation namespace]). Merge
+// sites compare `got.Rank() < worst.Rank()` to keep the more severe one.
+func (s Status) Rank() int {
+	switch s {
+	case StatusFail:
+		return 0
+	case StatusWarn:
+		return 1
+	default:
+		return 2
+	}
+}
+
 // Check is the per-service health result.
 type Check struct {
 	// Status is the health status of this individual check.

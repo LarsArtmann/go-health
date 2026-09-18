@@ -14,6 +14,26 @@ type state struct {
 	healthy bool
 }
 
+// TestStatus_Rank pins the module-wide severity ordering used by the
+// merge sites (aggregate, federation): lower rank is worse, and unknown
+// values rank as pass — the Status type is validated at the boundaries,
+// so an unknown arriving at a merge must not fail it.
+func TestStatus_Rank(t *testing.T) {
+	t.Parallel()
+
+	for status, want := range map[health.Status]int{
+		health.StatusFail: 0,
+		health.StatusWarn: 1,
+		health.StatusPass: 2,
+		"degraded":        2,
+		"":                2,
+	} {
+		if got := status.Rank(); got != want {
+			t.Errorf("Rank(%q): want %d, got %d", status, want, got)
+		}
+	}
+}
+
 // serviceNames are the three probe services exercised by the matrix.
 var serviceNames = []string{"a", "b", "c"}
 

@@ -342,6 +342,20 @@ func (p *Prober) fetch(remote Remote) fetchResult {
 		return fetchResult{errMsg: "response has no status — is this a go-health endpoint?"}
 	}
 
+	// Unlike aggregate, which reads trusted in-process probes, federation
+	// decodes untrusted wire input. A document carrying an invalid check
+	// status is refused whole: rendering it would let an unknown status
+	// masquerade as healthy on the merged surface.
+	for name, check := range parsed.Checks {
+		switch check.Status {
+		case health.StatusPass, health.StatusWarn, health.StatusFail:
+		default:
+			return fetchResult{
+				errMsg: fmt.Sprintf("response check %q has invalid status %q", name, check.Status),
+			}
+		}
+	}
+
 	return fetchResult{ok: true, resp: parsed}
 }
 

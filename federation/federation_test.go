@@ -173,10 +173,10 @@ func TestNew_Validation(t *testing.T) {
 }
 
 // TestCachedResponse_EndToEndWireContract is the federation contract
-// test: a real go-health probe (injector-free constructor, live mode)
-// serves its readiness handler over HTTP, and a federated view over it
-// reports the probe's checks namespaced, statuses preserved, and the
-// probe-observed Since intact.
+// test: a real go-health probe (injector-free constructor) runs with a
+// background refresh loop and serves its readiness handler over HTTP,
+// and a federated view over it reports the probe's checks namespaced,
+// statuses preserved, and the probe-observed Since intact.
 func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 	t.Parallel()
 
@@ -187,8 +187,22 @@ func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 				"queue":    errors.New("connection refused"),
 			}
 		},
-		health.WithRefreshInterval(0),
+		health.WithRefreshInterval(5*time.Millisecond),
 	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(func() {
+		cancel()
+	})
+
+	if err := probe.Start(ctx); err != nil {
+		t.Fatalf("probe start: %v", err)
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	for probe.CachedResponse().Status == "" && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
 
 	upstream := newRemote(t, probe.ReadinessHandler())
 
@@ -325,6 +339,17 @@ func TestCachedResponse_Merge(t *testing.T) {
 			wantStatus: health.StatusFail,
 			wantChecks: map[string]health.Check{
 				"wrong/reachable": {Status: health.StatusFail},
+			},
+		},
+		{
+			name:    "invalid per-check status is refused whole",
+			remotes: []federation.Remote{{Name: "liar", URL: ""}},
+			servers: []jsonRemote{newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte(`{"status":"pass","checks":{"db":{"status":"sorta"}}}`))
+			})},
+			wantStatus: health.StatusFail,
+			wantChecks: map[string]health.Check{
+				"liar/reachable": {Status: health.StatusFail},
 			},
 		},
 	}

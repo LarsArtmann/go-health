@@ -67,11 +67,10 @@ Shipped: `Response.InstanceID` + `WithInstanceID`, static OpenAPI spec
 ([docs/openapi.yaml](docs/openapi.yaml)), Prometheus exposition via composition
 ([docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)).
 
-Raw ideas:
-
-- ETag/`If-None-Match` caching headers on health endpoints — write the
-  rejection note (caching is a proxy/CDN composition concern) before someone
-  asks for it
+Decided against (see [etag-rejection-design.md](docs/etag-rejection-design.md)):
+ETag/`If-None-Match` caching headers on health endpoints (status-truth must
+never come from a cache; dependency load is already bounded by the background
+cache).
 
 Decided against (see [starting-status-design.md](docs/starting-status-design.md)):
 "starting" Status, Status validation (no injection boundary exists).

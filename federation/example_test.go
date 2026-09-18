@@ -1,26 +1,37 @@
 package federation_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
+	"net/http/httptest"
 
 	health "github.com/larsartmann/go-health"
 	federation "github.com/larsartmann/go-health/federation"
 )
 
-// ExampleNew builds a federated view over two services' readiness
-// endpoints and registers the hub's own kubelet handlers, the way a
-// health.home.lan hub would. Point a go-health-dashboard at the hub to
-// render it: dashboard.New(fed) accepts a *federation.Prober unchanged.
+// Combine two services' health endpoints into one federated surface with
+// the conventional Kubernetes paths. Remote names must be unique,
+// non-empty, and free of "/" (they become the "name/check" key prefixes).
+// Point a go-health-dashboard at the Prober to render the federation: it
+// satisfies the dashboard's consumer interface unchanged.
 func ExampleNew() {
+	probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"db": nil, "cache": nil}
+	}, health.WithRefreshInterval(0))
+
+	api := httptest.NewServer(probe.ReadinessHandler())
+	defer api.Close()
+
+	web := httptest.NewServer(probe.ReadinessHandler())
+	defer web.Close()
+
 	fed, err := federation.New(
 		[]federation.Remote{
-			{Name: "jellyfin", URL: "http://jellyfin.lan:8096/readyz"},
-			{Name: "nas", URL: "http://nas.lan:9102/readyz"},
+			{Name: "api", URL: api.URL},
+			{Name: "web", URL: web.URL},
 		},
-		federation.WithTimeout(2 * time.Second),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -29,11 +40,19 @@ func ExampleNew() {
 	mux := http.NewServeMux()
 	fed.RegisterRoutes(mux, health.DefaultRoutes())
 
-	got := fed.CachedResponse()
-	fmt.Println(got.Status)
-	// Output depends on whether the remotes are reachable:
-	// a refused fetch surfaces as the namespaced fail row
-	//   jellyfin/reachable: fail
-	//   nas/reachable: fail
-	// instead of a silently frozen last-known state.
+	// The merged view namespaces every check as "remote/check" and takes
+	// the worst status across remotes.
+	merged := fed.CachedResponse()
+
+	fmt.Println(merged.Status)
+
+	for _, name := range []string{"api/cache", "api/db", "web/db"} {
+		fmt.Println(name, merged.Checks[name].Status)
+	}
+
+	// Output:
+	// pass
+	// api/cache pass
+	// api/db pass
+	// web/db pass
 }

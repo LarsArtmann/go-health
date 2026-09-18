@@ -235,7 +235,10 @@ func (p *Prober) CachedResponse() health.Response {
 // cachedResponse is CachedResponse with an explicit context: handlers pass
 // the request's context so a disconnected caller cancels its fetches.
 func (p *Prober) cachedResponse(ctx context.Context) health.Response {
-	results := make([]fetchResult, len(p.remotes)) //nolint:makezero // pre-sized on purpose: parallel goroutines write results[i] by index
+	results := make(
+		[]fetchResult,
+		len(p.remotes),
+	) //nolint:makezero // pre-sized on purpose: parallel goroutines write results[i] by index
 
 	var wg sync.WaitGroup
 

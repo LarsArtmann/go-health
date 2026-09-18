@@ -31,10 +31,13 @@ type dashboardProber interface {
 
 var _ dashboardProber = (*federation.Prober)(nil)
 
+// errQueueRefused is the canned non-critical failure for probe-backed
+// upstreams (static, so the classification is errors.Is-able).
+var errQueueRefused = errors.New("connection refused")
+
 // --- Test helpers ---.
 
-// jsonRemote stands up one upstream serving a fixed health document (or
-// an arbitrary body when raw is set) and returns its URL.
+// jsonRemote stands up one upstream HTTP server for the test's lifetime.
 type jsonRemote struct {
 	server *httptest.Server
 }
@@ -62,7 +65,28 @@ func serveDocument(t *testing.T, doc health.Response) jsonRemote {
 	})
 }
 
-func mustNew(t *testing.T, remotes []federation.Remote, opts ...federation.Option) *federation.Prober {
+// healthyUpstream serves a valid pass document and rejects requests
+// without the Accept header federation must send — the content
+// negotiation contract with dashboard-hosted remotes.
+func healthyUpstream(t *testing.T) jsonRemote {
+	t.Helper()
+
+	return newRemote(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Accept") != "application/json" {
+			w.WriteHeader(http.StatusNotAcceptable)
+
+			return
+		}
+
+		_, _ = w.Write([]byte(`{"status":"pass","checks":{}}`))
+	})
+}
+
+func mustNew(
+	t *testing.T,
+	remotes []federation.Remote,
+	opts ...federation.Option,
+) *federation.Prober {
 	t.Helper()
 
 	prober, err := federation.New(remotes, opts...)
@@ -71,6 +95,11 @@ func mustNew(t *testing.T, remotes []federation.Remote, opts ...federation.Optio
 	}
 
 	return prober
+}
+
+// darkUpstream is an address with nothing listening: connection refused.
+func darkUpstream() string {
+	return "http://127.0.0.1:1/readyz"
 }
 
 // TestNew_Validation walks the construction contract: every invalid
@@ -98,6 +127,11 @@ func TestNew_Validation(t *testing.T) {
 			wantErr: federation.ErrInvalidRemote,
 		},
 		{
+			name:    "name contains slash",
+			remotes: []federation.Remote{{Name: "a/b", URL: "http://x/readyz"}},
+			wantErr: federation.ErrInvalidRemote,
+		},
+		{
 			name:    "empty URL",
 			remotes: []federation.Remote{{Name: "nas", URL: ""}},
 			wantErr: federation.ErrInvalidRemote,
@@ -108,11 +142,6 @@ func TestNew_Validation(t *testing.T) {
 				{Name: "nas", URL: "http://nas/readyz"},
 				{Name: "nas", URL: "http://other/readyz"},
 			},
-			wantErr: federation.ErrInvalidRemote,
-		},
-		{
-			name:    "name contains slash",
-			remotes: []federation.Remote{{Name: "a/b", URL: "http://x/readyz"}},
 			wantErr: federation.ErrInvalidRemote,
 		},
 		{
@@ -184,13 +213,14 @@ func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 		func(_ context.Context) map[string]error {
 			return map[string]error{
 				"postgres": nil,
-				"queue":    errors.New("connection refused"),
+				"queue":    errQueueRefused,
 			}
 		},
 		health.WithRefreshInterval(5*time.Millisecond),
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
+
 	t.Cleanup(func() {
 		cancel()
 	})
@@ -243,7 +273,8 @@ func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 // TestCachedResponse_Merge walks the merge table: worst-of across
 // remotes, per-check namespacing, scalar non-survival, and every
 // reachable-failure mode (transport, non-200, undecodable body, missing
-// status) surfacing as one synthetic fail check with the cause.
+// status, invalid per-check status) surfacing as one synthetic fail
+// check with the cause.
 func TestCachedResponse_Merge(t *testing.T) {
 	t.Parallel()
 
@@ -267,16 +298,16 @@ func TestCachedResponse_Merge(t *testing.T) {
 	tests := []struct {
 		name          string
 		remotes       []federation.Remote
-		servers       []jsonRemote // aligned with remotes
+		servers       []jsonRemote
 		wantStatus    health.Status
-		wantChecks    map[string]health.Check
 		wantShutDown  bool
 		wantLatencyMs int64
+		wantChecks    map[string]health.Check
 	}{
 		{
-			name:    "single healthy remote",
-			remotes: []federation.Remote{{Name: "a", URL: ""}},
-			servers: []jsonRemote{serveDocument(t, passDoc)},
+			name:       "single healthy remote",
+			remotes:    []federation.Remote{{Name: "a", URL: ""}},
+			servers:    []jsonRemote{serveDocument(t, passDoc)},
 			wantStatus: health.StatusPass,
 			wantChecks: map[string]health.Check{"a/cache": {Status: health.StatusPass}},
 		},
@@ -286,7 +317,7 @@ func TestCachedResponse_Merge(t *testing.T) {
 				{Name: "a", URL: ""},
 				{Name: "b", URL: ""},
 			},
-			servers: []jsonRemote{serveDocument(t, passDoc), serveDocument(t, warnDoc)},
+			servers:    []jsonRemote{serveDocument(t, passDoc), serveDocument(t, warnDoc)},
 			wantStatus: health.StatusWarn,
 			wantChecks: map[string]health.Check{
 				"a/cache": {Status: health.StatusPass},
@@ -299,9 +330,9 @@ func TestCachedResponse_Merge(t *testing.T) {
 				{Name: "a", URL: ""},
 				{Name: "b", URL: ""},
 			},
-			servers: []jsonRemote{serveDocument(t, passDoc), serveDocument(t, failDoc)},
-			wantStatus:   health.StatusFail,
-			wantShutDown: true,
+			servers:       []jsonRemote{serveDocument(t, passDoc), serveDocument(t, failDoc)},
+			wantStatus:    health.StatusFail,
+			wantShutDown:  true,
 			wantLatencyMs: 42,
 			wantChecks: map[string]health.Check{
 				"a/cache": {Status: health.StatusPass},
@@ -309,11 +340,9 @@ func TestCachedResponse_Merge(t *testing.T) {
 			},
 		},
 		{
-			name:    "unreachable remote yields synthetic fail check",
-			remotes: []federation.Remote{{Name: "ghost", URL: ""}},
-			servers: []jsonRemote{newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusNotFound)
-			})},
+			name:       "unreachable remote yields synthetic fail check",
+			remotes:    []federation.Remote{{Name: "ghost", URL: ""}},
+			servers:    []jsonRemote{newRemote(t, http.NotFoundHandler().ServeHTTP)},
 			wantStatus: health.StatusFail,
 			wantChecks: map[string]health.Check{
 				"ghost/reachable": {Status: health.StatusFail},
@@ -358,46 +387,74 @@ func TestCachedResponse_Merge(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			remotes := make([]federation.Remote, len(tt.remotes))
+			remotes := make([]federation.Remote, 0, len(tt.remotes))
 			for i := range tt.remotes {
-				remotes[i] = federation.Remote{Name: tt.remotes[i].Name, URL: tt.servers[i].server.URL}
+				remotes = append(remotes, federation.Remote{
+					Name: tt.remotes[i].Name,
+					URL:  tt.servers[i].server.URL,
+				})
 			}
 
-			got := mustNew(t, remotes).CachedResponse()
-
-			if got.Status != tt.wantStatus {
-				t.Errorf("status: want %q, got %q", tt.wantStatus, got.Status)
-			}
-
-			if got.ShuttingDown != tt.wantShutDown {
-				t.Errorf("shutting down: want %v, got %v", tt.wantShutDown, got.ShuttingDown)
-			}
-
-			if got.TotalLatencyMs != tt.wantLatencyMs {
-				t.Errorf("latency: want %d, got %d", tt.wantLatencyMs, got.TotalLatencyMs)
-			}
-
-			for key, want := range tt.wantChecks {
-				gotCheck, ok := got.Checks[key]
-				if !ok {
-					t.Errorf("missing check %q in %v", key, got.Checks)
-
-					continue
-				}
-
-				if gotCheck.Status != want.Status {
-					t.Errorf("check %q: want status %q, got %q", key, want.Status, gotCheck.Status)
-				}
-
-				if want.Error != "" && !strings.Contains(gotCheck.Error, want.Error) {
-					t.Errorf("check %q: error must contain %q, got %q", key, want.Error, gotCheck.Error)
-				}
-			}
-
-			if want, gotLen := len(tt.wantChecks), len(got.Checks); want != gotLen {
-				t.Errorf("check count: want %d, got %d (%v)", want, gotLen, got.Checks)
-			}
+			assertMerged(t, mustNew(t, remotes).CachedResponse(), mergedExpectation{
+				status:       tt.wantStatus,
+				shuttingDown: tt.wantShutDown,
+				latencyMs:    tt.wantLatencyMs,
+				checks:       tt.wantChecks,
+			})
 		})
+	}
+}
+
+// mergedExpectation is the assertion payload for assertMerged.
+type mergedExpectation struct {
+	status       health.Status
+	shuttingDown bool
+	latencyMs    int64
+	checks       map[string]health.Check
+}
+
+// assertMerged compares a merged response against the expectation:
+// exact status/shutdown/latency, every wanted check present with the
+// right status (substring error match), and no extra checks.
+func assertMerged(t *testing.T, got health.Response, want mergedExpectation) {
+	t.Helper()
+
+	if got.Status != want.status {
+		t.Errorf("status: want %q, got %q", want.status, got.Status)
+	}
+
+	if got.ShuttingDown != want.shuttingDown {
+		t.Errorf("shutting down: want %v, got %v", want.shuttingDown, got.ShuttingDown)
+	}
+
+	if got.TotalLatencyMs != want.latencyMs {
+		t.Errorf("latency: want %d, got %d", want.latencyMs, got.TotalLatencyMs)
+	}
+
+	for key, wantCheck := range want.checks {
+		gotCheck, ok := got.Checks[key]
+		if !ok {
+			t.Errorf("missing check %q in %v", key, got.Checks)
+
+			continue
+		}
+
+		if gotCheck.Status != wantCheck.Status {
+			t.Errorf("check %q: want status %q, got %q", key, wantCheck.Status, gotCheck.Status)
+		}
+
+		if wantCheck.Error != "" && !strings.Contains(gotCheck.Error, wantCheck.Error) {
+			t.Errorf(
+				"check %q: error must contain %q, got %q",
+				key,
+				wantCheck.Error,
+				gotCheck.Error,
+			)
+		}
+	}
+
+	if len(got.Checks) != len(want.checks) {
+		t.Errorf("check count: want %d, got %d (%v)", len(want.checks), len(got.Checks), got.Checks)
 	}
 }
 
@@ -408,13 +465,13 @@ func TestCachedResponse_ScalarsDoNotSurviveMerge(t *testing.T) {
 	t.Parallel()
 
 	doc := health.Response{
-		Status:      health.StatusPass,
-		Version:     "9.9.9",
-		InstanceID:  "replica-1",
-		Uptime:      "1h",
-		Timestamp:   time.Now(),
+		Status:         health.StatusPass,
+		Version:        "9.9.9",
+		InstanceID:     "replica-1",
+		Uptime:         "1h",
+		Timestamp:      time.Now(),
 		TotalLatencyMs: 7,
-		Checks:      map[string]health.Check{"db": {Status: health.StatusPass}},
+		Checks:         map[string]health.Check{"db": {Status: health.StatusPass}},
 	}
 
 	upstream := serveDocument(t, doc)
@@ -454,18 +511,18 @@ func TestCachedResponse_WireFieldsDecode(t *testing.T) {
 
 	got := fed.CachedResponse()
 
-	db, ok := got.Checks["nas/db"]
+	dbCheck, ok := got.Checks["nas/db"]
 	if !ok {
 		t.Fatalf("missing nas/db in %v", got.Checks)
 	}
 
-	want := time.Date(2026, 9, 18, 8, 0, 0, 0, time.UTC)
-	if !db.Since.Equal(want) {
-		t.Errorf("since: want %v, got %v", want, db.Since)
+	wantSince := time.Date(2026, 9, 18, 8, 0, 0, 0, time.UTC)
+	if !dbCheck.Since.Equal(wantSince) {
+		t.Errorf("since: want %v, got %v", wantSince, dbCheck.Since)
 	}
 
-	if db.DurationNanos != 1500 {
-		t.Errorf("duration_ns: want 1500, got %d", db.DurationNanos)
+	if dbCheck.DurationNanos != 1500 {
+		t.Errorf("duration_ns: want 1500, got %d", dbCheck.DurationNanos)
 	}
 }
 
@@ -519,15 +576,11 @@ func TestCachedResponse_ConcurrentReads(t *testing.T) {
 	var wg sync.WaitGroup
 
 	for range readers {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			if got := fed.CachedResponse(); got.Status != health.StatusPass {
 				t.Errorf("concurrent read: want pass, got %q", got.Status)
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -579,6 +632,7 @@ func TestStartupComplete_LatchesOnFirstSuccess(t *testing.T) {
 	}
 
 	healthy.Store(true)
+
 	_ = fed.CachedResponse()
 
 	if !fed.StartupComplete() {
@@ -586,6 +640,7 @@ func TestStartupComplete_LatchesOnFirstSuccess(t *testing.T) {
 	}
 
 	healthy.Store(false)
+
 	_ = fed.CachedResponse()
 
 	if !fed.StartupComplete() {
@@ -593,115 +648,115 @@ func TestStartupComplete_LatchesOnFirstSuccess(t *testing.T) {
 	}
 }
 
-// TestHandlers walks the three kubelet handlers: liveness is static and
-// fetch-free, readiness serves the merged verdict, startup fetches (which
-// is how latches move) and reports the not-yet-answered remotes by name.
-func TestHandlers(t *testing.T) {
+// TestLivenessHandler_FetchFreeAlwaysOK pins the cascade-safety contract:
+// liveness is a static pass that never touches a remote — even one that
+// refuses connections.
+func TestLivenessHandler_FetchFreeAlwaysOK(t *testing.T) {
 	t.Parallel()
 
-	passDoc := health.Response{Status: health.StatusPass, Checks: map[string]health.Check{}}
+	fed := mustNew(t, []federation.Remote{{Name: "ghost", URL: darkUpstream()}})
 
-	passPayload, err := json.Marshal(passDoc, json.Deterministic(true))
-	if err != nil {
-		t.Fatalf("marshal passDoc: %v", err)
+	rec := httptest.NewRecorder()
+	fed.LivenessHandler()(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("liveness: want 200, got %d", rec.Code)
 	}
 
-	upstream := newRemote(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Accept") != "application/json" {
-			w.WriteHeader(http.StatusNotAcceptable)
+	var got health.Response
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("liveness body: %v", err)
+	}
 
-			return
-		}
+	if got.Status != health.StatusPass || len(got.Checks) != 0 {
+		t.Errorf("liveness: want pass with empty checks, got %+v", got)
+	}
+}
 
-		_, _ = w.Write(passPayload)
+// TestReadinessHandler_ServesMergedVerdict walks readiness both ways and
+// proves the remote request carries Accept: application/json (the
+// upstream rejects the read without it).
+func TestReadinessHandler_ServesMergedVerdict(t *testing.T) {
+	t.Parallel()
+
+	fed := mustNew(t, []federation.Remote{{Name: "a", URL: healthyUpstream(t).server.URL}})
+
+	rec := httptest.NewRecorder()
+	fed.ReadinessHandler()(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf(
+			"readiness over healthy remote: want 200, got %d (%s)",
+			rec.Code,
+			rec.Body.String(),
+		)
+	}
+
+	dark := mustNew(t, []federation.Remote{{Name: "b", URL: darkUpstream()}})
+
+	rec = httptest.NewRecorder()
+	dark.ReadinessHandler()(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("readiness over dark remote: want 503, got %d", rec.Code)
+	}
+}
+
+// TestStartupHandler_ProgressesViaOwnFetches pins the boot contract: the
+// startup handler's own fetches move the latches, so kubelet polling
+// alone drives startup to completion.
+func TestStartupHandler_ProgressesViaOwnFetches(t *testing.T) {
+	t.Parallel()
+
+	fed := mustNew(t, []federation.Remote{{Name: "a", URL: healthyUpstream(t).server.URL}})
+
+	rec := httptest.NewRecorder()
+	fed.StartupHandler()(rec, httptest.NewRequest(http.MethodGet, "/startupz", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf(
+			"startup after successful fetch: want 200, got %d (%s)",
+			rec.Code,
+			rec.Body.String(),
+		)
+	}
+
+	if !fed.StartupComplete() {
+		t.Fatal("startup handler must latch the answered remote")
+	}
+}
+
+// TestStartupHandler_NamesUnansweredRemotes pins the 503 shape: one
+// failing check per remote without a successful fetch, answered remotes
+// absent from the report.
+func TestStartupHandler_NamesUnansweredRemotes(t *testing.T) {
+	t.Parallel()
+
+	fed := mustNew(t, []federation.Remote{
+		{Name: "dark", URL: darkUpstream()},
+		{Name: "lit", URL: healthyUpstream(t).server.URL},
 	})
 
-	t.Run("liveness is fetch-free and always 200", func(t *testing.T) {
-		t.Parallel()
+	rec := httptest.NewRecorder()
+	fed.StartupHandler()(rec, httptest.NewRequest(http.MethodGet, "/startupz", nil))
 
-		fed := mustNew(t, []federation.Remote{{Name: "ghost", URL: "http://127.0.0.1:1/readyz"}})
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("startup with a dark remote: want 503, got %d", rec.Code)
+	}
 
-		rec := httptest.NewRecorder()
-		fed.LivenessHandler()(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+	var got health.Response
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("startup body: %v", err)
+	}
 
-		if rec.Code != http.StatusOK {
-			t.Fatalf("liveness: want 200, got %d", rec.Code)
-		}
+	dark, ok := got.Checks["dark"]
+	if !ok || dark.Status != health.StatusFail {
+		t.Errorf("startup must name the dark remote as failing, got %v", got.Checks)
+	}
 
-		var got health.Response
-		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
-			t.Fatalf("liveness body: %v", err)
-		}
-
-		if got.Status != health.StatusPass || len(got.Checks) != 0 {
-			t.Errorf("liveness: want pass with empty checks, got %+v", got)
-		}
-	})
-
-	t.Run("readiness serves the merged verdict", func(t *testing.T) {
-		t.Parallel()
-
-		fed := mustNew(t, []federation.Remote{{Name: "a", URL: upstream.server.URL}})
-
-		rec := httptest.NewRecorder()
-		fed.ReadinessHandler()(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
-
-		if rec.Code != http.StatusOK {
-			t.Fatalf("readiness: want 200, got %d", rec.Code)
-		}
-
-		dark := mustNew(t, []federation.Remote{{Name: "b", URL: "http://127.0.0.1:1/readyz"}})
-
-		rec = httptest.NewRecorder()
-		dark.ReadinessHandler()(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
-
-		if rec.Code != http.StatusServiceUnavailable {
-			t.Fatalf("readiness over dark remote: want 503, got %d", rec.Code)
-		}
-	})
-
-	t.Run("startup progresses via its own fetches", func(t *testing.T) {
-		t.Parallel()
-
-		fed := mustNew(t, []federation.Remote{{Name: "a", URL: upstream.server.URL}})
-
-		rec := httptest.NewRecorder()
-		fed.StartupHandler()(rec, httptest.NewRequest(http.MethodGet, "/startupz", nil))
-
-		if rec.Code != http.StatusOK {
-			t.Fatalf("startup after successful fetch: want 200, got %d (%s)", rec.Code, rec.Body.String())
-		}
-	})
-
-	t.Run("startup names the unanswered remotes", func(t *testing.T) {
-		t.Parallel()
-
-		fed := mustNew(t, []federation.Remote{
-			{Name: "dark", URL: "http://127.0.0.1:1/readyz"},
-			{Name: "lit", URL: upstream.server.URL},
-		})
-
-		rec := httptest.NewRecorder()
-		fed.StartupHandler()(rec, httptest.NewRequest(http.MethodGet, "/startupz", nil))
-
-		if rec.Code != http.StatusServiceUnavailable {
-			t.Fatalf("startup with a dark remote: want 503, got %d", rec.Code)
-		}
-
-		var got health.Response
-		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
-			t.Fatalf("startup body: %v", err)
-		}
-
-		dark, ok := got.Checks["dark"]
-		if !ok || dark.Status != health.StatusFail {
-			t.Errorf("startup must name the dark remote as failing, got %v", got.Checks)
-		}
-
-		if _, ok := got.Checks["lit"]; ok {
-			t.Errorf("startup must not flag the answered remote, got %v", got.Checks)
-		}
-	})
+	if _, ok := got.Checks["lit"]; ok {
+		t.Errorf("startup must not flag the answered remote, got %v", got.Checks)
+	}
 }
 
 // TestRegisterRoutes_WiresAllThree smoke-tests the route registration

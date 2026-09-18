@@ -29,14 +29,14 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 		`{"status":"pass","checks":{"a":null}}`,
 	}
 
-	var mu sync.Mutex
+	var bodyMu sync.Mutex
 
 	body := []byte(seeds[0])
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		mu.Lock()
+		bodyMu.Lock()
 		payload := body
-		mu.Unlock()
+		bodyMu.Unlock()
 
 		_, _ = w.Write(payload)
 	}))
@@ -55,9 +55,9 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, next string) {
-		mu.Lock()
+		bodyMu.Lock()
 		body = []byte(next)
-		mu.Unlock()
+		bodyMu.Unlock()
 
 		got := prober.CachedResponse()
 
@@ -72,7 +72,10 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 			}
 
 			if len(got.Checks) != 1 {
-				t.Fatalf("a refused remote must contribute only the reachable row, got %v", got.Checks)
+				t.Fatalf(
+					"a refused remote must contribute only the reachable row, got %v",
+					got.Checks,
+				)
 			}
 
 			return

@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>httputil — Ecosystem Adoption and Utilization Audit (2026-09-18)</title>
+    <style>
+      /* =========================================================================
+         BAUHAUS LIGHT — Editorial template
+         Design language: form follows function. Primary colors on warm paper.
+         Zero external dependencies: system fonts, no CDN, no build step.
+         Token architecture: see references/bauhaus-tokens.md
+         ========================================================================= */
+
+      :root {
+        /* --- Primitive palette (Bauhaus Light) --- */
+        --color-paper: #f4f4f0;
+        --color-paper-2: #ffffff;
+        --color-paper-3: #e8e8e2;
+        --color-ink: #111111;
+        --color-red: #e63946;
+        --color-blue: #1d3557;
+        --color-yellow: #f4d35e;
+        --color-hairline: rgba(17, 17, 17, 0.14);
+        --color-hairline-strong: rgba(17, 17, 17, 0.3);
+
+        /* --- Semantic layer (shared vocabulary with dark template) --- */
+        --surface: var(--color-paper);
+        --surface-raised: var(--color-paper-2);
+        --surface-sunken: var(--color-paper-3);
+        --text: var(--color-ink);
+        --text-muted: rgba(17, 17, 17, 0.72);
+        --text-faint: rgba(17, 17, 17, 0.5);
+        --border: var(--color-hairline);
+        --border-strong: var(--color-hairline-strong);
+        --accent: var(--color-red);
+        --problem: var(--color-red);
+        --solution: var(--color-blue);
+        --warning: var(--color-yellow);
+
+        /* --- Backward-compatible aliases (do not break consumer skills) --- */
+        --bg: var(--surface);
+        --bg-elevated: var(--surface-raised);
+        --bg-sunken: var(--surface-sunken);
+        --bg-card: var(--surface-raised);
+        --bg-code: var(--surface-sunken);
+        --ink: var(--text);
+        --ink-secondary: var(--text-muted);
+        --ink-muted: var(--text-faint);
+        --rose: var(--problem);
+        --rose-glow: color-mix(in srgb, var(--problem) 15%, transparent);
+        --emerald: var(--solution);
+        --emerald-glow: color-mix(in srgb, var(--solution) 15%, transparent);
+        --amber: var(--warning);
+        --amber-glow: color-mix(in srgb, var(--warning) 15%, transparent);
+        --amber-light: color-mix(in srgb, var(--warning) 22%, transparent);
+        --coral: var(--problem);
+        --coral-light: color-mix(in srgb, var(--problem) 12%, transparent);
+        --teal: var(--solution);
+        --teal-light: color-mix(in srgb, var(--solution) 12%, transparent);
+
+        /* --- Shape --- */
+        --radius: 0px;
+        --radius-sm: 0px;
+
+        /* --- Type stacks (system only — zero external fonts) --- */
+        --font-heading:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-body:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-mono:
+          ui-monospace, "Cascadia Code", "Source Code Pro", "JetBrains Mono",
+          Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      section[id],
+      [id] {
+        scroll-margin-top: 60px;
+      }
+
+      body {
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* --- Accessibility: keyboard focus --- */
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      a:focus-visible {
+        outline-offset: -1px;
+      }
+
+      /* --- Full-bleed top bar --- */
+      .top-bar {
+        background: var(--text);
+        color: var(--surface);
+        padding: 0.6rem 2rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* --- Layout: optional sticky sidebar TOC --- */
+      .layout {
+        display: flex;
+        gap: 2.5rem;
+        padding: 2rem;
+      }
+      .sidebar {
+        width: 220px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 1rem;
+        align-self: flex-start;
+        height: calc(100vh - 2rem);
+        overflow-y: auto;
+        display: none;
+      }
+      .sidebar nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .sidebar .label {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid var(--text);
+      }
+      .sidebar a {
+        font-size: 0.86rem;
+        color: var(--text);
+        text-decoration: none;
+        padding: 0.5rem 0.75rem;
+        border-left: 4px solid transparent;
+        font-weight: 600;
+        transition: all 0.15s ease;
+        line-height: 1.4;
+      }
+      .sidebar a:hover,
+      .sidebar a.active {
+        border-left-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+        color: var(--accent);
+      }
+      .main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* --- Headings --- */
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-heading);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+        line-height: 1.05;
+        margin: 0 0 0.6rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+        margin: 2.5rem 0 1rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 3px solid var(--text);
+        display: flex;
+        align-items: baseline;
+        gap: 0.7rem;
+      }
+      h2 .num {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      h3 {
+        font-size: 1.15rem;
+        margin: 0 0 0.4rem;
+        font-weight: 700;
+      }
+      h4 {
+        font-size: 1rem;
+        margin: 0 0 0.3rem;
+        font-weight: 700;
+      }
+      p {
+        margin: 0 0 1rem;
+      }
+
+      /* --- Hero --- */
+      .hero {
+        padding: 1.5rem 0 2rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 3px solid var(--text);
+      }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+        margin-bottom: 0.9rem;
+      }
+      .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        max-width: 70ch;
+        margin: 0 0 1rem;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .tag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 0.25rem 0.6rem;
+        background: var(--surface-sunken);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+      }
+      .tag.amber {
+        background: var(--warning);
+        border-color: var(--warning);
+        color: var(--text);
+      }
+      .tag.teal {
+        background: var(--solution);
+        border-color: var(--solution);
+        color: var(--surface);
+      }
+
+      /* Bauhaus signature: geometric shape cluster (optional) */
+      .hero-shapes {
+        position: relative;
+        height: 90px;
+        margin-bottom: 1.2rem;
+      }
+      .hero-shapes .circle {
+        position: absolute;
+        top: 0;
+        right: 180px;
+        width: 64px;
+        height: 64px;
+        background: var(--problem);
+        border-radius: 50%;
+      }
+      .hero-shapes .square {
+        position: absolute;
+        top: 26px;
+        right: 90px;
+        width: 56px;
+        height: 56px;
+        background: var(--solution);
+      }
+      .hero-shapes .tri {
+        position: absolute;
+        top: 8px;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-left: 32px solid transparent;
+        border-right: 32px solid transparent;
+        border-bottom: 56px solid var(--warning);
+      }
+      .hero-shapes .bar {
+        position: absolute;
+        bottom: 0;
+        right: 230px;
+        width: 100px;
+        height: 14px;
+        background: var(--text);
+      }
+
+      /* --- Scorecard / stat cards --- */
+      .scorecard,
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0;
+        margin: 1.5rem 0 2rem;
+        border: 3px solid var(--text);
+      }
+      .score-card,
+      .stat-card {
+        padding: 1.3rem 1rem;
+        text-align: center;
+        border-right: 3px solid var(--text);
+        background: var(--surface-raised);
+      }
+      .score-card:last-child,
+      .stat-card:last-child {
+        border-right: none;
+      }
+
+      .score,
+      .stat-value {
+        font-family: var(--font-heading);
+        font-size: 2.6rem;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      .score-card .label,
+      .stat-label {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-top: 0.5rem;
+      }
+      /* Semantic state classes — no nth-child decoration, no !important */
+      .score-good,
+      .stat-good {
+        background: var(--solution);
+        color: var(--surface);
+      }
+      .score-warn,
+      .stat-warn {
+        background: var(--warning);
+        color: var(--text);
+      }
+      .score-bad,
+      .stat-bad {
+        background: var(--problem);
+        color: var(--surface);
+      }
+
+      /* --- General cards --- */
+      .card {
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1rem;
+        border-left: 8px solid var(--border-strong);
+      }
+      .card-problem {
+        border-left-color: var(--problem);
+      }
+      .card-solution {
+        border-left-color: var(--solution);
+      }
+      .card-warning {
+        border-left-color: var(--warning);
+      }
+
+      /* --- Issue cards --- */
+      .issue {
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1rem;
+        border-left: 8px solid var(--border-strong);
+      }
+      .issue-critical {
+        border-left-color: var(--problem);
+      }
+      .issue-important {
+        border-left-color: var(--warning);
+      }
+      .issue-nice {
+        border-left-color: var(--solution);
+      }
+      .issue h3 {
+        margin-bottom: 0.3rem;
+      }
+      .issue .where {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-faint);
+        margin: 0.2rem 0 0.6rem;
+      }
+      .issue p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* --- Severity badges --- */
+      .severity {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.22rem 0.6rem;
+        margin-bottom: 0.6rem;
+        color: var(--surface);
+      }
+      .severity-critical {
+        background: var(--problem);
+      }
+      .severity-important {
+        background: var(--warning);
+        color: var(--text);
+      }
+      .severity-nice {
+        background: var(--solution);
+      }
+
+      /* --- Inline badges --- */
+      .badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.55rem;
+        border: 1px solid var(--text);
+        color: var(--text);
+      }
+      .badge-critical {
+        background: var(--problem);
+        color: var(--surface);
+      }
+      .badge-high {
+        background: var(--warning);
+      }
+      .badge-medium {
+        background: var(--surface-sunken);
+      }
+      .badge-low {
+        background: var(--surface-raised);
+        color: var(--text-muted);
+      }
+      .badge-fixed {
+        background: var(--solution);
+        color: var(--surface);
+      }
+
+      /* --- Callouts --- */
+      .callout {
+        margin: 0.8rem 0 0;
+        padding: 0.8rem 1rem;
+        border: 1px solid var(--border-strong);
+        border-left: 4px solid var(--border-strong);
+        background: var(--surface-sunken);
+        font-size: 0.92rem;
+      }
+      .callout strong {
+        display: inline-block;
+        margin-right: 0.4rem;
+      }
+      .callout-teal,
+      .callout-solution {
+        border-left-color: var(--solution);
+        background: color-mix(
+          in srgb,
+          var(--solution) 10%,
+          var(--surface-raised)
+        );
+      }
+      .callout-amber,
+      .callout-warning {
+        border-left-color: var(--warning);
+        background: color-mix(
+          in srgb,
+          var(--warning) 18%,
+          var(--surface-raised)
+        );
+      }
+
+      /* --- Strengths --- */
+      .strengths {
+        display: grid;
+        gap: 0.5rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .strength {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.9rem;
+        padding: 0.75rem 0;
+        border-bottom: 2px solid var(--border);
+      }
+      .strength .check {
+        font-family: var(--font-mono);
+        font-weight: 900;
+        color: var(--solution);
+        font-size: 1.3rem;
+        line-height: 1.3;
+      }
+      .strength .text strong {
+        display: block;
+        margin-bottom: 0.15rem;
+      }
+      .strength .text span {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+      }
+
+      /* --- Tables --- */
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0 1.5rem;
+        font-size: 0.92rem;
+        border: 2px solid var(--text);
+      }
+      th {
+        text-align: left;
+        padding: 0.6rem 0.9rem;
+        background: var(--text);
+        color: var(--surface);
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-right: 1px solid var(--border-strong);
+      }
+      th:last-child {
+        border-right: none;
+      }
+      td {
+        padding: 0.6rem 0.9rem;
+        border-top: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+      }
+      td:last-child {
+        border-right: none;
+      }
+      tr:nth-child(even) td {
+        background: var(--surface-sunken);
+      }
+      table.compare td.yes {
+        color: var(--solution);
+        font-weight: 700;
+      }
+      table.compare td.no {
+        color: var(--problem);
+        font-weight: 700;
+      }
+
+      /* --- Code blocks + syntax highlighting --- */
+      pre {
+        background: var(--text);
+        color: var(--surface);
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.65;
+        overflow-x: auto;
+        border: 2px solid var(--text);
+      }
+      code {
+        font-family: var(--font-mono);
+      }
+      p code,
+      li code,
+      td code {
+        font-size: 0.88em;
+        background: var(--surface-sunken);
+        padding: 0.1rem 0.35rem;
+      }
+      .tok-keyword {
+        color: var(--warning);
+      }
+      .tok-type {
+        color: var(--warning);
+      }
+      .tok-string {
+        color: #95e1d3;
+      }
+      .tok-comment {
+        color: rgba(244, 244, 240, 0.45);
+        font-style: italic;
+      }
+      .tok-func {
+        color: #6eb5ff;
+      }
+      .tok-number {
+        color: var(--warning);
+      }
+      .tok-generic {
+        color: var(--problem);
+      }
+      .tok-builtin {
+        color: #6eb5ff;
+      }
+      .tok-punct {
+        color: rgba(244, 244, 240, 0.7);
+      }
+      .tok-attr {
+        color: var(--warning);
+      }
+
+      /* --- Dependency tree / ASCII diagrams --- */
+      .dep-tree {
+        background: var(--surface-sunken);
+        border: 2px solid var(--text);
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.7;
+        white-space: pre;
+        overflow-x: auto;
+      }
+      .dep-tree .root {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .dep-tree .ok {
+        color: var(--solution);
+      }
+      .dep-tree .unwanted {
+        color: var(--problem);
+      }
+
+      /* --- Inline node-and-arrow diagrams --- */
+      .diagram {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+      }
+      .node {
+        display: inline-block;
+        padding: 0.4rem 0.75rem;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: var(--surface-sunken);
+        border: 1px solid var(--text);
+      }
+      .node-core {
+        background: var(--accent);
+        color: var(--surface);
+      }
+      .node-problem {
+        background: var(--problem);
+        color: var(--surface);
+      }
+      .node-good {
+        background: var(--solution);
+        color: var(--surface);
+      }
+      .arrow {
+        color: var(--text-faint);
+        font-family: var(--font-mono);
+      }
+
+      /* --- Grids --- */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+
+      /* --- Inline TOC --- */
+      .toc {
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        border-left: 6px solid var(--accent);
+        padding: 1rem 1.3rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .toc h3 {
+        margin-bottom: 0.5rem;
+      }
+      .toc ul {
+        list-style: none;
+        padding: 0;
+      }
+      .toc li {
+        margin: 0.25rem 0;
+      }
+      .toc a {
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+      .toc a:hover {
+        color: var(--accent);
+      }
+
+      /* --- Migration / numbered steps --- */
+      .migration-step {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1.1rem;
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        border-left: 6px solid var(--accent);
+      }
+      .migration-num {
+        font-family: var(--font-mono);
+        font-weight: 900;
+        font-size: 1.8rem;
+        color: var(--accent);
+        line-height: 1;
+      }
+      .migration-content h4 {
+        margin-bottom: 0.2rem;
+      }
+      .migration-content p {
+        margin-bottom: 0;
+        color: var(--text-muted);
+        font-size: 0.94rem;
+      }
+
+      /* --- Before/After comparison --- */
+      .compare-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin: 1rem 0 0.5rem;
+      }
+      .compare-before,
+      .compare-after {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0.4rem 0.7rem;
+        color: var(--surface);
+      }
+      .compare-before {
+        background: var(--problem);
+      }
+      .compare-after {
+        background: var(--solution);
+      }
+      .compare-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .compare-row pre {
+        margin: 0;
+      }
+
+      /* --- Footer --- */
+      .footer {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 3px solid var(--text);
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+      }
+
+      /* --- Responsive --- */
+      @media (min-width: 1024px) {
+        .sidebar {
+          display: block;
+        }
+      }
+      @media (max-width: 768px) {
+        .layout {
+          flex-direction: column;
+          padding: 1rem;
+        }
+        .top-bar {
+          padding: 0.6rem 1rem;
+          flex-wrap: wrap;
+          gap: 0.3rem;
+        }
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+        .compare-header,
+        .compare-row {
+          grid-template-columns: 1fr;
+        }
+        .scorecard,
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .score-card:nth-child(2),
+        .stat-card:nth-child(2) {
+          border-right: none;
+        }
+        .score-card:nth-child(1),
+        .stat-card:nth-child(1),
+        .score-card:nth-child(2),
+        .stat-card:nth-child(2) {
+          border-bottom: 3px solid var(--text);
+        }
+        .migration-step {
+          grid-template-columns: 1fr;
+        }
+        .hero-shapes {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-bar">
+      <span>LIBRARY DEEP DIVE</span>
+      <span>2026-09-18</span>
+      <span>larsartmann ecosystem &middot; go-health session</span>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar" data-nav>
+        <nav>
+          <div class="label">Contents</div>
+          <a href="#summary">Summary</a>
+          <a href="#scorecard">Scorecard</a>
+          <a href="#usage">Current Usage</a>
+          <a href="#findings">Findings</a>
+          <a href="#currency">Version Currency</a>
+          <a href="#opportunities">Opportunities</a>
+          <a href="#proposal">Target State</a>
+          <a href="#appendix">Appendix</a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="hero">
+          <div class="hero-shapes">
+            <div class="bar"></div>
+            <div class="circle"></div>
+            <div class="square"></div>
+            <div class="tri"></div>
+          </div>
+          <div class="eyebrow">LIBRARY DEEP DIVE &middot; 2026-09-18</div>
+          <h1>httputil &mdash; Ecosystem Adoption &amp; Utilization Audit</h1>
+          <p class="subtitle">
+            A whole-ecosystem audit of <code>github.com/larsartmann/httputil</code> (latest
+            release v1.2.0, 2026-09-16): 75 modules pin the main module and 37 the
+            server_timing sub-module; 206 import-site files were swept and every
+            middleware family symbol-counted. Companion to the same-day
+            <a href="2026-09-18_go-etag-deep-dive.html">go-etag audit</a>.
+          </p>
+          <div class="meta">
+            <span class="tag teal">Version audited: v1.2.0 (latest)</span>
+            <span class="tag">75 + 37 module pins</span>
+            <span class="tag amber">Adoption Score: 72/100</span>
+          </div>
+        </header>
+
+        <section id="scorecard" class="scorecard">
+          <div class="score-card score-good">
+            <div class="score">92</div>
+            <div class="label">Utilization /100</div>
+          </div>
+          <div class="score-card score-warn">
+            <div class="score">41/75</div>
+            <div class="label">Modules on latest v1.2.0</div>
+          </div>
+          <div class="score-card score-warn">
+            <div class="score">11</div>
+            <div class="label">Pre-v1.0 pins (live projects)</div>
+          </div>
+          <div class="score-card score-bad">
+            <div class="score">1</div>
+            <div class="label">Consumer test suites broken today</div>
+          </div>
+          <div class="score-card score-bad">
+            <div class="score">2</div>
+            <div class="label">Removed-API compile hazards</div>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2><span class="num">00</span>Summary</h2>
+          <p>
+            httputil is the ecosystem's most broadly adopted infrastructure library &mdash;
+            and it is used superbly. Every middleware family appears in production
+            somewhere: JSON responses (&times;59), security headers (&times;53), CSRF
+            (&times;41), keyed rate limiting (&times;38+), middleware chains (&times;32),
+            reverse proxy (&times;29), request IDs, logging, recovery, CORS, compression,
+            and the httpspec contract-test library &mdash; with near-zero usage of anything
+            removed or deprecated in production code. Version currency is the weak axis:
+            v1.2.0 shipped two days ago, 55% of modules already sit on it, but 11 live
+            projects remain on pre-v1.0 releases that predate the v1.1.0 API removals
+            &mdash; and two of the fleet's own files still call the removed symbols, one
+            of them a test suite that cannot compile against its own pinned version.
+          </p>
+          <div class="callout callout-amber">
+            <strong>The bottom line</strong>
+            Utilization is exemplary (92/100); the work is two concrete hazard fixes
+            (library-policy's broken tests, nsfw-classifier's one removed-API line) and a
+            mechanical 34-module currency sweep &mdash; which, as a side effect, closes the
+            go-etag laggard list from the companion audit in the same bump.
+          </div>
+        </section>
+
+        <section id="usage">
+          <h2><span class="num">&#9670;</span>What's already excellent</h2>
+          <p>
+            Evidence base: 206 import-site files swept; <code>httputil.&lowast;</code>,
+            <code>servertiming.&lowast;</code>, and <code>httpspec.&lowast;</code> symbol
+            counts across the fleet (top-70 ranked, tail individually verified).
+          </p>
+          <div class="strengths">
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>The whole middleware surface is in production</strong>
+                <span>WriteJSON &times;59, SecurityHeaders &times;53 (+DefaultSecurityHeadersConfig
+                &times;31), Chain &times;32, Nonce/CSP &times;26+25, RequestID &times;22,
+                Logging &times;19, Recovery &times;16, CORS &times;13, Compression &times;12,
+                ClientIP &times;11 &mdash; no family is dead weight.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>The modern rate limiter won</strong>
+                <span>KeyedRateLimiterConfig &times;38, KeyedRateLimiterMiddleware &times;25,
+                NewKeyedRateLimiter &times;11, KeyExtractorFromClientIP &times;21 &mdash; the
+                v1.1.0 replacement API is the only rate limiter in production use across the
+                fleet.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>CSRF adopted deeply, not cosmetically</strong>
+                <span>CSRFConfig &times;41, CSRFMiddleware &times;37, token context helpers
+                (&times;18+10+9) &mdash; including cqrs-htmx's dedicated csrf_handler and
+                re-export layer.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Spec-based HTTP testing is fleet practice</strong>
+                <span>httpspec.Run &times;13, Spec &times;8, CategoryRouting &times;6,
+                ExpectStatus &times;5 &mdash; consumers test against the library's own
+                contract specs, not ad-hoc handlers.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Observability beyond the headline</strong>
+                <span>server_timing middleware in 15+ modules (ServerTimingMiddleware &times;18,
+                MeasureServerTiming &times;16); the Metrics middleware has real adopters
+                (DiscordSync, middleware-showcase); ResponseRecorder &times;7 and
+                NewMiddlewareStack &times;3 in tests and composition.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>httplane hygiene: production code avoided the v1.1.0 removals</strong>
+                <span>Across 206 files, exactly one production removed-API call survives
+                (nsfw-classifier) and one test file (library-policy) &mdash; everything else
+                migrated before the deprecation window closed.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="findings">
+          <h2><span class="num">01</span>Findings</h2>
+          <p>Ordered by impact. Findings 1&ndash;2 are compile hazards proven statically; 3&ndash;4 are currency debt.</p>
+
+          <div class="issue issue-critical" id="library-policy-broken">
+            <span class="severity severity-critical">Blocking &middot; broken today</span>
+            <h3>library-policy's httpapi tests cannot compile against its own pinned httputil v1.2.0</h3>
+            <div class="where">
+              library-policy/cmd/library-policy/internal/httpapi/middleware_test.go:133,140
+              &middot; go.sum holds only httputil v1.2.0
+            </div>
+            <p>
+              The test calls <code>httputil.NewTokenBucketLimiter</code>,
+              <code>httputil.RateLimit</code>, and <code>httputil.RateLimitConfig</code>
+              &mdash; all removed in v1.1.0 (verified: zero occurrences in the v1.2.0 tag
+              source; go.sum contains no older version that could supply them). Any
+              <code>go vet</code>/<code>go test</code> of that package fails to build. This
+              slipped through because the module requires go &ge; 1.27 while the local
+              toolchain is 1.26.7 (GOTOOLCHAIN=local) &mdash; the compile check could not
+              run where this audit stood.
+            </p>
+            <pre><code><span class="tok-comment">// Before (removed API)</span>
+limiter, err := httputil.<span class="tok-function">NewTokenBucketLimiter</span>(<span class="tok-number">2</span>, <span class="tok-number">2</span>)
+<span class="tok-function">httputil</span>.<span class="tok-function">RateLimit</span>(httputil.<span class="tok-type">RateLimitConfig</span>{<span class="tok-property">Limiter</span>: limiter})
+
+<span class="tok-comment">// After (docs/migrating-to-keyed-rate-limiter.md)</span>
+mw := httputil.<span class="tok-function">KeyedRateLimiterMiddleware</span>(
+    httputil.<span class="tok-function">NewKeyedRateLimiter</span>(cfg),
+    httputil.<span class="tok-function">KeyExtractorFromClientIP</span>(<span class="tok-number">2</span>, <span class="tok-number">2</span>),
+)</code></pre>
+            <div class="callout callout-teal">
+              <strong>Fix</strong>
+              Migrate the test to <code>KeyedRateLimiterMiddleware</code> per the shipped
+              migration guide, then re-run the package's gates under the go 1.27 toolchain
+              the module requires.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="nsfw-etag">
+            <span class="severity severity-important">Important &middot; upgrade blocker</span>
+            <h3>nsfw-classifier still calls the removed httputil.ETag adapter in production</h3>
+            <div class="where">
+              nsfw-classifier/internal/server/server.go:391 &middot; pinned at httputil
+              v0.12.0 (pre-removal, so it builds today)
+            </div>
+            <p>
+              <code>httputil.ETag(etag.DefaultETagConfig())</code> &mdash; the adapter
+              v1.1.0 deleted as a pure passthrough. The file already imports
+              <code>go-etag/server</code>, so the swap is one line and the middleware
+              behavior is byte-identical. This is also the module the companion go-etag
+              audit flagged; this fix unblocks both upgrades at once.
+            </p>
+            <pre><code><span class="tok-comment">// server.go:391 &mdash; before / after</span>
+<span class="tok-function">httputil</span>.<span class="tok-function">ETag</span>(etag.<span class="tok-function">DefaultETagConfig</span>()),
+etag.<span class="tok-function">New</span>(etag.<span class="tok-function">DefaultETagConfig</span>()),</code></pre>
+            <div class="callout callout-teal">
+              <strong>Fix</strong>
+              Swap the line, bump httputil v0.12.0 &rarr; v1.2.0, <code>go mod tidy</code>;
+              go-etag rises to v0.3.1 in the same step.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="pre-v1">
+            <span class="severity severity-important">Important &middot; 11 live modules</span>
+            <h3>Eleven live projects sit on pre-v1.0 httputil &mdash; before the security-hardening era</h3>
+            <div class="where">
+              v0.12.0: nsfw-classifier, crush-daily, games/SEC, GmbH, GmbH/server,
+              sales-landing-page/cloud-run, Standup-Killer, webphone &middot; v0.11.0:
+              games/KeyCountdown &middot; v0.9.1: accountability-system (touched today)
+              &middot; v0.7.1: german-business-contract-automation (touched 2026-09-15)
+            </div>
+            <p>
+              These are not archived experiments &mdash; two were committed within the last
+              three days. They predate v1.1.0's CSRF trusted-proxy attestation model,
+              v1.2.0's CSRF <code>SameSite=None</code> Secure fallback and fail-closed
+              <code>TrustedOrigins</code>, the route-pattern propagation fix (otelhttp span
+              names), and the compression header-less-request safety default. Nine of the
+              eleven are simultaneously the go-etag laggards: one httputil bump resolves
+              both audits' findings.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Upgrade all eleven to v1.2.0. Only nsfw-classifier needs a code change first
+              (finding 2); the other ten are drop-in. After any bump, skim
+              <code>docs/migrating-to-v1.2.md</code> &mdash; the compression default change
+              is behavioral, not just additive.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="v111-pins">
+            <span class="severity severity-important">Important &middot; 23 modules</span>
+            <h3>The v1.1.1 pins are one functional release behind (v1.2.0 is two days old)</h3>
+            <div class="where">
+              23 direct/indirect pins incl. AI-Speed-Test, bank-sync, blog, browser-history,
+              ChastityAPI, e-invoicing &times;2, overview, RedditParse, storbi, Zlota44,
+              plugmarket &times;3
+            </div>
+            <p>
+              v1.1.1 is docs/chore-only (verified: its delta touches RELEASE.md and status
+              docs, no library code), so these modules are functionally on v1.1.0. What
+              v1.2.0 adds that they lack: <code>r.Pattern</code> propagation through
+              request-forking middleware (otelhttp spans collapsed to bare <code>GET</code>
+              without it), the <code>AbsentEncoding</code> compression policy (health probes
+              and minimal clients without <code>Accept-Encoding</code> now get identity
+              instead of compressed bytes), CSRF construction hardening, and
+              <code>CORSConfig.AllowPrivateNetwork</code> for Chrome PNA/LNA preflights.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Mechanical <code>go get httputil@v1.2.0</code> sweep; budget an extra look at
+              any consumer whose clients omit <code>Accept-Encoding</code> (the one
+              behavioral change, covered by the migration guide).
+            </div>
+          </div>
+
+          <div class="issue issue-nice" id="housekeeping">
+            <span class="severity severity-nice">Nice to have &middot; housekeeping</span>
+            <h3>httputil's own record: no [1.1.1] changelog section, one patch behind go-error-family</h3>
+            <div class="where">
+              CHANGELOG.md (tags v1.1.0 &rarr; v1.2.0, no [1.1.1]) &middot; go.mod pins
+              go-error-family v0.10.0 (latest v0.10.1) &middot; HEAD = v1.2.0-1 (unreleased
+              CSRF-limitation doc commit)
+            </div>
+            <p>
+              The v1.1.1 tag shipped without a CHANGELOG section &mdash; unlike the v1.0.0
+              and v1.1.0 tags, whose doc-only gaps received explicit freeze-policy entries.
+              Same class, missed once. go-error-family v0.10.1 and the queued HEAD commit
+              fold into the next release.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Backfill a one-line [1.1.1] "documentation-only" note per the established
+              freeze policy; bump go-error-family and tag the CSRF-limitation doc commit as
+              v1.2.1.
+            </div>
+          </div>
+
+          <div class="issue issue-nice" id="unused-advanced">
+            <span class="severity severity-nice">Nice to have &middot; low relevance</span>
+            <h3>Truly unused surface is two symbols &mdash; honestly graded Not Applicable</h3>
+            <div class="where">not used anywhere: <code>DetectCapabilities</code>,
+              <code>MiddlewareStack</code> (as a declared type)</div>
+            <p>
+              A library this size usually accumulates dead weight; httputil has almost
+              none. <code>DetectCapabilities</code> (capability sniffing) has no consumer
+              and no obvious near-term need; the <code>MiddlewareStack</code> type is used
+              only through its constructor. Everything else &mdash; health handlers
+              (&times;4&ndash;7 consumers), Decompression, ParseUintQuery, WantsHTML,
+              DumpRequest &mdash; has at least one fleet user.
+            </p>
+          </div>
+        </section>
+
+        <section id="currency">
+          <h2><span class="num">02</span>Version Currency</h2>
+          <p>
+            Latest release <strong>v1.2.0</strong> (2026-09-16, two days old) &mdash; the
+            currency gap is largely release recency, not neglect. server_timing (separate
+            sub-module): 37 of its pins sit on latest v1.0.1; the stragglers are the same
+            pre-v1.0 crowd.
+          </p>
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Date</th>
+                <th>Notable Change</th>
+                <th>Relevance to laggards</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>v1.2.0</td>
+                <td>2026-09-16</td>
+                <td>Route-pattern propagation (otelhttp fix), compression
+                  <code>AbsentEncoding</code> identity default (behavioral; migration
+                  guide), CSRF <code>SameSite=None</code> Secure fallback + fail-closed
+                  <code>TrustedOrigins</code>, <code>CORSConfig.AllowPrivateNetwork</code>,
+                  <code>ErrNoCookie</code>/<code>ErrNoLocation</code> reclassified
+                  Rejection</td>
+                <td class="yes">High &mdash; security + correctness</td>
+              </tr>
+              <tr>
+                <td>v1.1.1</td>
+                <td>2026-09-12</td>
+                <td>Docs/chore only (no library code; no CHANGELOG section)</td>
+                <td class="yes">None &mdash; functionally equal to v1.1.0</td>
+              </tr>
+              <tr>
+                <td>v1.1.0</td>
+                <td>2026-09-11</td>
+                <td>Removed <code>TokenBucketLimiter</code>/<code>RateLimit()</code> and
+                  the <code>ETag()</code> adapter; CSRF trusted-proxy scheme attestation;
+                  concurrency-safe <code>MiddlewareStack</code>; <code>CodeOf</code></td>
+                <td class="no">Breaking &mdash; blocks 2 fleet files (findings 1&ndash;2)</td>
+              </tr>
+              <tr>
+                <td>v1.0.1</td>
+                <td>2026-09-11</td>
+                <td>go-etag &rarr; v0.3.1 (the companion audit's lift), panic-free API
+                  guarantee finalized</td>
+                <td class="yes">Any v1.x bump closes the go-etag lag</td>
+              </tr>
+              <tr>
+                <td>v1.0.0</td>
+                <td>2026-09-10</td>
+                <td>v1 stabilization</td>
+                <td>Baseline</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="callout callout-teal">
+            <strong>Currency verdict</strong>
+            64/75 modules (85%) are within one functional release of latest; 41 (55%) are
+            on it. The 11 pre-v1.0 pins are the only real debt &mdash; and they are shared
+            with the go-etag audit's laggard list.
+          </div>
+        </section>
+
+        <section id="opportunities">
+          <h2><span class="num">03</span>Top Opportunities</h2>
+          <p>Pareto-ranked by impact &times; ease.</p>
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Opportunity</th>
+                <th>Impact</th>
+                <th>Ease</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Migrate library-policy's middleware_test.go to KeyedRateLimiter &mdash; un-break its test suite</td>
+                <td class="yes">4</td>
+                <td class="yes">4</td>
+                <td><span class="highlight">16</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>nsfw-classifier: swap <code>httputil.ETag</code> &rarr; <code>etag.New</code> (1 line), then httputil v0.12.0 &rarr; v1.2.0</td>
+                <td class="yes">4</td>
+                <td class="yes">4</td>
+                <td><span class="highlight">16</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Upgrade the other 10 pre-v1.0 modules to v1.2.0 (drop-in; closes go-etag lag too)</td>
+                <td class="yes">4</td>
+                <td>3</td>
+                <td><span class="highlight">12</span></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Sweep the 23 v1.1.1 pins to v1.2.0 (review compression behavior for header-less clients)</td>
+                <td>3</td>
+                <td class="yes">4</td>
+                <td><span class="highlight">12</span></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>httputil housekeeping release: backfill [1.1.1] changelog note, go-error-family v0.10.1, tag HEAD doc commit</td>
+                <td>2</td>
+                <td class="yes">4</td>
+                <td><span class="highlight">8</span></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>Adopt the Metrics middleware in 2&ndash;3 flagship servers (DiscordSync already proves the pattern)</td>
+                <td>2</td>
+                <td>3</td>
+                <td><span class="highlight">6</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="proposal">
+          <h2><span class="num">04</span>Target State</h2>
+          <p>
+            After items 1&ndash;4: all 75 main-module pins resolve &ge; v1.2.0, no fleet
+            file references a removed symbol, and the security-hardening era (CSRF
+            fail-closed construction, pattern propagation, compression safety default) is
+            universal. The workflow that gets there:
+          </p>
+          <pre><code><span class="tok-comment"># 1. fix the two hazards first (findings 1-2), then per module:</span>
+<span class="tok-function">go</span> get github.com/larsartmann/httputil@v1.2.0
+<span class="tok-function">go</span> mod tidy &amp;&amp; <span class="tok-function">go</span> build ./... &amp;&amp; <span class="tok-function">go</span> test ./...
+<span class="tok-comment"># 2. side effect: go-etag minimum rises to v0.3.1 fleet-wide (companion audit)</span>
+<span class="tok-comment"># 3. for header-less-client deployments, review CompressionConfig.AbsentEncoding</span></code></pre>
+          <div class="callout callout-teal">
+            <strong>Why this state is better</strong>
+            Two audits' findings close with one sweep, the fleet's oldest deployed
+            middleware jumps from pre-hardening v0.x to v1.2.0 in a single step, and no
+            module ever again compiles against a symbol set its pinned version does not
+            export &mdash; the library-policy failure class.
+          </div>
+        </section>
+
+        <section id="appendix">
+          <h2><span class="num">05</span>Appendix</h2>
+          <p><strong>Methodology.</strong> Every claim verified against primary sources on
+            2026-09-18: a 76-module <code>go.mod</code> sweep under <code>~/projects</code>
+            (75 main-module + 37 server_timing pins counted); 206 import-site files swept
+            for <code>httputil.&lowast;</code>/<code>servertiming.&lowast;</code>/
+            <code>httpspec.&lowast;</code> symbol usage (top-70 ranked, tail verified);
+            removed-API proof via <code>git show v1.2.0:&lt;file&gt;</code> plus
+            <code>go.sum</code> version sets; tag dates via <code>git log</code>; the
+            v1.1.1 content classification via its commit delta. Underused-symbol checks
+            were run <code>httputil.</code>-qualified after an unqualified pass produced
+            false positives (consumers define their own <code>HealthHandler</code>).
+            library-policy's compile break is proven statically (removed symbols + sole
+            go.sum version); a local vet was impossible because the module requires go
+            &ge; 1.27 and the host pins GOTOOLCHAIN=local with 1.26.7. Scoring: currency
+            55/100 &times; 0.35 + utilization 92/100 &times; 0.4 + hygiene 60/100 (two
+            compile hazards, changelog gap) &times; 0.25 = 72.</p>
+
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Pre-v1.0 module</th>
+                <th>Pin</th>
+                <th>Upgrade path</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>german-business-contract-automation</td><td class="no">v0.7.1</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>accountability-system</td><td class="no">v0.9.1</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>games/KeyCountdown</td><td class="no">v0.11.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>nsfw-classifier</td><td class="no">v0.12.0</td><td>fix server.go:391 first (finding 2)</td></tr>
+              <tr><td>crush-daily</td><td class="no">v0.12.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>games/SEC</td><td class="no">v0.12.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>GmbH</td><td class="no">v0.12.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>GmbH/server</td><td class="no">v0.12.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>sales-landing-page/cloud-run</td><td class="no">v0.12.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>Standup-Killer</td><td class="no">v0.12.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+              <tr><td>webphone</td><td class="no">v0.12.0</td><td>drop-in &rarr; v1.2.0</td></tr>
+            </tbody>
+          </table>
+
+          <p><strong>Related.</strong>
+            <a href="2026-09-18_go-etag-deep-dive.html">go-etag deep dive (same day)</a>
+            &mdash; shares 9 of these 11 laggards &middot; httputil
+            <code>docs/migrating-to-v1.2.md</code> and
+            <code>docs/migrating-to-keyed-rate-limiter.md</code> (shipped migration
+            guides) &middot; go-etag deep-dive recommendation #1 (httputil &rarr; v1.2.0)
+            is refined here by finding 2.</p>
+        </section>
+
+        <footer class="footer">
+          <p>
+            Generated 2026-09-18 &middot; Reviewed against httputil v1.2.0 (latest,
+            2026-09-16) &middot; All claims verified against source, git tags, and
+            go.mod/go.sum files as cited
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      (function () {
+        if (!("IntersectionObserver" in window)) return;
+        var nav = document.querySelector("[data-nav]");
+        if (!nav) return;
+        var links = nav.querySelectorAll('a[href^="#"]');
+        var ids = Array.from(links).map(function (l) {
+          return l.getAttribute("href").slice(1);
+        });
+        var sections = ids
+          .map(function (id) {
+            return document.getElementById(id);
+          })
+          .filter(Boolean);
+        if (!sections.length) return;
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                links.forEach(function (link) {
+                  link.classList.toggle(
+                    "active",
+                    link.getAttribute("href") === "#" + entry.target.id,
+                  );
+                });
+              }
+            });
+          },
+          { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
+        );
+        sections.forEach(function (s) {
+          observer.observe(s);
+        });
+      })();
+    </script>
+  </body>
+</html>

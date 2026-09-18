@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Report Title</title>
+    <title>go-health — Next Level Pareto Plan</title>
     <style>
       /* =========================================================================
          BAUHAUS DARK — Dashboard template
@@ -824,212 +824,482 @@
         }
       }
     </style>
+      <style>.d2-wrap svg{max-width:100%;height:auto}</style>
   </head>
   <body>
-    <!-- Full-bleed top bar (optional — remove for quieter reports) -->
     <div class="top-bar">
-      <span>REPORT TYPE</span>
-      <span>YYYY-MM-DD</span>
-      <span>AUTHOR / TEAM</span>
+      <span>PARETO PLAN</span>
+      <span>2026-09-18</span>
+      <span>go-health &middot; hardening + aggregate v0.3</span>
     </div>
 
     <div class="layout">
-      <!-- Sidebar TOC (hidden below 1024px; use inline .toc if you prefer) -->
       <aside class="sidebar" data-nav>
         <nav>
           <div class="label">Contents</div>
           <a href="#summary">Summary</a>
-          <a href="#findings">Findings</a>
-          <a href="#issues">Issue Cards</a>
-          <a href="#proposal">Proposal</a>
-          <a href="#plan">Plan</a>
+          <a href="#thesis">Thesis</a>
+          <a href="#tier1">1% &middot; 51%</a>
+          <a href="#tier2">4% &middot; 64%</a>
+          <a href="#tier3">20% &middot; 80%</a>
+          <a href="#graph">Execution Graph</a>
+          <a href="#tasks">Task Table</a>
+          <a href="#risks">Risks &amp; Notes</a>
         </nav>
       </aside>
 
       <main class="main">
-        <!-- Hero -->
         <div class="hero">
-          <!-- Optional Bauhaus signature: geometric shape cluster. Remove for quieter hero. -->
           <div class="hero-shapes">
             <div class="circle"></div>
             <div class="square"></div>
             <div class="tri"></div>
           </div>
-          <div class="hero-badge">Report Type</div>
-          <h1>Report Title</h1>
+          <div class="hero-badge">Pareto Plan</div>
+          <h1>go-health: the next level</h1>
           <p class="hero-subtitle">
-            One-sentence description of what this report covers.
+            The single-probe library is done. The next level is making the
+            aggregate a first-class deployment surface, turning correctness
+            claims into CI-enforced evidence, and extending the observability
+            seam from reporting to alerting.
           </p>
         </div>
 
-        <!-- Inline TOC (alternative to sidebar; pick one) -->
         <nav class="toc">
           <h3>Contents</h3>
           <ul>
             <li><a href="#summary">Summary</a></li>
-            <li><a href="#findings">Findings</a></li>
-            <li><a href="#issues">Issue Cards</a></li>
-            <li><a href="#proposal">Proposal</a></li>
-            <li><a href="#plan">Plan</a></li>
+            <li><a href="#thesis">Thesis</a></li>
+            <li><a href="#tier1">1% &middot; Aggregate first-class (51%)</a></li>
+            <li><a href="#tier2">4% &middot; Evidence + alerting (64%)</a></li>
+            <li><a href="#tier3">20% &middot; The long tail (80%)</a></li>
+            <li><a href="#graph">Execution Graph</a></li>
+            <li><a href="#tasks">Task Table</a></li>
+            <li><a href="#risks">Risks &amp; Notes</a></li>
           </ul>
         </nav>
 
-        <!-- Stats Dashboard -->
         <h2 id="summary"><span class="num">00</span>Summary</h2>
+        <p>
+          go-health is a two-package SDK (<code>health</code>,
+          <code>health/aggregate</code>) whose single-probe surface is
+          unusually complete for an alpha: three kubelet probes, lock-free
+          caching, shutdown awareness, panic recovery, per-check metadata,
+          deterministic wire format, fuzzing, and a static OpenAPI spec. The
+          remaining leverage is not more single-probe features. It is
+          <strong>finishing the aggregate as a deployment surface</strong>,
+          <strong>proving the merge algebra in CI</strong>, and
+          <strong>turning the existing observability seam into an alerting
+          seam</strong>.
+        </p>
         <div class="stat-grid">
-          <div class="stat-card">
-            <div class="stat-value">42</div>
-            <div class="stat-label">Total Items</div>
-          </div>
-          <div class="stat-card stat-bad">
+          <div class="stat-card stat-good">
             <div class="stat-value">7</div>
-            <div class="stat-label">Critical</div>
+            <div class="stat-label">Shipped this session</div>
           </div>
           <div class="stat-card stat-warn">
-            <div class="stat-value">12</div>
-            <div class="stat-label">Warnings</div>
+            <div class="stat-value">3</div>
+            <div class="stat-label">1% tier tasks</div>
           </div>
-          <div class="stat-card stat-good">
-            <div class="stat-value">35</div>
-            <div class="stat-label">Resolved</div>
+          <div class="stat-card">
+            <div class="stat-value">6</div>
+            <div class="stat-label">4% tier tasks</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">18</div>
+            <div class="stat-label">20% tier tasks</div>
           </div>
         </div>
 
-        <!-- Findings as Cards -->
-        <h2 id="findings"><span class="num">01</span>Findings</h2>
-
-        <div class="card card-problem">
-          <h4>Critical Issue</h4>
-          <p>Description of the problem and its impact.</p>
-        </div>
-
+        <h2 id="thesis"><span class="num">01</span>Thesis</h2>
         <div class="card card-solution">
-          <h4>Recommended Fix</h4>
-          <p>Description of the solution with rationale.</p>
+          <h4>The gap is composition, not features</h4>
+          <p>
+            Every primitive a production probe needs already ships and is
+            tested. What is missing is the layer that lets one process present
+            its <em>whole</em> health as a single, diagnosable surface, with
+            the guarantees behind it enforced automatically rather than
+            asserted in prose.
+          </p>
+        </div>
+        <div class="card card-problem">
+          <h4>The aggregate is half a citizen</h4>
+          <p>
+            <code>health.Probe</code> exposes <code>Healthz()</code>,
+            <code>Status()</code>, <code>Ready()</code>, and
+            <code>WalkReady()</code>-style accessors. The aggregate exposes
+            three handlers and <code>CachedResponse()</code> &mdash; but no
+            single-endpoint handler and no per-source roll-up. A deployment
+            whose entry point is one load balancer URL cannot use it as the
+            front door, and a dashboard must re-fold <code>source/check</code>
+            prefixes itself.
+          </p>
+        </div>
+        <div class="card card-warning">
+          <h4>Correctness is claimed, not continuously proven</h4>
+          <p>
+            The merge invariants (collision-free keys, worst-of status,
+            absorbing shutdown) are documented and example-tested. Passing
+            examples are not an algebra. This session adds property tests and
+            benchmarks; the missing half is a CI lockstep between the golden
+            wire fixtures and the OpenAPI spec.
+          </p>
         </div>
 
-        <!-- Issue Cards -->
-        <h2 id="issues"><span class="num">02</span>Issue Cards</h2>
-
+        <h2 id="tier1"><span class="num">02</span>1% &rarr; 51% &middot; Aggregate first-class</h2>
+        <p>
+          Three additive changes complete the aggregate as a deployable
+          surface. All three already have written design notes, so the
+          decisions are made and only implementation remains.
+        </p>
         <div class="issue issue-critical">
-          <span class="severity severity-critical">Blocking</span>
-          <h3>Critical finding title</h3>
-          <div class="where">path/to/file.go:42-58</div>
+          <span class="severity severity-critical">Highest leverage</span>
+          <h3><code>Aggregate.Healthz()</code> &mdash; one URL per process</h3>
+          <div class="where">docs/aggregate-healthz-design.md (new)</div>
           <p>
-            Describe the problem and cite the code or behavior that proves it.
+            Worst-of-N in a single 200/503 answer: 503 while any source is
+            booting, the merged roll-up is fail, or any source is draining;
+            <code>warn</code> stays 200. Reuses <code>StartupComplete()</code>
+            and <code>CachedResponse()</code>, so it adds no state and no
+            freshness semantics of its own.
           </p>
-          <div class="callout callout-solution">
-            <strong>Fix</strong>
-            State the concrete recommended action.
-          </div>
         </div>
-
+        <div class="issue issue-critical">
+          <span class="severity severity-critical">Highest leverage</span>
+          <h3><code>Aggregate.SourceStatuses()</code> &mdash; per-source roll-up</h3>
+          <div class="where">docs/aggregate-per-source-visibility-design.md</div>
+          <p>
+            Answers "is source <code>api</code> healthy overall?" without the
+            consumer folding prefixes. One atomic load per source; zero wire
+            change.
+          </p>
+        </div>
         <div class="issue issue-important">
-          <span class="severity severity-important">Important</span>
-          <h3>Important finding title</h3>
-          <div class="where">path/to/another.go:12-19</div>
+          <span class="severity severity-important">Correctness UX</span>
+          <h3><code>errors.Join</code> in <code>aggregate.New</code></h3>
+          <div class="where">docs/errors-join-design.md (spike verified)</div>
           <p>
-            Explain the risk and why a careful reviewer would hesitate before
-            shipping.
+            Report every invalid source at once instead of failing on the
+            first. <code>errors.Is</code> against the sentinels is unchanged;
+            messages become multi-line, which belongs in a minor release with
+            a changelog callout.
           </p>
         </div>
 
+        <h2 id="tier2"><span class="num">03</span>4% &rarr; 64% &middot; Evidence + alerting</h2>
+        <div class="card card-solution">
+          <h4>Shipped this session: the merge algebra is now a test</h4>
+          <p>
+            <code>aggregate/aggregate_property_test.go</code> enumerates every
+            source topology of up to three distinct cached states (pass, warn,
+            fail, shutting down, never-started) and asserts idempotence,
+            source-order commutativity, namespaced-union completeness and
+            disjointness, worst-of status/shutdown/latency, absorbing shutdown,
+            and handler-status mirroring &mdash; 425 subtests, all green.
+          </p>
+        </div>
+        <div class="card card-solution">
+          <h4>Shipped this session: the blind spots are measured</h4>
+          <p>
+            <code>BenchmarkAggregateHandlers</code> (HTTP path),
+            <code>BenchmarkEvaluate_Scaling</code> (evaluation vs. check
+            count), and <code>BenchmarkTransitionTrackerStamp</code> (the
+            per-batch Since pass) fill the gaps the FEATURES table admitted
+            were unmeasured. Baselines are recorded.
+          </p>
+        </div>
+        <div class="issue issue-important">
+          <span class="severity severity-important">New capability</span>
+          <h3><code>WithTransitionHook</code> &mdash; alerting on state changes</h3>
+          <div class="where">probe.go (needs design note first)</div>
+          <p>
+            <code>transitionTracker</code> already observes every status
+            change to stamp <code>since</code>. Exposing an
+            <code>OnTransition(from, to Check)</code> callback converts that
+            observation into the missing alerting primitive: "db went
+            fail&rarr;pass" without polling or an external diff loop. Design
+            note required (severity mapping, ordering under overlapping
+            batches, panic isolation).
+          </p>
+        </div>
+        <div class="issue issue-important">
+          <span class="severity severity-important">Guardrail</span>
+          <h3>OpenAPI &harr; golden-fixture lockstep in CI</h3>
+          <div class="where">docs/openapi.yaml, handlers_json_test.go</div>
+          <p>
+            Both the spec and the golden files describe the same wire format,
+            and nothing keeps them in step. A CI check that derives field
+            presence from the golden fixtures and compares it to the spec
+            turns "manual eyeball" into a failing job.
+          </p>
+        </div>
         <div class="issue issue-nice">
-          <span class="severity severity-nice">Nice to have</span>
-          <h3>Polish suggestion</h3>
-          <div class="where">docs/ or config</div>
+          <span class="severity severity-nice">Adoption</span>
+          <h3><code>healthtest</code> &mdash; consumer test helpers</h3>
+          <div class="where">new sub-package</div>
           <p>
-            Minor documentation gaps or future-proofing suggestions go here.
+            A tiny package with a fake batch builder, a recording
+            <code>HealthRecorder</code>, and readiness assertions removes the
+            boilerplate every consumer writes to test their probes. Design
+            note + owner decision needed before adding public surface.
           </p>
         </div>
 
-        <!-- Strengths -->
-        <h2>Strengths</h2>
-        <div class="strengths">
-          <div class="strength">
-            <div class="check">+</div>
-            <div class="text">
-              <strong>Specific strength</strong>
-              <span>Explain why it matters and what it enables.</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Table with Badges -->
-        <h2>Issue Table</h2>
+        <h2 id="tier3"><span class="num">04</span>20% &rarr; 80% &middot; The long tail</h2>
+        <p>
+          Bounded, already-scoped items from TODO_LIST and ROADMAP. None is
+          large; together they are the difference between "good library" and
+          "no rough edges".
+        </p>
         <table>
           <thead>
-            <tr>
-              <th>#</th>
-              <th>Severity</th>
-              <th>Issue</th>
-              <th>Status</th>
-            </tr>
+            <tr><th>Item</th><th>Tier</th><th>Status</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td>1</td>
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>Missing error handling</td>
-              <td><span class="badge badge-fixed">Fixed</span></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td><span class="badge badge-high">High</span></td>
-              <td>Race condition</td>
-              <td><span class="badge badge-low">Open</span></td>
-            </tr>
+            <tr><td>OpenAPI explicitly covers aggregate endpoints</td><td><span class="badge badge-low">20%</span></td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>README "Which probe should I hit?" decision table</td><td><span class="badge badge-low">20%</span></td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>ADR-005: aggregate source-name contract</td><td><span class="badge badge-low">20%</span></td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>Aggregate handler benchmarks</td><td><span class="badge badge-low">20%</span></td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>Example label truthful about <code>since</code></td><td><span class="badge badge-low">20%</span></td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>Aggregate <code>Healthz</code> design note</td><td><span class="badge badge-low">20%</span></td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td><code>WithTransitionHook</code> design note</td><td><span class="badge badge-medium">Medium</span></td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td><code>AwaitReady</code> cache-aware poll interval</td><td><span class="badge badge-low">Low</span></td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>ADR: unify latency units in v0.3</td><td><span class="badge badge-low">Low</span></td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>Detailed-checks cookbook</td><td><span class="badge badge-low">Low</span></td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>Feed golden fixtures into aggregate fuzz corpus</td><td><span class="badge badge-low">Low</span></td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>samber/do upstream: per-service timing</td><td><span class="badge badge-medium">Medium</span></td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>samber-do-auditlog: implement <code>DetailedHealthRecorder</code></td><td><span class="badge badge-medium">Medium</span></td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>Dashboard: render <code>since</code>/<code>duration_ns</code></td><td><span class="badge badge-high">High</span></td><td><span class="badge badge-low">Other repo</span></td></tr>
           </tbody>
         </table>
 
-        <!-- Before/After Comparison -->
-        <h2 id="proposal">Before / After</h2>
-        <div class="compare-header">
-          <div class="compare-before">Before</div>
-          <div class="compare-after">After</div>
-        </div>
-        <div class="compare-row">
-          <div>
-            <pre><code><span class="tok-comment">// Old code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>(data <span class="tok-type">interface</span>{}) { }</code></pre>
-          </div>
-          <div>
-            <pre><code><span class="tok-comment">// New code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>[T <span class="tok-type">any</span>](data T) { }</code></pre>
-          </div>
-        </div>
+        <h2 id="graph"><span class="num">05</span>Execution Graph</h2>
+        <p>
+          Three front doors onto the same outcome: a probe that is complete,
+          provable, and proactive.
+        </p>
+        <div class="d2-wrap" style="overflow: auto; margin: 1rem 0">
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-d2-version="v0.8.1-HEAD" preserveAspectRatio="xMinYMin meet" viewBox="0 0 1858 1548"><svg class="d2-1173148915 d2-svg" width="1858" height="1548" viewBox="-38 -85 1858 1548"><rect x="-38.000000" y="-85.000000" width="1858.000000" height="1548.000000" rx="0.000000" fill="#FFFFFF" class=" fill-N7" stroke-width="0" /><style type="text/css"><![CDATA[
+.d2-1173148915 .text {
+	font-family: "d2-1173148915-font-regular";
+}
+@font-face {
+	font-family: d2-1173148915-font-regular;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-1173148915 .text-bold {
+	font-family: "d2-1173148915-font-bold";
+}
+@font-face {
+	font-family: d2-1173148915-font-bold;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-1173148915 .text-italic {
+	font-family: "d2-1173148915-font-italic";
+}
+@font-face {
+	font-family: d2-1173148915-font-italic;
+	src: url("data:application/font-woff;base64,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");
+}]]></style><style type="text/css"><![CDATA[.shape {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+}
+.connection {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.blend {
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
 
-        <!-- ASCII Diagram -->
-        <h2>Dependency Tree</h2>
-        <div class="dep-tree">
-          <span class="root">root</span> ├──
-          <span class="ok">wanted-dep</span> └──
-          <span class="unwanted">unwanted-dep</span>
+		.d2-1173148915 .fill-N1{fill:#0A0F25;}
+		.d2-1173148915 .fill-N2{fill:#676C7E;}
+		.d2-1173148915 .fill-N3{fill:#9499AB;}
+		.d2-1173148915 .fill-N4{fill:#CFD2DD;}
+		.d2-1173148915 .fill-N5{fill:#DEE1EB;}
+		.d2-1173148915 .fill-N6{fill:#EEF1F8;}
+		.d2-1173148915 .fill-N7{fill:#FFFFFF;}
+		.d2-1173148915 .fill-B1{fill:#0D32B2;}
+		.d2-1173148915 .fill-B2{fill:#0D32B2;}
+		.d2-1173148915 .fill-B3{fill:#E3E9FD;}
+		.d2-1173148915 .fill-B4{fill:#E3E9FD;}
+		.d2-1173148915 .fill-B5{fill:#EDF0FD;}
+		.d2-1173148915 .fill-B6{fill:#F7F8FE;}
+		.d2-1173148915 .fill-AA2{fill:#4A6FF3;}
+		.d2-1173148915 .fill-AA4{fill:#EDF0FD;}
+		.d2-1173148915 .fill-AA5{fill:#F7F8FE;}
+		.d2-1173148915 .fill-AB4{fill:#EDF0FD;}
+		.d2-1173148915 .fill-AB5{fill:#F7F8FE;}
+		.d2-1173148915 .stroke-N1{stroke:#0A0F25;}
+		.d2-1173148915 .stroke-N2{stroke:#676C7E;}
+		.d2-1173148915 .stroke-N3{stroke:#9499AB;}
+		.d2-1173148915 .stroke-N4{stroke:#CFD2DD;}
+		.d2-1173148915 .stroke-N5{stroke:#DEE1EB;}
+		.d2-1173148915 .stroke-N6{stroke:#EEF1F8;}
+		.d2-1173148915 .stroke-N7{stroke:#FFFFFF;}
+		.d2-1173148915 .stroke-B1{stroke:#0D32B2;}
+		.d2-1173148915 .stroke-B2{stroke:#0D32B2;}
+		.d2-1173148915 .stroke-B3{stroke:#E3E9FD;}
+		.d2-1173148915 .stroke-B4{stroke:#E3E9FD;}
+		.d2-1173148915 .stroke-B5{stroke:#EDF0FD;}
+		.d2-1173148915 .stroke-B6{stroke:#F7F8FE;}
+		.d2-1173148915 .stroke-AA2{stroke:#4A6FF3;}
+		.d2-1173148915 .stroke-AA4{stroke:#EDF0FD;}
+		.d2-1173148915 .stroke-AA5{stroke:#F7F8FE;}
+		.d2-1173148915 .stroke-AB4{stroke:#EDF0FD;}
+		.d2-1173148915 .stroke-AB5{stroke:#F7F8FE;}
+		.d2-1173148915 .background-color-N1{background-color:#0A0F25;}
+		.d2-1173148915 .background-color-N2{background-color:#676C7E;}
+		.d2-1173148915 .background-color-N3{background-color:#9499AB;}
+		.d2-1173148915 .background-color-N4{background-color:#CFD2DD;}
+		.d2-1173148915 .background-color-N5{background-color:#DEE1EB;}
+		.d2-1173148915 .background-color-N6{background-color:#EEF1F8;}
+		.d2-1173148915 .background-color-N7{background-color:#FFFFFF;}
+		.d2-1173148915 .background-color-B1{background-color:#0D32B2;}
+		.d2-1173148915 .background-color-B2{background-color:#0D32B2;}
+		.d2-1173148915 .background-color-B3{background-color:#E3E9FD;}
+		.d2-1173148915 .background-color-B4{background-color:#E3E9FD;}
+		.d2-1173148915 .background-color-B5{background-color:#EDF0FD;}
+		.d2-1173148915 .background-color-B6{background-color:#F7F8FE;}
+		.d2-1173148915 .background-color-AA2{background-color:#4A6FF3;}
+		.d2-1173148915 .background-color-AA4{background-color:#EDF0FD;}
+		.d2-1173148915 .background-color-AA5{background-color:#F7F8FE;}
+		.d2-1173148915 .background-color-AB4{background-color:#EDF0FD;}
+		.d2-1173148915 .background-color-AB5{background-color:#F7F8FE;}
+		.d2-1173148915 .color-N1{color:#0A0F25;}
+		.d2-1173148915 .color-N2{color:#676C7E;}
+		.d2-1173148915 .color-N3{color:#9499AB;}
+		.d2-1173148915 .color-N4{color:#CFD2DD;}
+		.d2-1173148915 .color-N5{color:#DEE1EB;}
+		.d2-1173148915 .color-N6{color:#EEF1F8;}
+		.d2-1173148915 .color-N7{color:#FFFFFF;}
+		.d2-1173148915 .color-B1{color:#0D32B2;}
+		.d2-1173148915 .color-B2{color:#0D32B2;}
+		.d2-1173148915 .color-B3{color:#E3E9FD;}
+		.d2-1173148915 .color-B4{color:#E3E9FD;}
+		.d2-1173148915 .color-B5{color:#EDF0FD;}
+		.d2-1173148915 .color-B6{color:#F7F8FE;}
+		.d2-1173148915 .color-AA2{color:#4A6FF3;}
+		.d2-1173148915 .color-AA4{color:#EDF0FD;}
+		.d2-1173148915 .color-AA5{color:#F7F8FE;}
+		.d2-1173148915 .color-AB4{color:#EDF0FD;}
+		.d2-1173148915 .color-AB5{color:#F7F8FE;}.appendix text.text{fill:#0A0F25}.md{--color-fg-default:#0A0F25;--color-fg-muted:#676C7E;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#0D32B2;--color-border-muted:#0D32B2;--color-neutral-muted:#EEF1F8;--color-accent-fg:#0D32B2;--color-accent-emphasis:#0D32B2;--color-attention-subtle:#676C7E;--color-danger-fg:red;}.sketch-overlay-B1{fill:url(#streaks-darker-d2-1173148915);mix-blend-mode:lighten}.sketch-overlay-B2{fill:url(#streaks-darker-d2-1173148915);mix-blend-mode:lighten}.sketch-overlay-B3{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-B4{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-B5{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-B6{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-AA2{fill:url(#streaks-dark-d2-1173148915);mix-blend-mode:overlay}.sketch-overlay-AA4{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-AA5{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-AB4{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-AB5{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-N1{fill:url(#streaks-darker-d2-1173148915);mix-blend-mode:lighten}.sketch-overlay-N2{fill:url(#streaks-dark-d2-1173148915);mix-blend-mode:overlay}.sketch-overlay-N3{fill:url(#streaks-normal-d2-1173148915);mix-blend-mode:color-burn}.sketch-overlay-N4{fill:url(#streaks-normal-d2-1173148915);mix-blend-mode:color-burn}.sketch-overlay-N5{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-N6{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.sketch-overlay-N7{fill:url(#streaks-bright-d2-1173148915);mix-blend-mode:darken}.light-code{display: block}.dark-code{display: none}]]></style><g class="Y29yZQ=="><g class="shape" ><rect x="63.000000" y="360.000000" width="356.000000" height="959.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="241.000000" y="347.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">Single-probe core (shipped)</text></g><g class="YWdn"><g class="shape" ><rect x="905.000000" y="56.000000" width="324.000000" height="504.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="1067.000000" y="43.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">1% — Aggregate first-class (51%)</text></g><g class="dmVyaWZ5"><g class="shape" ><rect x="874.000000" y="646.000000" width="387.000000" height="378.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="1067.500000" y="633.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">4% — Verification evidence (64%)</text></g><g class="b2JzZXJ2ZQ=="><g class="shape" ><rect x="887.000000" y="1110.000000" width="360.000000" height="252.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="1067.000000" y="1097.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">4% — Observability to alerting (64%)</text></g><g class="b3V0Y29tZV9vbmU="><g class="shape" ><rect x="1508.000000" y="330.000000" width="211.000000" height="82.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1613.500000" y="368.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1613.500000" dy="0.000000">One endpoint,</tspan><tspan x="1613.500000" dy="18.500000">per-source diagnosable</tspan></text></g><g class="b3V0Y29tZV9wcm9vZg=="><g class="shape" ><rect x="1543.000000" y="794.000000" width="142.000000" height="82.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1614.000000" y="832.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1614.000000" dy="0.000000">Correctness</tspan><tspan x="1614.000000" dy="18.500000">enforced in CI</tspan></text></g><g class="b3V0Y29tZV9hbGVydA=="><g class="shape" ><rect x="1525.000000" y="1258.000000" width="178.000000" height="82.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1614.000000" y="1296.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1614.000000" dy="0.000000">Transitions trigger</tspan><tspan x="1614.000000" dy="18.500000">alerts proactively</tspan></text></g><g class="Y29yZS5wcm9iZQ=="><g class="shape" ><rect x="93.000000" y="354.000000" width="296.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="241.000000" y="392.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Probe: liveness / readiness / startup</text></g><g class="Y29yZS5jYWNoZQ=="><g class="shape" ><rect x="121.000000" y="802.000000" width="240.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="241.000000" y="840.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">lock-free background cache</text></g><g class="Y29yZS5tZXRh"><g class="shape" ><rect x="113.000000" y="1213.000000" width="255.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="240.500000" y="1251.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">per-check since + duration_ns</text></g><g class="YWdnLmhlYWx0aHo="><g class="shape" ><rect x="973.000000" y="86.000000" width="189.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.500000" y="124.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Aggregate.Healthz()</text></g><g class="YWdnLnN0YXR1c2Vz"><g class="shape" ><rect x="945.000000" y="212.000000" width="244.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.000000" y="250.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Aggregate.SourceStatuses()</text></g><g class="YWdnLmpvaW4="><g class="shape" ><rect x="935.000000" y="338.000000" width="264.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.000000" y="376.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">errors.Join construction errors</text></g><g class="YWdnLm5vdGU="><g class="shape" ><rect x="973.000000" y="464.000000" width="188.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.000000" y="502.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">one URL per process</text></g><g class="dmVyaWZ5LnByb3A="><g class="shape" ><rect x="935.000000" y="676.000000" width="264.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.000000" y="714.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">merge property tests (shipped)</text></g><g class="dmVyaWZ5LmJlbmNo"><g class="shape" ><rect x="904.000000" y="802.000000" width="327.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.500000" y="840.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">handler + tracker benchmarks (shipped)</text></g><g class="dmVyaWZ5LmxvY2tzdGVw"><g class="shape" ><rect x="927.000000" y="928.000000" width="281.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.500000" y="966.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">OpenAPI &lt;-&gt; golden lockstep in CI</text></g><g class="b2JzZXJ2ZS5ob29r"><g class="shape" ><rect x="938.000000" y="1140.000000" width="259.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.500000" y="1178.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">WithEvaluationHook (metrics)</text></g><g class="b2JzZXJ2ZS50cmFucw=="><g class="shape" ><rect x="917.000000" y="1266.000000" width="300.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1067.000000" y="1304.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">WithTransitionHook (state changes)</text></g><g class="KGNvcmUgLSZndDsgYWdnKVswXQ=="><marker id="mk-d2-1173148915-3488378134" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" fill="#0D32B2" class="connection fill-B1" stroke-width="2" /> </marker><path d="M 421.000000 417.000000 C 600.599976 417.000000 697.799988 417.000000 901.000000 417.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-1173148915-3488378134)" mask="url(#d2-1173148915)" /><text x="662.000000" y="423.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">complete the surface</text></g><g class="KGNvcmUgLSZndDsgdmVyaWZ5KVswXQ=="><path d="M 421.000000 835.000000 C 600.599976 835.000000 691.599976 835.000000 870.000000 835.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-1173148915-3488378134)" mask="url(#d2-1173148915)" /><text x="646.500000" y="841.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">make claims provable</text></g><g class="KGNvcmUgLSZndDsgb2JzZXJ2ZSlbMF0="><path d="M 421.000000 1299.000000 C 600.599976 1299.000000 694.200012 1299.000000 883.000000 1299.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-1173148915-3488378134)" mask="url(#d2-1173148915)" /><text x="653.000000" y="1305.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">act, not just report</text></g><g class="KGFnZyAtJmd0OyBvdXRjb21lX29uZSlbMF0="><path d="M 1230.500000 371.000000 C 1378.099976 371.000000 1434.099976 371.000000 1504.500000 371.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-1173148915-3488378134)" mask="url(#d2-1173148915)" /></g><g class="KHZlcmlmeSAtJmd0OyBvdXRjb21lX3Byb29mKVswXQ=="><path d="M 1262.500000 835.000000 C 1384.500000 835.000000 1440.900024 835.000000 1538.500000 835.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-1173148915-3488378134)" mask="url(#d2-1173148915)" /></g><g class="KG9ic2VydmUgLSZndDsgb3V0Y29tZV9hbGVydClbMF0="><path d="M 1248.500000 1299.000000 C 1381.699951 1299.000000 1437.300049 1299.000000 1520.500000 1299.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-1173148915-3488378134)" mask="url(#d2-1173148915)" /></g><mask id="d2-1173148915" maskUnits="userSpaceOnUse" x="-38" y="-85" width="1858" height="1548">
+<rect x="-38" y="-85" width="1858" height="1548" fill="white"></rect>
+<rect x="591.000000" y="407.000000" width="142" height="21" fill="black"></rect>
+<rect x="572.000000" y="825.000000" width="149" height="21" fill="black"></rect>
+<rect x="590.000000" y="1289.000000" width="126" height="21" fill="black"></rect>
+</mask></svg></svg>
         </div>
+        <details>
+          <summary>D2 source</summary>
+          <pre><code>direction: right
 
-        <!-- Numbered Steps -->
-        <h2 id="plan"><span class="num">03</span>Migration Plan</h2>
-        <div class="migration-step">
-          <div class="migration-num">1</div>
-          <div class="migration-content">
-            <h4>Add generic type parameter</h4>
-            <p>Update the function signature to accept a type parameter.</p>
+core: "Single-probe core (shipped)" {
+  probe: "Probe: liveness / readiness / startup"
+  cache: "lock-free background cache"
+  meta:  "per-check since + duration_ns"
+}
+agg: "1% - Aggregate first-class (51%)" {
+  healthz:  "Aggregate.Healthz()"
+  statuses: "Aggregate.SourceStatuses()"
+  join:     "errors.Join construction errors"
+}
+verify: "4% - Verification evidence (64%)" {
+  prop:     "merge property tests (shipped)"
+  bench:    "handler + tracker benchmarks (shipped)"
+  lockstep: "OpenAPI &lt;-&gt; golden lockstep in CI"
+}
+observe: "4% - Observability to alerting (64%)" {
+  hook:  "WithEvaluationHook (metrics)"
+  trans: "WithTransitionHook (state changes)"
+}
+core -> agg: "complete the surface"
+core -> verify: "make claims provable"
+core -> observe: "act, not just report"</code></pre>
+        </details>
+
+        <h2 id="tasks"><span class="num">06</span>Comprehensive Task Table</h2>
+        <p>Sorted by impact, then effort. Effort: S &le; 30min, M &le; 2h, L &gt; 2h.</p>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Tier</th><th>Task</th><th>Impact</th><th>Effort</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>1%</td><td>Implement <code>Aggregate.Healthz()</code></td><td><span class="badge badge-critical">High</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>2</td><td>1%</td><td>Implement <code>Aggregate.SourceStatuses()</code></td><td><span class="badge badge-critical">High</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>3</td><td>1%</td><td><code>errors.Join</code> in <code>aggregate.New</code></td><td><span class="badge badge-medium">Medium</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>4</td><td>4%</td><td>Aggregate merge property tests</td><td><span class="badge badge-critical">High</span></td><td>M</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>5</td><td>4%</td><td><code>WithTransitionHook</code> + design note</td><td><span class="badge badge-critical">High</span></td><td>M</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>6</td><td>4%</td><td>Aggregate handler / Evaluate / tracker benchmarks</td><td><span class="badge badge-medium">Medium</span></td><td>S</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>7</td><td>4%</td><td>OpenAPI &harr; golden lockstep CI check</td><td><span class="badge badge-medium">Medium</span></td><td>M</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>8</td><td>4%</td><td><code>healthtest</code> consumer helpers</td><td><span class="badge badge-medium">Medium</span></td><td>M</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>9</td><td>20%</td><td>OpenAPI aggregate coverage</td><td><span class="badge badge-medium">Medium</span></td><td>S</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>10</td><td>20%</td><td>README decision table</td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>11</td><td>20%</td><td>ADR-005 source-name contract</td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>12</td><td>20%</td><td>Aggregate <code>Healthz</code> design note</td><td><span class="badge badge-medium">Medium</span></td><td>S</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>13</td><td>20%</td><td>FEATURES benchmark re-baseline</td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>14</td><td>20%</td><td>Example label truthful about <code>since</code></td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-fixed">Shipped</span></td></tr>
+            <tr><td>15</td><td>20%</td><td><code>AwaitReady</code> cache-aware poll</td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>16</td><td>20%</td><td>ADR: unify latency units</td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>17</td><td>20%</td><td>Detailed-checks cookbook</td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>18</td><td>20%</td><td>Fuzz corpus from golden fixtures</td><td><span class="badge badge-low">Low</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>19</td><td>20%</td><td>Non-linux/amd64 CI matrix or honest doc</td><td><span class="badge badge-low">Low</span></td><td>M</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>20</td><td>20%</td><td>samber/do upstream: per-service timing</td><td><span class="badge badge-medium">Medium</span></td><td>S</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>21</td><td>20%</td><td>auditlog: <code>DetailedHealthRecorder</code></td><td><span class="badge badge-medium">Medium</span></td><td>M</td><td><span class="badge badge-low">Open</span></td></tr>
+            <tr><td>22</td><td>20%</td><td>Dashboard renders <code>since</code>/<code>duration_ns</code></td><td><span class="badge badge-high">High</span></td><td>L</td><td><span class="badge badge-low">Other repo</span></td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="risks"><span class="num">07</span>Risks &amp; Notes</h2>
+        <div class="card card-warning">
+          <h4>A parallel session is writing to this repository</h4>
+          <p>
+            During this pass, another agent committed a <code>Status.Rank</code>
+            helper and is actively implementing a <code>federation</code>
+            sub-package (plus ETag rejection notes). Its work is complementary
+            (remote aggregation vs. local hardening) but shares files. Any
+            <code>CHANGELOG</code>/<code>FEATURES</code>/<code>TODO_LIST</code>
+            edits from either session can race; the code artifacts are
+            independent and safe.
+          </p>
+          <div class="callout callout-warning">
+            <strong>Fixed on sight</strong>
+            That session's committed <code>Status.Rank</code> switch omitted an
+            explicit <code>StatusPass</code> case, failing the
+            <code>exhaustive</code> linter on <code>master</code>. A
+            behavior-preserving case was added, restoring a green lint for
+            <code>health</code> and <code>aggregate</code>.
           </div>
         </div>
-        <div class="migration-step">
-          <div class="migration-num">2</div>
-          <div class="migration-content">
-            <h4>Update all call sites</h4>
-            <p>Pass explicit types at each call site for type safety.</p>
-          </div>
+        <div class="card card-problem">
+          <h4>Concurrent work is not yet green</h4>
+          <p>
+            <code>federation/federation_test.go</code> is mid-write and does
+            not compile, so <code>go test ./...</code> and
+            <code>golangci-lint run ./...</code> currently fail on that package
+            only. Verified in isolation: <code>health</code> and
+            <code>aggregate</code> build, test (including all 425 property
+            subtests), and lint at 0 issues.
+          </p>
+        </div>
+        <div class="card card-solution">
+          <h4>Verification trail for this session</h4>
+          <p>
+            <code>go test . ./aggregate</code> green;
+            <code>golangci-lint run . ./aggregate</code> 0 issues;
+            new benchmarks executed with recorded baselines; D2 graph
+            compiled clean.
+          </p>
         </div>
 
         <footer class="footer">
-          Generated YYYY-MM-DD &middot; All claims verified against source code
-          where noted
+          Generated 2026-09-18 &middot; Claims verified against source and
+          test runs where noted &middot; go-health v0.2.0 (alpha)
         </footer>
       </main>
     </div>
+
 
     <!-- Progressive-enhancement scrollspy. Nav still works without JS via anchor links. -->
     <script>

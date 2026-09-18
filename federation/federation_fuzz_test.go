@@ -3,6 +3,8 @@ package federation_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,7 +16,8 @@ import (
 // through the fetch-and-merge path. Invariants that must hold for ANY
 // input: no panic, a non-empty overall status, and no synthesized check
 // other than the reachable fail row with a failing status — the hub must
-// never render a remote's garbage as a healthy check.
+// never render a remote's garbage as a healthy check. One shared server
+// backs the whole campaign: a listener per iteration exhausts ports.
 func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 	seeds := []string{
 		`{"status":"pass","checks":{}}`,
@@ -26,23 +29,35 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 		`{"status":"pass","checks":{"a":null}}`,
 	}
 
+	var mu sync.Mutex
+
+	body := []byte(seeds[0])
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		mu.Lock()
+		payload := body
+		mu.Unlock()
+
+		_, _ = w.Write(payload)
+	}))
+	defer server.Close()
+
+	prober, err := federation.New(
+		[]federation.Remote{{Name: "fuzz", URL: server.URL}},
+		federation.WithTimeout(time.Second),
+	)
+	if err != nil {
+		f.Fatalf("New: %v", err)
+	}
+
 	for _, seed := range seeds {
 		f.Add(seed)
 	}
 
-	f.Fuzz(func(t *testing.T, body string) {
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			_, _ = w.Write([]byte(body))
-		}))
-		defer server.Close()
-
-		prober, err := federation.New(
-			[]federation.Remote{{Name: "fuzz", URL: server.URL}},
-			federation.WithTimeout(time.Second),
-		)
-		if err != nil {
-			t.Fatalf("New: %v", err)
-		}
+	f.Fuzz(func(t *testing.T, next string) {
+		mu.Lock()
+		body = []byte(next)
+		mu.Unlock()
 
 		got := prober.CachedResponse()
 
@@ -64,7 +79,7 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 		}
 
 		for name, check := range got.Checks {
-			if len(name) < 5 || name[:5] != "fuzz/" {
+			if !strings.HasPrefix(name, "fuzz/") {
 				t.Fatalf("accepted remote checks must be namespaced, got %q", name)
 			}
 

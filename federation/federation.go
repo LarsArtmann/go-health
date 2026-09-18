@@ -146,53 +146,8 @@ func New(remotes []Remote, opts ...Option) (*Prober, error) {
 		)
 	}
 
-	if len(remotes) == 0 {
-		return nil, ErrNoRemotes
-	}
-
-	seen := make(map[string]struct{}, len(remotes))
-
-	for _, remote := range remotes {
-		switch {
-		case remote.Name == "":
-			return nil, fmt.Errorf("%w: remote name must not be empty", ErrInvalidRemote)
-		case strings.Contains(remote.Name, "/"):
-			return nil, fmt.Errorf(
-				"%w: remote name %q must not contain '/' (names become \"name/check\" key prefixes)",
-				ErrInvalidRemote,
-				remote.Name,
-			)
-		case remote.URL == "":
-			return nil, fmt.Errorf("%w: remote %q has an empty URL", ErrInvalidRemote, remote.Name)
-		}
-
-		parsed, err := url.Parse(remote.URL)
-		if err != nil {
-			return nil, fmt.Errorf("%w: remote %q URL: %v", ErrInvalidRemote, remote.Name, err)
-		}
-
-		switch {
-		case parsed.Scheme != "http" && parsed.Scheme != "https":
-			return nil, fmt.Errorf(
-				"%w: remote %q URL %q must be absolute with scheme http or https",
-				ErrInvalidRemote,
-				remote.Name,
-				remote.URL,
-			)
-		case parsed.Host == "":
-			return nil, fmt.Errorf(
-				"%w: remote %q URL %q must have a host",
-				ErrInvalidRemote,
-				remote.Name,
-				remote.URL,
-			)
-		}
-
-		if _, dup := seen[remote.Name]; dup {
-			return nil, fmt.Errorf("%w: duplicate remote name %q", ErrInvalidRemote, remote.Name)
-		}
-
-		seen[remote.Name] = struct{}{}
+	if err := validateRemotes(remotes); err != nil {
+		return nil, err
 	}
 
 	return &Prober{
@@ -201,6 +156,61 @@ func New(remotes []Remote, opts ...Option) (*Prober, error) {
 		timeout: cfg.timeout,
 		startup: make([]atomic.Bool, len(remotes)),
 	}, nil
+}
+
+// validateRemotes enforces the aggregate source-name contract plus URL
+// sanity, with a cause naming the offending value.
+func validateRemotes(remotes []Remote) error {
+	if len(remotes) == 0 {
+		return ErrNoRemotes
+	}
+
+	seen := make(map[string]struct{}, len(remotes))
+
+	for _, remote := range remotes {
+		switch {
+		case remote.Name == "":
+			return fmt.Errorf("%w: remote name must not be empty", ErrInvalidRemote)
+		case strings.Contains(remote.Name, "/"):
+			return fmt.Errorf(
+				"%w: remote name %q must not contain '/' (names become \"name/check\" key prefixes)",
+				ErrInvalidRemote,
+				remote.Name,
+			)
+		case remote.URL == "":
+			return fmt.Errorf("%w: remote %q has an empty URL", ErrInvalidRemote, remote.Name)
+		}
+
+		parsed, err := url.Parse(remote.URL)
+		if err != nil {
+			return fmt.Errorf("%w: remote %q URL: %w", ErrInvalidRemote, remote.Name, err)
+		}
+
+		switch {
+		case parsed.Scheme != "http" && parsed.Scheme != "https":
+			return fmt.Errorf(
+				"%w: remote %q URL %q must be absolute with scheme http or https",
+				ErrInvalidRemote,
+				remote.Name,
+				remote.URL,
+			)
+		case parsed.Host == "":
+			return fmt.Errorf(
+				"%w: remote %q URL %q must have a host",
+				ErrInvalidRemote,
+				remote.Name,
+				remote.URL,
+			)
+		}
+
+		if _, dup := seen[remote.Name]; dup {
+			return fmt.Errorf("%w: duplicate remote name %q", ErrInvalidRemote, remote.Name)
+		}
+
+		seen[remote.Name] = struct{}{}
+	}
+
+	return nil
 }
 
 // fetchResult is the outcome of one remote fetch: either a decoded
@@ -219,18 +229,20 @@ type fetchResult struct {
 // "name/reachable" fail check with the cause. TotalLatencyMs is the
 // slowest remote's reported batch.
 func (p *Prober) CachedResponse() health.Response {
-	results := make([]fetchResult, len(p.remotes))
+	return p.cachedResponse(context.Background())
+}
+
+// cachedResponse is CachedResponse with an explicit context: handlers pass
+// the request's context so a disconnected caller cancels its fetches.
+func (p *Prober) cachedResponse(ctx context.Context) health.Response {
+	results := make([]fetchResult, len(p.remotes)) //nolint:makezero // pre-sized on purpose: parallel goroutines write results[i] by index
 
 	var wg sync.WaitGroup
 
 	for i, remote := range p.remotes {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
-			results[i] = p.fetch(remote)
-		}()
+		wg.Go(func() {
+			results[i] = p.fetch(ctx, remote)
+		})
 	}
 
 	wg.Wait()
@@ -304,8 +316,8 @@ func worst(a, b health.Status) health.Status {
 // mode — request construction, transport, non-200, oversized or
 // undecodable body, missing status — returns a non-ok result carrying a
 // human-readable cause; none of them panic or retry.
-func (p *Prober) fetch(remote Remote) fetchResult {
-	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
+func (p *Prober) fetch(ctx context.Context, remote Remote) fetchResult {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, remote.URL, nil)
@@ -323,9 +335,12 @@ func (p *Prober) fetch(remote Remote) fetchResult {
 	defer func() { _ = resp.Body.Close() }() //nolint:erraudit // closing an HTTP response body has no useful error to act on
 
 	if resp.StatusCode != http.StatusOK {
-		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxResponseBytes)) //nolint:erraudit // best-effort drain so the connection can be reused
+		_, _ = io.Copy( //nolint:erraudit // best-effort drain so the connection can be reused
+			io.Discard,
+			io.LimitReader(resp.Body, maxResponseBytes),
+		)
 
-		return fetchResult{errMsg: fmt.Sprintf("unexpected HTTP status %s", resp.Status)}
+		return fetchResult{errMsg: "unexpected HTTP status " + resp.Status}
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
@@ -333,6 +348,15 @@ func (p *Prober) fetch(remote Remote) fetchResult {
 		return fetchResult{errMsg: fmt.Sprintf("read body: %v", err)}
 	}
 
+	return decodeDocument(body)
+}
+
+// decodeDocument validates the wire shape beyond JSON syntax: a document
+// without a status, or with a check status that is not pass/warn/fail, is
+// refused whole. Unlike aggregate, which reads trusted in-process probes,
+// federation decodes untrusted wire input — rendering an unknown status
+// would let it masquerade as healthy on the merged surface.
+func decodeDocument(body []byte) fetchResult {
 	var parsed health.Response
 	if err := json.Unmarshal(body, &parsed); err != nil {
 		return fetchResult{errMsg: fmt.Sprintf("decode response: %v", err)}
@@ -342,10 +366,6 @@ func (p *Prober) fetch(remote Remote) fetchResult {
 		return fetchResult{errMsg: "response has no status — is this a go-health endpoint?"}
 	}
 
-	// Unlike aggregate, which reads trusted in-process probes, federation
-	// decodes untrusted wire input. A document carrying an invalid check
-	// status is refused whole: rendering it would let an unknown status
-	// masquerade as healthy on the merged surface.
 	for name, check := range parsed.Checks {
 		switch check.Status {
 		case health.StatusPass, health.StatusWarn, health.StatusFail:
@@ -402,8 +422,8 @@ func (p *Prober) LivenessHandler() http.HandlerFunc {
 // remote), 200 otherwise. A dark remote takes the hub out of rotation —
 // deliberate: the hub's whole answer is its remotes.
 func (p *Prober) ReadinessHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		resp := p.CachedResponse()
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp := p.cachedResponse(r.Context())
 
 		code := http.StatusOK
 		if resp.Status == health.StatusFail {
@@ -420,8 +440,8 @@ func (p *Prober) ReadinessHandler() http.HandlerFunc {
 // with one failing check per not-yet-latched remote until all latches
 // are set, then 200 with an empty checks map.
 func (p *Prober) StartupHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		_ = p.CachedResponse()
+	return func(w http.ResponseWriter, r *http.Request) {
+		_ = p.cachedResponse(r.Context())
 
 		if p.StartupComplete() {
 			writeResponse(w, http.StatusOK, health.Response{

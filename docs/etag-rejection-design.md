@@ -81,4 +81,4 @@ grow this.
 
 - [middleware-design.md](middleware-design.md) — why handlers stay plain and middleware composes outside
 - [content-negotiation-design.md](content-negotiation-design.md) — same rejection pattern for representation concerns
-- [docs/2026-09-18_go-etag-deep-dive.html](research/2026-09-18_go-etag-deep-dive.html) — ecosystem-wide go-etag audit (2026-09-18)
+- [research/2026-09-18_go-etag-deep-dive.html](research/2026-09-18_go-etag-deep-dive.html) — ecosystem-wide go-etag audit (2026-09-18)

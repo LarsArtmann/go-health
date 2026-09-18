@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>go-etag — Ecosystem Adoption and Utilization Audit (2026-09-18)</title>
+    <style>
+      /* =========================================================================
+         BAUHAUS LIGHT — Editorial template
+         Design language: form follows function. Primary colors on warm paper.
+         Zero external dependencies: system fonts, no CDN, no build step.
+         Token architecture: see references/bauhaus-tokens.md
+         ========================================================================= */
+
+      :root {
+        /* --- Primitive palette (Bauhaus Light) --- */
+        --color-paper: #f4f4f0;
+        --color-paper-2: #ffffff;
+        --color-paper-3: #e8e8e2;
+        --color-ink: #111111;
+        --color-red: #e63946;
+        --color-blue: #1d3557;
+        --color-yellow: #f4d35e;
+        --color-hairline: rgba(17, 17, 17, 0.14);
+        --color-hairline-strong: rgba(17, 17, 17, 0.3);
+
+        /* --- Semantic layer (shared vocabulary with dark template) --- */
+        --surface: var(--color-paper);
+        --surface-raised: var(--color-paper-2);
+        --surface-sunken: var(--color-paper-3);
+        --text: var(--color-ink);
+        --text-muted: rgba(17, 17, 17, 0.72);
+        --text-faint: rgba(17, 17, 17, 0.5);
+        --border: var(--color-hairline);
+        --border-strong: var(--color-hairline-strong);
+        --accent: var(--color-red);
+        --problem: var(--color-red);
+        --solution: var(--color-blue);
+        --warning: var(--color-yellow);
+
+        /* --- Backward-compatible aliases (do not break consumer skills) --- */
+        --bg: var(--surface);
+        --bg-elevated: var(--surface-raised);
+        --bg-sunken: var(--surface-sunken);
+        --bg-card: var(--surface-raised);
+        --bg-code: var(--surface-sunken);
+        --ink: var(--text);
+        --ink-secondary: var(--text-muted);
+        --ink-muted: var(--text-faint);
+        --rose: var(--problem);
+        --rose-glow: color-mix(in srgb, var(--problem) 15%, transparent);
+        --emerald: var(--solution);
+        --emerald-glow: color-mix(in srgb, var(--solution) 15%, transparent);
+        --amber: var(--warning);
+        --amber-glow: color-mix(in srgb, var(--warning) 15%, transparent);
+        --amber-light: color-mix(in srgb, var(--warning) 22%, transparent);
+        --coral: var(--problem);
+        --coral-light: color-mix(in srgb, var(--problem) 12%, transparent);
+        --teal: var(--solution);
+        --teal-light: color-mix(in srgb, var(--solution) 12%, transparent);
+
+        /* --- Shape --- */
+        --radius: 0px;
+        --radius-sm: 0px;
+
+        /* --- Type stacks (system only — zero external fonts) --- */
+        --font-heading:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-body:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-mono:
+          ui-monospace, "Cascadia Code", "Source Code Pro", "JetBrains Mono",
+          Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      section[id],
+      [id] {
+        scroll-margin-top: 60px;
+      }
+
+      body {
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* --- Accessibility: keyboard focus --- */
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      a:focus-visible {
+        outline-offset: -1px;
+      }
+
+      /* --- Full-bleed top bar --- */
+      .top-bar {
+        background: var(--text);
+        color: var(--surface);
+        padding: 0.6rem 2rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* --- Layout: optional sticky sidebar TOC --- */
+      .layout {
+        display: flex;
+        gap: 2.5rem;
+        padding: 2rem;
+      }
+      .sidebar {
+        width: 220px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 1rem;
+        align-self: flex-start;
+        height: calc(100vh - 2rem);
+        overflow-y: auto;
+        display: none;
+      }
+      .sidebar nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .sidebar .label {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid var(--text);
+      }
+      .sidebar a {
+        font-size: 0.86rem;
+        color: var(--text);
+        text-decoration: none;
+        padding: 0.5rem 0.75rem;
+        border-left: 4px solid transparent;
+        font-weight: 600;
+        transition: all 0.15s ease;
+        line-height: 1.4;
+      }
+      .sidebar a:hover,
+      .sidebar a.active {
+        border-left-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+        color: var(--accent);
+      }
+      .main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* --- Headings --- */
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-heading);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      h1 {
+        font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+        line-height: 1.05;
+        margin: 0 0 0.6rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+        margin: 2.5rem 0 1rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 3px solid var(--text);
+        display: flex;
+        align-items: baseline;
+        gap: 0.7rem;
+      }
+      h2 .num {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      h3 {
+        font-size: 1.15rem;
+        margin: 0 0 0.4rem;
+        font-weight: 700;
+      }
+      h4 {
+        font-size: 1rem;
+        margin: 0 0 0.3rem;
+        font-weight: 700;
+      }
+      p {
+        margin: 0 0 1rem;
+      }
+
+      /* --- Hero --- */
+      .hero {
+        padding: 1.5rem 0 2rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 3px solid var(--text);
+      }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+        margin-bottom: 0.9rem;
+      }
+      .subtitle {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        max-width: 70ch;
+        margin: 0 0 1rem;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .tag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 0.25rem 0.6rem;
+        background: var(--surface-sunken);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+      }
+      .tag.amber {
+        background: var(--warning);
+        border-color: var(--warning);
+        color: var(--text);
+      }
+      .tag.teal {
+        background: var(--solution);
+        border-color: var(--solution);
+        color: var(--surface);
+      }
+
+      /* Bauhaus signature: geometric shape cluster (optional) */
+      .hero-shapes {
+        position: relative;
+        height: 90px;
+        margin-bottom: 1.2rem;
+      }
+      .hero-shapes .circle {
+        position: absolute;
+        top: 0;
+        right: 180px;
+        width: 64px;
+        height: 64px;
+        background: var(--problem);
+        border-radius: 50%;
+      }
+      .hero-shapes .square {
+        position: absolute;
+        top: 26px;
+        right: 90px;
+        width: 56px;
+        height: 56px;
+        background: var(--solution);
+      }
+      .hero-shapes .tri {
+        position: absolute;
+        top: 8px;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-left: 32px solid transparent;
+        border-right: 32px solid transparent;
+        border-bottom: 56px solid var(--warning);
+      }
+      .hero-shapes .bar {
+        position: absolute;
+        bottom: 0;
+        right: 230px;
+        width: 100px;
+        height: 14px;
+        background: var(--text);
+      }
+
+      /* --- Scorecard / stat cards --- */
+      .scorecard,
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0;
+        margin: 1.5rem 0 2rem;
+        border: 3px solid var(--text);
+      }
+      .score-card,
+      .stat-card {
+        padding: 1.3rem 1rem;
+        text-align: center;
+        border-right: 3px solid var(--text);
+        background: var(--surface-raised);
+      }
+      .score-card:last-child,
+      .stat-card:last-child {
+        border-right: none;
+      }
+
+      .score,
+      .stat-value {
+        font-family: var(--font-heading);
+        font-size: 2.6rem;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      .score-card .label,
+      .stat-label {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-top: 0.5rem;
+      }
+      /* Semantic state classes — no nth-child decoration, no !important */
+      .score-good,
+      .stat-good {
+        background: var(--solution);
+        color: var(--surface);
+      }
+      .score-warn,
+      .stat-warn {
+        background: var(--warning);
+        color: var(--text);
+      }
+      .score-bad,
+      .stat-bad {
+        background: var(--problem);
+        color: var(--surface);
+      }
+
+      /* --- General cards --- */
+      .card {
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1rem;
+        border-left: 8px solid var(--border-strong);
+      }
+      .card-problem {
+        border-left-color: var(--problem);
+      }
+      .card-solution {
+        border-left-color: var(--solution);
+      }
+      .card-warning {
+        border-left-color: var(--warning);
+      }
+
+      /* --- Issue cards --- */
+      .issue {
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1rem;
+        border-left: 8px solid var(--border-strong);
+      }
+      .issue-critical {
+        border-left-color: var(--problem);
+      }
+      .issue-important {
+        border-left-color: var(--warning);
+      }
+      .issue-nice {
+        border-left-color: var(--solution);
+      }
+      .issue h3 {
+        margin-bottom: 0.3rem;
+      }
+      .issue .where {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-faint);
+        margin: 0.2rem 0 0.6rem;
+      }
+      .issue p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* --- Severity badges --- */
+      .severity {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.22rem 0.6rem;
+        margin-bottom: 0.6rem;
+        color: var(--surface);
+      }
+      .severity-critical {
+        background: var(--problem);
+      }
+      .severity-important {
+        background: var(--warning);
+        color: var(--text);
+      }
+      .severity-nice {
+        background: var(--solution);
+      }
+
+      /* --- Inline badges --- */
+      .badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.55rem;
+        border: 1px solid var(--text);
+        color: var(--text);
+      }
+      .badge-critical {
+        background: var(--problem);
+        color: var(--surface);
+      }
+      .badge-high {
+        background: var(--warning);
+      }
+      .badge-medium {
+        background: var(--surface-sunken);
+      }
+      .badge-low {
+        background: var(--surface-raised);
+        color: var(--text-muted);
+      }
+      .badge-fixed {
+        background: var(--solution);
+        color: var(--surface);
+      }
+
+      /* --- Callouts --- */
+      .callout {
+        margin: 0.8rem 0 0;
+        padding: 0.8rem 1rem;
+        border: 1px solid var(--border-strong);
+        border-left: 4px solid var(--border-strong);
+        background: var(--surface-sunken);
+        font-size: 0.92rem;
+      }
+      .callout strong {
+        display: inline-block;
+        margin-right: 0.4rem;
+      }
+      .callout-teal,
+      .callout-solution {
+        border-left-color: var(--solution);
+        background: color-mix(
+          in srgb,
+          var(--solution) 10%,
+          var(--surface-raised)
+        );
+      }
+      .callout-amber,
+      .callout-warning {
+        border-left-color: var(--warning);
+        background: color-mix(
+          in srgb,
+          var(--warning) 18%,
+          var(--surface-raised)
+        );
+      }
+
+      /* --- Strengths --- */
+      .strengths {
+        display: grid;
+        gap: 0.5rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .strength {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.9rem;
+        padding: 0.75rem 0;
+        border-bottom: 2px solid var(--border);
+      }
+      .strength .check {
+        font-family: var(--font-mono);
+        font-weight: 900;
+        color: var(--solution);
+        font-size: 1.3rem;
+        line-height: 1.3;
+      }
+      .strength .text strong {
+        display: block;
+        margin-bottom: 0.15rem;
+      }
+      .strength .text span {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+      }
+
+      /* --- Tables --- */
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0 1.5rem;
+        font-size: 0.92rem;
+        border: 2px solid var(--text);
+      }
+      th {
+        text-align: left;
+        padding: 0.6rem 0.9rem;
+        background: var(--text);
+        color: var(--surface);
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-right: 1px solid var(--border-strong);
+      }
+      th:last-child {
+        border-right: none;
+      }
+      td {
+        padding: 0.6rem 0.9rem;
+        border-top: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+      }
+      td:last-child {
+        border-right: none;
+      }
+      tr:nth-child(even) td {
+        background: var(--surface-sunken);
+      }
+      table.compare td.yes {
+        color: var(--solution);
+        font-weight: 700;
+      }
+      table.compare td.no {
+        color: var(--problem);
+        font-weight: 700;
+      }
+
+      /* --- Code blocks + syntax highlighting --- */
+      pre {
+        background: var(--text);
+        color: var(--surface);
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.65;
+        overflow-x: auto;
+        border: 2px solid var(--text);
+      }
+      code {
+        font-family: var(--font-mono);
+      }
+      p code,
+      li code,
+      td code {
+        font-size: 0.88em;
+        background: var(--surface-sunken);
+        padding: 0.1rem 0.35rem;
+      }
+      .tok-keyword {
+        color: var(--warning);
+      }
+      .tok-type {
+        color: var(--warning);
+      }
+      .tok-string {
+        color: #95e1d3;
+      }
+      .tok-comment {
+        color: rgba(244, 244, 240, 0.45);
+        font-style: italic;
+      }
+      .tok-func {
+        color: #6eb5ff;
+      }
+      .tok-number {
+        color: var(--warning);
+      }
+      .tok-generic {
+        color: var(--problem);
+      }
+      .tok-builtin {
+        color: #6eb5ff;
+      }
+      .tok-punct {
+        color: rgba(244, 244, 240, 0.7);
+      }
+      .tok-attr {
+        color: var(--warning);
+      }
+
+      /* --- Dependency tree / ASCII diagrams --- */
+      .dep-tree {
+        background: var(--surface-sunken);
+        border: 2px solid var(--text);
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.7;
+        white-space: pre;
+        overflow-x: auto;
+      }
+      .dep-tree .root {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .dep-tree .ok {
+        color: var(--solution);
+      }
+      .dep-tree .unwanted {
+        color: var(--problem);
+      }
+
+      /* --- Inline node-and-arrow diagrams --- */
+      .diagram {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+      }
+      .node {
+        display: inline-block;
+        padding: 0.4rem 0.75rem;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: var(--surface-sunken);
+        border: 1px solid var(--text);
+      }
+      .node-core {
+        background: var(--accent);
+        color: var(--surface);
+      }
+      .node-problem {
+        background: var(--problem);
+        color: var(--surface);
+      }
+      .node-good {
+        background: var(--solution);
+        color: var(--surface);
+      }
+      .arrow {
+        color: var(--text-faint);
+        font-family: var(--font-mono);
+      }
+
+      /* --- Grids --- */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+
+      /* --- Inline TOC --- */
+      .toc {
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        border-left: 6px solid var(--accent);
+        padding: 1rem 1.3rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .toc h3 {
+        margin-bottom: 0.5rem;
+      }
+      .toc ul {
+        list-style: none;
+        padding: 0;
+      }
+      .toc li {
+        margin: 0.25rem 0;
+      }
+      .toc a {
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+      .toc a:hover {
+        color: var(--accent);
+      }
+
+      /* --- Migration / numbered steps --- */
+      .migration-step {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1.1rem;
+        background: var(--surface-raised);
+        border: 2px solid var(--text);
+        border-left: 6px solid var(--accent);
+      }
+      .migration-num {
+        font-family: var(--font-mono);
+        font-weight: 900;
+        font-size: 1.8rem;
+        color: var(--accent);
+        line-height: 1;
+      }
+      .migration-content h4 {
+        margin-bottom: 0.2rem;
+      }
+      .migration-content p {
+        margin-bottom: 0;
+        color: var(--text-muted);
+        font-size: 0.94rem;
+      }
+
+      /* --- Before/After comparison --- */
+      .compare-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin: 1rem 0 0.5rem;
+      }
+      .compare-before,
+      .compare-after {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0.4rem 0.7rem;
+        color: var(--surface);
+      }
+      .compare-before {
+        background: var(--problem);
+      }
+      .compare-after {
+        background: var(--solution);
+      }
+      .compare-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .compare-row pre {
+        margin: 0;
+      }
+
+      /* --- Footer --- */
+      .footer {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 3px solid var(--text);
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+      }
+
+      /* --- Responsive --- */
+      @media (min-width: 1024px) {
+        .sidebar {
+          display: block;
+        }
+      }
+      @media (max-width: 768px) {
+        .layout {
+          flex-direction: column;
+          padding: 1rem;
+        }
+        .top-bar {
+          padding: 0.6rem 1rem;
+          flex-wrap: wrap;
+          gap: 0.3rem;
+        }
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+        .compare-header,
+        .compare-row {
+          grid-template-columns: 1fr;
+        }
+        .scorecard,
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .score-card:nth-child(2),
+        .stat-card:nth-child(2) {
+          border-right: none;
+        }
+        .score-card:nth-child(1),
+        .stat-card:nth-child(1),
+        .score-card:nth-child(2),
+        .stat-card:nth-child(2) {
+          border-bottom: 3px solid var(--text);
+        }
+        .migration-step {
+          grid-template-columns: 1fr;
+        }
+        .hero-shapes {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-bar">
+      <span>LIBRARY DEEP DIVE</span>
+      <span>2026-09-18</span>
+      <span>larsartmann ecosystem &middot; go-health session</span>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar" data-nav>
+        <nav>
+          <div class="label">Contents</div>
+          <a href="#summary">Summary</a>
+          <a href="#scorecard">Scorecard</a>
+          <a href="#usage">Current Usage</a>
+          <a href="#findings">Findings</a>
+          <a href="#currency">Version Currency</a>
+          <a href="#opportunities">Opportunities</a>
+          <a href="#proposal">Target State</a>
+          <a href="#appendix">Appendix</a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="hero">
+          <div class="hero-shapes">
+            <div class="bar"></div>
+            <div class="circle"></div>
+            <div class="square"></div>
+            <div class="tri"></div>
+          </div>
+          <div class="eyebrow">LIBRARY DEEP DIVE &middot; 2026-09-18</div>
+          <h1>go-etag &mdash; Ecosystem Adoption &amp; Utilization Audit</h1>
+          <p class="subtitle">
+            A whole-ecosystem audit of <code>github.com/larsartmann/go-etag</code> (latest
+            release v0.3.1, remote-verified): 77 modules reference it, 10 production import
+            sites were symbol-audited, and the asking project (go-health) deliberately
+            abstains &mdash; a rejection now documented for the first time.
+          </p>
+          <div class="meta">
+            <span class="tag teal">Version audited: v0.3.1 (latest)</span>
+            <span class="tag">77 module references</span>
+            <span class="tag amber">Adoption Score: 88/100</span>
+          </div>
+        </header>
+
+        <section id="scorecard" class="scorecard">
+          <div class="score-card score-good">
+            <div class="score">88</div>
+            <div class="label">Adoption score /100</div>
+          </div>
+          <div class="score-card score-warn">
+            <div class="score">68/77</div>
+            <div class="label">Modules on latest v0.3.1</div>
+          </div>
+          <div class="score-card score-warn">
+            <div class="score">9</div>
+            <div class="label">Stale minimum versions</div>
+          </div>
+          <div class="score-card score-good">
+            <div class="score">0</div>
+            <div class="label">Deprecated root-shim imports</div>
+          </div>
+          <div class="score-card score-good">
+            <div class="score">0</div>
+            <div class="label">Anti-patterns / misuse</div>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2><span class="num">00</span>Summary</h2>
+          <p>
+            Yes &mdash; where go-etag is used, it is used superbly. All 10 production import
+            sites use the modern <code>server</code>/<code>client</code> package paths (zero
+            deprecated-root imports), memory bounds are configured wherever responses are
+            wrapped, and go-github-kit's client transport is textbook RFC 9111 usage:
+            credential-scoped keys, &#167;4.3.4 freshening, and cache-marker headers. The
+            version story is the only real gap: 68 of 77 referencing modules sit on the
+            latest v0.3.1, while 9 lag on v0.1.0&ndash;v0.2.0 minimums &mdash; every one
+            traceable to two library pins (stale <code>httputil</code>, unreleased
+            <code>go-github-kit</code>), not to the applications themselves. go-health, the
+            project that prompted this audit, does not use go-etag at all &mdash; correctly:
+            caching health endpoints endangers the freshness that makes them worth polling.
+          </p>
+          <div class="callout callout-amber">
+            <strong>The bottom line</strong>
+            Zero misuse, 88% version currency, and one composition point
+            (<code>httputil</code>'s wrapper) where a single upgrade lifts 8 stale modules
+            to v0.3.1 via MVS. The remaining work is release hygiene, not code.
+          </div>
+        </section>
+
+        <section id="usage">
+          <h2><span class="num">&#9670;</span>What's already excellent</h2>
+          <p>
+            Evidence base: symbol-level audit of every production import site
+            (<code>etag.&lowast;</code> / <code>etagclient.&lowast;</code> usage across
+            cqrs-htmx &times;4, DiscordSync &times;2, go-github-kit, httputil,
+            library-policy, nsfw-classifier).
+          </p>
+          <div class="strengths">
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Zero-config server middleware, everywhere it belongs</strong>
+                <span><code>etag.New</code> &times;16 and <code>DefaultETagConfig</code> &times;17
+                wrap routes in cqrs-htmx (catalog, projection status, serve), DiscordSync,
+                library-policy's httpapi, and nsfw-classifier &mdash; the RFC 7232 hard parts
+                (304 bodies, weak comparison, HEAD) delegated, not hand-rolled.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Bounded memory is the norm, not the default</strong>
+                <span><code>MaxBodyBytes</code> &times;12, <code>MaxEntries</code> &times;5,
+                <code>MaxBufferSize</code> &times;1 explicitly set &mdash; consumers did not
+                leave the FIFO/cache-size safety valves at defaults.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>go-github-kit: textbook client usage</strong>
+                <span><code>NewTransport</code> with <code>KeyFunc</code> (credential-scoped
+                cache keys), <code>FreshenFields</code> (RFC 9111 &#167;4.3.4 header
+                freshening), <code>FromCacheHeader</code>, and <code>Stats()</code> telemetry
+                &mdash; conditional GET against the GitHub API is exactly what the client
+                package was built for.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Strong validators respected</strong>
+                <span><code>SkipIfPresent</code> &times;2 lets handler-supplied entity-tags
+                (e.g. database revisions) pass through untouched instead of being
+                body-hashed over.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Zero deprecated-path debt</strong>
+                <span>All 16 imports use <code>go-etag/server</code> or
+                <code>go-etag/client</code>; the deprecated root shim (slated for removal in
+                v1.0.0) has no consumers.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>go-health abstains, by design</strong>
+                <span>go-health's ROADMAP deferred an ETag rejection note "before someone
+                asks"; this audit wrote it &mdash; <code>docs/etag-rejection-design.md</code>
+                &mdash; citing go-etag's own v0.3.0 field report (a CDN serving a
+                two-day-stale 200) as the reason health status-truth must never be cached.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="findings">
+          <h2><span class="num">01</span>Findings</h2>
+          <p>Ordered by impact. No misuses were found &mdash; every finding is a gap, not an error.</p>
+
+          <div class="issue issue-important" id="stale-httputil">
+            <span class="severity severity-important">Important &middot; 8 modules affected</span>
+            <h3>Nine modules pinned to stale go-etag minimums via old httputil releases</h3>
+            <div class="where">
+              go.mod of games/KeyCountdown (v0.1.0) &middot; crush-daily, games/SEC, GmbH,
+              GmbH/server, sales-landing-page/cloud-run, Standup-Killer, webphone (v0.2.0)
+            </div>
+            <p>
+              These modules never import go-etag directly; the requirement is
+              <code>// indirect</code>, pulled by <code>httputil</code>. Their pins are
+              httputil v0.11.0&ndash;v0.12.0, and <strong>httputil v0.12.0's released go.mod
+              still requires go-etag v0.2.0</strong> (verified:
+              <code>git show v0.12.0:go.mod</code>). The fix is not touching these
+              applications at all beyond one dependency bump: <strong>httputil v1.2.0
+              already requires go-etag v0.3.1</strong> (verified:
+              <code>git show v1.2.0:go.mod</code>), so MVS lifts the minimum the moment
+              httputil is upgraded.
+            </p>
+            <pre><code><span class="tok-comment"># per affected module — one line, mechanical</span>
+<span class="tok-function">go</span> get github.com/larsartmann/httputil@v1.2.0 &amp;&amp; <span class="tok-function">go</span> mod tidy
+<span class="tok-comment"># go-etag minimum rises v0.1.0/v0.2.0 → v0.3.1 automatically</span></code></pre>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Upgrade httputil to v1.2.0 in the 8 httputil-pulled modules (KeyCountdown
+              double-benefits: httputil v0.11.0 &rarr; v1.2.0 also closes its v0.1.0
+              go-etag gap). Runtime risk is low for server-only consumers &mdash; v0.3.0's
+              changes target the client package &mdash; but each module should still build
+              and test after the bump.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="ggk-release">
+            <span class="severity severity-important">Important &middot; release hygiene</span>
+            <h3>go-github-kit's go-etag v0.3.1 bump is unreleased, stranding one consumer</h3>
+            <div class="where">
+              /home/lars/projects/go-github-kit &middot; HEAD = v0.3.0-25 (25 unreleased
+              commits) &middot; released v0.3.0 requires go-etag v0.2.0
+            </div>
+            <p>
+              go-github-kit's working tree already requires go-etag v0.3.1, but the latest
+              tag (v0.3.0) still requires v0.2.0 &mdash; the bump lives only in unreleased
+              commits. <code>standard-bug-tracking-schema</code> (pins go-github-kit
+              v0.2.0) therefore cannot reach go-etag v0.3.1 through any released path,
+              unlike the httputil case.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Tag go-github-kit v0.4.0 (the 25 queued commits include the bump), then
+              <code>go get github.com/LarsArtmann/go-github-kit@v0.4.0</code> in
+              standard-bug-tracking-schema. Per the go-release discipline: verify build
+              <em>and</em> the delivering layer before tagging.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="dark-hooks">
+            <span class="severity severity-important">Important &middot; observability gap</span>
+            <h3>Observability hooks are dark: no cache-hit visibility anywhere</h3>
+            <div class="where">
+              <code>OnETagGenerated</code> &times;0, <code>OnBufferOverflow</code> &times;0,
+              <code>On304</code> &times;1, <code>Transport.Stats()</code> &times;1 across all
+              import sites
+            </div>
+            <p>
+              go-etag ships exactly the hooks needed to answer "is conditional caching
+              working?" &mdash; the CHANGELOG's <code>ExampleNew_observabilityHooks</code>
+              derives a cache-hit ratio in six lines. No consumer wires them, so ETag
+              effectiveness (hit ratios, degraded-to-streaming responses) is unmeasured
+              across the entire ecosystem. The natural wiring point is
+              <code>httputil</code>'s wrapper: one composition, every wrapped app inherits
+              the metrics.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              See the Target State section for the wrapper sketch. Start with On304 + OnETagGenerated
+              (hit ratio) and OnBufferOverflow (alerts when bodies exceed
+              <code>MaxBufferSize</code> and silently lose their ETag).
+            </div>
+          </div>
+
+          <div class="issue issue-nice" id="etag-housekeeping">
+            <span class="severity severity-nice">Nice to have &middot; housekeeping</span>
+            <h3>go-etag itself: 22 unreleased commits and one patch behind go-error-family</h3>
+            <div class="where">
+              /home/lars/projects/go-etag &middot; HEAD = v0.3.1-22 &middot; go.mod pins
+              go-error-family v0.10.0 (latest: v0.10.1)
+            </div>
+            <p>
+              The unreleased drift is real code, not docs: a typed error-code system
+              (<code>server/code.go</code> +124 lines, <code>wrapper.go</code> migrated
+              from <code>errorfamily.Wrap*</code> to code-receiver methods) plus its test
+              suite. Until it is tagged, every future consumer gets the pre-refactor error
+              surface. The go-error-family patch lag is trivial but free to close in the
+              same release.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Cut v0.3.2 (or v0.4.0 given the error-code surface change) from HEAD, bumping
+              go-error-family to v0.10.1 in the same tag.
+            </div>
+          </div>
+
+          <div class="issue issue-nice" id="unused-advanced">
+            <span class="severity severity-nice">Nice to have &middot; low relevance</span>
+            <h3>Advanced validators unused &mdash; honestly graded Not Applicable</h3>
+            <div class="where">not used anywhere: <code>MatchesIfMatch</code>,
+              <code>ParseETagList</code>, <code>Weak</code>/<code>Strong</code> constants</div>
+            <p>
+              If-Match optimistic concurrency (strong comparison) and manual entity-tag
+              construction are unused across all consumers &mdash; but no current
+              application implements conditional writes or revision checks, so this is a
+              statement of relevance, not a gap. Listed for completeness; revisit if any
+              service grows compare-and-swap update endpoints.
+            </p>
+          </div>
+        </section>
+
+        <section id="currency">
+          <h2><span class="num">02</span>Version Currency</h2>
+          <p>
+            Latest release <strong>v0.3.1</strong> (2026-09-11), verified against the
+            remote (<code>git ls-remote --tags</code>). go-etag moves fast: the client
+            package is three weeks old and already RFC 9111-conformance-tested.
+          </p>
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Date</th>
+                <th>Notable Change</th>
+                <th>Relevance to laggards</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>v0.3.1</td>
+                <td>2026-09-11</td>
+                <td>Docs + CI only; <code>go.mod</code>, <code>go.sum</code>, and every
+                  <code>.go</code> file byte-identical to v0.3.0</td>
+                <td class="yes">None &mdash; pure tag hygiene</td>
+              </tr>
+              <tr>
+                <td>v0.3.0</td>
+                <td>2026-09-11</td>
+                <td>RFC 9111 &#167;4.4 mutation invalidation, &#167;4.3.4 freshening, Age
+                  surfacing, conformance suite &mdash; motivated by a real CDN serving a
+                  two-day-stale 200</td>
+                <td class="yes">High for client consumers (go-github-kit chain)</td>
+              </tr>
+              <tr>
+                <td>v0.2.0</td>
+                <td>2026-08-16</td>
+                <td>Client package intro (<code>NewTransport</code>, <code>Options</code>:
+                  KeyFunc, MaxEntries, MaxBodyBytes, PreserveOn304), server observability
+                  hooks (<code>OnETagGenerated</code>, <code>On304</code>,
+                  <code>OnBufferOverflow</code>)</td>
+                <td>Foundation &mdash; what the 9 laggards are missing</td>
+              </tr>
+              <tr>
+                <td>v0.1.1</td>
+                <td>&mdash;</td>
+                <td><code>server</code> package path established; root becomes deprecated shim</td>
+                <td class="no">KeyCountdown (v0.1.0) predates the modern import paths</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="callout callout-teal">
+            <strong>Currency verdict</strong>
+            68/77 modules (88%) on the latest release. The 9 laggards share two root
+            causes &mdash; no module lags because an application "chose" an old go-etag.
+          </div>
+        </section>
+
+        <section id="opportunities">
+          <h2><span class="num">03</span>Top Opportunities</h2>
+          <p>Pareto-ranked by impact &times; ease.</p>
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Opportunity</th>
+                <th>Impact</th>
+                <th>Ease</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Upgrade httputil &rarr; v1.2.0 in the 8 httputil-pulled modules (lifts go-etag to v0.3.1 via MVS)</td>
+                <td class="yes">4</td>
+                <td class="yes">5</td>
+                <td><span class="highlight">20</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Tag go-github-kit v0.4.0 (bump already queued), then bump standard-bug-tracking-schema</td>
+                <td class="yes">4</td>
+                <td>4</td>
+                <td><span class="highlight">16</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Wire OnETagGenerated/On304/OnBufferOverflow into httputil's wrapper &mdash; one composition, ecosystem-wide cache metrics</td>
+                <td>3</td>
+                <td>4</td>
+                <td><span class="highlight">12</span></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Document go-health's ETag rejection (ROADMAP Theme 5 open item)</td>
+                <td>2</td>
+                <td class="yes">5</td>
+                <td><span class="highlight">10</span> &middot; <strong>done in this audit</strong></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Release go-etag HEAD (typed error codes) + go-error-family v0.10.1 bump</td>
+                <td>2</td>
+                <td>4</td>
+                <td><span class="highlight">8</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="proposal">
+          <h2><span class="num">04</span>Target State</h2>
+          <p>
+            After items 1&ndash;3: every referencing module resolves go-etag &ge; v0.3.1,
+            and cache effectiveness is observable at the single point where responses are
+            already wrapped:
+          </p>
+          <pre><code><span class="tok-comment">// httputil wrapper &mdash; wired once, inherited by every wrapped app</span>
+<span class="tok-keyword">var</span> <span class="tok-type">etagHits</span>, <span class="tok-type">etagGenerated</span>, <span class="tok-type">etagOverflow</span> atomic.<span class="tok-type">Int64</span>
+
+cfg := etag.<span class="tok-function">DefaultETagConfig</span>()
+cfg.<span class="tok-property">On304</span>            = <span class="tok-keyword">func</span>(etag.<span class="tok-type">ETag</span>) { etagHits.<span class="tok-function">Add</span>(<span class="tok-number">1</span>) }
+cfg.<span class="tok-property">OnETagGenerated</span> = <span class="tok-keyword">func</span>(etag.<span class="tok-type">ETag</span>) { etagGenerated.<span class="tok-function">Add</span>(<span class="tok-number">1</span>) }
+cfg.<span class="tok-property">OnBufferOverflow</span> = <span class="tok-keyword">func</span>(<span class="tok-type">int</span>) { etagOverflow.<span class="tok-function">Add</span>(<span class="tok-number">1</span>) }
+<span class="tok-comment">// hit ratio = On304 / (On304 + OnETagGenerated), exported via /metrics</span></code></pre>
+          <div class="callout callout-teal">
+            <strong>Why this state is better</strong>
+            Version drift becomes structural (MVS via two libraries, not 77 manual pins),
+            and the ecosystem's most-shipped middleware finally reports whether
+            conditional caching is paying for itself &mdash; the question its own
+            observability hooks were designed to answer.
+          </div>
+        </section>
+
+        <section id="appendix">
+          <h2><span class="num">05</span>Appendix</h2>
+          <p><strong>Methodology.</strong> Every claim verified against primary sources on
+            2026-09-18: a 77-module <code>go.mod</code> sweep under <code>~/projects</code>
+            (go.sum cross-checked for the audit's root project); remote tag verification via
+            <code>git ls-remote</code>; released-requirement checks via
+            <code>git show &lt;tag&gt;:go.mod</code> in httputil, go-github-kit, and go-etag;
+            symbol-level usage greps over all 10 production import sites. go-etag is a
+            private-ecosystem library, so its local source (README, CHANGELOG, exported API)
+            is the authoritative capability reference &mdash; no external docs exist to
+            contradict it. Scoring: version currency 88% &times; 0.4 + utilization ~85/100
+            &times; 0.4 + hygiene 100 &times; 0.2 = 88.</p>
+
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Stale module</th>
+                <th>go-etag minimum</th>
+                <th>Pulled via</th>
+                <th>Fix</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>games/KeyCountdown</td><td class="no">v0.1.0</td><td>httputil v0.11.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>crush-daily</td><td class="no">v0.2.0</td><td>httputil v0.12.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>games/SEC</td><td class="no">v0.2.0</td><td>httputil v0.12.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>GmbH</td><td class="no">v0.2.0</td><td>httputil v0.12.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>GmbH/server</td><td class="no">v0.2.0</td><td>httputil v0.12.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>sales-landing-page/cloud-run</td><td class="no">v0.2.0</td><td>httputil v0.12.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>Standup-Killer</td><td class="no">v0.2.0</td><td>httputil v0.12.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>webphone</td><td class="no">v0.2.0</td><td>httputil v0.12.0</td><td>httputil &rarr; v1.2.0</td></tr>
+              <tr><td>standard-bug-tracking-schema</td><td class="no">v0.2.0</td><td>go-github-kit v0.2.0</td><td>go-github-kit v0.4.0 first</td></tr>
+            </tbody>
+          </table>
+
+          <p><strong>Related.</strong>
+            <code>go-health/docs/etag-rejection-design.md</code> (the rejection this audit
+            documented) &middot; go-etag v0.3.0 CHANGELOG (stale-CDN field report) &middot;
+            deprecated root shim (<code>deprecated.go</code>, removal in v1.0.0, zero
+            consumers found).</p>
+        </section>
+
+        <footer class="footer">
+          <p>
+            Generated 2026-09-18 &middot; Reviewed against go-etag v0.3.1 (latest,
+            remote-verified) &middot; All claims verified against source, git tags, and
+            go.mod files as cited
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      (function () {
+        if (!("IntersectionObserver" in window)) return;
+        var nav = document.querySelector("[data-nav]");
+        if (!nav) return;
+        var links = nav.querySelectorAll('a[href^="#"]');
+        var ids = Array.from(links).map(function (l) {
+          return l.getAttribute("href").slice(1);
+        });
+        var sections = ids
+          .map(function (id) {
+            return document.getElementById(id);
+          })
+          .filter(Boolean);
+        if (!sections.length) return;
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                links.forEach(function (link) {
+                  link.classList.toggle(
+                    "active",
+                    link.getAttribute("href") === "#" + entry.target.id,
+                  );
+                });
+              }
+            });
+          },
+          { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
+        );
+        sections.forEach(function (s) {
+          observer.observe(s);
+        });
+      })();
+    </script>
+  </body>
+</html>

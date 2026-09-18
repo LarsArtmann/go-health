@@ -1,11 +1,22 @@
 openapi: 3.1.0
 info:
   title: go-health probe endpoints
-  version: 0.1.3
+  version: 0.2.0
   description: |
     Kubernetes-style health probes exposed by the go-health Probe.
     Field-presence rules are documented per property; they are enforced by
     the golden-file wire-format test, not by OpenAPI keywords.
+
+    The `health/aggregate` sub-package serves the same three paths and the
+    same HealthResponse/Check schemas, so these definitions cover it too.
+    Its differences are body-level, not shape-level: merged check keys are
+    namespaced `source/check` (everything before the first `/` is the source
+    name, which `aggregate.New` guarantees is unique and slash-free), the
+    per-process scalars `version`, `instance_id`, and `uptime` are absent
+    because they cannot survive a merge, `total_latency_ms` is the slowest
+    source's batch, and any shutting-down source forces `shutting_down: true`
+    with overall `fail`. Aggregate liveness remains dependency-blind and its
+    startup latches only once every source has.
   license:
     name: MIT
     identifier: MIT

@@ -216,14 +216,16 @@ func BenchmarkGuardOverhead_AllowHeader(b *testing.B) {
 	}
 }
 
-// BenchmarkEvaluate measures the full in-process evaluation: the health-check
-// batch (a fresh map per call), Check construction, the transition tracker's
-// per-batch Since stamp, and classification. It is the CPU cost the background
-// cache loop pays on every refresh, independent of HTTP.
+// BenchmarkEvaluate_Scaling measures the full in-process evaluation: the
+// health-check batch (a fresh map per call), Check construction, the
+// transition tracker's per-batch Since stamp, and classification. It
+// complements BenchmarkEvaluate, which measures two injector-backed services;
+// this one scales check count with an injector-free probe to expose the
+// tracker's per-batch map pass.
 //
 // Recorded baseline (2026-09-18, go1.26.7 linux/amd64, 32 threads): see
 // FEATURES.md "Performance".
-func BenchmarkEvaluate(b *testing.B) {
+func BenchmarkEvaluate_Scaling(b *testing.B) {
 	for _, services := range []int{1, 8, 64} {
 		b.Run(fmt.Sprintf("services=%d", services), func(b *testing.B) {
 			probe := health.NewWithHealthCheck(

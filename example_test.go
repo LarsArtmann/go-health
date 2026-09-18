@@ -212,12 +212,12 @@ func ExampleNewWithDetailedCheck() {
 	resp := probe.Evaluate(context.Background())
 
 	fmt.Println("status:", resp.Status)
-	fmt.Println("database failing:", resp.Checks["database"].Since.IsZero())
+	fmt.Println("database since set:", !resp.Checks["database"].Since.IsZero())
 	fmt.Println("database timed:", resp.Checks["database"].DurationNanos > 0)
 
 	// Output:
 	// status: pass
-	// database failing: false
+	// database since set: true
 	// database timed: true
 }
 

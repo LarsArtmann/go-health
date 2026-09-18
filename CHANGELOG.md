@@ -27,6 +27,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   aggregate lacks; implementation deferred to v0.3.0.
 - README "Which probe should I hit?" decision table mapping each consumer
   (kubelet probes, load balancer, dashboard, in-process code) to its probe.
+- Federation: `health/federation` pulls remote go-health instances over
+  HTTP and merges them into one surface — `federation.New(remotes,
+  opts...)` returns a `Prober` satisfying the same five-method surface
+  the go-health-dashboard consumes, so a hub (e.g. `health.home.lan`)
+  renders every service's checks per remote with zero dashboard changes.
+  Merge-on-read (one parallel fetch per remote per read, per-fetch
+  timeout, 1 MiB body cap); checks land namespaced as `name/check`;
+  `Check.Since`/`DurationNanos` survive the wire verbatim; an
+  unreachable, non-200, undecodable, or status-invalid remote
+  contributes one synthetic `name/reachable` fail check instead of
+  freezing silently. Liveness is fetch-free, readiness serves the
+  merged verdict, startup latches per remote on first successful fetch.
+  Design: `docs/federation-design.md`.
+- `Status.Rank()` is public: the severity ordering (fail 0 < warn 1 <
+  pass 2, unknown ranks as pass) behind the merge sites, so consumers
+  merging statuses share one ordering. `aggregate` delegates to it.
 
 ### Changed
 

@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate` · **Go**: 1.26 · **Status**: v0.2.0 (alpha)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.26 · **Status**: v0.2.0 (alpha), federation unreleased (v0.3.0 vehicle)
 
 ---
 
@@ -51,6 +51,25 @@ duplicate, slash-containing, or nil-probe sources — see docs/aggregate-source-
 `"source/check"` namespacing, shutdown overlay, max latency), `RefreshInterval` (slowest source),
 `StartupComplete` (AND of latches), the three kubelet handlers (liveness 200, readiness 503 on
 fail, startup 503 until all latches), `RegisterRoutes`.
+
+Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N
+remote go-health instances over HTTP into one `health.Response`. `Remote{Name, URL}`, `New(remotes,
+opts...)` (same source-name contract as aggregate + absolute http(s) URL validation;
+`WithClient`, `WithTimeout` — default 5s per fetch), `CachedResponse` (merge-on-read: one parallel
+HTTP fetch per remote per read; worst-of via `Status.Rank`; `"name/check"` namespacing;
+shutting-down overlay; max latency; per-remote one-way startup latches moved by successful
+fetches), `RefreshInterval` (always 0 — live fetch, no cadence of its own), the three kubelet
+handlers (liveness fetch-free 200, readiness 503 on merged fail, startup fetches and reports
+unlatched remotes), `RegisterRoutes`. An unreachable/non-200/undecodable/status-invalid remote
+contributes one synthetic `name/reachable` FAIL check (cause in `Error`) — never a silent freeze,
+never a status override. Wire input is untrusted: documents missing a status or carrying a
+non-pass/warn/fail check status are refused whole (an unknown status would render healthy
+downstream). `Check.Since`/`DurationNanos` survive the wire verbatim. Scalars (Version, Uptime,
+InstanceID, Timestamp) do not survive the merge (aggregate's rule). Fetches cap bodies at 1 MiB
+and carry `Accept: application/json`, so a go-health-dashboard route (content-negotiated JSON) is
+a valid remote. The `Prober` type satisfies the go-health-dashboard's consumer-side `Prober`
+interface structurally (asserted in `federation_test.go`; the dashboard cannot be imported —
+the dependency points the other way). Design: docs/federation-design.md.
 
 ### Key Design Decisions
 

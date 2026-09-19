@@ -130,10 +130,15 @@ func TestNewChecks_HungCheckFailsClosedAtDeadline(t *testing.T) {
 	probe := health.NewChecks(map[string]health.CheckFunc{
 		"wedged": func(_ context.Context) error { <-hung; return nil },
 		"quick":  func(_ context.Context) error { return nil },
-	}, health.WithTimeout(30*time.Millisecond))
+	})
+
+	// Evaluate honors the caller's deadline (handlers and Start apply
+	// p.timeout themselves; direct callers bound their own context).
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
 
 	start := time.Now()
-	resp := probe.Evaluate(context.Background())
+	resp := probe.Evaluate(ctx)
 	elapsed := time.Since(start)
 
 	wedged := resp.Checks["wedged"]

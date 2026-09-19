@@ -30,6 +30,9 @@ type CheckFunc func(ctx context.Context) error
 //     cannot take down the batch or the process.
 //   - A check that ignores its context is abandoned at the batch deadline with
 //     a fail-closed error naming it; the probe never hangs on a wedged check.
+//     The deadline is whatever the batch context carries — handlers and
+//     [Probe.Start] apply [WithTimeout] automatically, so only callers invoking
+//     [Probe.Evaluate] directly must bound their context themselves.
 //   - Names are graded against [WithCriticalServices] exactly like injector
 //     services; an empty map yields a permanently-passing batch (the same
 //     contract as a readiness handler with no checks).
@@ -39,7 +42,9 @@ func NewChecks(checks map[string]CheckFunc, opts ...Option) *Probe {
 	cfg := buildConfig(opts)
 	cfg.recorder = nil
 
-	return assemble(runNamedChecks(checks), cfg)
+	runChecks := runNamedChecks(checks)
+
+	return assemble(func(ctx context.Context) map[string]CheckDetail { return runChecks(ctx) }, cfg)
 }
 
 // runNamedChecks adapts a named-check map into the executor seam

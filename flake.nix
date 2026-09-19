@@ -36,7 +36,11 @@
         { config, pkgs, ... }:
         let
           inherit (pkgs) lib;
-          goPkg = pkgs.go_1_26;
+          # go.mod carries a go 1.27.1 directive (the ecosystem-wide relax,
+          # same as go-cqrs-lite/cqrs-htmx) and GOTOOLCHAIN=local (sandbox
+          # forbids toolchain downloads) cannot satisfy it under go_1_26,
+          # so the toolchain is nixpkgs' go_1_27.
+          goPkg = pkgs.go_1_27;
 
           # Every Go command in this flake needs the json/v2 experiment
           # enabled: the code imports encoding/json/v2, which go1.26 only

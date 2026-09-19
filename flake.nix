@@ -68,7 +68,11 @@
             projectRootFile = "go.mod";
             programs = {
               gofumpt.enable = true;
-              goimports.enable = true;
+              # gofmt (not goimports): the sandboxed format check cannot
+              # download the go1.27.1 toolchain that nixpkgs' goimports
+              # resolves via GOTOOLCHAIN=auto. gofmt is the layout subset of
+              # the repo's current gofumpt+goimports fixed point — zero churn.
+              gofmt.enable = true;
               golines.enable = true;
               nixfmt.enable = true;
             };

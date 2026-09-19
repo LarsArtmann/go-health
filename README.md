@@ -346,6 +346,15 @@ probe := health.NewWithHealthCheck(func(ctx context.Context) map[string]error {
 }, health.WithCriticalServices("database"))
 ```
 
+Or from plain named checks — `NewChecks` runs them concurrently, times each check, recovers a panicking check into that check's error, and abandons a check that ignores its context at the batch deadline (fail-closed) instead of hanging the probe:
+
+```go
+probe := health.NewChecks(map[string]health.CheckFunc{
+    "database": func(ctx context.Context) error { return db.PingContext(ctx) },
+    "cache":    pingCache,
+}, health.WithCriticalServices("database"))
+```
+
 ## Metrics
 
 The library ships no metrics client — it provides the seam instead. `WithEvaluationHook(fn)` fires synchronously after every evaluation with the fully classified response, so a few lines of composition produce a Prometheus exposition without adding a dependency:

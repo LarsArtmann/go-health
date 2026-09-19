@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -53,9 +54,9 @@ func NewChecks(checks map[string]CheckFunc, opts ...Option) *Probe {
 func runNamedChecks(checks map[string]CheckFunc) DetailedHealthCheckFunc {
 	return func(ctx context.Context) map[string]CheckDetail {
 		var (
-			mu  sync.Mutex
-			wg  sync.WaitGroup
-			out = make(map[string]CheckDetail, len(checks))
+			resultsMu sync.Mutex
+			wg        sync.WaitGroup
+			out       = make(map[string]CheckDetail, len(checks))
 		)
 
 		for name, check := range checks {
@@ -67,9 +68,9 @@ func runNamedChecks(checks map[string]CheckFunc) DetailedHealthCheckFunc {
 				start := time.Now()
 				err := runBoundedCheck(name, check, ctx)
 
-				mu.Lock()
+				resultsMu.Lock()
 				out[name] = CheckDetail{Err: err, Duration: time.Since(start)}
-				mu.Unlock()
+				resultsMu.Unlock()
 			}(name, check)
 		}
 
@@ -79,6 +80,16 @@ func runNamedChecks(checks map[string]CheckFunc) DetailedHealthCheckFunc {
 	}
 }
 
+// ErrNilCheck is wrapped into the fail-closed error reported when a
+// [NewChecks] map carries a nil [CheckFunc]. Match with errors.Is.
+var ErrNilCheck = errors.New("health: check is nil")
+
+// ErrCheckPanicked is wrapped into the per-check error when a [NewChecks]
+// check panics and the panic is recovered. Match with errors.Is: like the
+// batch-level [ErrPanicDuringHealthCheck], a recovered panic must read as a
+// failure, never a warning.
+var ErrCheckPanicked = errors.New("health: check panicked")
+
 // runBoundedCheck runs one check and stays honest under every failure mode:
 // the check's own error is returned as-is, a panic is recovered into an error
 // naming the check, and a check that ignores its context is abandoned at the
@@ -86,7 +97,7 @@ func runNamedChecks(checks map[string]CheckFunc) DetailedHealthCheckFunc {
 // the check returns; done is buffered so its late result can never block.
 func runBoundedCheck(name string, check CheckFunc, ctx context.Context) error {
 	if check == nil {
-		return fmt.Errorf("health: check %q is nil", name)
+		return fmt.Errorf("%w: %q", ErrNilCheck, name)
 	}
 
 	done := make(chan error, 1)
@@ -94,7 +105,7 @@ func runBoundedCheck(name string, check CheckFunc, ctx context.Context) error {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				done <- fmt.Errorf("health: check %q panicked: %v", name, r)
+				done <- fmt.Errorf("%w: %q: %v", ErrCheckPanicked, name, r)
 			}
 		}()
 

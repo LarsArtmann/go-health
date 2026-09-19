@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `NewChecks(checks map[string]CheckFunc, opts ...Option)` — the ergonomic
+  injector-free constructor for plain named checks (`checks.go` +
+  `docs/named-checks-design.md`): checks run concurrently per batch, each is
+  timed (surfaces as `duration_ns`), a panicking check is recovered into that
+  check's error, a nil check fails closed, and a check that ignores its
+  context is abandoned at the batch deadline with a fail-closed error — the
+  probe can no longer hang on a wedged check. Classification, caching,
+  handlers, and shutdown semantics are identical to `New`.
 - Aggregate merge property tests (`aggregate/aggregate_property_test.go`):
   idempotence, source-order commutativity, namespaced-union completeness and
   disjointness, worst-of roll-up (status/shutdown/latency), an absorbing

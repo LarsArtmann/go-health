@@ -41,6 +41,7 @@ tracker.go       — transitionTracker: per-check status-transition tracking beh
 classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
 handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + SanitizeResponse (UTF-8 coercion)
 accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, DetailedHealthCheckFunc, NewWithDetailedCheck, Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz
+checks.go        — CheckFunc + NewChecks (injector-free named-check constructor: concurrent execution, per-check duration, panic recovery, nil fail-closed, batch-deadline abandonment), runNamedChecks/runBoundedCheck executors — design: docs/named-checks-design.md
 export_test.go   — ResetStartupLatchForTest (test builds only; public latch stays one-way)
 ```
 

@@ -12,12 +12,17 @@ import (
 	"github.com/larsartmann/go-health"
 )
 
+var (
+	errConnRefused = errors.New("connection refused")
+	errDBDown      = errors.New("down")
+)
+
 func TestNewChecks_ReportsNamedPassAndFail(t *testing.T) {
 	t.Parallel()
 
 	probe := health.NewChecks(map[string]health.CheckFunc{
 		"ok-check":  func(_ context.Context) error { return nil },
-		"bad-check": func(_ context.Context) error { return errors.New("connection refused") },
+		"bad-check": func(_ context.Context) error { return errConnRefused },
 	})
 
 	resp := probe.Evaluate(context.Background())
@@ -45,7 +50,7 @@ func TestNewChecks_CriticalFailureFailsReadiness(t *testing.T) {
 	t.Parallel()
 
 	probe := health.NewChecks(map[string]health.CheckFunc{
-		"db": func(_ context.Context) error { return errors.New("down") },
+		"db": func(_ context.Context) error { return errDBDown },
 	}, health.WithCriticalServices("db"))
 
 	resp := probe.Evaluate(context.Background())
@@ -64,8 +69,18 @@ func TestNewChecks_RunsConcurrently(t *testing.T) {
 	// only complete when execution is concurrent (a serial runner would
 	// deadlock and the watchdog below would fail the test).
 	probe := health.NewChecks(map[string]health.CheckFunc{
-		"a": func(_ context.Context) error { close(a); <-b; return nil },
-		"b": func(_ context.Context) error { close(b); <-a; return nil },
+		"a": func(_ context.Context) error {
+			close(a)
+			<-b
+
+			return nil
+		},
+		"b": func(_ context.Context) error {
+			close(b)
+			<-a
+
+			return nil
+		},
 	})
 
 	done := make(chan health.Response, 1)
@@ -128,7 +143,11 @@ func TestNewChecks_HungCheckFailsClosedAtDeadline(t *testing.T) {
 	defer close(hung) // release the abandoned check goroutine
 
 	probe := health.NewChecks(map[string]health.CheckFunc{
-		"wedged": func(_ context.Context) error { <-hung; return nil },
+		"wedged": func(_ context.Context) error {
+			<-hung
+
+			return nil
+		},
 		"quick":  func(_ context.Context) error { return nil },
 	})
 
@@ -160,7 +179,11 @@ func TestNewChecks_DurationPopulated(t *testing.T) {
 	t.Parallel()
 
 	probe := health.NewChecks(map[string]health.CheckFunc{
-		"slowish": func(_ context.Context) error { time.Sleep(5 * time.Millisecond); return nil },
+		"slowish": func(_ context.Context) error {
+			time.Sleep(5 * time.Millisecond)
+
+			return nil
+		},
 	})
 
 	resp := probe.Evaluate(context.Background())

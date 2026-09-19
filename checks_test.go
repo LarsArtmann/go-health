@@ -148,7 +148,7 @@ func TestNewChecks_HungCheckFailsClosedAtDeadline(t *testing.T) {
 
 			return nil
 		},
-		"quick":  func(_ context.Context) error { return nil },
+		"quick": func(_ context.Context) error { return nil },
 	})
 
 	// Evaluate honors the caller's deadline (handlers and Start apply
@@ -201,7 +201,11 @@ func TestNewChecks_EmptyMapPasses(t *testing.T) {
 	resp := probe.Evaluate(context.Background())
 
 	if resp.Status != health.StatusPass || len(resp.Checks) != 0 {
-		t.Errorf("an empty check set should pass with no entries, got %q %v", resp.Status, resp.Checks)
+		t.Errorf(
+			"an empty check set should pass with no entries, got %q %v",
+			resp.Status,
+			resp.Checks,
+		)
 	}
 }
 

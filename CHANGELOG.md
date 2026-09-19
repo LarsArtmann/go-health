@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+## [v0.3.0] - 2026-09-19
+
+### Added
+
 - `NewChecks(checks map[string]CheckFunc, opts ...Option)` — the ergonomic
   injector-free constructor for plain named checks (`checks.go` +
   `docs/named-checks-design.md`): checks run concurrently per batch, each is
@@ -32,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   design note into the formal ADR series.
 - Design note for proposed aggregate `Healthz()` parity
   (`docs/aggregate-healthz-design.md`) — the single-endpoint handler the
-  aggregate lacks; implementation deferred to v0.3.0.
+  aggregate lacks; implementation deferred beyond v0.3.0 (this release ships
+  federation + `NewChecks`; the aggregate handler is tracked in ROADMAP).
 - README "Which probe should I hit?" decision table mapping each consumer
   (kubelet probes, load balancer, dashboard, in-process code) to its probe.
 - Federation: `health/federation` pulls remote go-health instances over

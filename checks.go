@@ -116,6 +116,10 @@ func runBoundedCheck(name string, check CheckFunc, ctx context.Context) error {
 	case err := <-done:
 		return err
 	case <-ctx.Done():
-		return fmt.Errorf("health: check %q did not finish before the batch deadline: %w", name, ctx.Err())
+		return fmt.Errorf(
+			"health: check %q did not finish before the batch deadline: %w",
+			name,
+			ctx.Err(),
+		)
 	}
 }

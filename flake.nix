@@ -62,8 +62,7 @@
               program = lib.getExe script;
               meta.description = description;
             };
-        in
-        {
+
           # OpenAPI ↔ golden-file lockstep: every wire key the golden readiness
           # response exhibits must be declared in the spec's HealthResponse /
           # Check schemas, and every status value must be one of the spec's
@@ -87,9 +86,9 @@
                 . as $wire
                 | $spec[0].components.schemas as $s
                 | [
-                    ($wire | keys[] | $s.HealthResponse.properties | has(.)),
+                    ($wire | keys[] as $k | $s.HealthResponse.properties | has($k)),
                     ($s.HealthResponse.properties.status.enum | index($wire.status) != null),
-                    ($wire.checks | to_entries[] | .value | keys[] | $s.Check.properties | has(.))
+                    ($wire.checks | to_entries[] | .value | keys[] as $ck | $s.Check.properties | has($ck))
                   ]
                 | all
               ' "$golden" || {
@@ -99,7 +98,8 @@
               echo "openapi-lockstep: $golden is fully covered by docs/openapi.yaml"
             '';
           };
-
+        in
+        {
           treefmt = {
             projectRootFile = "go.mod";
             programs = {
@@ -144,6 +144,13 @@
           };
 
           apps = {
+            openapi-lockstep = {
+              type = "app";
+              program = lib.getExe openapiLockstep;
+              meta.description =
+                "Verify the golden wire format stays covered by docs/openapi.yaml (paths override: spec golden)";
+            };
+
             test = mkApp "test" "Run all tests" [ goPkg ] ''
               go test ./... -count=1 "$@"
             '';

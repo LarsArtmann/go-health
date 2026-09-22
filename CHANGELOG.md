@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Tooling: `GOEXPERIMENT=jsonv2` dropped from the flake (every app + the devShell) — `encoding/json/v2` is stable stdlib on the go 1.27 floor (verified 2026-09-22: build + vet + full suite green with the experiment unset). Contributors need Go 1.27+ and nothing else; the experiment era's host-shell-leak lesson is preserved in AGENTS.md.
 - The Prometheus example (`ExampleWithEvaluationHook_metrics`) now emits `health_check` series in sorted order, making the reference implementation byte-for-byte deterministic across scrapes — matching the determinism the JSON wire format pins.
 - ADR-006: duration units stay split by granularity — roll-up scalars in always-present milliseconds (`total_latency_ms`), per-entity measurements in `omitzero` nanoseconds (`duration_ns`); unifying on either unit is rejected (ms would zero out sub-millisecond checks, ns is human-hostile for batch totals). Codifies the unit policy future duration fields must follow.
+- Docs: detailed-checks cookbook ([docs/detailed-checks-cookbook.md](docs/detailed-checks-cookbook.md)) — how to get `duration_ns` onto the wire per check source: `NewChecks` (executor times for free), `NewWithDetailedCheck` (self-timed composed checks, with an honest `timed` helper and fan-out guidance), `DetailedHealthRecorder` (recorder upgrade), and why the raw `New(injector)` path stays duration-less (do returns only errors). Snippets verified against the actual API.
 
 ## [v0.3.0] - 2026-09-19
 

@@ -177,7 +177,11 @@ func main() {
 Every check carries `since` — when the probe first observed the current
 status ("failing since 12:27") — and, when the check executor reports it,
 `duration_ns`. Both are omitted (`omitzero`) when unknown; see
-[docs/check-metadata-design.md](docs/check-metadata-design.md).
+[docs/check-metadata-design.md](docs/check-metadata-design.md). To make
+`duration_ns` appear, follow
+[docs/detailed-checks-cookbook.md](docs/detailed-checks-cookbook.md) —
+`NewChecks` reports it automatically, and self-timed or recorder-based
+setups have one-function upgrade paths.
 
 ## Three Probes
 

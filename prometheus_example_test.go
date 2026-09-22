@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/larsartmann/go-health"
@@ -19,7 +20,9 @@ import (
 // docs/prometheus-exposition-design.md: go-health ships the raw evaluation
 // stream ([health.WithEvaluationHook], [health.Probe.Evaluate]); the consumer
 // owns the wire format. Metric names follow the "health_" prefix convention;
-// per-service health is a gauge whose labels identify the service.
+// per-service health is a gauge whose labels identify the service. Series are
+// emitted in sorted order so repeated scrapes of the same state render byte-
+// for-byte identically (the same determinism the JSON wire format pins).
 func prometheusWriter(w *strings.Builder, resp health.Response) {
 	instance := resp.InstanceID
 
@@ -34,6 +37,7 @@ func prometheusWriter(w *strings.Builder, resp health.Response) {
 	for name := range resp.Checks {
 		names = append(names, name)
 	}
+	sort.Strings(names)
 
 	for _, name := range names {
 		check := resp.Checks[name]

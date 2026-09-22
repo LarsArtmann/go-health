@@ -24,9 +24,14 @@
 > aggregate HTTP / Evaluate-scaling / tracker-stamp benchmarks, ADR-005, the
 > OpenAPI aggregate coverage, the README "which probe?" decision table, and
 > the `ExampleNewWithDetailedCheck` label fix shipped (see CHANGELOG
-> `[Unreleased]`); their rows below are resolved and can be harvested. New
-> task surfaced: implement `Aggregate.Healthz()` per
-> `docs/aggregate-healthz-design.md` (v0.3.0 candidate).
+> `[Unreleased]`).
+>
+> Harvested 2026-09-22: the resolved 2026-09-18 rows (ADR-005, OpenAPI
+> aggregate coverage, aggregate merge property tests, README decision
+> table, `ExampleNewWithDetailedCheck` determinism) verified in code and
+> deleted per lifecycle (they live in CHANGELOG). New task surfaced:
+> implement `Aggregate.Healthz()` per `docs/aggregate-healthz-design.md`
+> (v0.3.0 candidate).
 
 ## Status legend
 
@@ -83,11 +88,7 @@ Check names are the exact `name:` fields CI reports. To revert:
 | --------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Trigger `Fuzz (weekly long)` once via `workflow_dispatch`                               | TODO   | Medium | 5min   | The weekly fuzz YAML has never executed on GitHub; a typo would only surface Monday 04:17 UTC. `21-31` §b. `.github/workflows/fuzz-long.yml` has `workflow_dispatch`. |
 | Verify pkg.go.dev renders v0.2.0 (metadata fields + examples + aggregate visible)       | TODO   | Medium | 10min  | Proxy verified + clean-dir `go get`/build OK at release; page fetch 404 within the normal ~1h propagation lag (2026-09-16).                                           |
-| ADR-005: promote the slash-name design note into the ADR series                         | TODO   | Medium | 30min  | `docs/aggregate-source-name-design.md` is a design note; ADR-001..004 are the formal series. `21-31` §f13.                                                            |
-| OpenAPI: state explicitly that aggregate endpoints are covered or scoped out            | TODO   | Medium | 30min  | Same response shapes as the root probes, but `docs/openapi.yaml` is silent on `aggregate`. `21-31` §f12.                                                              |
-| Aggregate property tests: merge idempotence + source-order commutativity                | TODO   | Medium | 45min  | Two reads of `CachedResponse` identical; merge result independent of source order. `21-31` §f16–17. `aggregate/aggregate.go`                                          |
 | OpenAPI ↔ golden-file lockstep check in CI (currently a manual eyeball)                 | TODO   | Low    | 45min  | The golden test and `docs/openapi.yaml` can drift silently. `21-31` §f23.                                                                                             |
-| README: short "which probe should I hit?" decision table for newcomers                  | TODO   | Low    | 30min  | Three-probe choice is explained in prose only. `21-31` §f25.                                                                                                          |
 | Dashboard: render "failing since HH:MM (Nm)" from `check.since`                         | TODO   | High   | 2h     | Wire fields shipped (unreleased); dashboard renders placeholders. Own repo: `go-health-dashboard`. `09-15` §f2.                                                       |
 | Dashboard: status-changes timeline from `since` (kill sampling-clock guess)             | TODO   | High   | 4h     | Same wire source. `09-15` §f3.                                                                                                                                        |
 | Dashboard: render `duration_ns` adaptively (µs/ms), hide when absent                    | TODO   | Medium | 1h     | `09-15` §f4.                                                                                                                                                          |
@@ -96,7 +97,6 @@ Check names are the exact `name:` fields CI reports. To revert:
 | File samber/do upstream: richer batch results (per-service timing)                      | TODO   | Medium | 30min  | Would let the injector path populate `duration_ns` (currently zero). `09-15` §f11.                                                                                    |
 | samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor)              | TODO   | Medium | 1h     | It already times checks internally. `09-15` §f12.                                                                                                                     |
 | Dashboard integration test pinning `since`/`duration_ns` rendering                      | TODO   | Low    | 45min  | After dashboard adopts. `09-15` §f24.                                                                                                                                 |
-| Make `ExampleNewWithDetailedCheck` output deterministic                                 | TODO   | Low    | 15min  | Assert non-negative duration instead of printing raw timing. `09-15` §f17.                                                                                            |
 | Detailed-checks cookbook (self-timing + `NewWithDetailedCheck` composition)             | TODO   | Low    | 1h     | README or docs/. `09-15` §f22–23.                                                                                                                                     |
 | Prose review: `middleware_example_test.go` / `prometheus_example_test.go` wire examples | TODO   | Low    | 20min  | They pass; docs-only sweep. `09-15` §f27.                                                                                                                             |
 | golangci `nolint_filter` warning for `//nolint:erraudit` (unknown linter)               | TODO   | Low    | 15min  | erraudit is a standalone tool honoring `//nolint`; golangci doesn't know it (warning, exit 0). Accept or find a suppression path. Found 2026-09-16.                   |

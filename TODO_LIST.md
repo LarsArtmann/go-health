@@ -34,7 +34,7 @@
 > root + aggregate + federation all render metadata fields and examples;
 > proxy @latest = v0.3.0). Fixed stale CHANGELOG version-link block.
 > Fuzz (weekly long) dispatched (run 35756511889; scheduled runs already
-> green). Shipped same day: `Aggregate.Healthz()` (design accepted,
+> green) — run completed successfully 2026-09-22 17:03 UTC. Shipped same day: `Aggregate.Healthz()` (design accepted,
 > implemented) and the OpenAPI ↔ golden lockstep check
 > (`nix run .#openapi-lockstep` + `checks.openapi-lockstep` under
 > `nix flake check`). nolint_filter warning accepted + documented

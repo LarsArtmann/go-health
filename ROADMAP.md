@@ -97,22 +97,18 @@ Raw ideas (quality polish, none scheduled):
 
 How the v0.x line matures.
 
-#### v0.3.0 candidates (feature-driven, unscheduled)
+#### v0.4.0 candidates (feature-driven, unscheduled)
 
-Scoped 2026-09-04 from the open idea inventory. All are additive;
-the first two carry a written design, the `Healthz` parity decision note is
-still to be written:
+Scoped 2026-09-04 from the open idea inventory; retargeted 2026-09-22 when
+v0.3.0 shipped (federation + `NewChecks`, released 2026-09-19) and the
+aggregate `Healthz()` parity was implemented (design accepted, unreleased —
+sits in CHANGELOG `[Unreleased]`). All are additive; the first two carry a
+written design:
 
 - `errors.Join` in `aggregate.New` — report all invalid sources instead of
   the first ([docs/errors-join-design.md](docs/errors-join-design.md), spike verified)
 - `Aggregate.SourceStatuses()` — per-source roll-up accessor
   ([docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md))
-- Aggregate `Healthz` parity: one combined endpoint across all sources
-  (decide whether worst-of-N belongs in a single 200/503 answer; no design
-  note yet — write it before implementing)
-- Toolchain floor bump: go.mod directive → 1.27, drop
-  `GOEXPERIMENT=jsonv2` from the flake — verified to need no code changes
-  (see AGENTS.md GOEXPERIMENT gotcha); ship when 1.26 support is dropped
 
 #### v1.0 criteria draft
 
@@ -153,14 +149,12 @@ Raw ideas, none scheduled:
 - Promote `erraudit` / `doanalyzerv2` from local gates to CI steps if either
   tool ever becomes public
 - Dependency automation: extend Dependabot/Renovate to flake inputs + pinned
-  action SHAs (subsumes Go 1.26.x patch tracking; auto-merge rules are a
+  action SHAs (subsumes Go 1.27.x patch tracking; auto-merge rules are a
   separate policy decision)
 - Non-nix CI matrix job (plain `go test`) to widen the honestly-tested OS/arch
   statement beyond linux/amd64; arm64 native runner evaluation if QEMU stays
   too slow for race jobs
 - Raise the per-push fuzz budget above 10s/target if CI cost allows
-- Editor-experience: suppress the gopls stdversion warning while GOEXPERIMENT
-  stays enabled (AGENTS gotcha documents it as benign; noise only)
 
 ## Non-goals
 

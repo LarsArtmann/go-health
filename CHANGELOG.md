@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Nothing yet.
+- Tooling: `GOEXPERIMENT=jsonv2` dropped from the flake (every app + the devShell) — `encoding/json/v2` is stable stdlib on the go 1.27 floor (verified 2026-09-22: build + vet + full suite green with the experiment unset). Contributors need Go 1.27+ and nothing else; the experiment era's host-shell-leak lesson is preserved in AGENTS.md.
 
 ## [v0.3.0] - 2026-09-19
 

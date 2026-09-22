@@ -96,6 +96,7 @@ Check names are the exact `name:` fields CI reports. To revert:
 | Task                                   | Status | Impact | Effort | Evidence                                                                              |
 | -------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------------- |
 | Publish the v0.1.1/v0.1.2 announcement | TODO   | Low    | 15min  | Draft + channels checklist ready in `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`. |
+| Post samber/do#318 comment: per-service duration on `HealthOutcome` | TODO   | Medium | 5min   | Draft + verification notes + checklist ready in `docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md` (gates passed, voice-checked; filing is an owner call). |
 
 ## Open — unblocked (any session can pick these up)
 
@@ -105,6 +106,5 @@ Check names are the exact `name:` fields CI reports. To revert:
 | Dashboard: status-changes timeline from `since` (kill sampling-clock guess)             | TODO   | High   | 4h     | Same wire source. `09-15` §f3.                                                                                  |
 | Dashboard: render `duration_ns` adaptively (µs/ms), hide when absent                    | TODO   | Medium | 1h     | `09-15` §f4.                                                                                                    |
 | Dashboard: "stable for Xh" collapse summaries for healthy groups                        | TODO   | Medium | 2h     | `09-15` §f5.                                                                                                    |
-| File samber/do upstream: richer batch results (per-service timing)                      | TODO   | Medium | 30min  | Would let the injector path populate `duration_ns` (currently zero). `09-15` §f11.                              |
 | samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor)              | TODO   | Medium | 1h     | It already times checks internally. `09-15` §f12.                                                               |
 | Dashboard integration test pinning `since`/`duration_ns` rendering                      | TODO   | Low    | 45min  | After dashboard adopts. `09-15` §f24.                                                                           |

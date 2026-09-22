@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [v0.4.0] - 2026-09-22
+
+### Added
+
 - `Aggregate.Healthz()` — the aggregate's single-endpoint handler, mirroring `Probe.Healthz()`: 503 while any source has an unset startup latch, the merged roll-up is fail (which includes any source shutting down), or a source is draining; 200 otherwise, with the merged body (warn stays 200). Standalone like the root probe — `RegisterRoutes` keeps wiring the three kubelet probes. See docs/aggregate-healthz-design.md.
 - `nix run .#openapi-lockstep` (also enforced as `checks.openapi-lockstep` under `nix flake check`, so the "Flake + Formatting" CI job runs it) — verifies every wire key in `testdata/readiness_response.golden` is declared in the `docs/openapi.yaml` HealthResponse/Check schemas and that status values are within the spec's enum, closing the silent-drift gap between the spec (redocly-linted) and the wire format (golden-file-tested).
 - Measured the tracker's cost (`BenchmarkEvaluate_TrackerDelta`, A/B via a test-only `SetTrackerDisabledForTest` seam): Since stamping adds ~355 ns (+47%), 528 B, and 2 allocs per full `Evaluate` (8 stable checks, go1.27.1; B/allocs exact, ns ±15% run-to-run). Evaluate/tracker benchmark rows re-baselined in FEATURES.md.
@@ -19,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - The Prometheus example (`ExampleWithEvaluationHook_metrics`) now emits `health_check` series in sorted order, making the reference implementation byte-for-byte deterministic across scrapes — matching the determinism the JSON wire format pins.
 - ADR-006: duration units stay split by granularity — roll-up scalars in always-present milliseconds (`total_latency_ms`), per-entity measurements in `omitzero` nanoseconds (`duration_ns`); unifying on either unit is rejected (ms would zero out sub-millisecond checks, ns is human-hostile for batch totals). Codifies the unit policy future duration fields must follow.
 - Docs: detailed-checks cookbook ([docs/detailed-checks-cookbook.md](docs/detailed-checks-cookbook.md)) — how to get `duration_ns` onto the wire per check source: `NewChecks` (executor times for free), `NewWithDetailedCheck` (self-timed composed checks, with an honest `timed` helper and fan-out guidance), `DetailedHealthRecorder` (recorder upgrade), and why the raw `New(injector)` path stays duration-less (do returns only errors). Snippets verified against the actual API.
+- Internal dedup, no behavior change: the three standalone constructors (`NewWithHealthCheck`, `NewWithDetailedCheck`, `NewChecks`) share one config builder enforcing the recorder-voiding rule, and the live handler paths share one batch-deadline application; the parallel `RegisterRoutes`/`Option` shapes across `health`/`aggregate`/`federation` stay deliberately similar (the three-handler contract repeats per package).
 
 ## [v0.3.0] - 2026-09-19
 
@@ -338,7 +349,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/larsartmann/go-health/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/larsartmann/go-health/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/larsartmann/go-health/compare/v0.1.3...v0.2.0
 [v0.1.3]: https://github.com/larsartmann/go-health/compare/v0.1.2...v0.1.3

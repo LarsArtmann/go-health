@@ -106,7 +106,7 @@ baseline rows; treat cross-baseline comparisons with suspicion.
 - samber-do-auditlog: implement `DetailedHealthRecorder` (Medium; other repo).
 - All four go-health-dashboard tasks (High/Medium; other repo): `since` rendering, status-change
   timeline, `duration_ns` adaptive, "stable for Xh" collapse; plus the integration test pinned
-  *after* adoption.
+  _after_ adoption.
 - Owner-blocked (untouched by design): branch protection, coverage-threshold CI, announcement
   publishing.
 - New gaps surfaced this session (not yet rows):
@@ -219,4 +219,4 @@ baseline rows; treat cross-baseline comparisons with suspicion.
 
 ---
 
-*Point-in-time snapshot; open work lives in TODO_LIST.md, completed work in CHANGELOG.md.*
+_Point-in-time snapshot; open work lives in TODO_LIST.md, completed work in CHANGELOG.md._

@@ -12,17 +12,17 @@ remains available for deployments that want the old behavior deliberately.
 
 ## Fleet inventory (consumers of `httputil.Compression`)
 
-| Consumer | Client profile | Header-less clients? | Decision |
-| -------- | -------------- | -------------------- | -------- |
-| CV | human site (browsers) | no — browsers always send `Accept-Encoding` | identity default: no effect |
-| DiscordSync `internal/api` | API (Go http.Clients, bots) | no — Go transport auto-sends `gzip` | identity default: no effect |
-| InboxClean | human web app | no | identity default: no effect |
-| artmann-technologies-website | public site (browsers/CDN) | no | identity default: no effect |
-| crush-daily `internal/server` | local UI (browser) | no | identity default: no effect |
-| dynamic-markdown-site | public site | no | identity default: no effect |
-| go-website-template | template site | no | identity default: no effect |
-| library-policy `httpapi` | API (CI + tooling) | possible raw `curl` | identity default: **adopted** — plain `curl` without `--compressed` now receives valid identity bytes instead of gzip it could not decode |
-| nsfw-classifier | browsers + SDK + SSE | SSE (excluded via `IncompressibleTypes`) | identity default: **adopted** — SSE must be identity regardless; JSON endpoints unchanged for negotiating clients |
+| Consumer                      | Client profile              | Header-less clients?                        | Decision                                                                                                                                  |
+| ----------------------------- | --------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| CV                            | human site (browsers)       | no — browsers always send `Accept-Encoding` | identity default: no effect                                                                                                               |
+| DiscordSync `internal/api`    | API (Go http.Clients, bots) | no — Go transport auto-sends `gzip`         | identity default: no effect                                                                                                               |
+| InboxClean                    | human web app               | no                                          | identity default: no effect                                                                                                               |
+| artmann-technologies-website  | public site (browsers/CDN)  | no                                          | identity default: no effect                                                                                                               |
+| crush-daily `internal/server` | local UI (browser)          | no                                          | identity default: no effect                                                                                                               |
+| dynamic-markdown-site         | public site                 | no                                          | identity default: no effect                                                                                                               |
+| go-website-template           | template site               | no                                          | identity default: no effect                                                                                                               |
+| library-policy `httpapi`      | API (CI + tooling)          | possible raw `curl`                         | identity default: **adopted** — plain `curl` without `--compressed` now receives valid identity bytes instead of gzip it could not decode |
+| nsfw-classifier               | browsers + SDK + SSE        | SSE (excluded via `IncompressibleTypes`)    | identity default: **adopted** — SSE must be identity regardless; JSON endpoints unchanged for negotiating clients                         |
 
 ## Decision
 

@@ -3,7 +3,7 @@
 |            |                                                                                                    |
 | ---------- | -------------------------------------------------------------------------------------------------- |
 | **Date**   | 2026-09-18                                                                                         |
-| **Status** | PROPOSED — v0.3.0 candidate; design note required before implementing                              |
+| **Status** | ACCEPTED — implemented 2026-09-22 (unit table, property extension, example shipped)                                                      |
 | **Inputs** | `Probe.Healthz()` ([accessors.go](../../accessors.go)), `aggregate` merge-on-read, ROADMAP Theme 7 |
 
 ## Problem

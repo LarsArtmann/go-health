@@ -311,9 +311,10 @@ func TestAggregateMerge_ShutdownIsAbsorbing(t *testing.T) {
 	}
 }
 
-// TestAggregateHandlers_MirrorMergedStatus asserts the handler status codes are
-// a pure function of the merged roll-up: readiness 503 iff fail, startup 200
-// iff every latch is set.
+// TestAggregateHandlers_MirrorMergedStatus asserts the handler status codes
+// are a pure function of the merged roll-up: readiness 503 iff fail, startup
+// 200 iff every latch is set, healthz 200 iff every latch is set and the
+// merged roll-up is not fail.
 func TestAggregateHandlers_MirrorMergedStatus(t *testing.T) {
 	t.Parallel()
 
@@ -347,6 +348,18 @@ func TestAggregateHandlers_MirrorMergedStatus(t *testing.T) {
 
 			if startupRec.Code != wantStartup {
 				t.Errorf("startup code = %d, want %d", startupRec.Code, wantStartup)
+			}
+
+			healthRec := httptest.NewRecorder()
+			agg.Healthz()(healthRec, fuzzRequest(t))
+
+			wantHealth := http.StatusOK
+			if !agg.StartupComplete() || agg.CachedResponse().Status == health.StatusFail {
+				wantHealth = http.StatusServiceUnavailable
+			}
+
+			if healthRec.Code != wantHealth {
+				t.Errorf("healthz code = %d, want %d", healthRec.Code, wantHealth)
 			}
 		})
 	}

@@ -187,3 +187,56 @@ func ExampleAggregate_StartupHandler() {
 	// all booted: false
 	// all booted: true
 }
+
+// The aggregate Healthz answers one question for single-endpoint deployments:
+// "should traffic be routed here?" It stays 503 until every source has booted
+// and the merged roll-up is not fail, then follows readiness (warn stays
+// 200). The handler is standalone: RegisterRoutes keeps /healthz wired to
+// liveness for kubelet-style deployments.
+func ExampleAggregate_Healthz() {
+	api := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"db": nil}
+	}, health.WithRefreshInterval(0), health.WithLiveThrottle(time.Hour))
+
+	web := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"render": nil}
+	}, health.WithRefreshInterval(0), health.WithLiveThrottle(time.Hour))
+
+	ctx := context.Background()
+
+	if err := api.Start(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := web.Start(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	agg, err := aggregate.New(
+		aggregate.Source{Name: "api", Probe: api},
+		aggregate.Source{Name: "web", Probe: web},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	serve := func() int {
+		rec := httptest.NewRecorder()
+		agg.Healthz().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+
+		return rec.Code
+	}
+
+	fmt.Println("booting:", serve())
+
+	// A successful startup evaluation flips each source's latch — here
+	// simulated by one startup request per source:
+	latchStartup(api)
+	latchStartup(web)
+
+	fmt.Println("booted:", serve())
+
+	// Output:
+	// booting: 503
+	// booted: 200
+}

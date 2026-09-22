@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- `Aggregate.Healthz()` — the aggregate's single-endpoint handler, mirroring `Probe.Healthz()`: 503 while any source has an unset startup latch, the merged roll-up is fail (which includes any source shutting down), or a source is draining; 200 otherwise, with the merged body (warn stays 200). Standalone like the root probe — `RegisterRoutes` keeps wiring the three kubelet probes. See docs/aggregate-healthz-design.md.
 
 ### Changed
 

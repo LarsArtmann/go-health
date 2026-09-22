@@ -44,9 +44,11 @@ nix fmt                 # gofumpt/goimports/golines/nixfmt
 erraudit ./... --type-aware   # error-handling audit (baseline: 0 violations)
 ```
 
-Bare `go` commands outside the flake need `GOEXPERIMENT=jsonv2` — the code
-imports `encoding/json/v2`, which go1.26 only exposes behind that experiment.
-The flake exports it for every gate; a fresh shell does not.
+Bare `go` commands need Go 1.27+ (`encoding/json/v2` is stable there;
+go.mod's `go 1.27` directive excludes older toolchains). No `GOEXPERIMENT`
+is needed — the flake used to export it back when go.mod sat at 1.26, but
+the go 1.27 floor made it obsolete (verified 2026-09-22: full suite green
+with the experiment unset).
 
 5. Emulate CI once before pushing — CI machines have no host Go on `PATH`, so
    gates that shell out to `go` fall back to whatever toolchain the binary was

@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.26 · **Status**: v0.2.0 (alpha), federation unreleased (v0.3.0 vehicle)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.27 · **Status**: v0.3.0 released 2026-09-19 (alpha; federation + `NewChecks` shipped)
 
 ---
 
@@ -116,7 +116,7 @@ DO-1..DO-6 across all source files. Invoke with
 checkout at `/home/lars/projects/branching-flow` (the replace path in
 `tools/doanalyzerv2/go.mod`).
 
-**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires released v0.1.3 directly (no replace directive; bumped to v0.1.3 at release time 2026-09-04). Verified at the v0.1.3 release (2026-09-04): dashboard build green and all go-health-related tests (aggregate, integration, dashboard) green against released v0.1.3 with source names `api`/`web` (contract-compatible); its pre-existing CSP/Datastar test failures are unchanged from v0.1.2 and unrelated to go-health. At the v0.2.0 release (2026-09-16): dashboard verified compatible with the unreleased metadata fields pre-tag (build green 2026-09-16); v0.2.0 is additive, so no dashboard bump was required at release time — the dashboard adopts v0.2.0 when it starts rendering `since`/`duration_ns`. Consumers building against go-health need `GOEXPERIMENT=jsonv2` (json/v2 is behind the experiment on go1.26). Any public API change must be coordinated with the dashboard consumer.
+**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the only known consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires released v0.1.3 directly (no replace directive; bumped to v0.1.3 at release time 2026-09-04). Verified at the v0.1.3 release (2026-09-04): dashboard build green and all go-health-related tests (aggregate, integration, dashboard) green against released v0.1.3 with source names `api`/`web` (contract-compatible); its pre-existing CSP/Datastar test failures are unchanged from v0.1.2 and unrelated to go-health. At the v0.2.0 release (2026-09-16): dashboard verified compatible with the unreleased metadata fields pre-tag (build green 2026-09-16); v0.2.0 is additive, so no dashboard bump was required at release time — the dashboard adopts v0.2.0 when it starts rendering `since`/`duration_ns`. Consumers building against go-health need Go 1.27+ (`encoding/json/v2` is stable there; go.mod's `go 1.27` directive excludes older toolchains outright). Any public API change must be coordinated with the dashboard consumer.
 
 ### Data Flow
 
@@ -156,33 +156,28 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 - **samber/do v2.1.0 behavior** — never-invoked lazy services appear in `HealthCheckWithContext` results with nil error. Eagerly invoke critical services at boot for the startup probe to be meaningful.
 - **Three-state classify** — `classify` returns `pass`/`warn`/`fail`. The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
 - **Config validation** — `Probe.Validate()` checks `timeout > 0` and `refreshInterval >= 0`. `Start()` calls `Validate()` and returns an error on invalid config — callers should check the error from `Start()`.
-- **GOEXPERIMENT=jsonv2 IS required since the jsonv2 migration** — `handlers.go` (and
-  `aggregate/aggregate.go`) import `encoding/json/v2`, which go1.26 only exposes behind
-  `GOEXPERIMENT=jsonv2` (verified: `env -u GOEXPERIMENT go build ./...` fails with "build
-  constraints exclude all Go files in encoding/json/v2"; `env GOEXPERIMENT=jsonv2` builds).
-  An older revision of this file claimed no GOEXPERIMENT was needed — that claim was an
-  artifact of the host shell leaking `GOEXPERIMENT=jsonv2` into every nix invocation.
-  The flake now sets it explicitly in every app and the devShell, so the gates are
-  hermetic; only bare `go` commands outside the flake need it manually.
-  **Per-version truth (verified 2026-09-04 against nixpkgs go_1_27 = 1.27.0):** under
-  go1.27 no experiment is needed — the library builds and the full test suite PASSES
-  (`go test -vet=off ./...`, both packages ok). The only go1.27 complaint is the
-  stdversion vet check demanding a `go 1.27` directive for files calling json/v2
-  functions. Adoption path when 1.26 support drops: bump the go.mod directive to 1.27,
-  remove the experiment from flake apps/devShell — no code changes. The flake keeps
-  go_1_26 pinned until then. gopls' stdversion
-  warning ("json.Marshal requires go1.27") is expected and benign while the experiment is
-  enabled — it reflects the stabilized json/v2 landing in go1.27, not a real build failure.
-  Set `GOWORK=off` to avoid workspace interference.
+- **No GOEXPERIMENT needed since the go 1.27 floor** — `handlers.go` (and
+  `aggregate/aggregate.go`) import `encoding/json/v2`, which is stable stdlib
+  on go1.27. Verified 2026-09-22 on go1.27.1: build + vet + full test suite
+  green with `GOEXPERIMENT` unset; the flake no longer exports the experiment
+  in any app or the devShell. History for archaeology: while go.mod sat at
+  1.26 the experiment was mandatory (`build constraints exclude all Go files
+  in encoding/json/v2` without it), and one AGENTS.md revision wrongly
+  claimed it was unnecessary — that claim was an artifact of the host shell
+  leaking `GOEXPERIMENT=jsonv2` into every nix invocation. Lesson that
+  survives the migration: environment variables from the host shell leak
+  into nix run/develop invocations; gates must set or unset what they depend
+  on explicitly. Set `GOWORK=off` to avoid workspace interference.
 - **Tools that shell out to `go` need `goPkg` in their flake app** —
   `golangci-lint`, `govulncheck`, and `gosec` load packages by invoking a `go`
   binary from PATH. Their apps originally declared only the tool, so CI (no Go
   on PATH) fell back to the GOROOT the binary was compiled with — an older Go
-  that hard-fails on `GOEXPERIMENT=jsonv2` ("unknown GOEXPERIMENT jsonv2").
+  that cannot satisfy go.mod's `go 1.27` directive (then it also hard-failed
+  on `GOEXPERIMENT=jsonv2`, "unknown GOEXPERIMENT jsonv2").
   First CI run caught it; the fix puts `goPkg` in every such app's
   `runtimeInputs` (verified by running the gates with the host Go removed
   from PATH). Rule of thumb: any new flake app that indirectly runs `go` must
-  list `goPkg` — the same leak class as the GOEXPERIMENT gotcha above, one
+  list `goPkg` — the same leak class as the host-shell-env gotcha above, one
   layer down.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
 - **`encoding/json/v2` cannot marshal `time.Duration` AT ALL** — no default representation exists (go.dev/issue/71631, undecided upstream) and no struct-tag format is accepted (verified empirically on go1.26.7: `int`, `ns`, `nanoseconds`, … all rejected); the only escape is the per-call `json.FormatDurationAsNano` option, which every re-marshaling consumer would have to know to pass. That is why `Check.DurationNanos` is a plain `int64` while the in-process seam `CheckDetail.Duration` stays `time.Duration`, converted once in `buildChecks`. Pinned by `TestCheck_JSONOmitZero`. Related v2 trap: scalar `omitempty` (bool/int) is not honored — only strings and `omitzero` omit; see `TestReadinessResponse_JSONOmitEmpty`.

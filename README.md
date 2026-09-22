@@ -71,13 +71,11 @@ it. A CI OS matrix is deliberately deferred: darwin can no longer evaluate
 the Nix flake at all (nixpkgs 26.11 dropped x86_64-darwin; see `flake.nix`),
 so those jobs would assert nothing.
 
-Bare `go` commands outside this repo's flake need `GOEXPERIMENT=jsonv2` on
-Go 1.26: the library imports `encoding/json/v2`, which go1.26 only exposes
-behind that experiment. Building through the flake, or with Go 1.27+ where
-json/v2 is stable, needs nothing special. Verified against go1.27.0: the
-library builds and the full test suite passes without the experiment — the
-only noise is go1.27's stdversion vet check asking for a `go 1.27` directive
-(and this go.mod stays at 1.26 until 1.26 support is dropped).
+Building requires Go 1.27+: the library imports `encoding/json/v2`, which is
+stable stdlib there (go.mod's `go 1.27` directive excludes older toolchains).
+No `GOEXPERIMENT` is needed anywhere — the flake sets up the toolchain, and
+bare `go` commands just work on a 1.27+ host. Verified against go1.27.1:
+the library builds and the full test suite passes with `GOEXPERIMENT` unset.
 
 Older Go toolchains are unsupported. Other samber/do v2.x versions are
 expected to work but are not covered by CI — if you bump it, run the test

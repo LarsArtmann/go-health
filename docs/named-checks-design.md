@@ -30,13 +30,13 @@ caching, handlers, shutdown awareness, and validation are unchanged.
 
 ### Per-check failure contract (`runBoundedCheck`)
 
-| Failure                        | Behavior                                                        |
-| ------------------------------ | --------------------------------------------------------------- |
-| Check returns nil              | pass                                                            |
-| Check returns error            | error surfaced under its name, graded against the critical set  |
-| Check panics                   | recovered; `"check %q panicked: %v"` error, siblings unaffected |
-| Check is nil                   | fail-closed `"check %q is nil"` error                           |
-| Check ignores ctx, batch ends  | abandoned; `"check %q did not finish before the batch deadline"` |
+| Failure                       | Behavior                                                         |
+| ----------------------------- | ---------------------------------------------------------------- |
+| Check returns nil             | pass                                                             |
+| Check returns error           | error surfaced under its name, graded against the critical set   |
+| Check panics                  | recovered; `"check %q panicked: %v"` error, siblings unaffected  |
+| Check is nil                  | fail-closed `"check %q is nil"` error                            |
+| Check ignores ctx, batch ends | abandoned; `"check %q did not finish before the batch deadline"` |
 
 The abandonment branch is what samber/do's native health checks cannot do:
 a goroutine that never returns cannot be killed, but the batch stops waiting

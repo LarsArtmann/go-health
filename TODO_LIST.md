@@ -29,9 +29,12 @@
 > Harvested 2026-09-22: the resolved 2026-09-18 rows (ADR-005, OpenAPI
 > aggregate coverage, aggregate merge property tests, README decision
 > table, `ExampleNewWithDetailedCheck` determinism) verified in code and
-> deleted per lifecycle (they live in CHANGELOG). New task surfaced:
-> implement `Aggregate.Healthz()` per `docs/aggregate-healthz-design.md`
-> (v0.3.0 candidate).
+> deleted per lifecycle (they live in CHANGELOG). pkg.go.dev render
+> verification passed the same day (v0.2.0 root + aggregate; v0.3.0
+> root + aggregate + federation all render metadata fields and examples;
+> proxy @latest = v0.3.0). Fixed stale CHANGELOG version-link block.
+> New task surfaced: implement `Aggregate.Healthz()` per
+> `docs/aggregate-healthz-design.md` (v0.3.0 candidate).
 
 ## Status legend
 
@@ -86,8 +89,8 @@ Check names are the exact `name:` fields CI reports. To revert:
 
 | Task                                                                                    | Status | Impact | Effort | Evidence                                                                                                                                                              |
 | --------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Trigger `Fuzz (weekly long)` once via `workflow_dispatch`                               | TODO   | Medium | 5min   | The weekly fuzz YAML has never executed on GitHub; a typo would only surface Monday 04:17 UTC. `21-31` §b. `.github/workflows/fuzz-long.yml` has `workflow_dispatch`. |
-| Verify pkg.go.dev renders v0.2.0 (metadata fields + examples + aggregate visible)       | TODO   | Medium | 10min  | Proxy verified + clean-dir `go get`/build OK at release; page fetch 404 within the normal ~1h propagation lag (2026-09-16).                                           |
+| Trigger `Fuzz (weekly long)` once via `workflow_dispatch`                               | DONE   | Medium | 5min   | Dispatched 2026-09-22 (run 35756511889); scheduled runs 09-14 + 09-21 already green, YAML proven on GitHub.                                                            |
+| Verify pkg.go.dev renders v0.2.0 (metadata fields + examples + aggregate visible)       | DONE   | Medium | 10min  | Verified 2026-09-22: v0.2.0 root+aggregate and v0.3.0 root+aggregate+federation all render; proxy @latest = v0.3.0 (released 2026-09-19).                     |
 | OpenAPI ↔ golden-file lockstep check in CI (currently a manual eyeball)                 | TODO   | Low    | 45min  | The golden test and `docs/openapi.yaml` can drift silently. `21-31` §f23.                                                                                             |
 | Dashboard: render "failing since HH:MM (Nm)" from `check.since`                         | TODO   | High   | 2h     | Wire fields shipped (unreleased); dashboard renders placeholders. Own repo: `go-health-dashboard`. `09-15` §f2.                                                       |
 | Dashboard: status-changes timeline from `since` (kill sampling-clock guess)             | TODO   | High   | 4h     | Same wire source. `09-15` §f3.                                                                                                                                        |

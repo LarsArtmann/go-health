@@ -40,8 +40,7 @@ type CheckFunc func(ctx context.Context) error
 //   - [WithHealthRecorder] has no effect here: the given checks own batch
 //     execution. All other options apply normally.
 func NewChecks(checks map[string]CheckFunc, opts ...Option) *Probe {
-	cfg := buildConfig(opts)
-	cfg.recorder = nil
+	cfg := buildStandaloneConfig(opts)
 
 	runChecks := runNamedChecks(checks)
 

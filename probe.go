@@ -329,6 +329,18 @@ func buildConfig(opts []Option) config {
 	return cfg
 }
 
+// buildStandaloneConfig resolves options for a probe whose health-check
+// batches are produced by an explicit function ([NewWithHealthCheck],
+// [NewWithDetailedCheck], [NewChecks]). Such a function owns batch
+// execution, so [WithHealthRecorder] has no effect: it is cleared here,
+// once, instead of at every standalone constructor.
+func buildStandaloneConfig(opts []Option) config {
+	cfg := buildConfig(opts)
+	cfg.recorder = nil
+
+	return cfg
+}
+
 // assemble wires a resolved health-check capability and configuration into
 // a Probe. Both constructors funnel through here.
 func assemble(healthCheck healthCheckFunc, cfg config) *Probe {

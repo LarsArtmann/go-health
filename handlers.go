@@ -129,6 +129,15 @@ func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes) {
 	mux.HandleFunc(routes.Startup, p.StartupHandler())
 }
 
+// evaluateBounded runs one live batch under the probe's batch deadline
+// ([WithTimeout]).
+func (p *Probe) evaluateBounded(ctx context.Context) Response {
+	evalCtx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	return p.Evaluate(evalCtx)
+}
+
 // readinessResponse returns the cached response when available, or evaluates
 // live with a timeout-bounded context. With [WithLiveThrottle] set, live
 // evaluations coalesce: within the throttle window the stored result of the
@@ -143,10 +152,7 @@ func (p *Probe) readinessResponse(ctx context.Context) Response {
 		return *cached
 	}
 
-	evalCtx, cancel := context.WithTimeout(ctx, p.timeout)
-	defer cancel()
-
-	return p.Evaluate(evalCtx)
+	return p.evaluateBounded(ctx)
 }
 
 // throttledLiveResponse serializes live evaluations and reuses the stored
@@ -160,10 +166,7 @@ func (p *Probe) throttledLiveResponse(ctx context.Context) Response {
 		return *cached
 	}
 
-	evalCtx, cancel := context.WithTimeout(ctx, p.timeout)
-	defer cancel()
-
-	resp := p.Evaluate(evalCtx)
+	resp := p.evaluateBounded(ctx)
 	p.latest.Store(&resp)
 
 	return resp

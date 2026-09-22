@@ -37,8 +37,7 @@ type DetailedHealthCheckFunc func(ctx context.Context) map[string]CheckDetail
 // recovered and reported as a fail-closed synthetic error, exactly like the
 // other check sources.
 func NewWithDetailedCheck(fn DetailedHealthCheckFunc, opts ...Option) *Probe {
-	cfg := buildConfig(opts)
-	cfg.recorder = nil
+	cfg := buildStandaloneConfig(opts)
 
 	return assemble(func(ctx context.Context) map[string]CheckDetail { return fn(ctx) }, cfg)
 }
@@ -57,8 +56,7 @@ func NewWithDetailedCheck(fn DetailedHealthCheckFunc, opts ...Option) *Probe {
 // explicit function already owns batch execution. All other options apply
 // normally.
 func NewWithHealthCheck(fn HealthCheckFunc, opts ...Option) *Probe {
-	cfg := buildConfig(opts)
-	cfg.recorder = nil
+	cfg := buildStandaloneConfig(opts)
 
 	return assemble(adaptPlainChecks(fn), cfg)
 }

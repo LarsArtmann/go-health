@@ -99,7 +99,7 @@
 
 ## Performance
 
-Baselines recorded 2026-09-04; `*_Scaling`/handlers/tracker rows recorded 2026-09-18 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`).
+Handler/guard/aggregate rows recorded 2026-09-18 (go1.26.7 linux/amd64, 32 threads, `-benchtime=1s`); evaluate/tracker rows re-baselined 2026-09-22 (go1.27.1 linux/amd64, AMD Ryzen AI MAX+ 395, 32 threads, `-benchtime=1s`) after the go 1.27 toolchain bump. ns values across toolchain/host changes are not directly comparable; B/allocs are.
 
 | Benchmark                                        | Result                                                                                                      | Notes                                                                                                                                                           |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,8 +111,9 @@ Baselines recorded 2026-09-04; `*_Scaling`/handlers/tracker rows recorded 2026-0
 | `BenchmarkGuardOverhead_AllowHeader`             | ~250 ns/op · 88 B/op · 5 allocs                                                                             | The 405 response's Allow-header construction (sorted join over a 3-method set): the entire marginal cost of an unlisted-method reply.                           |
 | `BenchmarkAggregateCachedResponse` (median of 3) | 1 src: 390 ns · 504 B · 5 allocs; 2: 506 ns · 544 B · 8; 4: 1.26 µs · 1560 B · 17; 8: 2.79 µs · 3544 B · 31 | Merge-on-read cost scales ~linearly with source count (~330 ns + 1 map-entry insert per check per source). `aggregate/aggregate_benchmark_test.go`.             |
 | `BenchmarkAggregateHandlers/readiness`           | 1 src: ~5.7 µs · 3768 B · 29 allocs; 4 srcs: ~13.2 µs · 8307 B · 61 allocs                                  | Full aggregate HTTP path: merge + sanitize + deterministic marshal + write. `liveness` is the empty-check floor; `startup_unlatched` is the 503 branch.         |
-| `BenchmarkEvaluate_Scaling`                      | 1 svc: ~897 ns · 2027 B · 10 allocs; 8: ~2.4 µs · 3518 B · 20; 64: ~14.7 µs · 34973 B · 84                  | Injector-free full evaluation (batch + checks + tracker stamp + classify) vs. check count. Complements the 2-service `BenchmarkEvaluate`.                       |
-| `BenchmarkTransitionTrackerStamp`                | 1 check: ~142 ns · 528 B · 2 allocs; 8: ~507 ns · 528 B · 2; 64: ~4.3 µs · 8280 B · 4                       | Per-batch Since stamp: a fresh tracked map plus one mutex-guarded pass. Warm (stable statuses); a transition adds one struct alloc.                             |
+| `BenchmarkEvaluate_Scaling`                      | 1 svc: ~993 ns · 2027 B · 10 allocs; 8: ~1.83 µs · 2067 B · 17; 64: ~17.4 µs · 34974 B · 84                  | Injector-free full evaluation (batch + checks + tracker stamp + classify) vs. check count. Complements the 2-service `BenchmarkEvaluate` (~3.85 µs · 3530 B · 42 allocs). |
+| `BenchmarkEvaluate_TrackerDelta`                 | tracker off: ~757 ns · 1154 B · 5 allocs; on: ~1111 ns · 1682 B · 7 allocs (medians of 4 runs, 8 stable checks) | Since stamping costs **+~355 ns (+47%), +528 B, +2 allocs** per full `Evaluate`; B/allocs exact across runs, ns varies ±15%. A/B seam: `SetTrackerDisabledForTest` (test builds only). |
+| `BenchmarkTransitionTrackerStamp`                | 1 check: ~145 ns · 528 B · 2 allocs; 8: ~376 ns · 528 B · 2; 64: ~4.5 µs · 8280 B · 4                       | Per-batch Since stamp: a fresh tracked map plus one mutex-guarded pass. Warm (stable statuses); a transition adds one struct alloc.                             |
 
 ## Infrastructure & Tooling
 

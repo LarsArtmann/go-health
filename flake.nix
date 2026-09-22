@@ -36,25 +36,21 @@
         { config, pkgs, ... }:
         let
           inherit (pkgs) lib;
-          # go.mod carries a go 1.27.1 directive (the ecosystem-wide relax,
+          # go.mod carries a go 1.27 directive (the ecosystem-wide relax,
           # same as go-cqrs-lite/cqrs-htmx) and GOTOOLCHAIN=local (sandbox
           # forbids toolchain downloads) cannot satisfy it under go_1_26,
           # so the toolchain is nixpkgs' go_1_27.
           goPkg = pkgs.go_1_27;
 
-          # Every Go command in this flake needs the json/v2 experiment
-          # enabled: the code imports encoding/json/v2, which go1.26 only
-          # exposes behind GOEXPERIMENT=jsonv2. Exporting it here keeps the
-          # gates hermetic — they must not depend on the host shell's env.
+          # encoding/json/v2 is stable on go1.27: no GOEXPERIMENT is needed
+          # anywhere (verified 2026-09-22: build + vet + full suite green
+          # with GOEXPERIMENT unset). Apps stay hermetic via runtimeInputs.
           mkApp =
             name: description: runtimeInputs: text:
             let
               script = pkgs.writeShellApplication {
                 inherit name runtimeInputs;
-                text = ''
-                  export GOEXPERIMENT=jsonv2
-                  ${text}
-                '';
+                inherit text;
               };
             in
             {
@@ -136,7 +132,6 @@
             ];
 
             GOWORK = "off";
-            GOEXPERIMENT = "jsonv2";
 
             shellHook = ''
               echo "go-health dev shell — $(go version)"
@@ -172,9 +167,9 @@
                   pkgs.golangci-lint
                   # golangci-lint shells out to a `go` binary for package
                   # loading; without goPkg on PATH it falls back to the GOROOT
-                  # it was compiled with (an older Go that rejects
-                  # GOEXPERIMENT=jsonv2) and fails on any machine whose host
-                  # PATH does not already provide Go 1.26.
+                  # it was compiled with (an older Go that rejects go.mod's
+                  # go 1.27 directive) and fails on any machine whose host
+                  # PATH does not already provide Go 1.27.
                   goPkg
                 ]
                 ''

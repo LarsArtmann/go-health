@@ -220,3 +220,61 @@ baseline rows; treat cross-baseline comparisons with suspicion.
 ---
 
 _Point-in-time snapshot; open work lives in TODO_LIST.md, completed work in CHANGELOG.md._
+
+## h) SESSION CONTINUATION (2026-09-22 ~21:00)
+
+Everything in §e/f got executed or resolved the same evening. Additions and
+closures on top of this report:
+
+**Shipped (all gates green on the final tree):**
+
+- Benchmark task closed: FEATURES.md Performance table got the
+  `BenchmarkEvaluate_TrackerDelta` row (4-run medians: tracker off ~757 ns /
+  1154 B / 5 allocs vs on ~1111 ns / 1682 B / 7 allocs → **+~355 ns (+47%),
+  +528 B, +2 allocs** per `Evaluate`; B/allocs exact, ns ±15%) and
+  go1.27.1 re-baselines for `Evaluate_Scaling`/`TransitionTrackerStamp`/
+  `BenchmarkEvaluate`, incl. CPU model in the baseline note (closes §f1+§f28).
+- **GOEXPERIMENT=jsonv2 dropped from the flake** (every app + devShell):
+  `encoding/json/v2` is stable on the go 1.27 floor; verified build + vet +
+  full suite green with the experiment unset; ROADMAP's pre-planned
+  "toolchain floor bump" follow-through executed; README/CONTRIBUTING/
+  AGENTS.md rewritten; host-shell-leak lesson preserved in AGENTS.md.
+- ADR-006: duration units split by granularity (roll-ups in always-present
+  ms, per-check in `omitzero` ns; unification rejected on precision and
+  readability grounds) — closes the "unify latency units" row.
+- Detailed-checks cookbook (`docs/detailed-checks-cookbook.md`): three paths
+  + the injector-path limitation; snippets verified by scratch tests that
+  were then trashed. Linked from README + AGENTS.md.
+- Prometheus example fixed: reference implementation now emits
+  `health_check` series in sorted order (was random map order; caught by
+  the prose-review row).
+- samber/do#318 comment drafted (per-service `Duration` on `HealthOutcome`),
+  all five verify-before-filing gates passed (v2.1.0 + master source read;
+  `ShutdownReport.ServiceShutdownTime` precedent found in do itself;
+  no prior timing proposal exists), voice-checked (0 FAIL / 0 WARN).
+  Posting is the owner's call → TODO_LIST Owner Actions.
+- AGENTS.md staleness sweep (§f30): header now says Go 1.27 / v0.3.0
+  released; consumer-verification paragraph updated (dashboard HAS adopted
+  the metadata rendering — verified 2026-09-22); auditlog decoupling caveat
+  added.
+
+**Resolved by verification (rows deleted, evidence in TODO_LIST harvest
+notes):**
+
+- All five dashboard rows (§f2–f5, §f21): already implemented in
+  go-health-dashboard (`rowMetadataTexts`, `formatCheckDuration`,
+  `history.go` timeline, collapse policy, golden + screenshot pinning);
+  focused + full suites green. Fixed dashboard master's pre-existing
+  go.mod drift (`go 1.27` → `go 1.27.1`, a dep requirement) while there.
+- samber-do-auditlog `DetailedHealthRecorder`: premise ("already times
+  checks") was FALSE — corrected; the real blocker is an owner decision
+  (importing go-health reverses ADR-004 decoupling + silent execution-path
+  switch). Do DOES expose `do.HealthCheckNamedWithContext` (an earlier
+  blocked-claim was wrong and is corrected in TODO_LIST).
+
+**Owner questions (§g) status:** Q2 answered by action → draft-only,
+artifact ready in `docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md`.
+Q3 moot → dashboard rows were already done. Q1 (v0.4.0 release vehicle)
+remains the one open owner decision; branch protection (G3), coverage
+threshold, and the v0.1.1/v0.1.2 announcement publishing remain owner
+actions.

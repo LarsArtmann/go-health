@@ -6,7 +6,7 @@ Thanks for your interest in contributing to go-health!
 
 ### Prerequisites
 
-- **Go 1.26+** — [install](https://go.dev/doc/install)
+- **Go 1.27+** — [install](https://go.dev/doc/install)
 - **Nix** (optional, recommended) — [install](https://nixos.org/download.html) for reproducible builds
 
 ### With Nix (recommended)

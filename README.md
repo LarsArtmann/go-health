@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.2.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+> **Stability:** v0.4.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
 
 ---
 
@@ -51,7 +51,7 @@ Splitting probes breaks this coupling:
 go get github.com/larsartmann/go-health
 ```
 
-**Requirements:** Go 1.26+. Single dependency: `github.com/samber/do/v2`.
+**Requirements:** Go 1.27+. Single dependency: `github.com/samber/do/v2`.
 
 ## Compatibility
 
@@ -59,7 +59,7 @@ What CI actually tests on every push — not what merely compiles:
 
 | Dimension | Tested                                        |
 | --------- | --------------------------------------------- |
-| Go        | 1.26.x — CI runs go 1.26.7 on linux/amd64     |
+| Go        | 1.27.x — CI runs go 1.27.1 (Nix-pinned) on linux/amd64 |
 | OS/arch   | linux/amd64 — the only configuration CI tests |
 | samber/do | v2.1.0 (the pinned `go.mod` dependency)       |
 | Aggregate | same module version, tested in the same suite |
@@ -72,7 +72,7 @@ the Nix flake at all (nixpkgs 26.11 dropped x86_64-darwin; see `flake.nix`),
 so those jobs would assert nothing.
 
 Building requires Go 1.27+: the library imports `encoding/json/v2`, which is
-stable stdlib there (go.mod's `go 1.27` directive excludes older toolchains).
+stable stdlib there (go.mod's `go 1.27.1` directive excludes older toolchains).
 No `GOEXPERIMENT` is needed anywhere — the flake sets up the toolchain, and
 bare `go` commands just work on a 1.27+ host. Verified against go1.27.1:
 the library builds and the full test suite passes with `GOEXPERIMENT` unset.

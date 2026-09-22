@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.27 · **Status**: v0.3.0 released 2026-09-19 (alpha; federation + `NewChecks` shipped)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.27 · **Status**: v0.4.0 released 2026-09-22 (alpha; federation + `NewChecks` + aggregate `Healthz` shipped)
 
 ---
 

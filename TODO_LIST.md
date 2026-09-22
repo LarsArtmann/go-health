@@ -67,36 +67,7 @@
 
 | Task                                                             | Status  | Impact | Effort | Evidence                                                                                                                                                                                                                        |
 | ---------------------------------------------------------------- | ------- | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Enable branch protection on `master` (5 checks + linear history) | BLOCKED | High   | 10min  | Needs owner/admin repo settings (decision G3). Ready-to-run command below. ⚠️ required status checks block direct pushes for non-admins; `enforce_admins: false` keeps your admin bypass. See `.github/workflows/ci.yml` header. |
 | Coverage-threshold CI job (fail < 97%)?                          | BLOCKED | Medium | 20min  | Policy call (decision G3 follow-up). CONTRIBUTING states the 99.7% baseline; a red-failing threshold job is a maintainer preference, not a default.                                                                             |
-
-### Ready-to-run: branch protection (G3)
-
-```bash
-gh api -X PUT repos/LarsArtmann/go-health/branches/master/protection --input - <<'JSON'
-{
-  "required_status_checks": {
-    "strict": true,
-    "contexts": [
-      "Test (race)",
-      "Vet + Lint",
-      "Security (govulncheck + gosec)",
-      "Flake + Formatting",
-      "OpenAPI spec"
-    ]
-  },
-  "enforce_admins": false,
-  "required_pull_request_reviews": null,
-  "restrictions": null,
-  "required_linear_history": true,
-  "allow_force_pushes": false,
-  "allow_deletions": false
-}
-JSON
-```
-
-Check names are the exact `name:` fields CI reports. To revert:
-`gh api -X DELETE repos/LarsArtmann/go-health/branches/master/protection`.
 
 ## Owner Actions (artifacts ready, publishing is yours)
 

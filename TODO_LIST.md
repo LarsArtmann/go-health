@@ -46,7 +46,14 @@
 > Harvested 2026-09-22 (cont.): `BenchmarkEvaluate` before/after tracker
 > measured (A/B seam: +~355 ns/+47%, +528 B, +2 allocs per `Evaluate`;
 > evaluate/tracker rows re-baselined on go1.27.1 in FEATURES.md — see
-> CHANGELOG `[Unreleased]`).
+> CHANGELOG `[Unreleased]`). All five dashboard rows (`09-15` §f2–f5, §f24)
+> verified DONE in `go-health-dashboard` and deleted per lifecycle: it
+> renders `since` ("since 14:02:05 UTC (17m)", `status.go`
+> `rowMetadataTexts`), `duration_ns` adaptively with absent-when-unknown
+> (`formatCheckDuration`), powers a status-change timeline
+> (`history.go`), collapses healthy groups (`applyCollapsePolicy` +
+> `TestCollapse_*`), and pins the rendering with a golden test +
+> `timedScreenshotRecorder` — focused suite green 2026-09-22.
 
 ## Status legend
 
@@ -98,18 +105,13 @@ Check names are the exact `name:` fields CI reports. To revert:
 | Publish the v0.1.1/v0.1.2 announcement | TODO   | Low    | 15min  | Draft + channels checklist ready in `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`. |
 | Post samber/do#318 comment: per-service duration on `HealthOutcome` | TODO   | Medium | 5min   | Draft + verification notes + checklist ready in `docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md` (gates passed, voice-checked; filing is an owner call). |
 
-## Blocked — upstream (samber/do)
+## Blocked — upstream / cross-repo decisions
 
-|| Task                                                                          | Status  | Impact | Effort | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-|| ------------------------------------------------------------------------------ | ------- | ------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|| samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor)              | BLOCKED | Medium | 1h     | Owner decision required (verified 2026-09-22): the row's premise was false — auditlog times builds + shutdowns, NOT health checks. Implementing the interface requires importing go-health (`health.CheckDetail` return type), reversing the deliberate post-extraction "dependency-free both ways" decoupling (ADR-004), and it would silently switch go-health consumers from do's pooled batch to a hand-rolled fan-out (do's default semantics match, but `HealthCheckParallelism`/`HealthCheckTimeout` configs would be bypassed). The pattern is proven: go-health-dashboard's `timedScreenshotRecorder` implements the interface via `do.HealthCheckNamedWithContext` (`di_lifecycle.go:217`). |
+| Task                                                                        | Status  | Impact | Effort | Evidence |
+| --------------------------------------------------------------------------- | ------- | ------ | ------ | -------- |
+| samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor)  | BLOCKED | Medium | 1h     | Owner decision required (verified 2026-09-22): the row's premise was false — auditlog times builds + shutdowns, NOT health checks. Implementing the interface requires importing go-health (`health.CheckDetail` return type), reversing the deliberate post-extraction "dependency-free both ways" decoupling (ADR-004), and it would silently switch go-health consumers from do's pooled batch to a hand-rolled fan-out (do's default semantics match, but `HealthCheckParallelism`/`HealthCheckTimeout` configs would be bypassed). The pattern is proven: go-health-dashboard's `timedScreenshotRecorder` implements the interface via `do.HealthCheckNamedWithContext` (`di_lifecycle.go:217`). |
 
 ## Open — unblocked (any session can pick these up)
 
-| Task                                                                                    | Status | Impact | Effort | Evidence                                                                                                        |
-| --------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------------------------- |
-| Dashboard: render "failing since HH:MM (Nm)" from `check.since`                         | TODO   | High   | 2h     | Wire fields shipped (unreleased); dashboard renders placeholders. Own repo: `go-health-dashboard`. `09-15` §f2. |
-| Dashboard: status-changes timeline from `since` (kill sampling-clock guess)             | TODO   | High   | 4h     | Same wire source. `09-15` §f3.                                                                                  |
-| Dashboard: render `duration_ns` adaptively (µs/ms), hide when absent                    | TODO   | Medium | 1h     | `09-15` §f4.                                                                                                    |
-| Dashboard: "stable for Xh" collapse summaries for healthy groups                        | TODO   | Medium | 2h     | `09-15` §f5.                                                                                                    |
-| Dashboard integration test pinning `since`/`duration_ns` rendering                      | TODO   | Low    | 45min  | After dashboard adopts. `09-15` §f24.                                                                           |
+Nothing open. All former rows are done (see CHANGELOG + harvest notes above),
+owner-gated (Owner Actions), or decision-blocked (section above).

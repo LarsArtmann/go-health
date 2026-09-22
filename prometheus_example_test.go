@@ -37,6 +37,7 @@ func prometheusWriter(w *strings.Builder, resp health.Response) {
 	for name := range resp.Checks {
 		names = append(names, name)
 	}
+
 	sort.Strings(names)
 
 	for _, name := range names {

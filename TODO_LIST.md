@@ -33,8 +33,15 @@
 > verification passed the same day (v0.2.0 root + aggregate; v0.3.0
 > root + aggregate + federation all render metadata fields and examples;
 > proxy @latest = v0.3.0). Fixed stale CHANGELOG version-link block.
+> Fuzz (weekly long) dispatched (run 35756511889; scheduled runs already
+> green). Shipped same day: `Aggregate.Healthz()` (design accepted,
+> implemented) and the OpenAPI ↔ golden lockstep check
+> (`nix run .#openapi-lockstep` + `checks.openapi-lockstep` under
+> `nix flake check`). nolint_filter warning accepted + documented
+> (upstream has no suppression gate; bare `//nolint` would over-suppress).
 > New task surfaced: implement `Aggregate.Healthz()` per
-> `docs/aggregate-healthz-design.md` (v0.3.0 candidate).
+> `docs/aggregate-healthz-design.md` (v0.3.0 candidate) — DONE, see
+> CHANGELOG.
 
 ## Status legend
 
@@ -89,7 +96,6 @@ Check names are the exact `name:` fields CI reports. To revert:
 
 | Task                                                                                    | Status | Impact | Effort | Evidence                                                                                                                                                              |
 | --------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| OpenAPI ↔ golden-file lockstep check in CI (currently a manual eyeball)                 | TODO   | Low    | 45min  | The golden test and `docs/openapi.yaml` can drift silently. `21-31` §f23.                                                                                             |
 | Dashboard: render "failing since HH:MM (Nm)" from `check.since`                         | TODO   | High   | 2h     | Wire fields shipped (unreleased); dashboard renders placeholders. Own repo: `go-health-dashboard`. `09-15` §f2.                                                       |
 | Dashboard: status-changes timeline from `since` (kill sampling-clock guess)             | TODO   | High   | 4h     | Same wire source. `09-15` §f3.                                                                                                                                        |
 | Dashboard: render `duration_ns` adaptively (µs/ms), hide when absent                    | TODO   | Medium | 1h     | `09-15` §f4.                                                                                                                                                          |
@@ -100,5 +106,4 @@ Check names are the exact `name:` fields CI reports. To revert:
 | Dashboard integration test pinning `since`/`duration_ns` rendering                      | TODO   | Low    | 45min  | After dashboard adopts. `09-15` §f24.                                                                                                                                 |
 | Detailed-checks cookbook (self-timing + `NewWithDetailedCheck` composition)             | TODO   | Low    | 1h     | README or docs/. `09-15` §f22–23.                                                                                                                                     |
 | Prose review: `middleware_example_test.go` / `prometheus_example_test.go` wire examples | TODO   | Low    | 20min  | They pass; docs-only sweep. `09-15` §f27.                                                                                                                             |
-| golangci `nolint_filter` warning for `//nolint:erraudit` (unknown linter)               | TODO   | Low    | 15min  | erraudit is a standalone tool honoring `//nolint`; golangci doesn't know it (warning, exit 0). Accept or find a suppression path. Found 2026-09-16.                   |
 | ADR: unify latency units (`total_latency_ms` vs `duration_ns`) in v0.3                  | TODO   | Low    | 30min  | Dual units forever or one breaking unification while alpha. `09-15` §f25.                                                                                             |

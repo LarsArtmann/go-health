@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `Aggregate.Healthz()` — the aggregate's single-endpoint handler, mirroring `Probe.Healthz()`: 503 while any source has an unset startup latch, the merged roll-up is fail (which includes any source shutting down), or a source is draining; 200 otherwise, with the merged body (warn stays 200). Standalone like the root probe — `RegisterRoutes` keeps wiring the three kubelet probes. See docs/aggregate-healthz-design.md.
+- `nix run .#openapi-lockstep` (also enforced as `checks.openapi-lockstep` under `nix flake check`, so the "Flake + Formatting" CI job runs it) — verifies every wire key in `testdata/readiness_response.golden` is declared in the `docs/openapi.yaml` HealthResponse/Check schemas and that status values are within the spec's enum, closing the silent-drift gap between the spec (redocly-linted) and the wire format (golden-file-tested).
 
 ### Changed
 

@@ -11,11 +11,11 @@
 
 One health document carries three duration shapes:
 
-| Field             | Type on the wire      | Present when                      | Meaning                                    |
-| ----------------- | --------------------- | --------------------------------- | ------------------------------------------ |
+| Field              | Type on the wire     | Present when                                                                                 | Meaning                                       |
+| ------------------ | -------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `total_latency_ms` | `int64` milliseconds | always (json/v2 ignores scalar `omitempty`; pinned by `TestReadinessResponse_JSONOmitEmpty`) | Wall-clock of the whole batch; 0 for liveness |
-| `duration_ns`      | `int64` nanoseconds  | only when known (`omitzero`)      | One check's most recent execution          |
-| `uptime`           | human string         | when non-zero                     | Time since boot (`"4m5s"`)                 |
+| `duration_ns`      | `int64` nanoseconds  | only when known (`omitzero`)                                                                 | One check's most recent execution             |
+| `uptime`           | human string         | when non-zero                                                                                | Time since boot (`"4m5s"`)                    |
 
 In-process, a fourth shape exists by design: `CheckDetail.Duration` is a
 `time.Duration`, converted to ns exactly once in `buildChecks`

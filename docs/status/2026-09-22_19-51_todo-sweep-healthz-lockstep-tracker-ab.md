@@ -243,8 +243,8 @@ closures on top of this report:
   ms, per-check in `omitzero` ns; unification rejected on precision and
   readability grounds) — closes the "unify latency units" row.
 - Detailed-checks cookbook (`docs/detailed-checks-cookbook.md`): three paths
-  + the injector-path limitation; snippets verified by scratch tests that
-  were then trashed. Linked from README + AGENTS.md.
+  - the injector-path limitation; snippets verified by scratch tests that
+    were then trashed. Linked from README + AGENTS.md.
 - Prometheus example fixed: reference implementation now emits
   `health_check` series in sorted order (was random map order; caught by
   the prose-review row).

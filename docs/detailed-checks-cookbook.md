@@ -10,10 +10,10 @@ that cannot report durations. Design rationale lives in
 Who computes what — the split that makes the metadata trustworthy:
 
 - **`duration_ns` is executor-reported.** Only the code that runs a check
-  knows how long it took. Zero means unknown and is *absent* from JSON
+  knows how long it took. Zero means unknown and is _absent_ from JSON
   (`omitzero`) — a `0` would read as "instantly healthy", a lie.
-- **`since` is probe-observed.** The probe stamps when a check *entered its
-  current status* (first batch reporting it, carried while it holds). Checks
+- **`since` is probe-observed.** The probe stamps when a check _entered its
+  current status_ (first batch reporting it, carried while it holds). Checks
   cannot report it, because a check cannot know its own graded status. It
   resets on process restart.
 
@@ -79,7 +79,7 @@ and live handlers can both invoke it).
 
 Fan-out note: if you run checks concurrently with a `WaitGroup`/errgroup,
 time each check inside its own goroutine around its own call — a shared
-stopwatch measured before `wg.Wait()` reports the *slowest* check's duration
+stopwatch measured before `wg.Wait()` reports the _slowest_ check's duration
 as every check's duration.
 
 ## Path 3: `DetailedHealthRecorder` — upgrading a recorder
@@ -121,7 +121,7 @@ Escape hatches, in order of preference:
 ## Reading the numbers
 
 - Durations are **per execution**, not per request: a cached readiness
-  response reports the duration of the *background refresh's* batch, not of
+  response reports the duration of the _background refresh's_ batch, not of
   your HTTP call.
 - A check that hits the batch deadline reports whatever duration it reached
   when the batch gave up on it (fail-closed abandonment in path 1).

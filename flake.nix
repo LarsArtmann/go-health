@@ -64,6 +64,42 @@
             };
         in
         {
+          # OpenAPI ↔ golden-file lockstep: every wire key the golden readiness
+          # response exhibits must be declared in the spec's HealthResponse /
+          # Check schemas, and every status value must be one of the spec's
+          # enum values. Without this, the spec (redocly-linted) and the wire
+          # format (golden-file-tested) can drift silently — CI checks them
+          # independently, never against each other. One script definition
+          # backs both the flake check (CI + nix flake check) and the local
+          # app (nix run .#openapi-lockstep).
+          openapiLockstep = pkgs.writeShellApplication {
+            name = "openapi-lockstep";
+            runtimeInputs = [
+              pkgs.yq-go
+              pkgs.jq
+            ];
+            text = ''
+              spec="$(mktemp)"
+              trap 'rm -f "$spec"' EXIT
+              yq -o=json '.' "''${1:-docs/openapi.yaml}" > "$spec"
+              golden="''${2:-testdata/readiness_response.golden}"
+              jq -e --slurpfile spec "$spec" '
+                . as $wire
+                | $spec[0].components.schemas as $s
+                | [
+                    ($wire | keys[] | $s.HealthResponse.properties | has(.)),
+                    ($s.HealthResponse.properties.status.enum | index($wire.status) != null),
+                    ($wire.checks | to_entries[] | .value | keys[] | $s.Check.properties | has(.))
+                  ]
+                | all
+              ' "$golden" || {
+                echo "openapi-lockstep: $golden drifted from docs/openapi.yaml (HealthResponse/Check properties or status enum)" >&2
+                exit 1
+              }
+              echo "openapi-lockstep: $golden is fully covered by docs/openapi.yaml"
+            '';
+          };
+
           treefmt = {
             projectRootFile = "go.mod";
             programs = {
@@ -79,6 +115,12 @@
           };
 
           checks.format = config.treefmt.build.check self;
+
+          checks.openapi-lockstep = pkgs.runCommand "openapi-lockstep" { } ''
+            cd ${self}
+            ${lib.getExe openapiLockstep}
+            touch $out
+          '';
 
           devShells.default = pkgs.mkShell {
             packages = [

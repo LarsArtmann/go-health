@@ -51,7 +51,9 @@ duplicate, slash-containing, or nil-probe sources — see docs/aggregate-source-
 `CachedResponse` (merge-on-read: N lock-free loads, worst-of status,
 `"source/check"` namespacing, shutdown overlay, max latency), `RefreshInterval` (slowest source),
 `StartupComplete` (AND of latches), the three kubelet handlers (liveness 200, readiness 503 on
-fail, startup 503 until all latches), `RegisterRoutes`.
+fail, startup 503 until all latches), a standalone `Healthz()` single-endpoint handler (503 while
+any source is unlatched/failing/draining; wired manually — `DefaultRoutes` already claims /healthz
+for liveness; see docs/aggregate-healthz-design.md), `RegisterRoutes`.
 
 Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N
 remote go-health instances over HTTP into one `health.Response`. `Remote{Name, URL}`, `New(remotes,

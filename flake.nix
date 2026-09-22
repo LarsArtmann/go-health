@@ -91,7 +91,7 @@
                     ($wire.checks | to_entries[] | .value | keys[] as $ck | $s.Check.properties | has($ck))
                   ]
                 | all
-              ' "$golden" || {
+              ' "$golden" > /dev/null || {
                 echo "openapi-lockstep: $golden drifted from docs/openapi.yaml (HealthResponse/Check properties or status enum)" >&2
                 exit 1
               }
@@ -147,8 +147,7 @@
             openapi-lockstep = {
               type = "app";
               program = lib.getExe openapiLockstep;
-              meta.description =
-                "Verify the golden wire format stays covered by docs/openapi.yaml (paths override: spec golden)";
+              meta.description = "Verify the golden wire format stays covered by docs/openapi.yaml (paths override: spec golden)";
             };
 
             test = mkApp "test" "Run all tests" [ goPkg ] ''

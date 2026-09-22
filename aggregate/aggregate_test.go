@@ -631,13 +631,19 @@ func TestHealthzHandler_SingleEndpointTable(t *testing.T) {
 			}
 
 			body := decodeResponse(t, rec)
+
 			checks, ok := body["checks"].(map[string]any)
 			if !ok {
 				t.Fatalf("healthz body missing checks map; got %v", body)
 			}
 
 			if _, has := checks["startup"]; has != tt.wantStartupKey {
-				t.Fatalf("startup synthetic check present = %v, want %v; checks %v", has, tt.wantStartupKey, checks)
+				t.Fatalf(
+					"startup synthetic check present = %v, want %v; checks %v",
+					has,
+					tt.wantStartupKey,
+					checks,
+				)
 			}
 
 			// The merged view stays the body: both sources' namespaced checks.

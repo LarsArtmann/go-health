@@ -57,12 +57,12 @@ go get github.com/larsartmann/go-health
 
 What CI actually tests on every push — not what merely compiles:
 
-| Dimension | Tested                                        |
-| --------- | --------------------------------------------- |
+| Dimension | Tested                                                 |
+| --------- | ------------------------------------------------------ |
 | Go        | 1.27.x — CI runs go 1.27.1 (Nix-pinned) on linux/amd64 |
-| OS/arch   | linux/amd64 — the only configuration CI tests |
-| samber/do | v2.1.0 (the pinned `go.mod` dependency)       |
-| Aggregate | same module version, tested in the same suite |
+| OS/arch   | linux/amd64 — the only configuration CI tests          |
+| samber/do | v2.1.0 (the pinned `go.mod` dependency)                |
+| Aggregate | same module version, tested in the same suite          |
 
 Other OS/arch combinations (darwin, windows, arm64) are untested: the code is
 platform-independent Go (no cgo, no syscalls), so it is _expected_ to work,

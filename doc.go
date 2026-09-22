@@ -28,6 +28,31 @@
 //	mux := http.NewServeMux()
 //	probe.RegisterRoutes(mux, health.DefaultRoutes())
 //
+// # Container-Free Quick Start (NewChecks)
+//
+// No samber/do injector anywhere in your app? [NewChecks] builds the same
+// probe from a named-check map — one [CheckFunc] per dependency. The three
+// probes then share ONE set of check functions, so liveness, readiness, and
+// startup can never disagree about the world:
+//
+//	probe := health.NewChecks(map[string]health.CheckFunc{
+//	    "database": func(ctx context.Context) error { return db.PingContext(ctx) },
+//	    "blob-dir": func(_ context.Context) error { return probeBlobDir() },
+//	},
+//	    health.WithCriticalServices("database", "blob-dir"),
+//	    health.WithRefreshInterval(0), // evaluate live; no background loop
+//	)
+//
+//	mux.Handle("GET /livez", probe.LivenessHandler())
+//	mux.Handle("GET /startupz", probe.StartupHandler())
+//
+// Checks run concurrently per batch, panics are recovered into that check's
+// error, and a check that ignores its context is abandoned at the batch
+// deadline with a fail-closed error naming it. With
+// [WithRefreshInterval] zero there is no background loop and no [Probe.Start]
+// ceremony — construct and route. (A readiness handler over the same probe is
+// the continuous gate; /startupz latches 503 until the checks first pass.)
+//
 // # Audit Integration (Optional)
 //
 // When a [HealthRecorder] is provided via [WithHealthRecorder], every

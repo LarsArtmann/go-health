@@ -548,6 +548,108 @@ func TestStartupHandler_LatchesWhenAllSourcesComplete(t *testing.T) {
 	}
 }
 
+// latchSource flips one source's startup latch via a single startup request —
+// the same evaluation path a real kubelet poll drives.
+func latchSource(probe *health.Probe) {
+	probe.StartupHandler()(
+		httptest.NewRecorder(),
+		httptest.NewRequest(http.MethodGet, "/startupz", nil),
+	)
+}
+
+// TestHealthzHandler_SingleEndpointTable pins the aggregate's single-endpoint
+// contract: 503 while any source is unlatched, failing, or draining; 200
+// otherwise. warn stays 200, and the synthetic "startup" check appears only
+// when the latch is the reason for the 503 (mirroring health.Probe.Healthz).
+func TestHealthzHandler_SingleEndpointTable(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		critical       bool
+		unhealthy      bool
+		latched        bool
+		shutdown       bool
+		wantCode       int
+		wantStartupKey bool
+	}{
+		{
+			name:     "all sources latched and healthy is 200",
+			latched:  true,
+			wantCode: http.StatusOK,
+		},
+		{
+			name:           "one unlatched source is 503 with synthetic startup check",
+			wantCode:       http.StatusServiceUnavailable,
+			wantStartupKey: true,
+		},
+		{
+			name:      "non-critical degradation (warn) stays 200",
+			unhealthy: true,
+			latched:   true,
+			wantCode:  http.StatusOK,
+		},
+		{
+			name:      "critical failure (fail) is 503 without startup key",
+			critical:  true,
+			unhealthy: true,
+			wantCode:  http.StatusServiceUnavailable,
+		},
+		{
+			name:     "shutting-down source is 503 without startup key",
+			shutdown: true,
+			wantCode: http.StatusServiceUnavailable,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			failing := newStartedProbe(t, tt.critical, tt.unhealthy)
+			healthy := newStartedProbe(t, false, false)
+
+			if tt.latched {
+				latchSource(failing)
+				latchSource(healthy)
+			}
+
+			if tt.shutdown {
+				failing.Shutdown()
+			}
+
+			agg := mustAggregate(t,
+				aggregate.Source{Name: "api", Probe: failing},
+				aggregate.Source{Name: "web", Probe: healthy},
+			)
+
+			rec := httptest.NewRecorder()
+			agg.Healthz().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+
+			if rec.Code != tt.wantCode {
+				t.Fatalf("healthz code = %d, want %d", rec.Code, tt.wantCode)
+			}
+
+			body := decodeResponse(t, rec)
+			checks, ok := body["checks"].(map[string]any)
+			if !ok {
+				t.Fatalf("healthz body missing checks map; got %v", body)
+			}
+
+			if _, has := checks["startup"]; has != tt.wantStartupKey {
+				t.Fatalf("startup synthetic check present = %v, want %v; checks %v", has, tt.wantStartupKey, checks)
+			}
+
+			// The merged view stays the body: both sources' namespaced checks.
+			for _, key := range []string{"api/dependency", "web/dependency"} {
+				if _, has := checks[key]; !has {
+					t.Fatalf("healthz checks missing merged key %q; got %v", key, checks)
+				}
+			}
+		})
+	}
+}
+
 func TestRegisterRoutes_WiresAllThreeProbes(t *testing.T) {
 	t.Parallel()
 

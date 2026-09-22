@@ -227,6 +227,38 @@ func (a *Aggregate) StartupHandler() http.HandlerFunc {
 	}
 }
 
+// Healthz answers the aggregate's single-endpoint question: "should traffic
+// be routed here?" — for deployments behind an external load balancer rather
+// than a kubelet's three probes. It is the worst of the same three conditions
+// [health.Probe.Healthz] evaluates, applied across all sources: 503 while any
+// source has an unset startup latch, the merged roll-up is fail (which
+// includes any source shutting down), or the aggregate is draining; 200
+// otherwise, with the merged body. Non-critical degradation (warn) stays 200.
+// Until every latch is set, the body carries one synthetic failing "startup"
+// check, mirroring [health.Probe.Healthz]. Like the root probe, this handler
+// is standalone: [Aggregate.RegisterRoutes] keeps wiring the three kubelet
+// probes, and [health.DefaultRoutes] already claims /healthz for liveness.
+func (a *Aggregate) Healthz() http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		resp := a.CachedResponse()
+
+		if !a.StartupComplete() && resp.Status != health.StatusFail {
+			resp.Checks["startup"] = health.Check{
+				Status: health.StatusFail,
+				Error:  "startup latch not set",
+			}
+			resp.Status = health.StatusFail
+		}
+
+		code := http.StatusOK
+		if resp.Status == health.StatusFail {
+			code = http.StatusServiceUnavailable
+		}
+
+		writeResponse(w, code, resp)
+	}
+}
+
 // RegisterRoutes registers all three aggregate probe handlers on the given
 // mux using the provided routes. Pass [health.DefaultRoutes] for the
 // conventional Kubernetes paths.

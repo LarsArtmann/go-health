@@ -252,3 +252,38 @@ func BenchmarkEvaluate_Scaling(b *testing.B) {
 		})
 	}
 }
+
+// BenchmarkEvaluate_TrackerDelta isolates the Since transition tracker's
+// marginal cost on a full evaluation: the same eight-service steady-state
+// evaluation run A/B — tracker stamping disabled vs enabled (via
+// SetTrackerDisabledForTest, a test-build-only seam; production always
+// stamps). The delta answers "what did per-check Since add?" for the issue #2
+// metadata fields; recorded baselines live in FEATURES.md "Performance".
+func BenchmarkEvaluate_TrackerDelta(b *testing.B) {
+	results := make(map[string]error, 8)
+	for i := range 8 {
+		results[fmt.Sprintf("svc%02d", i)] = nil
+	}
+
+	newProbe := func() *health.Probe {
+		return health.NewWithHealthCheck(func(context.Context) map[string]error {
+			return results
+		}, health.WithRefreshInterval(0))
+	}
+
+	ctx := context.Background()
+
+	for _, withTracker := range []bool{false, true} {
+		b.Run(fmt.Sprintf("tracker=%v", withTracker), func(b *testing.B) {
+			probe := newProbe()
+			probe.SetTrackerDisabledForTest(!withTracker)
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for range b.N {
+				_ = probe.Evaluate(ctx)
+			}
+		})
+	}
+}

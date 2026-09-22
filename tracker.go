@@ -30,6 +30,11 @@ type trackedStatus struct {
 type transitionTracker struct {
 	mu     sync.Mutex
 	tracks map[string]trackedStatus
+
+	// disabled short-circuits stamp for benchmark A/B runs only (see
+	// BenchmarkEvaluate_TrackerDelta): production always stamps, so this
+	// field is never set outside test builds.
+	disabled bool
 }
 
 // stamp fills every check's Since field in place: a check whose status is
@@ -37,6 +42,10 @@ type transitionTracker struct {
 // now; names absent from checks are forgotten. now comes from the probe's
 // clock seam so tests get deterministic transitions.
 func (t *transitionTracker) stamp(checks map[string]Check, now time.Time) {
+	if t.disabled {
+		return
+	}
+
 	t.mu.Lock()
 	defer t.mu.Unlock()
 

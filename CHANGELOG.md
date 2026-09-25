@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Nothing yet.
 
+## [v0.4.1] - 2026-09-25
+
+### Fixed
+
+- `go` directive lowered from `go 1.27.1` to `go 1.27` (major.minor-only form). v0.4.0's patch-form floor forced every consumer's `go mod tidy` to lift its directive to `1.27.1` — the known fleet floor-poisoning class (go-version-auto-configure's dep-floor gate classified consumers like go-health-dashboard as dep-forced). Floor-lowering is consumer-compatible: consumers on `1.27.1` keep building unchanged.
+
 ## [v0.4.0] - 2026-09-22
 
 ### Added

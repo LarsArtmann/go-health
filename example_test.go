@@ -504,3 +504,21 @@ func ExampleProbe_AsShutdowner() {
 	// Output:
 	// alive after do-shutdown: false
 }
+
+// ExampleVersionHandler wires the build-version endpoint next to the probe
+// routes. In real code the version comes from the build pipeline, stamped
+// via -ldflags "-X main.buildVersion=$(git describe --tags)".
+func ExampleVersionHandler() {
+	buildVersion := "v1.2.3"
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/version", health.VersionHandler(buildVersion))
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/version", nil))
+
+	fmt.Println(rec.Code, rec.Body.String())
+
+	// Output:
+	// 200 {"version":"v1.2.3"}
+}

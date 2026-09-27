@@ -89,7 +89,7 @@ paths:
       description: Reports the binary's build version via health.VersionHandler,
         wired manually by the host next to the probe routes (root package
         only — not part of RegisterRoutes/DefaultRoutes). Identity, not
-        health: never evaluates checks, always 200, unaffected by shutdown.
+        health — never evaluates checks, always 200, unaffected by shutdown.
       operationId: version
       responses:
         "200":

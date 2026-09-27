@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.27 · **Status**: v0.4.0 released 2026-09-22 (alpha; federation + `NewChecks` + aggregate `Healthz` shipped)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.27 · **Status**: v0.4.1 released 2026-09-25 (alpha; federation + `NewChecks` + aggregate `Healthz` shipped)
 
 ---
 
@@ -43,6 +43,7 @@ classifier.go    — Read-only classifier: classify (three-state), evaluateStart
 handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + SanitizeResponse (UTF-8 coercion)
 accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, DetailedHealthCheckFunc, NewWithDetailedCheck, Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz
 checks.go        — CheckFunc + NewChecks (injector-free named-check constructor: concurrent execution, per-check duration, panic recovery, nil fail-closed, batch-deadline abandonment), runNamedChecks/runBoundedCheck executors — design: docs/named-checks-design.md
+version.go       — VersionHandler: build-version endpoint (ldflags/VCS stamp as {"version":"..."}); GET-only 405 unconditionally, UTF-8-coerced, payload pre-marshaled at construction; wire shape in docs/openapi.yaml (VersionResponse)
 export_test.go   — ResetStartupLatchForTest (test builds only; public latch stays one-way)
 ```
 
@@ -99,6 +100,7 @@ the dependency points the other way). Design: docs/federation-design.md.
 - **Zero logging coupling** — the library does not import `log/slog` or any logging package. HTTP write failures (client disconnect) are silently swallowed. A library must not make logging decisions for the host application.
 - **Observability via hook, not library** — `WithEvaluationHook` is the metrics/alerting seam; Prometheus/OpenTelemetry formats are consumer composition (docs/prometheus-exposition-design.md). No client_golang dependency.
 - **Programmatic API mirrors handlers** — `Status/Alive/Ready/AwaitReady` read the cached view (never trigger checks); `Healthz` answers "route traffic here?"; `HealthCheck`/`AsShutdowner` make the probe a first-class do citizen.
+- **Version endpoint is build identity, not health** — `VersionHandler(stamp)` is a free function (no Probe, no injector): it never evaluates checks, never 503s, and ignores shutdown. GET-only 405 + `Allow: GET` unconditionally (the method guard's posture without its config surface). The `version` field is always present (no omitempty): an unstamped binary answers `""`. Payload marshaled once at construction — version is immutable per process.
 - **Per-check Since is probe-observed** — a `transitionTracker` stamps `Check.Since` inside `buildChecks` on every evaluation path (refresh, live, startup): the first batch reporting the current status, carried while it holds, restarted on change/reappearance, reset on process restart. Never service-reported (services cannot know their graded status). Liveness's empty checks and the Healthz synthetic `startup` check never carry Since.
 - **Per-check Duration is executor-reported, opt-in** — `CheckDetail{Err, Duration}` is the internal seam; plain `map[string]error` sources are adapted with zero duration. `NewWithDetailedCheck` and the optional `DetailedHealthRecorder` interface populate `Check.DurationNanos` (int64 ns, omitzero). The raw injector path cannot: do's `HealthCheckWithContext` returns only errors (see docs/check-metadata-design.md).
 

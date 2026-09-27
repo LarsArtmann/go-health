@@ -9,7 +9,7 @@ import (
 	"github.com/samber/do/v2"
 )
 
-// bearerAuth is the spike's minimal middleware: it rejects requests without
+// bearerAuth is the example's minimal middleware: it rejects requests without
 // the expected bearer token before the probe handler runs. Middleware wraps
 // plain http.HandlerFunc values — no library support needed.
 func bearerAuth(token string, next http.HandlerFunc) http.HandlerFunc {

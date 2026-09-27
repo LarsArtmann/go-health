@@ -119,6 +119,15 @@
 // (instance_id) so dashboards can attribute responses to the pod that
 // produced them behind a shared load balancer.
 //
+// # Build Version
+//
+// [VersionHandler] serves the binary's build stamp — the ldflags/VCS
+// pattern — as {"version":"..."} on its own endpoint. It is identity, not
+// health: no checks, always 200, unaffected by shutdown. Wire it next to
+// the probe routes:
+//
+//	mux.HandleFunc("/version", health.VersionHandler(buildVersion))
+//
 // # Why Three Probes?
 //
 // A single /health endpoint conflates "process alive" with "dependencies

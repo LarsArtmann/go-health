@@ -54,6 +54,13 @@
 > (`history.go`), collapses healthy groups (`applyCollapsePolicy` +
 > `TestCollapse_*`), and pins the rendering with a golden test +
 > `timedScreenshotRecorder` — focused suite green 2026-09-22.
+>
+> Harvested 2026-09-27: the stale 09-15 §f table re-verified row by row —
+> cookbook, ADR-006, `BenchmarkEvaluate`, and all dashboard rows confirmed
+> shipped; the §f27 prose sweep done (stale "spike" wording in
+> `middleware_example_test.go` fixed; `prometheus_example_test.go` clean);
+> the samber/do upstream row already lives in Owner Actions (draft ready).
+> `/version` endpoint helper implemented — see CHANGELOG `[Unreleased]`.
 
 ## Status legend
 
@@ -82,8 +89,3 @@
 | -------------------------------------------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor) | BLOCKED | Medium | 1h     | Owner decision required (verified 2026-09-22): the row's premise was false — auditlog times builds + shutdowns, NOT health checks. Implementing the interface requires importing go-health (`health.CheckDetail` return type), reversing the deliberate post-extraction "dependency-free both ways" decoupling (ADR-004), and it would silently switch go-health consumers from do's pooled batch to a hand-rolled fan-out (do's default semantics match, but `HealthCheckParallelism`/`HealthCheckTimeout` configs would be bypassed). The pattern is proven: go-health-dashboard's `timedScreenshotRecorder` implements the interface via `do.HealthCheckNamedWithContext` (`di_lifecycle.go:217`). |
 
-## Open — unblocked (any session can pick these up)
-
-| Task                                                                   | Status | Impact | Effort | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ---------------------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/version` HTTP endpoint helper (serve the binary's build version) | OPEN   | Medium | 2h     | Routed here 2026-09-25 from the go-version-auto-configure session: a rule demanding a `/version` route on HTTP servers belongs with the health-endpoint library, not the toolchain-surface linter. Sketch: opt-in helper (e.g. `health.VersionHandler(version string)`) returning the binary version stamp (ldflags/VCS pattern, see file-and-image-renamer's FLEET-STANDARD-VERSION-STAMPS); consumers wire it next to their healthz route. Keeps go-health dependency-free both ways (ADR-004). |

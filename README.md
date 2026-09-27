@@ -202,6 +202,7 @@ Match the consumer to the probe. Each answers a different question, so pointing 
 | kubelet `startupProbe`              | `/startupz`            | 503 until every critical service passed once, then latches to 200 forever |
 | external load balancer / single URL | `Probe.Healthz()`      | 503 while booting, failing, or draining; 200 otherwise                    |
 | dashboard or a human debugging      | `/readyz`              | Full per-check body, including `since` and `duration_ns`                  |
+| scripts / deploy tooling            | `/version`             | Build stamp as `{"version":"..."}` (`VersionHandler`, wired manually); GET-only, never 503 |
 | in-process code, middleware, tests  | `Status()` / `Ready()` | Cached roll-up read; never triggers a dependency check                    |
 
 ## Key Features
@@ -213,6 +214,7 @@ Match the consumer to the probe. Each answers a different question, so pointing 
 - **Background caching** (1s default) — kubelet/LB polling doesn't hammer dependencies.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
 - **Method-set enforcement** — `WithAllowedMethods(...)` rejects non-allowed methods with 405 and a sorted `Allow` header (`WithGETOnly` is the deprecated zero-arg equivalent).
+- **Build-version endpoint** — `health.VersionHandler(stamp)` serves the binary's ldflags/VCS version as `{"version":"..."}` next to the health routes; identity, not health (no checks, always 200, unaffected by shutdown, GET-only 405 unconditionally).
 - **Programmatic health API** — `Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)`, `Healthz()` — query health without spinning up HTTP; register the probe in its own injector via `HealthCheck`.
 - **Observability seam** — `WithEvaluationHook(fn)` observes every classified response; Prometheus exposition and OpenTelemetry compose on top without new dependencies.
 - **Panic-hardened** — panics from misbehaving recorders are recovered, reported as a failed check wrapping `health.ErrPanicDuringHealthCheck`, and roll readiness up to 503 (fail closed) instead of crashing your process or lying with a 200. (Note: a service whose own `HealthCheck` panics on the raw-injector path crashes the process — samber/do runs each check in a goroutine; keep service checks total.)

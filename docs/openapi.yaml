@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: go-health probe endpoints
-  version: 0.2.0
+  version: 0.5.0
   description: |
     Kubernetes-style health probes exposed by the go-health Probe.
     Field-presence rules are documented per property; they are enforced by
@@ -83,6 +83,28 @@ paths:
               schema: { $ref: "#/components/schemas/HealthResponse" }
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
+  /version:
+    get:
+      summary: Build version
+      description: Reports the binary's build version via health.VersionHandler,
+        wired manually by the host next to the probe routes (root package
+        only — not part of RegisterRoutes/DefaultRoutes). Identity, not
+        health: never evaluates checks, always 200, unaffected by shutdown.
+      operationId: version
+      responses:
+        "200":
+          description: The build version; empty string when the binary was
+            not stamped.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VersionResponse" }
+        "405":
+          description: Non-GET request. The version endpoint enforces GET
+            unconditionally — no method-set option involved.
+          headers:
+            Allow:
+              description: Always "GET".
+              schema: { type: string }
 components:
   responses:
     MethodNotAllowed:
@@ -161,3 +183,15 @@ components:
             unknown — the raw samber/do injector path cannot measure
             per-check duration, so only detailed sources
             (NewWithDetailedCheck, DetailedHealthRecorder) populate it.
+    VersionResponse:
+      type: object
+      required: [version]
+      properties:
+        version:
+          type: string
+          description: The binary's build version as passed to
+            health.VersionHandler; empty string when unstamped. Same field
+            name and semantics as HealthResponse.version, but always
+            present here (no omitempty) — the endpoint's sole purpose is
+            this value, so an unstamped binary answers {"version":""}
+            rather than an absent field.

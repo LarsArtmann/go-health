@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- `health.VersionHandler(version)` — opt-in `/version` endpoint helper serving the binary's build stamp (ldflags/VCS pattern) as `{"version":"..."}`, wire-it-yourself next to the probe routes. Identity, not health: never evaluates checks, never 503, unaffected by shutdown; GET-only (405 + `Allow: GET`) unconditionally, mirroring the method guard's posture. The version is UTF-8-coerced and the payload pre-marshaled at construction (immutable for the process lifetime — per-request cost is headers plus one slice copy). Wire shape documented in docs/openapi.yaml (`VersionResponse`; spec bumped to 0.5.0 for the addition). Routed from the go-version-auto-configure session (TODO_LIST 2026-09-25). Additive — no consumer change required.
 
 ### Fixed
 

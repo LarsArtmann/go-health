@@ -422,6 +422,19 @@ injector := do.NewWithOpts(plugin.Opts())
 probe := health.New(injector, health.WithHealthRecorder(plugin))
 ```
 
+A second implicit implementor ships in the go-appkit module family:
+[`flightrecorderhealth.Trigger`](https://pkg.go.dev/github.com/larsartmann/go-appkit/flightrecorderhealth)
+intercepts every health-check batch and captures a
+[flight-recorder](https://pkg.go.dev/github.com/larsartmann/go-flightrecorder)
+trace snapshot when any check fails (configurable trigger function, optional
+cooldown against trace flooding):
+
+```go
+rec, _ := fr.New(fr.WithSnapshotDir("/var/traces"))
+
+probe := health.New(injector, health.WithHealthRecorder(frhealth.NewTrigger(rec)))
+```
+
 ## Kubernetes Wiring
 
 Wire the three probes in your Deployment manifest:

@@ -195,15 +195,15 @@ setups have one-function upgrade paths.
 
 Match the consumer to the probe. Each answers a different question, so pointing the wrong one at the wrong consumer is the most common misconfiguration in this library (a load balancer on `/healthz` never drains a broken instance; liveness on `/readyz` restarts pods over dependency blips).
 
-| Consumer                            | Point it at            | Behavior                                                                  |
-| ----------------------------------- | ---------------------- | ------------------------------------------------------------------------- |
-| kubelet `livenessProbe`             | `/healthz`             | Always 200 while the process runs; zero dependency checks                 |
-| kubelet `readinessProbe`            | `/readyz`              | 503 on critical failure; 200 (`warn`) for non-critical failures           |
-| kubelet `startupProbe`              | `/startupz`            | 503 until every critical service passed once, then latches to 200 forever |
-| external load balancer / single URL | `Probe.Healthz()`      | 503 while booting, failing, or draining; 200 otherwise                    |
-| dashboard or a human debugging      | `/readyz`              | Full per-check body, including `since` and `duration_ns`                  |
+| Consumer                            | Point it at            | Behavior                                                                                   |
+| ----------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------ |
+| kubelet `livenessProbe`             | `/healthz`             | Always 200 while the process runs; zero dependency checks                                  |
+| kubelet `readinessProbe`            | `/readyz`              | 503 on critical failure; 200 (`warn`) for non-critical failures                            |
+| kubelet `startupProbe`              | `/startupz`            | 503 until every critical service passed once, then latches to 200 forever                  |
+| external load balancer / single URL | `Probe.Healthz()`      | 503 while booting, failing, or draining; 200 otherwise                                     |
+| dashboard or a human debugging      | `/readyz`              | Full per-check body, including `since` and `duration_ns`                                   |
 | scripts / deploy tooling            | `/version`             | Build stamp as `{"version":"..."}` (`VersionHandler`, wired manually); GET-only, never 503 |
-| in-process code, middleware, tests  | `Status()` / `Ready()` | Cached roll-up read; never triggers a dependency check                    |
+| in-process code, middleware, tests  | `Status()` / `Ready()` | Cached roll-up read; never triggers a dependency check                                     |
 
 ## Key Features
 

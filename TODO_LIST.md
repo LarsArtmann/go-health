@@ -88,3 +88,23 @@
 | Task                                                                       | Status  | Impact | Effort | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | -------------------------------------------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor) | BLOCKED | Medium | 1h     | Owner decision required (verified 2026-09-22): the row's premise was false — auditlog times builds + shutdowns, NOT health checks. Implementing the interface requires importing go-health (`health.CheckDetail` return type), reversing the deliberate post-extraction "dependency-free both ways" decoupling (ADR-004), and it would silently switch go-health consumers from do's pooled batch to a hand-rolled fan-out (do's default semantics match, but `HealthCheckParallelism`/`HealthCheckTimeout` configs would be bypassed). The pattern is proven: go-health-dashboard's `timedScreenshotRecorder` implements the interface via `do.HealthCheckNamedWithContext` (`di_lifecycle.go:217`). |
+
+> Harvested 2026-10-02 (right-way Pareto run): Tier 1 executed same day —
+> critical-name repro tests (`probe_critical_names_test.go`), fleet compat
+> scan, `docs/start-validation-design.md`, and `ErrUnknownCriticalService`
+> + `Start()` batch validation all shipped (see CHANGELOG `[Unreleased]`).
+> Remaining tiers harvested into the tables below; full detail in
+> `docs/planning/2026-10-02_16-11_right-way-pareto-master-plan.md` and the
+> two 2026-10-02 status reports.
+
+## High Impact (correctness & knowledge — from the 2026-10-02 Pareto plan)
+
+| Task | Status | Impact | Effort | Evidence |
+| --- | --- | --- | --- | --- |
+| Update README golden path: constructor decision table, version-stamping recipe, wire JSON sample | TODO | High | 50min | README quickstart is the only path; plan task B4. |
+| Inspect go-appkit/health bridge (criticality derivation, since/duration_ns fidelity) | TODO | High | 40min | 16/30 consumers inherit bridges; plan task C3. |
+| Inspect cqrs-htmx/health bridge (projection criticality + defaults) | TODO | High | 40min | Plan task C4. |
+| Full adoption matrix: alias-safe aggregate/federation grep, go-taskqueue resolution, per-feature sweeps | TODO | High | 70min | "nobody uses X" claims rest on non-hardened greps; plan task D1. |
+| Genre doc `docs/system-status-vs-probe.md` + FEATURES "Deliberately NOT included" + README "What go-health is NOT" | TODO | Med-High | 55min | Prevents scope-drift requests (paperless-ngx comparison); plan task B3. |
+| Batteries ownership decision (core `health/checks` vs contrib vs go-appkit) after reading CV/fir system checks | TODO | Med-High | 40min | Fleet-wide duplication (CV SystemResources, fir CheckDiskSpace); plan task C1. |
+| Harvest `docs/status/2026-10-02_13-48` + `15-06` reports fully (50-item lists) | PARTIALLY DONE | High | 30min | This harvest covers the headline items; the reports' §f lists still need row-by-row distillation. |

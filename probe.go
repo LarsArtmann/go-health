@@ -496,7 +496,9 @@ func (p *Probe) Start(ctx context.Context) error {
 	p.mu.Unlock()
 
 	evalCtx, cancelEval := context.WithTimeout(ctx, p.timeout)
+
 	resp := p.Evaluate(evalCtx)
+
 	cancelEval()
 
 	if err := p.validateCriticalNames(resp); err != nil {

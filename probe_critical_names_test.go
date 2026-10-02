@@ -19,7 +19,11 @@ import (
 // configurations with ErrUnknownCriticalService. See
 // docs/start-validation-design.md.
 
-func newCriticalNamesProbe(t *testing.T, batch func(ctx context.Context) map[string]error, critical []string) *health.Probe {
+func newCriticalNamesProbe(
+	t *testing.T,
+	batch func(ctx context.Context) map[string]error,
+	critical []string,
+) *health.Probe {
 	t.Helper()
 
 	return health.NewWithHealthCheck(batch, health.WithCriticalServices(critical...))
@@ -43,7 +47,8 @@ func startupVerdict(t *testing.T, probe *health.Probe) int {
 
 	rec := httptest.NewRecorder()
 
-	probe.StartupHandler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz/startup", nil))
+	probe.StartupHandler().
+		ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz/startup", nil))
 
 	return rec.Code
 }
@@ -159,7 +164,10 @@ func TestStart_AcceptsKnownCriticalNames(t *testing.T) {
 		startCriticalProbe(t, probe)
 
 		if code := startupVerdict(t, probe); code != http.StatusOK {
-			t.Fatalf("startup handler returned %d although all critical services passed; want 200", code)
+			t.Fatalf(
+				"startup handler returned %d although all critical services passed; want 200",
+				code,
+			)
 		}
 
 		if !probe.StartupComplete() {
@@ -224,7 +232,8 @@ func TestStart_FailedStartLeavesNoBackgroundLoop(t *testing.T) {
 
 	deadline := time.Now().Add(100 * time.Millisecond)
 	for time.Now().Before(deadline) {
-		if cached := probe.CachedResponse(); cached.Status == health.StatusPass && len(cached.Checks) > 0 {
+		if cached := probe.CachedResponse(); cached.Status == health.StatusPass &&
+			len(cached.Checks) > 0 {
 			t.Fatal("cache was populated although Start failed (background loop leaked)")
 		}
 

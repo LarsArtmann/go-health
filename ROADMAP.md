@@ -181,3 +181,13 @@ Things we are deliberately NOT pursuing and why:
   see [docs/multi-tenant-design.md](docs/multi-tenant-design.md).
 - **Fourth Status value ("starting") and Status input validation:**
   see [docs/starting-status-design.md](docs/starting-status-design.md).
+- **System-inventory metadata on the probe (install type, OS, storage, DB
+  engine/migrations):** go-health is a probe-genre library, not a
+  diagnostics page (the paperless-ngx `/api/status/` comparison, 2026-10-02).
+  Scalars do not survive aggregate/federation merges by design. Formalized
+  as ADR-007; composition point is go-health-dashboard.
+- **Breaking renames outside a v0.5 window:** `SanitizeResponse` →
+  `CoerceValidUTF8`, `Check.Since` → `StatusSince`, typed service identity
+  (`ServiceName`), and the Probe/Prober/Source/Remote vocabulary
+  reconciliation are designed (see TODO_LIST / planning plan
+  2026-10-02_16-11) but ship only in a v0.5 major window.

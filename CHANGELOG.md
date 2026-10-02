@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `Start()`-time critical-name validation with `ErrUnknownCriticalService` — a name passed to `WithCriticalServices` that never appears in the first health-check batch now fails `Start` (naming the offending services, sorted) instead of silently degrading readiness classification and blocking the startup latch forever. Validation reads the initial evaluation batch, so it applies uniformly to the injector, recorder, and standalone-constructor paths — including probes built over an empty injector with a recorder. Wire format unchanged; see docs/start-validation-design.md for the gating decision and the fleet compatibility scan.
 - `health.VersionHandler(version)` — opt-in `/version` endpoint helper serving the binary's build stamp (ldflags/VCS pattern) as `{"version":"..."}`, wire-it-yourself next to the probe routes. Identity, not health: never evaluates checks, never 503, unaffected by shutdown; GET-only (405 + `Allow: GET`) unconditionally, mirroring the method guard's posture. The version is UTF-8-coerced and the payload pre-marshaled at construction (immutable for the process lifetime — per-request cost is headers plus one slice copy). Wire shape documented in docs/openapi.yaml (`VersionResponse`; spec bumped to 0.5.0 for the addition). Routed from the go-version-auto-configure session (TODO_LIST 2026-09-25). Additive — no consumer change required.
 
 ### Fixed

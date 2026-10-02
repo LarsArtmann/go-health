@@ -98,7 +98,9 @@ import (
 func main() {
     injector := do.New()
 
-    // ... register and eagerly invoke services ...
+    // Register EVERY critical service by name and eagerly invoke it.
+    // Start() fails with ErrUnknownCriticalService if a name listed in
+    // WithCriticalServices never runs in the first health-check batch.
 
     probe := health.New(injector,
         health.WithCriticalServices("database", "redis"),

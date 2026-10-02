@@ -35,7 +35,13 @@ func Disk(path string, minFreeBytes uint64) func(ctx context.Context) error {
 		available := stat.Bavail * uint64(stat.Bsize)
 
 		if available < minFreeBytes {
-			return fmt.Errorf("checks: disk %s: %d bytes available, want at least %d", path, available, minFreeBytes)
+			return fmt.Errorf(
+				"%w: %s has %d bytes available, want at least %d",
+				ErrDiskLow,
+				path,
+				available,
+				minFreeBytes,
+			)
 		}
 
 		return nil
@@ -51,12 +57,25 @@ func Memory(maxAllocBytes uint64) func(ctx context.Context) error {
 		runtime.ReadMemStats(&stats)
 
 		if stats.Alloc > maxAllocBytes {
-			return fmt.Errorf("checks: memory: %d bytes allocated, want at most %d", stats.Alloc, maxAllocBytes)
+			return fmt.Errorf(
+				"%w: %d bytes allocated, want at most %d",
+				ErrMemoryHigh,
+				stats.Alloc,
+				maxAllocBytes,
+			)
 		}
 
 		return nil
 	}
 }
+
+// ErrDiskLow is wrapped by the Disk check when available space is below the
+// threshold. Match with errors.Is.
+var ErrDiskLow = errors.New("checks: disk space low")
+
+// ErrMemoryHigh is wrapped by the Memory check when heap allocation exceeds
+// the threshold. Match with errors.Is.
+var ErrMemoryHigh = errors.New("checks: memory usage high")
 
 // ErrHTTPCheckFailed is wrapped by the HTTP check on non-2xx responses or
 // failed requests. Match with errors.Is.
@@ -75,15 +94,15 @@ func HTTP(url string, timeout time.Duration) func(ctx context.Context) error {
 
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		if err != nil {
-			return fmt.Errorf("%w: %s: %v", ErrHTTPCheckFailed, url, err)
+			return fmt.Errorf("%w: %s: %w", ErrHTTPCheckFailed, url, err)
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			return fmt.Errorf("%w: %s: %v", ErrHTTPCheckFailed, url, err)
+			return fmt.Errorf("%w: %s: %w", ErrHTTPCheckFailed, url, err)
 		}
 
-		defer resp.Body.Close() //nolint:errcheck // body drain is best-effort on a health probe
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode < 200 || resp.StatusCode > 299 {
 			return fmt.Errorf("%w: %s: status %d", ErrHTTPCheckFailed, url, resp.StatusCode)
@@ -106,7 +125,7 @@ func Database(db *sql.DB, pingTimeout time.Duration) func(ctx context.Context) e
 		defer cancel()
 
 		if err := db.PingContext(ctx); err != nil {
-			return fmt.Errorf("%w: %v", ErrDatabaseUnreachable, err)
+			return fmt.Errorf("%w: %w", ErrDatabaseUnreachable, err)
 		}
 
 		return nil

@@ -452,6 +452,25 @@ agg.RegisterRoutes(mux, health.DefaultRoutes())
 
 The aggregate is passive: it adds no goroutines and merges on read (one lock-free cache load per source), so freshness is bounded by the slowest source's refresh interval. Overall status is the worst of the sources; every check is namespaced `source/check`, which keeps keys collision-free and gives consumers a stable grouping axis. Source names must not contain `/` — `aggregate.New` rejects them, because the name becomes the key prefix and a slash could alias another source's namespace (check names may contain `/`; everything before the first slash is the source name). Rationale in [docs/aggregate-source-name-design.md](docs/aggregate-source-name-design.md). Per-process scalars never survive a merge: the merged body has no `version`, `instance_id`, or `uptime`, because those fields describe one process and would lie in an aggregate view. Liveness stays dependency-blind (always 200); readiness is 503 on `fail` or any source shutting down; startup latches only when every source has booted.
 
+## Batteries: common checks
+
+`health/checks` ships zero-dependency, stdlib-only check functions for common needs:
+
+```go
+import "github.com/larsartmann/go-health/checks"
+
+probe := health.NewChecks(map[string]health.CheckFunc{
+    "disk":  checks.Disk("/var/lib/app", 1<<30), // fail below 1 GiB free
+    "mem":   checks.Memory(1 << 30),             // fail above 1 GiB heap
+    "api":   checks.HTTP("https://api.internal/healthz", 2*time.Second),
+    "db":    checks.Database(db, 2*time.Second), // any database/sql handle
+}, health.WithCriticalServices("db")) // resources stay warn: alert, don't restart
+```
+
+Resource checks (Disk, Memory) are **warn-by-default**: list a name in
+`WithCriticalServices` to escalate it to 503. Thresholds are arguments, not
+constants — they are policy. See [docs/batteries-ownership-decision.md](docs/batteries-ownership-decision.md).
+
 ## Audit Integration
 
 When a `HealthRecorder` is provided via `WithHealthRecorder`, every health-check batch is delegated to the recorder instead of the raw injector. [`samber-do-auditlog`](https://github.com/larsartmann/samber-do-auditlog)'s `*Plugin` satisfies the interface implicitly:

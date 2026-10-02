@@ -555,3 +555,32 @@ func TestReadinessHandler_WireOmitZeroOnInjectorPath(t *testing.T) {
 		t.Errorf("unknown duration must be omitted, got %s", body)
 	}
 }
+
+// TestResponse_JSONNilChecksMarshalAsEmptyObject pins the wire-integrity
+// question from the 2026-10-02 adoption/wire review: a never-evaluated
+// probe's zero Response carries a nil Checks map, and under encoding/json/v2
+// nil maps marshal as {} — never null — so consumers never see
+// "checks": null (verified empirically; see docs/adoption-matrix.md era
+// review). If this ever changes, dashboards keying on checks must be
+// null-guarded before the wire changes.
+func TestResponse_JSONNilChecksMarshalAsEmptyObject(t *testing.T) {
+	t.Parallel()
+
+	payload, err := json.Marshal(health.Response{Status: health.StatusPass}, json.Deterministic(true))
+	if err != nil {
+		t.Fatalf("marshal zero response: %v", err)
+	}
+
+	if strings.Contains(string(payload), "null") {
+		t.Errorf("nil Checks must marshal as {}, never null, got %s", payload)
+	}
+
+	empty, err := json.Marshal(health.Response{Status: health.StatusPass, Checks: map[string]health.Check{}}, json.Deterministic(true))
+	if err != nil {
+		t.Fatalf("marshal empty response: %v", err)
+	}
+
+	if string(payload) != string(empty) {
+		t.Errorf("nil and empty Checks must be wire-identical:\nnil:   %s\nempty: %s", payload, empty)
+	}
+}

@@ -13,6 +13,22 @@
 | BROKEN               | Present in code but not working / disabled / failing.        |
 | PLANNED              | Designed or documented but not yet implemented in code.      |
 
+## Deliberately NOT included
+
+Features this library will not ship, by genre decision (see
+[docs/system-status-vs-probe.md](docs/system-status-vs-probe.md) and
+[docs/adr/](docs/adr/)):
+
+- NOT SHIPPED, DELIBERATE: system-inventory metadata (install type, server
+  OS, storage totals, database engine/URL/migration status — the
+  paperless-ngx `/api/status/` field set). A probe is unauthenticated and
+  cache-backed; inventory is authenticated diagnostics. Compose via
+  go-health-dashboard or a staff-only view.
+- NOT SHIPPED, DELIBERATE: HTML rendering / content negotiation on probe
+  endpoints (docs/content-negotiation-design.md).
+- NOT SHIPPED, DELIBERATE: logging inside the library (ADR-002);
+  `WithEvaluationHook` is the observability seam.
+
 ## Probe & Configuration
 
 | Feature                           | Status           | Notes                                                                                                                                                                                                                                          |

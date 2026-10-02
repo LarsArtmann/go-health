@@ -205,6 +205,30 @@ Match the consumer to the probe. Each answers a different question, so pointing 
 | scripts / deploy tooling            | `/version`             | Build stamp as `{"version":"..."}` (`VersionHandler`, wired manually); GET-only, never 503 |
 | in-process code, middleware, tests  | `Status()` / `Ready()` | Cached roll-up read; never triggers a dependency check                                     |
 
+### Which constructor should I use?
+
+All paths share the same options, handlers, and wire format. Pick by check source:
+
+| Your checks live in...                                        | Constructor                                                                  | Notes |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----- |
+| a samber/do injector (the common case)                        | `health.New(injector, opts...)`                                              | Resolves `do.HealthcheckerWithContext` at construction; critical services must be eagerly invoked. |
+| any function (`func(ctx) map[string]error`)                   | `health.NewWithHealthCheck(fn, opts...)`                                     | Injector-free: composed checks, other DI containers, external endpoints. |
+| the same, but you want per-check `duration_ns`                | `health.NewWithDetailedCheck(fn, opts...)`                                   | Reports `CheckDetail{Err, Duration}`; classification stays with the probe. |
+| a fixed, named set of Go functions                            | `health.NewChecks(map[string]health.CheckFunc, opts...)`                     | Concurrent execution, per-check duration, panic recovery, batch deadline. See docs/named-checks-design.md. |
+| an existing observer of batches (audit log, flight recorder)  | `health.New(injector, health.WithHealthRecorder(r), ...)`                    | Any `RecordHealthCheckWithContext(ctx, injector) map[string]error` implementor; works over an empty injector too. |
+| the metadata-rich variant of the above                        | implement `DetailedHealthRecorder`                                           | Adds `DurationNanos` to the wire without changing classification. |
+
+`WithHealthRecorder` has no effect on the three standalone constructors (the explicit function owns batch execution).
+
+## What go-health is NOT
+
+go-health is a **probe**, not a diagnostics page. It deliberately does not
+expose install type, server OS, storage totals, or database engine/migration
+state (the paperless-ngx `/api/status/` field set) — those belong behind
+authentication in your own staff-only view or [go-health-dashboard](https://github.com/larsartmann/go-health-dashboard),
+never on an unauthenticated kubelet endpoint. It also does not log, render
+HTML, or own your HTTP server. See [docs/system-status-vs-probe.md](docs/system-status-vs-probe.md).
+
 ## Key Features
 
 - **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
@@ -221,7 +245,7 @@ Match the consumer to the probe. Each answers a different question, so pointing 
 - **Read-only accessors** — `CachedResponse()` and `RefreshInterval()` let dashboards and middleware read cached health state without triggering a synchronous evaluation.
 - **Flood-safe live mode** — `WithLiveThrottle(d)` coalesces live-mode request floods into one evaluation per window.
 - **Deterministic tests** — `WithNowFunc(fn)` drives uptime, timestamps, and throttle freshness from an injected clock; no sleeps.
-- **Config validation** — `Start()` validates configuration and returns an error on invalid settings (zero/negative timeout, negative refresh interval).
+- **Config validation** — `Start()` validates configuration and returns an error on invalid settings (zero/negative timeout, negative refresh interval) and on `WithCriticalServices` names that never ran in the first batch (`ErrUnknownCriticalService` — a typo'd critical name would otherwise silently block the startup latch forever).
 - **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch.
 
 ## Configuration Reference
@@ -304,6 +328,25 @@ Overrides the clock used for uptime, response timestamps, and live-throttle fres
 ### `WithHealthRecorder(r HealthRecorder)`
 
 Wires a `HealthRecorder` so every health-check batch is observable by an external system. When nil (the default), checks run against the raw injector.
+
+### Version stamping recipe
+
+One line wires build identity end to end — inject at build, serve at runtime:
+
+```go
+// main.go
+var version = "dev" // set via -ldflags
+probe := health.New(injector,
+    health.WithVersion(version), // stamped into every response body
+)
+mux.Handle("/version", health.VersionHandler(version)) // standalone: {"version":"..."}, GET-only, never 503
+```
+
+```sh
+go build -ldflags "-X main.version=$(git describe --tags --always)" ./cmd/myapp
+```
+
+Prefer VCS stamping over hand-rolled `-X` when you can: with `go build` on Go 1.24+, `runtime/debug.ReadBuildInfo()` carries `vcs.revision`/`vcs.tag`; pass the short form to `WithVersion`/`VersionHandler` and keep one source of truth. (A `WithVersionFromBuildInfo` convenience was considered and rejected for now — the two-line recipe above covers it without new API surface.)
 
 ## Shutdown Awareness
 

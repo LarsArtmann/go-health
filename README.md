@@ -467,6 +467,16 @@ With `failureThreshold: 30` and `periodSeconds: 10`, the startup probe allows up
 
 ## Troubleshooting
 
+### Start fails with `unknown critical service`
+
+`Start` validates that every name passed to `WithCriticalServices` actually ran in the first health-check batch. A name that never appears cannot influence readiness classification and would block the startup latch forever (this exact bug class hit real consumers as a silently never-ready pod). The error names the offending service(s):
+
+```
+health: unknown critical service: databse (no check ran under this name; fix WithCriticalServices or the check registration)
+```
+
+Fix the typo, or register/emit a check under that name before calling `Start` (with samber/do: provide the service and eagerly invoke it). See [docs/start-validation-design.md](docs/start-validation-design.md). Match the sentinel with `errors.Is(err, health.ErrUnknownCriticalService)`.
+
 ### Startup probe always returns 200 immediately
 
 samber/do v2.1.0 reports never-invoked lazy services as healthy (nil error) in `HealthCheckWithContext`. Eagerly invoke critical services at boot so their `HealthCheck` methods are actually exercised:

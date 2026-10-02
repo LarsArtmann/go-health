@@ -495,11 +495,15 @@ func (p *Probe) Start(ctx context.Context) error {
 
 	p.mu.Unlock()
 
-	p.refreshCache(ctx)
+	evalCtx, cancelEval := context.WithTimeout(ctx, p.timeout)
+	resp := p.Evaluate(evalCtx)
+	cancelEval()
 
-	if err := p.validateCriticalNames(); err != nil {
+	if err := p.validateCriticalNames(resp); err != nil {
 		return err
 	}
+
+	p.latest.Store(&resp)
 
 	if p.refreshInterval > 0 {
 		go p.refreshLoop(runCtx)
@@ -511,17 +515,15 @@ func (p *Probe) Start(ctx context.Context) error {
 // validateCriticalNames rejects critical names absent from the initial
 // health-check batch: such a name can never influence classification and the
 // startup latch can never set (docs/start-validation-design.md).
-func (p *Probe) validateCriticalNames() error {
+func (p *Probe) validateCriticalNames(resp Response) error {
 	if len(p.rollups.critical) == 0 {
 		return nil
 	}
 
-	run := p.CachedResponse().Checks
-
 	unknown := make([]string, 0)
 
 	for name := range p.rollups.critical {
-		if _, ok := run[name]; !ok {
+		if _, ok := resp.Checks[name]; !ok {
 			unknown = append(unknown, name)
 		}
 	}

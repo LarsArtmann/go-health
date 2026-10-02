@@ -143,7 +143,11 @@ func ExampleProbe_Start() {
 	do.ProvideNamed(injector, "database", func(_ do.Injector) (*exampleDB, error) {
 		return &exampleDB{}, nil
 	})
+	do.ProvideNamed(injector, "redis", func(_ do.Injector) (*exampleDB, error) {
+		return &exampleDB{}, nil
+	})
 	_ = do.MustInvokeNamed[*exampleDB](injector, "database")
+	_ = do.MustInvokeNamed[*exampleDB](injector, "redis")
 
 	probe := health.New(injector,
 		health.WithCriticalServices("database", "redis"),

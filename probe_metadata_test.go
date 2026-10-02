@@ -566,7 +566,10 @@ func TestReadinessHandler_WireOmitZeroOnInjectorPath(t *testing.T) {
 func TestResponse_JSONNilChecksMarshalAsEmptyObject(t *testing.T) {
 	t.Parallel()
 
-	payload, err := json.Marshal(health.Response{Status: health.StatusPass}, json.Deterministic(true))
+	payload, err := json.Marshal(
+		health.Response{Status: health.StatusPass},
+		json.Deterministic(true),
+	)
 	if err != nil {
 		t.Fatalf("marshal zero response: %v", err)
 	}
@@ -575,12 +578,19 @@ func TestResponse_JSONNilChecksMarshalAsEmptyObject(t *testing.T) {
 		t.Errorf("nil Checks must marshal as {}, never null, got %s", payload)
 	}
 
-	empty, err := json.Marshal(health.Response{Status: health.StatusPass, Checks: map[string]health.Check{}}, json.Deterministic(true))
+	empty, err := json.Marshal(
+		health.Response{Status: health.StatusPass, Checks: map[string]health.Check{}},
+		json.Deterministic(true),
+	)
 	if err != nil {
 		t.Fatalf("marshal empty response: %v", err)
 	}
 
 	if string(payload) != string(empty) {
-		t.Errorf("nil and empty Checks must be wire-identical:\nnil:   %s\nempty: %s", payload, empty)
+		t.Errorf(
+			"nil and empty Checks must be wire-identical:\nnil:   %s\nempty: %s",
+			payload,
+			empty,
+		)
 	}
 }

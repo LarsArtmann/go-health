@@ -101,10 +101,23 @@
 
 | Task | Status | Impact | Effort | Evidence |
 | --- | --- | --- | --- | --- |
-| Update README golden path: constructor decision table, version-stamping recipe, wire JSON sample | TODO | High | 50min | README quickstart is the only path; plan task B4. |
-| Inspect go-appkit/health bridge (criticality derivation, since/duration_ns fidelity) | TODO | High | 40min | 16/30 consumers inherit bridges; plan task C3. |
-| Inspect cqrs-htmx/health bridge (projection criticality + defaults) | TODO | High | 40min | Plan task C4. |
-| Full adoption matrix: alias-safe aggregate/federation grep, go-taskqueue resolution, per-feature sweeps | TODO | High | 70min | "nobody uses X" claims rest on non-hardened greps; plan task D1. |
-| Genre doc `docs/system-status-vs-probe.md` + FEATURES "Deliberately NOT included" + README "What go-health is NOT" | TODO | Med-High | 55min | Prevents scope-drift requests (paperless-ngx comparison); plan task B3. |
-| Batteries ownership decision (core `health/checks` vs contrib vs go-appkit) after reading CV/fir system checks | TODO | Med-High | 40min | Fleet-wide duplication (CV SystemResources, fir CheckDiskSpace); plan task C1. |
+| Update README golden path: constructor decision table, version-stamping recipe, wire JSON sample | DONE | High | 50min | README quickstart is the only path; plan task B4. |
+| Inspect go-appkit/health bridge (criticality derivation, since/duration_ns fidelity) | DONE | High | 40min | 16/30 consumers inherit bridges; plan task C3. |
+| Inspect cqrs-htmx/health bridge (projection criticality + defaults) | DONE | High | 40min | Plan task C4. |
+| Full adoption matrix: alias-safe aggregate/federation grep, go-taskqueue resolution, per-feature sweeps | DONE | High | 70min | "nobody uses X" claims rest on non-hardened greps; plan task D1. |
+| Genre doc `docs/system-status-vs-probe.md` + FEATURES "Deliberately NOT included" + README "What go-health is NOT" | DONE | Med-High | 55min | Prevents scope-drift requests (paperless-ngx comparison); plan task B3. |
+| Batteries ownership decision (core `health/checks` vs contrib vs go-appkit) after reading CV/fir system checks | DONE | Med-High | 40min | Fleet-wide duplication (CV SystemResources, fir CheckDiskSpace); plan task C1. |
 | Harvest `docs/status/2026-10-02_13-48` + `15-06` reports fully (50-item lists) | PARTIALLY DONE | High | 30min | This harvest covers the headline items; the reports' §f lists still need row-by-row distillation. |
+
+> Update 2026-10-02 (cont.): the entire Tier 3 + Tier 4 of the Pareto plan
+> executed same day — README golden path (constructor table, version
+> recipe, `checks` section, quickstart validation hint), both bridge
+> inspections + `docs/bridge-golden-path.md` + 2 upstream issue drafts in
+> `docs/announcements/`, `docs/adoption-matrix.md` (15 direct consumers;
+> go-taskqueue resolved; aggregate/federation non-adoption claim corrected),
+> genre doc + ADR-007 + threat model, `health/checks` implemented with
+> tests (zero-dep), plus the v0.5 design set (ServiceName, merge
+> unification, naming integrity, vocabulary, synthetic overlays,
+> automation notes; both automation ideas REJECTED with revisit triggers).
+> Remaining: publish upstream issue drafts (owner), release train v0.4.2
+> (validation + checks), v0.5 window for staged renames.

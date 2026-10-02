@@ -55,6 +55,11 @@ they affect the probe contract itself, for example:
 
 ## Hardening guidance for users
 
+See [docs/probe-threat-model.md](docs/probe-threat-model.md) for the full
+analysis of what the unauthenticated probe endpoints may and may not expose,
+and the consumer hardening checklist (network policy, secret-free check
+messages, diagnostics behind authentication).
+
 - Keep the default background cache (`WithRefreshInterval`) on for any
   kubelet/load-balancer-polled endpoint; it bounds check frequency no matter
   how often the endpoint is polled.

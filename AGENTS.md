@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation` · **Go**: 1.27 · **Status**: v0.4.1 released 2026-09-25 (alpha; federation + `NewChecks` + aggregate `Healthz` shipped)
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.4.1 released 2026-09-25 (alpha; federation + `NewChecks` + aggregate `Healthz` shipped)
 
 ---
 
@@ -75,6 +75,17 @@ and carry `Accept: application/json`, so a go-health-dashboard route (content-ne
 a valid remote. The `Prober` type satisfies the go-health-dashboard's consumer-side `Prober`
 interface structurally (asserted in `federation_test.go`; the dashboard cannot be imported —
 the dependency points the other way). Design: docs/federation-design.md.
+
+Sub-package `checks` (source: `checks/checks.go`) is the batteries package:
+zero-dependency, stdlib-only `func(ctx) error` check constructors —
+`Disk(path, minFreeBytes)` (wraps `ErrDiskLow`), `Memory(maxAllocBytes)`
+(`ErrMemoryHigh`), `HTTP(url, timeout)` (`ErrHTTPCheckFailed`), `Database(db,
+pingTimeout)` (`ErrDatabaseUnreachable`). Each composes with `NewChecks`,
+`NewWithHealthCheck`, or any recorder path. Resource checks are
+warn-by-default: criticality stays with the caller; thresholds are arguments,
+not constants (CV 85%/97.3% and fir 1 GB proved they are policy). Ownership
+decision + constraints: docs/batteries-ownership-decision.md; tests use an
+in-process `sql.Register` fake driver — no driver dependency, ever.
 
 ### Key Design Decisions
 

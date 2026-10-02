@@ -420,6 +420,13 @@ var ErrInvalidTimeout = errors.New("health: timeout must be positive")
 // refresh interval is negative.
 var ErrInvalidRefreshInterval = errors.New("health: refresh interval must not be negative")
 
+// ErrUnknownCriticalService is returned by [Probe.Start] when a name passed to
+// [WithCriticalServices] never appears in the first health-check batch: no
+// check produced a result under that name, so it can never influence
+// readiness classification and the startup latch can never set. Match with
+// errors.Is. See docs/start-validation-design.md.
+var ErrUnknownCriticalService = errors.New("health: unknown critical service")
+
 // ErrPanicDuringHealthCheck is wrapped into the synthetic "health-check" error
 // when the health-check batch panics and the panic is recovered. Match with
 // errors.Is to distinguish a recovered panic from an ordinary service failure:
@@ -456,9 +463,9 @@ func (p *Probe) Validate() error {
 // immediate evaluation so the cache is populated before the first request
 // arrives. Calling Start more than once is a no-op.
 //
-// Returns [ErrInvalidTimeout] or [ErrInvalidRefreshInterval] if the
-// configuration is unusable. Call [Probe.Validate] separately to check
-// configuration before starting.
+// Returns [ErrInvalidTimeout], [ErrInvalidRefreshInterval], or
+// [ErrUnknownCriticalService] if the configuration is unusable. Call
+// [Probe.Validate] separately to check configuration before starting.
 //
 // The provided ctx controls the lifetime of the background goroutine. Call
 // [Probe.Shutdown] to stop the loop and mark the probe as shutting down.
@@ -490,11 +497,46 @@ func (p *Probe) Start(ctx context.Context) error {
 
 	p.refreshCache(ctx)
 
+	if err := p.validateCriticalNames(); err != nil {
+		return err
+	}
+
 	if p.refreshInterval > 0 {
 		go p.refreshLoop(runCtx)
 	}
 
 	return nil
+}
+
+// validateCriticalNames rejects critical names absent from the initial
+// health-check batch: such a name can never influence classification and the
+// startup latch can never set (docs/start-validation-design.md).
+func (p *Probe) validateCriticalNames() error {
+	if len(p.rollups.critical) == 0 {
+		return nil
+	}
+
+	run := p.CachedResponse().Checks
+
+	unknown := make([]string, 0)
+
+	for name := range p.rollups.critical {
+		if _, ok := run[name]; !ok {
+			unknown = append(unknown, name)
+		}
+	}
+
+	if len(unknown) == 0 {
+		return nil
+	}
+
+	sort.Strings(unknown)
+
+	return fmt.Errorf(
+		"%w: %s (no check ran under this name; fix WithCriticalServices or the check registration)",
+		ErrUnknownCriticalService,
+		strings.Join(unknown, ", "),
+	)
 }
 
 // refreshLoop runs the periodic cache refresh until the start context is cancelled.

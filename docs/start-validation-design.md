@@ -1,7 +1,7 @@
 # Design: critical-name validation at Start()
 
 **Date:** 2026-10-02 · **Status:** DECIDED — hard error at `Start()`, batch-based validation
-**Related:** [docs/panic-recovery-design.md](panic-recovery-design.md), [ADR-001](adr/001-stdlib-errors.md), [docs/timeout-design.md](timeout-design.md)
+**Related:** [docs/panic-recovery-design.md](panic-recovery-design.md), [ADR-001](adr/ADR-001-stdlib-errors.md), [docs/timeout-design.md](timeout-design.md)
 
 ## Problem
 
@@ -85,6 +85,23 @@ ordering — samber/do lazy services that are never invoked report nil-error
 and make the startup probe meaningless anyway (see AGENTS.md gotchas). If a
 real-world case emerges, an opt-out option can be added in a minor release;
 removing a hard error later is impossible.
+
+## Decisions on placement
+
+- **`Validate()` stays config-only** (timeout, refresh interval). It cannot
+  know the batch (it runs before any evaluation), so critical-name checking
+  does not grow there; it lives in `Start()` as a distinct
+  `validateCriticalNames` step. Alternative (a separate
+  `ValidateAgainstBatch` public method) rejected: no consumer needs to run
+  validation without starting.
+- **Acceptance criteria** (all pinned by `probe_critical_names_test.go`):
+  1. A `WithCriticalServices` name absent from the initial batch makes
+     `Start` return an error satisfying `errors.Is(err, ErrUnknownCriticalService)`.
+  2. The error names every unknown service, sorted, and none of the known ones.
+  3. A failed `Start` launches no background loop and publishes no cache.
+  4. Known names start unchanged; an empty critical set never validates.
+  5. Validation applies on the injector, recorder (empty injector), and
+     standalone-constructor paths alike.
 
 ## Semantics
 

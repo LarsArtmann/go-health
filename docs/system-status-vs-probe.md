@@ -23,6 +23,7 @@ point for status-page needs is [go-health-dashboard](https://github.com/larsartm
 | tasks blocks (redis, celery, index, classifier, sanity, llmindex) | ordinary checks (pass/fail per dependency) | Same capability, different encoding: verdict-per-check instead of nested task state. |
 | auth: `IsAuthenticated` + staff-only | unauthenticated by design | Kubelets/LBs must poll without credentials. Anything sensitive belongs behind a composition layer (dashboard, separate mux), not in the probe. |
 | cadence: synchronous per request | cached (1s default) or live | Probe answers in microseconds from cache so a 30s kubelet poll interval never hammers dependencies. |
+| per-block timings (redis ping ms, etc.) | `total_latency_ms` (whole batch) + optional per-check `duration_ns`; richer metrics via `WithEvaluationHook` composition | The probe keeps timing metadata uniform; per-dependency timing studies belong to the metrics seam. |
 | status codes: 200 with JSON state | 200/503 semantics per probe (pass/warn/fail) | The probe's body is a bonus; the status code is the contract for k8s. |
 
 ## When you need a paperless-style page

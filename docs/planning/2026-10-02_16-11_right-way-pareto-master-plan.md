@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-02 16:11 CEST
 **Author:** session planning run (Crush)
-**Status:** PLAN — awaiting approval. No task below has been executed.
+**Status:** EXECUTED 2026-10-02 (same day, all 27 L1 tasks). Outcome highlights: A1–A4 shipped as `ErrUnknownCriticalService` + `Start()` batch validation (docs/start-validation-design.md); B1–B5 docs landed; C1 decided → C2 shipped as `health/checks`; C3/C4 inspected → C5 contract + 2 upstream drafts; D1 matrix (15 direct consumers; go-taskqueue resolved; aggregate/federation non-adoption corrected); D2 pinned nil-Checks={} wire test; D3 build-verified (CV skew: v0.1.3 + go 1.26.7); E1–E6 design docs; F1–F4 (both automation ideas rejected). Remaining owner actions: publish upstream drafts, release train, v0.5 window.
 **Rule zero:** Do not verschlimmbessern. Every change must leave the repo verifiably no worse than found; when in doubt, prove with a test first.
 
 ---

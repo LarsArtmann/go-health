@@ -29,6 +29,14 @@ Threshold recipes from the fleet:
   For container RSS limits compose `os.ReadFile("/sys/fs/cgroup/...")`
   yourself; keep it non-critical (CV's rule: a full resource should ALERT,
   not restart the pod).
+- **Naming convention:** prefix host-level checks `host/…` (`host/disk`,
+  `host/memory`) so fleet dashboards can group them apart from dependency
+  checks; keep names stable — they are wire identifiers.
+- **fir's disk-CRITICAL choice is kubelet-correct when needed:** marking
+  `disk-space` critical makes readiness 503 (pod leaves rotation) while
+  liveness stays 200 — no restart cascade, the pod just stops receiving
+  traffic. Choose critical only when the process cannot degrade; warn when
+  it can (CV).
 
 ## 2. The DB-metadata trap
 

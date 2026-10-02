@@ -97,6 +97,13 @@
 > `docs/planning/2026-10-02_16-11_right-way-pareto-master-plan.md` and the
 > two 2026-10-02 status reports.
 
+## Verification train (remaining suites + skew)
+
+| Task | Status | Impact | Effort | Evidence |
+| --- | --- | --- | --- | --- |
+| Run consumer test suites: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier (CV + dnsblockd done 2026-10-02, green) | TODO | Medium | 45min | 2026-10-02 train: all 8 direct apps BUILD-OK; CV + dnsblockd suites green. |
+| Bump CV to go-health v0.4.x + `go 1.27` floor (currently v0.1.3 + `go 1.26.7` — works, but the v0.4 bump requires the 1.27 toolchain) | TODO | Medium | 30min | 2026-10-02 version-skew table: every other consumer pins v0.4.1. |
+
 ## High Impact (correctness & knowledge — from the 2026-10-02 Pareto plan)
 
 | Task | Status | Impact | Effort | Evidence |

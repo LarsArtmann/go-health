@@ -156,6 +156,20 @@ Raw ideas, none scheduled:
   too slow for race jobs
 - Raise the per-push fuzz budget above 10s/target if CI cost allows
 
+## Raw ideas (harvested 2026-10-02, report-1 §f)
+
+- Opt-in system-inventory composition on the **dashboard side**: host/OS/
+  storage panels fed by consumer-side checks (never probe fields) — ADR-007
+  names the dashboard as the composition point (go-health-dashboard repo).
+- System inventory as a **federation remote**: a tiny authenticated exporter
+  serving inventory JSON; `federation` merges it like any remote (its
+  1 MiB / JSON contract already fits). Untested demand — adopt only if a
+  consumer asks.
+- Extensible metadata map on `Response` (free-form key/values): rejected in
+  principle — scalars don't merge in aggregate/federation, so free-form
+  metadata would lie in fleet views. If it ever resurfaces, it needs a
+  merge rule per key first (see docs/adr/ADR-007-no-system-inventory.md).
+
 ## Non-goals
 
 Things we are deliberately NOT pursuing and why:

@@ -61,7 +61,7 @@ func mergeResponses(sources []mergeSource) health.Response
 
 ## Risks
 
-- Federation's per-remote latch movement on *successful fetch* is
+- Federation's per-remote latch movement on _successful fetch_ is
   stateful and stays federation-side; only the pure merge is unified.
 - Latency accounting differs subtly (aggregate: max of cached;
   federation: max including fetch time) — `mergeSource` must carry the

@@ -92,29 +92,30 @@
 > Harvested 2026-10-02 (right-way Pareto run): Tier 1 executed same day —
 > critical-name repro tests (`probe_critical_names_test.go`), fleet compat
 > scan, `docs/start-validation-design.md`, and `ErrUnknownCriticalService`
-> + `Start()` batch validation all shipped (see CHANGELOG `[Unreleased]`).
-> Remaining tiers harvested into the tables below; full detail in
-> `docs/planning/2026-10-02_16-11_right-way-pareto-master-plan.md` and the
-> two 2026-10-02 status reports.
+>
+> - `Start()` batch validation all shipped (see CHANGELOG `[Unreleased]`).
+>   Remaining tiers harvested into the tables below; full detail in
+>   `docs/planning/2026-10-02_16-11_right-way-pareto-master-plan.md` and the
+>   two 2026-10-02 status reports.
 
 ## Verification train (remaining suites + skew)
 
-| Task | Status | Impact | Effort | Evidence |
-| --- | --- | --- | --- | --- |
-| Run consumer test suites: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier (CV + dnsblockd done 2026-10-02, green) | TODO | Medium | 45min | 2026-10-02 train: all 8 direct apps BUILD-OK; CV + dnsblockd suites green. |
-| Bump CV to go-health v0.4.x + `go 1.27` floor (currently v0.1.3 + `go 1.26.7` — works, but the v0.4 bump requires the 1.27 toolchain) | TODO | Medium | 30min | 2026-10-02 version-skew table: every other consumer pins v0.4.1. |
+| Task                                                                                                                                     | Status | Impact | Effort | Evidence                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | -------------------------------------------------------------------------- |
+| Run consumer test suites: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier (CV + dnsblockd done 2026-10-02, green) | TODO   | Medium | 45min  | 2026-10-02 train: all 8 direct apps BUILD-OK; CV + dnsblockd suites green. |
+| Bump CV to go-health v0.4.x + `go 1.27` floor (currently v0.1.3 + `go 1.26.7` — works, but the v0.4 bump requires the 1.27 toolchain)    | TODO   | Medium | 30min  | 2026-10-02 version-skew table: every other consumer pins v0.4.1.           |
 
 ## High Impact (correctness & knowledge — from the 2026-10-02 Pareto plan)
 
-| Task | Status | Impact | Effort | Evidence |
-| --- | --- | --- | --- | --- |
-| Update README golden path: constructor decision table, version-stamping recipe, wire JSON sample | DONE | High | 50min | README quickstart is the only path; plan task B4. |
-| Inspect go-appkit/health bridge (criticality derivation, since/duration_ns fidelity) | DONE | High | 40min | 16/30 consumers inherit bridges; plan task C3. |
-| Inspect cqrs-htmx/health bridge (projection criticality + defaults) | DONE | High | 40min | Plan task C4. |
-| Full adoption matrix: alias-safe aggregate/federation grep, go-taskqueue resolution, per-feature sweeps | DONE | High | 70min | "nobody uses X" claims rest on non-hardened greps; plan task D1. |
-| Genre doc `docs/system-status-vs-probe.md` + FEATURES "Deliberately NOT included" + README "What go-health is NOT" | DONE | Med-High | 55min | Prevents scope-drift requests (paperless-ngx comparison); plan task B3. |
-| Batteries ownership decision (core `health/checks` vs contrib vs go-appkit) after reading CV/fir system checks | DONE | Med-High | 40min | Fleet-wide duplication (CV SystemResources, fir CheckDiskSpace); plan task C1. |
-| Harvest `docs/status/2026-10-02_13-48` + `15-06` reports fully (50-item lists) | PARTIALLY DONE | High | 30min | This harvest covers the headline items; the reports' §f lists still need row-by-row distillation. |
+| Task                                                                                                               | Status         | Impact   | Effort | Evidence                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------ | -------------- | -------- | ------ | ------------------------------------------------------------------------------------------------- |
+| Update README golden path: constructor decision table, version-stamping recipe, wire JSON sample                   | DONE           | High     | 50min  | README quickstart is the only path; plan task B4.                                                 |
+| Inspect go-appkit/health bridge (criticality derivation, since/duration_ns fidelity)                               | DONE           | High     | 40min  | 16/30 consumers inherit bridges; plan task C3.                                                    |
+| Inspect cqrs-htmx/health bridge (projection criticality + defaults)                                                | DONE           | High     | 40min  | Plan task C4.                                                                                     |
+| Full adoption matrix: alias-safe aggregate/federation grep, go-taskqueue resolution, per-feature sweeps            | DONE           | High     | 70min  | "nobody uses X" claims rest on non-hardened greps; plan task D1.                                  |
+| Genre doc `docs/system-status-vs-probe.md` + FEATURES "Deliberately NOT included" + README "What go-health is NOT" | DONE           | Med-High | 55min  | Prevents scope-drift requests (paperless-ngx comparison); plan task B3.                           |
+| Batteries ownership decision (core `health/checks` vs contrib vs go-appkit) after reading CV/fir system checks     | DONE           | Med-High | 40min  | Fleet-wide duplication (CV SystemResources, fir CheckDiskSpace); plan task C1.                    |
+| Harvest `docs/status/2026-10-02_13-48` + `15-06` reports fully (50-item lists)                                     | PARTIALLY DONE | High     | 30min  | This harvest covers the headline items; the reports' §f lists still need row-by-row distillation. |
 
 > Update 2026-10-02 (cont.): the entire Tier 3 + Tier 4 of the Pareto plan
 > executed same day — README golden path (constructor table, version

@@ -2,26 +2,27 @@
 
 **Date:** 2026-10-02 · **Method:** alias-safe `rg` over local checkouts of every known consumer
 (direct go-health imports + the go-appkit/cqrs-htmx bridges), go.mod requires
-+ source trace. "—" = zero adoption found in the fleet.
 
-| Feature | Adopters (direct, verified in source) | Verdict |
-| --- | --- | --- |
-| core `New` + handlers + `WithCriticalServices` | all 14 direct consumers | core |
-| `WithAllowedMethods` | dnsblockd, fir, KeyHolderAI, nsfw-classifier, PMA, Zlota44 | healthy |
-| `WithGETOnly` (deprecated) | KeyHolderAI (legacy path) | document-and-retire candidate at v0.5 (nudge KeyHolderAI first) |
-| `MarkShuttingDown` | CV, DiscordSync, KeyHolderAI, nsfw-classifier, go-appkit (+doadapter) | healthy |
-| `WithEvaluationHook` | dnsblockd, go-appkit/health | healthy |
-| `AwaitReady` | dnsblockd, go-appkit/health | healthy |
-| `WithNowFunc` | dnsblockd (tests) | healthy (test seam) |
-| `NewChecks` | webphone, go-health-dashboard example, typespec-eventsourcing (tests) | healthy, low adoption — keep (it is the batteries composition point) |
-| `NewWithDetailedCheck` / `DetailedHealthRecorder` | go-health-dashboard only (`timedScreenshotRecorder`) | low adoption; feeds the bridge detailed-variant gap (docs/bridge-golden-path.md) |
-| `WithInstanceID` | go-health-dashboard | single consumer — document-as-intended (dashboard correlation), retire only with owner sign-off |
-| `WithLiveThrottle` | — | ghost: live mode + flood coalescing has no adopter. Keep (semantically required for safe live mode), document as protective |
-| `WithShutdownGracePeriod` | go-daemon, project-discovery-daemon | healthy (infra consumers) |
-| `Healthz()` single-endpoint | go-health-dashboard | low direct adoption; primary use is external LB composition — document-as-intended |
-| `aggregate` subpackage | go-health-dashboard (multiple) | single-consumer but deep (loadtests, SSE, fuzz) — healthy |
-| `federation` subpackage | go-health-dashboard (`cmd/health-hub`) | single-consumer but production-wired — healthy |
-| `WithRefreshInterval`, `WithTimeout`, `WithVersion`, recorder paths | all consumers (spread) | core |
+- source trace. "—" = zero adoption found in the fleet.
+
+| Feature                                                             | Adopters (direct, verified in source)                                 | Verdict                                                                                                                     |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| core `New` + handlers + `WithCriticalServices`                      | all 14 direct consumers                                               | core                                                                                                                        |
+| `WithAllowedMethods`                                                | dnsblockd, fir, KeyHolderAI, nsfw-classifier, PMA, Zlota44            | healthy                                                                                                                     |
+| `WithGETOnly` (deprecated)                                          | KeyHolderAI (legacy path)                                             | document-and-retire candidate at v0.5 (nudge KeyHolderAI first)                                                             |
+| `MarkShuttingDown`                                                  | CV, DiscordSync, KeyHolderAI, nsfw-classifier, go-appkit (+doadapter) | healthy                                                                                                                     |
+| `WithEvaluationHook`                                                | dnsblockd, go-appkit/health                                           | healthy                                                                                                                     |
+| `AwaitReady`                                                        | dnsblockd, go-appkit/health                                           | healthy                                                                                                                     |
+| `WithNowFunc`                                                       | dnsblockd (tests)                                                     | healthy (test seam)                                                                                                         |
+| `NewChecks`                                                         | webphone, go-health-dashboard example, typespec-eventsourcing (tests) | healthy, low adoption — keep (it is the batteries composition point)                                                        |
+| `NewWithDetailedCheck` / `DetailedHealthRecorder`                   | go-health-dashboard only (`timedScreenshotRecorder`)                  | low adoption; feeds the bridge detailed-variant gap (docs/bridge-golden-path.md)                                            |
+| `WithInstanceID`                                                    | go-health-dashboard                                                   | single consumer — document-as-intended (dashboard correlation), retire only with owner sign-off                             |
+| `WithLiveThrottle`                                                  | —                                                                     | ghost: live mode + flood coalescing has no adopter. Keep (semantically required for safe live mode), document as protective |
+| `WithShutdownGracePeriod`                                           | go-daemon, project-discovery-daemon                                   | healthy (infra consumers)                                                                                                   |
+| `Healthz()` single-endpoint                                         | go-health-dashboard                                                   | low direct adoption; primary use is external LB composition — document-as-intended                                          |
+| `aggregate` subpackage                                              | go-health-dashboard (multiple)                                        | single-consumer but deep (loadtests, SSE, fuzz) — healthy                                                                   |
+| `federation` subpackage                                             | go-health-dashboard (`cmd/health-hub`)                                | single-consumer but production-wired — healthy                                                                              |
+| `WithRefreshInterval`, `WithTimeout`, `WithVersion`, recorder paths | all consumers (spread)                                                | core                                                                                                                        |
 
 ## Resolved unknowns
 

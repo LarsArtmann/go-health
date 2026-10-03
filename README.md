@@ -213,14 +213,14 @@ Match the consumer to the probe. Each answers a different question, so pointing 
 
 All paths share the same options, handlers, and wire format. Pick by check source:
 
-| Your checks live in...                                        | Constructor                                                                  | Notes |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----- |
-| a samber/do injector (the common case)                        | `health.New(injector, opts...)`                                              | Resolves `do.HealthcheckerWithContext` at construction; critical services must be eagerly invoked. |
-| any function (`func(ctx) map[string]error`)                   | `health.NewWithHealthCheck(fn, opts...)`                                     | Injector-free: composed checks, other DI containers, external endpoints. |
-| the same, but you want per-check `duration_ns`                | `health.NewWithDetailedCheck(fn, opts...)`                                   | Reports `CheckDetail{Err, Duration}`; classification stays with the probe. |
-| a fixed, named set of Go functions                            | `health.NewChecks(map[string]health.CheckFunc, opts...)`                     | Concurrent execution, per-check duration, panic recovery, batch deadline. See docs/named-checks-design.md. |
-| an existing observer of batches (audit log, flight recorder)  | `health.New(injector, health.WithHealthRecorder(r), ...)`                    | Any `RecordHealthCheckWithContext(ctx, injector) map[string]error` implementor; works over an empty injector too. |
-| the metadata-rich variant of the above                        | implement `DetailedHealthRecorder`                                           | Adds `DurationNanos` to the wire without changing classification. |
+| Your checks live in...                                       | Constructor                                               | Notes                                                                                                             |
+| ------------------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| a samber/do injector (the common case)                       | `health.New(injector, opts...)`                           | Resolves `do.HealthcheckerWithContext` at construction; critical services must be eagerly invoked.                |
+| any function (`func(ctx) map[string]error`)                  | `health.NewWithHealthCheck(fn, opts...)`                  | Injector-free: composed checks, other DI containers, external endpoints.                                          |
+| the same, but you want per-check `duration_ns`               | `health.NewWithDetailedCheck(fn, opts...)`                | Reports `CheckDetail{Err, Duration}`; classification stays with the probe.                                        |
+| a fixed, named set of Go functions                           | `health.NewChecks(map[string]health.CheckFunc, opts...)`  | Concurrent execution, per-check duration, panic recovery, batch deadline. See docs/named-checks-design.md.        |
+| an existing observer of batches (audit log, flight recorder) | `health.New(injector, health.WithHealthRecorder(r), ...)` | Any `RecordHealthCheckWithContext(ctx, injector) map[string]error` implementor; works over an empty injector too. |
+| the metadata-rich variant of the above                       | implement `DetailedHealthRecorder`                        | Adds `DurationNanos` to the wire without changing classification.                                                 |
 
 `WithHealthRecorder` has no effect on the three standalone constructors (the explicit function owns batch execution).
 

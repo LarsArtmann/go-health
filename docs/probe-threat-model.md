@@ -11,15 +11,15 @@ port** — cluster-internal peers, and the internet if the port is exposed.
 
 ## What is safe to expose (and why the defaults are what they are)
 
-| Data | Exposure | Rationale |
-| --- | --- | --- |
-| check names + pass/warn/fail + short error text | accepted | The error text is the operator's triage payload; keep messages free of secrets, hosts, and connection strings (consumer responsibility — see the cookbook's DB-metadata trap). |
-| `version` (opt-in `WithVersion`) | accepted, opt-in | Build identity; opt-in so nobody leaks it accidentally. `/version` endpoint likewise. |
-| `instance_id` (opt-in `WithInstanceID`) | accepted, opt-in | Correlation key, not a secret; only set when a dashboard needs it. |
-| `uptime` | accepted | Coarse operational signal. |
-| `timestamp`, `total_latency_ms`, `since`, `duration_ns` | accepted | Timing metadata is a minor fingerprinting aid at worst. |
-| install type / OS / storage / DB engine-URL-migrations | **never** | Inventory = reconnaissance; URLs embed credentials; migrations reveal deployment state. ADR-007. |
-| HTML rendering | **never** on probe endpoints | Attack surface without operator value; dashboards own rendering. |
+| Data                                                    | Exposure                     | Rationale                                                                                                                                                                      |
+| ------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| check names + pass/warn/fail + short error text         | accepted                     | The error text is the operator's triage payload; keep messages free of secrets, hosts, and connection strings (consumer responsibility — see the cookbook's DB-metadata trap). |
+| `version` (opt-in `WithVersion`)                        | accepted, opt-in             | Build identity; opt-in so nobody leaks it accidentally. `/version` endpoint likewise.                                                                                          |
+| `instance_id` (opt-in `WithInstanceID`)                 | accepted, opt-in             | Correlation key, not a secret; only set when a dashboard needs it.                                                                                                             |
+| `uptime`                                                | accepted                     | Coarse operational signal.                                                                                                                                                     |
+| `timestamp`, `total_latency_ms`, `since`, `duration_ns` | accepted                     | Timing metadata is a minor fingerprinting aid at worst.                                                                                                                        |
+| install type / OS / storage / DB engine-URL-migrations  | **never**                    | Inventory = reconnaissance; URLs embed credentials; migrations reveal deployment state. ADR-007.                                                                               |
+| HTML rendering                                          | **never** on probe endpoints | Attack surface without operator value; dashboards own rendering.                                                                                                               |
 
 ## Threats considered
 

@@ -36,7 +36,7 @@ injector is not always the check universe:
   with an **empty injector** — Zlota44 (`internal/server/health.go:101`) and
   projects-management-automation (`internal/infrastructure/health/server.go:100`)
   both do this. Every critical name would false-positive as "unknown".
-- On the injector path, only *healthcheck-registered* services can appear in a
+- On the injector path, only _healthcheck-registered_ services can appear in a
   batch; `ListProvidedServices()` lists all provided services, a superset.
 - Standalone constructors (`NewWithHealthCheck`, `NewChecks`,
   `NewWithDetailedCheck`) have no injector at all.
@@ -44,39 +44,39 @@ injector is not always the check universe:
 **Chosen universe: the keys of the initial evaluation batch.** `Start()`
 already runs one `refreshCache` before returning (probe.go), so the
 comparison is free. The invariant is exactly the latch's own requirement: a
-critical name absent from every batch can *never* satisfy
+critical name absent from every batch can _never_ satisfy
 `evaluateStartup`. If it is absent from the first batch, startup is already
 doomed — erroring is strictly more informative than hanging. Validation
 therefore applies uniformly to **all** construction paths.
 
 ## Gating posture: three options considered
 
-| Option | Behavior | Verdict |
-| --- | --- | --- |
-| **Hard error at `Start()`** | `Start` returns `ErrUnknownCriticalService` (wrapped with the sorted unknown names) after the initial batch. | **CHOSEN** — the defect is a silent never-ready pod; a loud boot failure is the correct trade. `Start` already returns validation errors (`ErrInvalidTimeout`, `ErrInvalidRefreshInterval`), so the contract does not change shape. |
-| Non-fatal diagnostic via `WithEvaluationHook` | Report unknown names, keep serving. | Rejected as default: the failure mode we are fixing is that nobody looks. A hook only helps consumers who already wired observability — the ones least likely to have the typo. |
-| Dev-strict (env-var/build-tag gated) | Error in dev builds, warn in prod. | Rejected: environment-dependent health semantics are worse than either pure option; the fleet cannot test what only fails elsewhere. |
+| Option                                        | Behavior                                                                                                     | Verdict                                                                                                                                                                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hard error at `Start()`**                   | `Start` returns `ErrUnknownCriticalService` (wrapped with the sorted unknown names) after the initial batch. | **CHOSEN** — the defect is a silent never-ready pod; a loud boot failure is the correct trade. `Start` already returns validation errors (`ErrInvalidTimeout`, `ErrInvalidRefreshInterval`), so the contract does not change shape. |
+| Non-fatal diagnostic via `WithEvaluationHook` | Report unknown names, keep serving.                                                                          | Rejected as default: the failure mode we are fixing is that nobody looks. A hook only helps consumers who already wired observability — the ones least likely to have the typo.                                                     |
+| Dev-strict (env-var/build-tag gated)          | Error in dev builds, warn in prod.                                                                           | Rejected: environment-dependent health semantics are worse than either pure option; the fleet cannot test what only fails elsewhere.                                                                                                |
 
 **Migration risk assessment (fleet scan 2026-10-02, all local
 `WithCriticalServices` call sites):**
 
-| Consumer | Path | Critical names | Batch-visible? |
-| --- | --- | --- | --- |
-| KeyHolderAI (di.go:442) | injector | typetostring-typed service names | yes (do healthcheckers) |
-| DiscordSync (health_dashboard.go:86) | injector | `criticalHealthServiceNames()` (guarded since the 2026-08-16 bug) | yes |
-| CV (di/health_probe.go:58) | injector | typetostring-typed, mode-conditional | yes |
-| nsfw-classifier (app.go:285) | injector | typed classifier service | yes |
-| go-appkit bridge (probe.go) | injector | derived from registered checks | yes |
-| cqrs-htmx bridge (probe.go) | recorder | projection names | yes (recorder emits them) |
-| Zlota44 (health.go:105) | empty injector + recorder | `checkSQLite` | yes (recorder emits it) |
-| PMA (server.go:101) | empty injector + recorder | `registry.CriticalNames()` | yes (registry emits them) |
-| dnsblockd (health.go:49) | injector | `database`, `dns` | yes |
-| library-policy (health.go:38) | standalone | dynamic `critical []string` | yes (batch fn emits them) |
-| fir (providers.go:125) | standalone | `CheckDiskSpace`, `CheckAIProvider` | yes |
-| webphone (app.go:216, server.go:311) | mixed | `sqlite`, `blob-dir` | yes |
+| Consumer                             | Path                      | Critical names                                                    | Batch-visible?            |
+| ------------------------------------ | ------------------------- | ----------------------------------------------------------------- | ------------------------- |
+| KeyHolderAI (di.go:442)              | injector                  | typetostring-typed service names                                  | yes (do healthcheckers)   |
+| DiscordSync (health_dashboard.go:86) | injector                  | `criticalHealthServiceNames()` (guarded since the 2026-08-16 bug) | yes                       |
+| CV (di/health_probe.go:58)           | injector                  | typetostring-typed, mode-conditional                              | yes                       |
+| nsfw-classifier (app.go:285)         | injector                  | typed classifier service                                          | yes                       |
+| go-appkit bridge (probe.go)          | injector                  | derived from registered checks                                    | yes                       |
+| cqrs-htmx bridge (probe.go)          | recorder                  | projection names                                                  | yes (recorder emits them) |
+| Zlota44 (health.go:105)              | empty injector + recorder | `checkSQLite`                                                     | yes (recorder emits it)   |
+| PMA (server.go:101)                  | empty injector + recorder | `registry.CriticalNames()`                                        | yes (registry emits them) |
+| dnsblockd (health.go:49)             | injector                  | `database`, `dns`                                                 | yes                       |
+| library-policy (health.go:38)        | standalone                | dynamic `critical []string`                                       | yes (batch fn emits them) |
+| fir (providers.go:125)               | standalone                | `CheckDiskSpace`, `CheckAIProvider`                               | yes                       |
+| webphone (app.go:216, server.go:311) | mixed                     | `sqlite`, `blob-dir`                                              | yes                       |
 
 No call site found where a critical name legitimately never appears in a
-batch. Environment-conditional sets (CV) toggle *which* names are passed, not
+batch. Environment-conditional sets (CV) toggle _which_ names are passed, not
 whether they are registered — the guard is safe.
 
 **Escape hatch:** none shipped in v0.4.x. A consumer genuinely blocked by

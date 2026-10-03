@@ -4,10 +4,10 @@
 
 ## The split brain today
 
-| Concept | Names in use | Where |
-| --- | --- | --- |
+| Concept                                 | Names in use                                                                                                                  | Where               |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | a thing that produces a health.Response | `*Probe` (root), `Source` (aggregate), `Remote` (federation), `Prober` (dashboard consumer interface, mirrored by federation) | 4 names, 4 packages |
-| a named health verdict | `Check` (wire/type), "service" (options, docs: `WithCriticalServices`) | 2 metaphors |
+| a named health verdict                  | `Check` (wire/type), "service" (options, docs: `WithCriticalServices`)                                                        | 2 metaphors         |
 
 ## Proposal
 
@@ -15,7 +15,7 @@
 (`Probe`, `aggregate.Source`, `federation.Remote` — each is idiomatic in
 its package and renaming `Remote` to `Source` would blur the transport
 difference that justifies the two packages). Instead, standardize the
-*generic* term in docs and interfaces:
+_generic_ term in docs and interfaces:
 
 - docs/DOMAIN_LANGUAGE.md gains the entry: **health source** — anything
   producing a `health.Response`: a local `Probe`, an aggregate source, or a
@@ -29,10 +29,10 @@ difference that justifies the two packages). Instead, standardize the
 "services." Renaming the option is the breaking part; document now, rename
 in v0.5 alongside `ServiceName`:
 
-- docs + DOMAIN_LANGUAGE.md: a *check* is one named verdict; a *critical
-  check* is one whose failure forces readiness to fail. "Service" survives
+- docs + DOMAIN_LANGUAGE.md: a _check_ is one named verdict; a _critical
+  check_ is one whose failure forces readiness to fail. "Service" survives
   only where samber/do services are literally meant (the injector path's
-  checks *are* do services there).
+  checks _are_ do services there).
 - v0.5 candidates: `WithCriticalServices` → `WithCriticalChecks`
   (docs-first; both accepted via a temporary alias option during the v0.5
   window if fleet pressure demands).

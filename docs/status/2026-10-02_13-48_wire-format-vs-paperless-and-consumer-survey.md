@@ -17,13 +17,13 @@
 
 ## What this session actually did (evidence trail)
 
-| # | Action | Evidence |
-|---|--------|----------|
-| 1 | Read the go-health wire format | `types.go:81-106` (Response), `types.go:61` (`duration_ns,omitzero`), `probe.go:121` (`WithVersion`), `probe.go:128` (`WithInstanceID`) |
-| 2 | Located and read paperless-ngx system status | local checkout `paperless-ngx/src/documents/views.py:4137-4410` (SystemStatusView, schema + implementation) |
+| # | Action                                                          | Evidence                                                                                                                                                                                                     |
+| - | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 | Read the go-health wire format                                  | `types.go:81-106` (Response), `types.go:61` (`duration_ns,omitzero`), `probe.go:121` (`WithVersion`), `probe.go:128` (`WithInstanceID`)                                                                      |
+| 2 | Located and read paperless-ngx system status                    | local checkout `paperless-ngx/src/documents/views.py:4137-4410` (SystemStatusView, schema + implementation)                                                                                                  |
 | 3 | Surveyed go-health API usage across 13 local consumer checkouts | go-appkit, cqrs-htmx, dnsblockd, CV, library-policy, DiscordSync, KeyHolderAI, file-and-image-renamer, go-taskqueue (empty — unresolved), nsfw-classifier, zlota44, webphone, projects-management-automation |
-| 4 | Checked version/aggregate/federation adoption | `WithVersion`/`VersionHandler` in dnsblockd, KeyHolderAI, fir, nsfw-classifier; aggregate/federation imports found in **no** app consumer (grep-based; not alias-hardened) |
-| 5 | Answered the three questions in chat | comparison table + 4-pattern survey |
+| 4 | Checked version/aggregate/federation adoption                   | `WithVersion`/`VersionHandler` in dnsblockd, KeyHolderAI, fir, nsfw-classifier; aggregate/federation imports found in **no** app consumer (grep-based; not alias-hardened)                                   |
+| 5 | Answered the three questions in chat                            | comparison table + 4-pattern survey                                                                                                                                                                          |
 
 ---
 
@@ -75,69 +75,69 @@ Nothing destructive (read-only session), but brutal honesty about the sloppy par
 
 ## f) Top 50 things we should get done next
 
-*Brainstorm, not commitment list (per status-report skill: >25 items are ROADMAP fuel; docs-health HARVEST must apply routing rigor). Sorted roughly by impact.*
+_Brainstorm, not commitment list (per status-report skill: >25 items are ROADMAP fuel; docs-health HARVEST must apply routing rigor). Sorted roughly by impact._
 
-| # | Task | Bucket |
-|---|------|--------|
-| 1 | Update AGENTS.md consumer-inventory: 14 direct consumers (add nsfw-classifier, webphone, go-taskqueue, projects-management-automation, cqrs-htmx) | docs |
-| 2 | Update AGENTS.md with the 4 consumer implementation patterns (A–D) + adoption facts | docs |
-| 3 | Alias-safe re-verification of aggregate/federation non-adoption (grep import lines `go-health/aggregate`, `go-health/federation`) | verify |
-| 4 | Resolve go-taskqueue's go-health usage (empty grep — check go.mod, aliases, bridge) | verify |
-| 5 | Re-verify go-health-dashboard federation usage in dashboard source (not via AGENTS.md) | verify |
-| 6 | Write the genre-comparison doc: probe vs status page, paperless-ngx case study (candidate: `docs/system-status-vs-probe.md` or rejected-design ADR-007 "no system inventory on the probe") | docs |
-| 7 | FEATURES.md: add "Deliberately NOT included: install-type, server OS, storage stats, DB metadata" with rationale links | docs |
-| 8 | README: add "What go-health is NOT" section (probe, not a diagnostics page) — sales framing | docs |
-| 9 | ROADMAP.md: capture "opt-in system-inventory composition (dashboard-side)" as raw idea | docs |
-| 10 | TODO_LIST.md: harvest this report's Top-50 via docs-health HARVEST | docs |
-| 11 | Consumer-feature adoption matrix (consumer × WithVersion/WithInstanceID/NewChecks/DetailedCheck/Hook/method-guard) in docs/ | survey |
-| 12 | Audit `WithInstanceID` adoption across all 30 consumers | survey |
-| 13 | Audit `NewChecks` adoption — is the new named-checks constructor reaching consumers at all? | survey |
-| 14 | Audit `NewWithDetailedCheck` / `DetailedHealthRecorder` adoption (v0.2.0 metadata — real users?) | survey |
-| 15 | Audit `WithEvaluationHook` adoption (Prometheus composition story: real users or none?) | survey |
-| 16 | Audit `WithAllowedMethods` method-guard adoption (is the guard dead weight?) | survey |
-| 17 | Audit deprecated `WithGETOnly` usage across consumers (removal decision input) | survey |
-| 18 | Audit `MarkShuttingDown` / `AsShutdowner` / `AwaitReady` adoption across the fleet | survey |
-| 19 | Verify all direct consumers build against v0.4.1 (fleet currency sweep; 2026-09-28 check was presence-only) | verify |
-| 20 | Run consumer test suites (not just go.mod presence) for the 8 direct app consumers — next verification train | verify |
-| 21 | Version-skew audit of indirect consumers (cqrs-htmx v4.7.0–v4.13.0, go-appkit v0.5.1/v0.7.0) against v0.4.1 wire format | verify |
-| 22 | go-appkit bridge fidelity: does v0.7.0 pass through `since`/`duration_ns` or drop them? | verify |
-| 23 | Extract CV `SystemResources` (filesystem/memory/disk checks) into a reusable module (contrib candidate) | code |
-| 24 | Extract fir `CheckDiskSpace` (Statfs threshold) into the same module — de-duplicate the fleet | code |
-| 25 | Decide ownership for #23/#24: new repo vs docs recipes vs go-appkit/health | decision |
-| 26 | `docs/detailed-checks-cookbook.md`: add "system resource checks" recipe referencing CV/fir | docs |
-| 27 | Document the DB-metadata trap: why `database{type,url,migrations}` doesn't belong in checks (secrets in Error text, wire exposure) | docs |
-| 28 | Document warn-semantics with dnsblockd `blocklist-sources` as the canonical non-critical example (README or DOMAIN_LANGUAGE.md) | docs |
-| 29 | Verify `docs/openapi.yaml` matches the field list reported this session (lockstep gate) | verify |
-| 30 | Diff reported fields against `testdata/readiness_response.golden` to confirm completeness (omitzero behavior) | verify |
-| 31 | Security comparison note: paperless `/api/status/` is staff-only+authenticated; go-health endpoints unauthenticated by design — info-leak threat-model note (SECURITY.md or docs/) | docs |
-| 32 | Document timing difference: paperless per-block timings vs go-health `TotalLatencyMs` + `WithEvaluationHook` seam | docs |
-| 33 | go-health-dashboard: evaluate host/OS/storage panels fed by consumer-side checks (not probe fields) | feature |
-| 34 | Standardize system-check naming convention (`host/disk`, `host/memory`) in DOMAIN_LANGUAGE.md | docs |
-| 35 | Federation adoption analysis: which of the 30 consumers deploy multi-process and would benefit? | analysis |
-| 36 | Aggregate adoption analysis: same for in-process multi-probe | analysis |
-| 37 | Audit `Healthz` (aggregate single-endpoint) adoption | survey |
-| 38 | Investigate dnsblockd health.go:134 manual `resp.Checks[...] = health.Check{...}` — bypasses `buildChecks` (no Since stamping): legit escape hatch or doc gap? | verify |
-| 39 | Add README example: `WithVersion` + `VersionHandler` used together coherently (stamp once, serve both) | docs |
-| 40 | Rejected-design doc if ever proposed: extensible metadata map on Response (scalars-don't-merge rationale) | docs |
-| 41 | Check whether "system status page" vs "health probe" terminology is missing from DOMAIN_LANGUAGE.md | docs |
-| 42 | Verify fleet consumers' `go 1.27` floor directives (go-health requires 1.27+ toolchains) | verify |
-| 43 | Document fir's disk-CRITICAL choice: disk-full → readiness 503; liveness stays 200 (no restart cascade) — the kubelet-correct way to gate on storage | docs |
-| 44 | Evaluate "system inventory as federation remote": tiny exporter serving inventory JSON merged via federation | feature |
-| 45 | Check consumers for pre-extraction `WithPlugin`-era patterns (migration completeness) | survey |
-| 46 | Check whether any consumer relies on live mode (`WithRefreshInterval(0)`) vs default caching — parameter-use distribution | survey |
-| 47 | Record the paperless-ngx checkout pin (commit/date) used for this comparison; note llmindex block is newer-main | verify |
-| 48 | Read paperless `test_api_status.py` for response shapes the view hides (error cases) | verify |
-| 49 | Consider README wire-format example block (JSON sample) since the comparison showed outsiders misread scope | docs |
-| 50 | Carry the 3 open questions (below) to a decision | decision |
+| #  | Task                                                                                                                                                                                       | Bucket   |
+| -- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 1  | Update AGENTS.md consumer-inventory: 14 direct consumers (add nsfw-classifier, webphone, go-taskqueue, projects-management-automation, cqrs-htmx)                                          | docs     |
+| 2  | Update AGENTS.md with the 4 consumer implementation patterns (A–D) + adoption facts                                                                                                        | docs     |
+| 3  | Alias-safe re-verification of aggregate/federation non-adoption (grep import lines `go-health/aggregate`, `go-health/federation`)                                                          | verify   |
+| 4  | Resolve go-taskqueue's go-health usage (empty grep — check go.mod, aliases, bridge)                                                                                                        | verify   |
+| 5  | Re-verify go-health-dashboard federation usage in dashboard source (not via AGENTS.md)                                                                                                     | verify   |
+| 6  | Write the genre-comparison doc: probe vs status page, paperless-ngx case study (candidate: `docs/system-status-vs-probe.md` or rejected-design ADR-007 "no system inventory on the probe") | docs     |
+| 7  | FEATURES.md: add "Deliberately NOT included: install-type, server OS, storage stats, DB metadata" with rationale links                                                                     | docs     |
+| 8  | README: add "What go-health is NOT" section (probe, not a diagnostics page) — sales framing                                                                                                | docs     |
+| 9  | ROADMAP.md: capture "opt-in system-inventory composition (dashboard-side)" as raw idea                                                                                                     | docs     |
+| 10 | TODO_LIST.md: harvest this report's Top-50 via docs-health HARVEST                                                                                                                         | docs     |
+| 11 | Consumer-feature adoption matrix (consumer × WithVersion/WithInstanceID/NewChecks/DetailedCheck/Hook/method-guard) in docs/                                                                | survey   |
+| 12 | Audit `WithInstanceID` adoption across all 30 consumers                                                                                                                                    | survey   |
+| 13 | Audit `NewChecks` adoption — is the new named-checks constructor reaching consumers at all?                                                                                                | survey   |
+| 14 | Audit `NewWithDetailedCheck` / `DetailedHealthRecorder` adoption (v0.2.0 metadata — real users?)                                                                                           | survey   |
+| 15 | Audit `WithEvaluationHook` adoption (Prometheus composition story: real users or none?)                                                                                                    | survey   |
+| 16 | Audit `WithAllowedMethods` method-guard adoption (is the guard dead weight?)                                                                                                               | survey   |
+| 17 | Audit deprecated `WithGETOnly` usage across consumers (removal decision input)                                                                                                             | survey   |
+| 18 | Audit `MarkShuttingDown` / `AsShutdowner` / `AwaitReady` adoption across the fleet                                                                                                         | survey   |
+| 19 | Verify all direct consumers build against v0.4.1 (fleet currency sweep; 2026-09-28 check was presence-only)                                                                                | verify   |
+| 20 | Run consumer test suites (not just go.mod presence) for the 8 direct app consumers — next verification train                                                                               | verify   |
+| 21 | Version-skew audit of indirect consumers (cqrs-htmx v4.7.0–v4.13.0, go-appkit v0.5.1/v0.7.0) against v0.4.1 wire format                                                                    | verify   |
+| 22 | go-appkit bridge fidelity: does v0.7.0 pass through `since`/`duration_ns` or drop them?                                                                                                    | verify   |
+| 23 | Extract CV `SystemResources` (filesystem/memory/disk checks) into a reusable module (contrib candidate)                                                                                    | code     |
+| 24 | Extract fir `CheckDiskSpace` (Statfs threshold) into the same module — de-duplicate the fleet                                                                                              | code     |
+| 25 | Decide ownership for #23/#24: new repo vs docs recipes vs go-appkit/health                                                                                                                 | decision |
+| 26 | `docs/detailed-checks-cookbook.md`: add "system resource checks" recipe referencing CV/fir                                                                                                 | docs     |
+| 27 | Document the DB-metadata trap: why `database{type,url,migrations}` doesn't belong in checks (secrets in Error text, wire exposure)                                                         | docs     |
+| 28 | Document warn-semantics with dnsblockd `blocklist-sources` as the canonical non-critical example (README or DOMAIN_LANGUAGE.md)                                                            | docs     |
+| 29 | Verify `docs/openapi.yaml` matches the field list reported this session (lockstep gate)                                                                                                    | verify   |
+| 30 | Diff reported fields against `testdata/readiness_response.golden` to confirm completeness (omitzero behavior)                                                                              | verify   |
+| 31 | Security comparison note: paperless `/api/status/` is staff-only+authenticated; go-health endpoints unauthenticated by design — info-leak threat-model note (SECURITY.md or docs/)         | docs     |
+| 32 | Document timing difference: paperless per-block timings vs go-health `TotalLatencyMs` + `WithEvaluationHook` seam                                                                          | docs     |
+| 33 | go-health-dashboard: evaluate host/OS/storage panels fed by consumer-side checks (not probe fields)                                                                                        | feature  |
+| 34 | Standardize system-check naming convention (`host/disk`, `host/memory`) in DOMAIN_LANGUAGE.md                                                                                              | docs     |
+| 35 | Federation adoption analysis: which of the 30 consumers deploy multi-process and would benefit?                                                                                            | analysis |
+| 36 | Aggregate adoption analysis: same for in-process multi-probe                                                                                                                               | analysis |
+| 37 | Audit `Healthz` (aggregate single-endpoint) adoption                                                                                                                                       | survey   |
+| 38 | Investigate dnsblockd health.go:134 manual `resp.Checks[...] = health.Check{...}` — bypasses `buildChecks` (no Since stamping): legit escape hatch or doc gap?                             | verify   |
+| 39 | Add README example: `WithVersion` + `VersionHandler` used together coherently (stamp once, serve both)                                                                                     | docs     |
+| 40 | Rejected-design doc if ever proposed: extensible metadata map on Response (scalars-don't-merge rationale)                                                                                  | docs     |
+| 41 | Check whether "system status page" vs "health probe" terminology is missing from DOMAIN_LANGUAGE.md                                                                                        | docs     |
+| 42 | Verify fleet consumers' `go 1.27` floor directives (go-health requires 1.27+ toolchains)                                                                                                   | verify   |
+| 43 | Document fir's disk-CRITICAL choice: disk-full → readiness 503; liveness stays 200 (no restart cascade) — the kubelet-correct way to gate on storage                                       | docs     |
+| 44 | Evaluate "system inventory as federation remote": tiny exporter serving inventory JSON merged via federation                                                                               | feature  |
+| 45 | Check consumers for pre-extraction `WithPlugin`-era patterns (migration completeness)                                                                                                      | survey   |
+| 46 | Check whether any consumer relies on live mode (`WithRefreshInterval(0)`) vs default caching — parameter-use distribution                                                                  | survey   |
+| 47 | Record the paperless-ngx checkout pin (commit/date) used for this comparison; note llmindex block is newer-main                                                                            | verify   |
+| 48 | Read paperless `test_api_status.py` for response shapes the view hides (error cases)                                                                                                       | verify   |
+| 49 | Consider README wire-format example block (JSON sample) since the comparison showed outsiders misread scope                                                                                | docs     |
+| 50 | Carry the 3 open questions (below) to a decision                                                                                                                                           | decision |
 
 ## g) Three questions I cannot figure out myself
 
-1. **Genre boundary:** Should "system status" data (OS, install type, storage stats, DB metadata) *ever* become a go-health feature (opt-in), or is the probe permanently minimal with that data living consumer-side / dashboard-side? This decides between writing a rejected-design ADR (cheap) and starting a feature design (expensive).
+1. **Genre boundary:** Should "system status" data (OS, install type, storage stats, DB metadata) _ever_ become a go-health feature (opt-in), or is the probe permanently minimal with that data living consumer-side / dashboard-side? This decides between writing a rejected-design ADR (cheap) and starting a feature design (expensive).
 2. **Survey blind spots:** Are there consumers **not checked out locally** (other machines, private forks) whose health implementations I could not see — particularly any already using aggregate/federation or `NewChecks`? My "only the dashboard merges" claim is only as good as the local checkouts.
 3. **Persistence:** Do you want this session's durable findings promoted now (AGENTS.md inventory + patterns update, plus the genre-comparison doc), or should they stay in this report until you call?
 
 ---
 
-*Auto-commit daemon will pick this file up; no manual commit (harness rule: no commit without explicit request).*
+_Auto-commit daemon will pick this file up; no manual commit (harness rule: no commit without explicit request)._
 
 **NEXT STEP AFTER THIS REPORT:** docs-health → HARVEST section (f) into TODO_LIST.md / ROADMAP.md — awaiting instructions.

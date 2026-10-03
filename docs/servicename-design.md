@@ -12,11 +12,11 @@ which is exactly the critical-name footgun class (now guarded at runtime by
 
 ## Options considered
 
-| Option | Shape | Verdict |
-| --- | --- | --- |
-| **A. Defined string type** | `type ServiceName string`; `WithCriticalServices(names ...ServiceName)` | **RECOMMENDED** — one-line definition, zero runtime cost, error `%w`-friendly, JSON-marshals as its string. Builders: `checks.Named("database", fn)`. |
-| B. Struct handle (identity object) | `ServiceName{...}` with methods | Rejected — heavyweight; identity is just a name in this domain. |
-| C. Sealed/branded type with registry | `NewServiceName[T]()` deriving from the type | Rejected for v0.5 — couples go-health to naming conventions (typetostring) some consumers don't use (cqrs-htmx projections are plain strings). |
+| Option                               | Shape                                                                   | Verdict                                                                                                                                               |
+| ------------------------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A. Defined string type**           | `type ServiceName string`; `WithCriticalServices(names ...ServiceName)` | **RECOMMENDED** — one-line definition, zero runtime cost, error `%w`-friendly, JSON-marshals as its string. Builders: `checks.Named("database", fn)`. |
+| B. Struct handle (identity object)   | `ServiceName{...}` with methods                                         | Rejected — heavyweight; identity is just a name in this domain.                                                                                       |
+| C. Sealed/branded type with registry | `NewServiceName[T]()` deriving from the type                            | Rejected for v0.5 — couples go-health to naming conventions (typetostring) some consumers don't use (cqrs-htmx projections are plain strings).        |
 
 ## Migration plan (v0.5 window)
 
@@ -34,7 +34,7 @@ which is exactly the critical-name footgun class (now guarded at runtime by
    accepting the same literals without generics gymnastics that would
    worsen the API. A clean major-version cut is the honest move.
 4. Validation (`ErrUnknownCriticalService`) is unchanged — it compares the
-   same names after conversion; the type only moves the *typo* class from
+   same names after conversion; the type only moves the _typo_ class from
    runtime to review time for constant-based consumers.
 
 ## Non-goals

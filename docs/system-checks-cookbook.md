@@ -40,7 +40,7 @@ Threshold recipes from the fleet:
 
 ## 2. The DB-metadata trap
 
-Do not model database *diagnostics* as check output: engine type, DSN/URL,
+Do not model database _diagnostics_ as check output: engine type, DSN/URL,
 and migration status do not belong in a probe response.
 
 - Check names carry a **verdict** (pass/warn/fail + short error), nothing
@@ -69,6 +69,6 @@ health.New(injector,
 ```
 
 Rule of thumb: critical = "cannot serve traffic at all"; everything else
-non-critical so the response body tells the operator *what* is degraded
+non-critical so the response body tells the operator _what_ is degraded
 while the pod keeps serving. Escalate to critical only when serving stale
 data is worse than serving nothing.

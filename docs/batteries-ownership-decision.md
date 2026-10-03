@@ -4,10 +4,10 @@
 
 ## The duplication (verified in source)
 
-| Consumer | Implementation | Semantics |
-| --- | --- | --- |
-| CV `internal/health/systemresources.go` (136 lines) | filesystem writability + memory MB thresholds + disk %-used via `syscall` | non-critical (warn): "a full disk must ALERT, not restart the pod" |
-| fir `pkg/injector/health_checks.go` (133 lines) | `syscall.Statfs` disk GB-free (<1 GB critical), process age, AI provider, file watcher | mixed: disk critical, age warn |
+| Consumer                                            | Implementation                                                                         | Semantics                                                          |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| CV `internal/health/systemresources.go` (136 lines) | filesystem writability + memory MB thresholds + disk %-used via `syscall`              | non-critical (warn): "a full disk must ALERT, not restart the pod" |
+| fir `pkg/injector/health_checks.go` (133 lines)     | `syscall.Statfs` disk GB-free (<1 GB critical), process age, AI provider, file watcher | mixed: disk critical, age warn                                     |
 
 Same underlying need (statfs/memory pressure), independently invented, with
 divergent criticality and threshold vocabularies. Every future consumer
@@ -15,11 +15,11 @@ without a batteries option re-invents them.
 
 ## Options considered
 
-| Option | Verdict | Reason |
-| --- | --- | --- |
+| Option                                 | Verdict    | Reason                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`health/checks` subpackage in core** | **CHOSEN** | The checks are small, pure-stdlib (`syscall`, `runtime`, `net/http`, `database/sql`), and semantically tied to go-health's pass/warn/fail vocabulary — putting them anywhere else forces a second dependency or copy-paste. Subpackage (not root) keeps the root import graph clean for consumers who don't want them. |
-| Separate contrib repo/module | Rejected | A whole repository for ~200 lines of stdlib checks is overhead without a payoff; version-skew coordination with core would be constant. |
-| go-appkit/health | Rejected | Reaches only the 2 bridge consumers; core batteries reach all 30. go-appkit can re-export later if it wants. |
+| Separate contrib repo/module           | Rejected   | A whole repository for ~200 lines of stdlib checks is overhead without a payoff; version-skew coordination with core would be constant.                                                                                                                                                                                |
+| go-appkit/health                       | Rejected   | Reaches only the 2 bridge consumers; core batteries reach all 30. go-appkit can re-export later if it wants.                                                                                                                                                                                                           |
 
 ## Design constraints (binding for C2)
 

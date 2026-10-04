@@ -45,14 +45,14 @@ go-health v0.1.3 released; issue-#2 feature sits in CHANGELOG `[Unreleased]`.
 
 Everything below is planned, prioritized in TODO_LIST.md, and has **zero code written**. Grouped, with why still idle:
 
-- **Release (blocked on owner):** cut v0.1.4 (tag, proxy-verify, pkg.go.dev, post-release consumer sweep). Waiting on g2. This gates the _entire_ issue-#2 delivery — the closed issue currently promises unreleased code.
-- **Dashboard rendering (separate repo, ownership unclear — 09-15 §g2 never answered):** failing-since column; status-changes timeline from `since`; adaptive `duration_ns` display; "stable for Xh" summaries; integration test pinning rendering. Waiting on g3.
-- **Measurement:** `BenchmarkEvaluate`/`buildChecks` before/after tracker delta + FEATURES.md re-baseline; the two contingent micro-opts (tracker allocation, `errorsOf`/classifier fusion) are gated on those numbers by design.
-- **Ecosystem:** samber/do upstream issue (per-service timing in batch results); samber-do-auditlog implements `DetailedHealthRecorder` (first real implementor).
-- **Docs:** detailed-checks cookbook; dashboard cookbook entry; README which-probe decision table; ADR-005 (slash-name promotion); OpenAPI aggregate-coverage statement; OpenAPI ↔ golden lockstep CI check; example-test prose review; deterministic `ExampleNewWithDetailedCheck` output.
-- **Property tests:** aggregate merge idempotence + source-order commutativity; populated-since seed for `FuzzAggregateMergeInvariants` (locks merged-since determinism like the root fuzz now does).
-- **Older open TODO_LIST rows (pre-session):** trigger `Fuzz (weekly long)` via workflow_dispatch (the workflow has literally never run — a typo would only surface at Monday 04:17 UTC); verify pkg.go.dev renders current release; coverage-threshold CI decision; branch protection on `master` (ready-to-run command in TODO_LIST); publish the v0.1.1/v0.1.2 announcement draft.
-- **Cross-repo hygiene:** repair the global-memory plumbing (d1); record the encoder lesson there afterwards (b5).
+- ~~**Release (blocked on owner):** cut v0.1.4 (tag, proxy-verify, pkg.go.dev, post-release consumer sweep). Waiting on g2. This gates the _entire_ issue-#2 delivery — the closed issue currently promises unreleased code.~~ done — shipped as v0.2.0 (2026-09-16); the closed issue's fix is released
+- ~~**Dashboard rendering (separate repo, ownership unclear — 09-15 §g2 never answered):** failing-since column; status-changes timeline from `since`; adaptive `duration_ns` display; "stable for Xh" summaries; integration test pinning rendering. Waiting on g3.~~ done — dashboard adopted all of it 2026-09-22
+- ~~**Measurement:** `BenchmarkEvaluate`/`buildChecks` before/after tracker delta + FEATURES.md re-baseline; the two contingent micro-opts (tracker allocation, `errorsOf`/classifier fusion) are gated on those numbers by design.~~ done — `BenchmarkEvaluate_TrackerDelta` measured (v0.4.0); both micro-opts Won't implement
+- ~~**Ecosystem:** samber/do upstream issue (per-service timing in batch results); samber-do-auditlog implements `DetailedHealthRecorder` (first real implementor).~~ done — samber/do #318 draft ready (owner files); auditlog row routed to TODO_LIST Blocked
+- ~~**Docs:** detailed-checks cookbook; dashboard cookbook entry; README which-probe decision table; ADR-005 (slash-name promotion); OpenAPI aggregate-coverage statement; OpenAPI ↔ golden lockstep CI check; example-test prose review; deterministic `ExampleNewWithDetailedCheck` output.~~ done — cookbook, README table, ADR-005, openapi-lockstep, prose sweep, deterministic output all shipped
+- ~~**Property tests:** aggregate merge idempotence + source-order commutativity; populated-since seed for `FuzzAggregateMergeInvariants` (locks merged-since determinism like the root fuzz now does).~~ done — aggregate_property_test.go (v0.3.0)
+- ~~**Older open TODO_LIST rows (pre-session):** trigger `Fuzz (weekly long)` via workflow_dispatch (the workflow has literally never run — a typo would only surface at Monday 04:17 UTC); verify pkg.go.dev renders current release; coverage-threshold CI decision; branch protection on `master` (ready-to-run command in TODO_LIST); publish the v0.1.1/v0.1.2 announcement draft.~~ done/routed — fuzz dispatched green; pkg.go.dev verified; coverage + branch protection + announcement are owner rows in TODO_LIST
+- ~~**Cross-repo hygiene:** repair the global-memory plumbing (d1); record the encoder lesson there afterwards (b5).~~ done — global AGENTS.md is nix-store managed; crush-config repo is the source of truth, lesson persisted
 
 Why unstarted: the session's directive was issue #2 + the prior session's follow-ups; everything above is either owner-gated, another repo, or deliberately deprioritized in TODO_LIST ranking.
 
@@ -148,3 +148,16 @@ _Point-in-time snapshot. Do not treat as current truth later — re-verify
 (AGENTS.md: "Status reports are point-in-time, not living documents").
 Format override: written as Markdown per explicit user instruction; the
 status-report skill's canonical output is a styled HTML dashboard._
+
+---
+
+## Completion (2026-10-04 docs-health run)
+
+Every §b/§c/§e/§f/§g item now carries an inline verdict. Issue #2's fix
+shipped as v0.2.0 the same day; the follow-ups landed across v0.2.0–v0.4.0
+(dashboard adoption, tracker benchmark, ADR-005/006, aggregate property tests,
+openapi-lockstep, prose sweep). Two §f items are explicit `Won't implement`
+(tracker/`errorsOf` micro-opts). Owner-gated rows (branch protection, coverage
+threshold, announcement publish) are tracked in TODO_LIST. §f49 (rename the
+09-15 report) executed this run. Report fully resolved and archived to
+`docs/status/archived/`.

@@ -20,7 +20,8 @@ the shutdown-grace, AsShutdowner, and aggregate examples landed right after
 
 - `AwaitReady` with a cache-aware poll interval (respect the source's
   refresh interval instead of a fixed 50ms poll)
-- Aggregate `Healthz` parity → promoted to a v0.3.0 candidate (Theme 7)
+- ~~Aggregate `Healthz` parity~~ shipped in v0.4.0 (`Aggregate.Healthz()`,
+  docs/aggregate-healthz-design.md)
 
 ### 2. Observability & Diagnostics
 
@@ -97,18 +98,19 @@ Raw ideas (quality polish, none scheduled):
 
 How the v0.x line matures.
 
-#### v0.4.0 candidates (feature-driven, unscheduled)
+#### v0.5 candidates (feature-driven, unscheduled)
 
-Scoped 2026-09-04 from the open idea inventory; retargeted 2026-09-22 when
-v0.3.0 shipped (federation + `NewChecks`, released 2026-09-19) and the
-aggregate `Healthz()` parity was implemented (design accepted, unreleased —
-sits in CHANGELOG `[Unreleased]`). All are additive; the first two carry a
-written design:
+Scoped 2026-09-04 from the open idea inventory and carried forward; v0.3.0
+(federation + `NewChecks`), v0.4.0 (aggregate `Healthz()` + OpenAPI lockstep),
+and v0.4.1 shipped ahead of them, so both remain open. All are additive; each
+carries a written design:
 
 - `errors.Join` in `aggregate.New` — report all invalid sources instead of
   the first ([docs/errors-join-design.md](docs/errors-join-design.md), spike verified)
 - `Aggregate.SourceStatuses()` — per-source roll-up accessor
   ([docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md))
+- `federation.Prober.Healthz()` — the single-endpoint parity the aggregate
+  gained in v0.4.0; the federation `Prober` still lacks it (design note first)
 
 #### v1.0 criteria draft
 
@@ -130,9 +132,9 @@ What "1.0" will mean here — none of this is promised yet:
 Rationale: this is a pure-Go library — no binaries, archives, or checksums
 to produce, which is the work GoReleaser automates. The manual flow
 (CHANGELOG cut → `nix run .#gates` → annotated tag → `gh release create` →
-proxy/pkg.go.dev verify) has shipped three releases cleanly (v0.1.0–v0.1.2).
-GoReleaser would add config and CI surface for zero deliverables. Revisit
-triggers: shipping a CLI binary, or a sustained cadence above ~4
+proxy/pkg.go.dev verify) has shipped every release cleanly (v0.0.1 through
+v0.4.1). GoReleaser would add config and CI surface for zero deliverables.
+Revisit triggers: shipping a CLI binary, or a sustained cadence above ~4
 releases/year.
 
 #### Internal architecture — seam extraction rejected 2026-09-04

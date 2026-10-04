@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.4.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+> **Stability:** v0.4.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
 
 ---
 
@@ -28,10 +28,12 @@ Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a s
 - [Metrics](#metrics)
 - [Middleware](#middleware)
 - [Aggregating Multiple Probes](#aggregating-multiple-probes)
+- [Federating Remote Probes](#federating-remote-probes)
 - [Batteries: common checks](#batteries-common-checks)
 - [Audit Integration](#audit-integration)
 - [Kubernetes Wiring](#kubernetes-wiring)
 - [Troubleshooting](#troubleshooting)
+- [Fleet](#fleet)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -74,7 +76,7 @@ the Nix flake at all (nixpkgs 26.11 dropped x86_64-darwin; see `flake.nix`),
 so those jobs would assert nothing.
 
 Building requires Go 1.27+: the library imports `encoding/json/v2`, which is
-stable stdlib there (go.mod's `go 1.27.1` directive excludes older toolchains).
+stable stdlib there (go.mod's `go 1.27` directive excludes older toolchains).
 No `GOEXPERIMENT` is needed anywhere — the flake sets up the toolchain, and
 bare `go` commands just work on a 1.27+ host. Verified against go1.27.1:
 the library builds and the full test suite passes with `GOEXPERIMENT` unset.
@@ -231,7 +233,9 @@ expose install type, server OS, storage totals, or database engine/migration
 state (the paperless-ngx `/api/status/` field set) — those belong behind
 authentication in your own staff-only view or [go-health-dashboard](https://github.com/larsartmann/go-health-dashboard),
 never on an unauthenticated kubelet endpoint. It also does not log, render
-HTML, or own your HTTP server. See [docs/system-status-vs-probe.md](docs/system-status-vs-probe.md).
+HTML, or own your HTTP server. See [docs/system-status-vs-probe.md](docs/system-status-vs-probe.md)
+for the genre comparison and [docs/probe-threat-model.md](docs/probe-threat-model.md)
+for the unauthenticated-probe threat model and consumer hardening checklist.
 
 ## Key Features
 
@@ -456,6 +460,43 @@ agg.RegisterRoutes(mux, health.DefaultRoutes())
 
 The aggregate is passive: it adds no goroutines and merges on read (one lock-free cache load per source), so freshness is bounded by the slowest source's refresh interval. Overall status is the worst of the sources; every check is namespaced `source/check`, which keeps keys collision-free and gives consumers a stable grouping axis. Source names must not contain `/` — `aggregate.New` rejects them, because the name becomes the key prefix and a slash could alias another source's namespace (check names may contain `/`; everything before the first slash is the source name). Rationale in [docs/aggregate-source-name-design.md](docs/aggregate-source-name-design.md). Per-process scalars never survive a merge: the merged body has no `version`, `instance_id`, or `uptime`, because those fields describe one process and would lie in an aggregate view. Liveness stays dependency-blind (always 200); readiness is 503 on `fail` or any source shutting down; startup latches only when every source has booted.
 
+## Federating Remote Probes
+
+`aggregate` merges probes that live **in one process**. When the probes run in
+separate deployments, the [`federation`](federation/) sub-package pulls their
+health documents over HTTP and merges them into the same surface — so a hub
+(e.g. `health.home.lan`) can render every service's checks per remote with no
+consumer-side change:
+
+```go
+import "github.com/larsartmann/go-health/federation"
+
+fed, err := federation.New(
+    []federation.Remote{
+        {Name: "api", URL: "http://api.internal:8080/readyz"},
+        {Name: "web", URL: "http://web.internal:8080/readyz"},
+    },
+    federation.WithTimeout(3*time.Second),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+fed.RegisterRoutes(mux, health.DefaultRoutes())
+```
+
+The merge rules mirror `aggregate`: checks land namespaced `name/check`,
+overall status is the worst of the remotes, per-process scalars (`version`,
+`instance_id`, `uptime`) are dropped, and startup latches per remote on its
+first successful fetch. What differs is trust: remote bodies are **untrusted
+input**. An unreachable, non-200, undecodable, or status-invalid remote
+contributes one synthetic `name/reachable` FAIL check rather than freezing or
+silently reporting healthy, responses are capped at 1 MiB, and a document
+missing a valid status is refused whole. Liveness is fetch-free (always 200);
+readiness serves the merged verdict. Design:
+[docs/federation-design.md](docs/federation-design.md). Because it fetches
+live on every read, `RefreshInterval` is always 0 — cadence is the remotes'.
+
 ## Batteries: common checks
 
 `health/checks` ships zero-dependency, stdlib-only check functions for common needs:
@@ -567,6 +608,15 @@ A method-set guard is active (`WithAllowedMethods` or the deprecated `WithGETOnl
 ### pkg.go.dev shows old docs
 
 pkg.go.dev picks up new versions from the module proxy with propagation lag (up to ~1h after tagging). If the latest tag is still missing, wait and re-check; the proxy itself (`go get module@version`) works immediately.
+
+## Fleet
+
+go-health is used across the LarsArtmann fleet: **15 direct consumers** plus
+**16 more indirectly** through two bridge modules (cqrs-htmx and go-appkit).
+Four implementation patterns cover the fleet (injector + critical services,
+check-func maps, recorder bridges, framework bridges). The per-feature adoption
+matrix and the pattern map live in
+[docs/adoption-matrix.md](docs/adoption-matrix.md).
 
 ## Contributing
 

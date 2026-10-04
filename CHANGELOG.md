@@ -357,7 +357,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.4.1...HEAD
+[v0.4.1]: https://github.com/larsartmann/go-health/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/larsartmann/go-health/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/larsartmann/go-health/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/larsartmann/go-health/compare/v0.1.3...v0.2.0

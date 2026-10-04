@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Report Title</title>
+    <title>go-health — Process Improvement: Make Intent a First-Class Artifact</title>
     <style>
       /* =========================================================================
          BAUHAUS LIGHT — Editorial template
@@ -850,9 +850,9 @@
   <body>
     <!-- Full-bleed top bar (optional — remove for quieter reports) -->
     <div class="top-bar">
-      <span>REPORT TYPE</span>
-      <span>YYYY-MM-DD</span>
-      <span>AUTHOR / TEAM</span>
+      <span>PROCESS REVIEW</span>
+      <span>2026-10-04</span>
+      <span>go-health &middot; LarsArtmann fleet</span>
     </div>
 
     <div class="layout">
@@ -860,12 +860,15 @@
       <aside class="sidebar" data-nav>
         <nav>
           <div class="label">Contents</div>
-          <a href="#summary">Summary</a>
+          <a href="#summary">00 &middot; Summary</a>
           <a href="#scorecard">Scorecard</a>
           <a href="#strengths">Strengths</a>
-          <a href="#findings">Findings</a>
-          <a href="#proposal">Proposal</a>
-          <a href="#appendix">Appendix</a>
+          <a href="#diagnosis">01 &middot; The asymmetry</a>
+          <a href="#findings">02 &middot; Findings</a>
+          <a href="#redesign">03 &middot; The redesign</a>
+          <a href="#fleet">04 &middot; The fleet</a>
+          <a href="#guardrails">05 &middot; Guardrails</a>
+          <a href="#appendix">06 &middot; Appendix</a>
         </nav>
       </aside>
 
@@ -873,43 +876,45 @@
       <main class="main">
         <!-- Hero -->
         <header class="hero">
-          <!-- Optional Bauhaus signature: geometric shape cluster. Remove for quieter hero. -->
           <div class="hero-shapes">
             <div class="bar"></div>
             <div class="circle"></div>
             <div class="square"></div>
             <div class="tri"></div>
           </div>
-          <div class="eyebrow">REPORT TYPE &middot; YYYY-MM-DD</div>
-          <h1>Report Title</h1>
+          <div class="eyebrow">PROCESS REVIEW &middot; 2026-10-04</div>
+          <h1>Make Intent a First-Class Artifact</h1>
           <p class="subtitle">
-            One or two sentences that set the frame: who this is for, what was
-            reviewed, and what the reader will take away.
+            We gate the code by machine and gate the intent by memory. This is a
+            structural review of the working process behind the LarsArtmann
+            fleet, written after a docs-health session that spent most of its
+            effort re-reading timestamped reports by hand &mdash; work the fleet
+            already has tools to eliminate.
           </p>
           <div class="meta">
-            <span class="tag amber">Scope: example</span>
-            <span class="tag">Version: 1.0.0</span>
-            <span class="tag teal">Status: draft</span>
+            <span class="tag amber">Scope: go-health + fleet</span>
+            <span class="tag">Lens: process architecture</span>
+            <span class="tag teal">Status: proposal</span>
           </div>
         </header>
 
         <!-- Scorecard -->
         <section id="scorecard" class="scorecard">
           <div class="score-card score-good">
-            <div class="score">8</div>
-            <div class="label">Items passing</div>
-          </div>
-          <div class="score-card score-warn">
-            <div class="score">3</div>
-            <div class="label">Warnings</div>
+            <div class="score">9</div>
+            <div class="label">Artifact rigor /10</div>
           </div>
           <div class="score-card score-bad">
-            <div class="score">1</div>
-            <div class="label">Blockers</div>
+            <div class="score">3</div>
+            <div class="label">Intent tracking /10</div>
           </div>
-          <div class="score-card">
-            <div class="score">12</div>
-            <div class="label">Total reviewed</div>
+          <div class="score-card score-warn">
+            <div class="score">4</div>
+            <div class="label">Cross-session continuity /10</div>
+          </div>
+          <div class="score-card score-bad">
+            <div class="score">2</div>
+            <div class="label">Machine-enforced process /10</div>
           </div>
         </section>
 
@@ -917,14 +922,31 @@
         <section id="summary">
           <h2><span class="num">00</span>Summary</h2>
           <p>
-            Replace this with the bottom-line verdict. A good summary tells the
-            reader whether the subject is ready, what the biggest risk is, and
-            what one action would unlock the most value.
+            The single most important fact about this process: <strong>the
+            product is verified by machines and the plan is verified by
+            humans.</strong> The wire format is pinned by a golden file and a
+            CI lockstep check; the reason the next change matters lives in a
+            prose &sect;f list inside a timestamped report. Every session pays a
+            tax to rediscover it &mdash; this session read 14 dated files and
+            wrote 321 hand-made annotations to reconstruct intent that a
+            four-line query should have returned.
+          </p>
+          <p>
+            The good news is that this is not a missing-tool problem. The fleet
+            already ships the whole pipeline: <code>todo-list-ai</code>
+            extracts, <code>go-taskqueue</code> harvests and dispatches,
+            <code>docs-organizer</code> files, and Taskwarrior syncs. What is
+            missing is a handful of <strong>connectors</strong> &mdash; and a
+            decision to move process invariants out of discipline and into
+            architecture.
           </p>
           <div class="callout callout-amber">
             <strong>The bottom line</strong>
-            State the verdict plainly. If the report is blocking, say so. If
-            it's mostly positive, lead with that.
+            Stop treating "what to do next, why, and cited how" as prose. Give
+            intent the same treatment as the wire format: one machine-readable
+            source of truth, mechanically gated, derived &mdash; never
+            duplicated by hand. Three connectors and two gates convert this
+            session's manual work into a query.
           </div>
         </section>
 
@@ -932,112 +954,556 @@
         <section id="strengths">
           <h2><span class="num">&#9670;</span>What's already excellent</h2>
           <p>
-            Before the criticism: acknowledge what works. This builds trust and
-            keeps the report from reading like a pure complaint list.
+            This is a mature process with real assets. The redesign reuses them;
+            it does not replace them.
           </p>
-
           <div class="strengths">
             <div class="strength">
               <div class="check">+</div>
               <div class="text">
-                <strong>Specific strength one</strong>
-                <span>Explain why it matters and what it enables.</span>
+                <strong>Artifacts are mechanically locked</strong>
+                <span
+                  ><code>openapi-lockstep</code> proves every golden wire key is
+                  declared in the spec, as a flake check and a CI job. The repo
+                  already believes "derive, don't duplicate" for code.</span
+                >
               </div>
             </div>
             <div class="strength">
               <div class="check">+</div>
               <div class="text">
-                <strong>Specific strength two</strong>
+                <strong>An honest, self-critical report culture</strong>
                 <span
-                  >Reference files, metrics, or patterns where possible.</span
+                  >Reports carry &sect;a&ndash;&sect;g including a "TOTALLY
+                  FUCKED UP" section. The raw material for process improvement
+                  is already being captured &mdash; it is simply not being
+                  read back by machine.</span
+                >
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>The fleet pipeline already exists</strong>
+                <span
+                  ><code>go-taskqueue/internal/harvest</code> scans every repo's
+                  TODO_LIST.md, enqueues one agent task per open item, and
+                  carries citation, provenance, drift and prune machinery. The
+                  ledger interface is already load-bearing.</span
+                >
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Pareto planning with decision gates</strong>
+                <span
+                  >Plans encode owner gates (G1&ndash;G3) with recommended
+                  defaults so execution proceeds without stalling. This is the
+                  template for every pending decision.</span
+                >
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Skills carry procedures; gates mirror CI</strong>
+                <span
+                  >Skills are the operating system (docs-health, linter-building,
+                  github-voice). <code>.#gates</code> and
+                  <code>.#ci-emulation</code> make local verification match
+                  remote.</span
+                >
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>History is preserved, not rewritten</strong>
+                <span
+                  >The annotate-then-archive convention keeps resolution
+                  non-destructive. The archive is trustworthy because nothing in
+                  it was forged after the fact.</span
                 >
               </div>
             </div>
           </div>
         </section>
 
+        <!-- Diagnosis -->
+        <section id="diagnosis">
+          <h2><span class="num">01</span>The fundamental asymmetry</h2>
+          <p>
+            Look at the two halves of a change. The <em>artifact</em> side is a
+            closed loop: write code &rarr; golden test &rarr; lockstep gate
+            &rarr; CI. The <em>intent</em> side is an open loop: a human decides
+            something, writes it into a report, and hope carries it forward.
+          </p>
+          <div class="diagram">
+            <span class="node node-core">Artifact</span>
+            <span class="arrow">&rarr;</span>
+            <span class="node">test</span>
+            <span class="arrow">&rarr;</span>
+            <span class="node">gate</span>
+            <span class="arrow">&rarr;</span>
+            <span class="node">CI</span>
+            <span class="arrow">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+            <span class="node">Intent</span>
+            <span class="arrow">&rarr;</span>
+            <span class="node">report &sect;f</span>
+            <span class="arrow">&rarr;</span>
+            <span class="node">memory</span>
+          </div>
+          <p>
+            The consequences are measurable and recur. In this session alone:
+            three doc defects that were pure arithmetic drift (a version line,
+            a changelog link base, an ADR range) had to be found by rereading;
+            a status report's 50-item &sect;f list had to be resolved item by
+            item at ~6 files &times; ~50 rows; and an unknown number of dated
+            files were simply not read. None of that is judgement work. It is
+            bookkeeping that a query would have returned.
+          </p>
+          <div class="callout callout-amber">
+            <strong>The tell</strong>
+            When I proposed a "machine-readable intent ledger," the fleet
+            already had one &mdash; <code>go-taskqueue</code>'s harvest engine,
+            with SHA citation and drift detection. The real gap is not a ledger;
+            it is the <em>connector</em> from the report corpus into it.
+          </div>
+        </section>
+
         <!-- Findings -->
         <section id="findings">
-          <h2><span class="num">01</span>Findings</h2>
-          <p>These are the issues that need attention, ordered by impact.</p>
+          <h2><span class="num">02</span>Findings</h2>
+          <p>
+            Ordered by impact. Each names the failure mode, the evidence from
+            this session or a prior one, and the structural fix.
+          </p>
 
-          <!-- Issue 1 -->
           <div class="issue issue-critical" id="issue-1">
             <span class="severity severity-critical"
-              >Blocking &middot; High impact</span
+              >Blocking &middot; Highest leverage</span
             >
-            <h3>Critical issue title</h3>
+            <h3>Intent has no machine-readable source of truth</h3>
             <div class="where">
-              path/to/file.go:42-58 &middot; short context
+              docs/status/&lowast;.md &sect;f &middot; TODO_LIST.md &middot; ROADMAP.md
             </div>
             <p>
-              Describe the problem, cite the code or behavior, and explain why
-              it matters to the reader's goals.
+              Forward intent lives as prose in timestamped reports and as
+              hand-maintained rows in TODO_LIST/ROADMAP. Harvesting it is
+              archaeology: this session read 14 dated files and hand-resolved
+              ~321 items. The same 50-item report lists were re-audited by hand
+              across three consecutive sessions.
             </p>
-            <pre><code>// Example of the problematic pattern
-func BadExample() {}</code></pre>
+            <pre><code># What we wrote by hand this session:
+grep -rL '~~' docs/status/archived/*.md     # completeness by eye
+# What should have been one query:
+tq harvest --report 2026-10-02 --json | jq '.[] | select(.routed==false)'</code></pre>
             <div class="callout callout-teal">
-              <strong>Fix: recommended action</strong>
-              State the concrete fix, including file names, function names, or
-              configuration changes.
+              <strong>Fix: one ledger, machine-derived</strong>
+              Treat TODO_LIST.md as the canonical ledger (it already is &mdash;
+              <code>tq</code> parses its checkboxes and <code>&mdash; P[1-4]</code>
+              markers). Build the report&rarr;ledger connector so &sect;f items
+              become rows with citation and provenance, and archive
+              decidability becomes a query.
             </div>
           </div>
 
-          <!-- Issue 2 -->
-          <div class="issue issue-important" id="issue-2">
-            <span class="severity severity-important"
-              >Important &middot; Medium impact</span
-            >
-            <h3>Important issue title</h3>
-            <div class="where">path/to/another.go:12-19</div>
+          <div class="issue issue-critical" id="issue-2">
+            <span class="severity severity-critical">Blocking &middot; The read half</span>
+            <h3>Reports are write-only; the loop never closes</h3>
+            <div class="where">
+              go-taskqueue/internal/executor &middot; TQ_RESULT protocol
+            </div>
             <p>
-              Explain the risk. Important issues are not blockers but would make
-              a careful reviewer hesitate before shipping.
+              The fleet already models the agent&rarr;report link: an executor
+              emits <code>TQ_RESULT: {"report":"docs/status/...md",
+              "next_items":N}</code>. But <code>next_items</code> is a
+              <em>count</em>, not the items. So the report's intent is stored
+              but not ingested &mdash; the reader must still open the file and
+              transcribe.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Fix: emit the items, not a count</strong>
+              Add a machine-readable NEXT block (or sidecar) to the report
+              contract; extend <code>TQ_RESULT</code> to carry it. Completion and
+              archival then become decidable: a report is archivable when every
+              item is routed and no open task points at it.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="issue-3">
+            <span class="severity severity-important">Important &middot; Drift class</span>
+            <h3>Doc drift is mechanically checkable but ungated</h3>
+            <div class="where">
+              README.md:11 &middot; CHANGELOG.md link block &middot; FEATURES.md ADR range
+            </div>
+            <p>
+              Three defects found this session were arithmetic: a stability line
+              stuck at <code>v0.4.0</code> while latest is <code>v0.4.1</code>;
+              <code>[Unreleased]</code> comparing from the wrong tag and a
+              missing <code>[v0.4.1]</code> link; an ADR range
+              <code>001..006</code> that ignored ADR-007. All are derivable from
+              <code>go.mod</code>, <code>git tag</code>, and <code>docs/adr/</code>.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Fix: port the drift alarm</strong>
+              The repo already gates the wire format. Add a
+              <code>.#docs-check</code> that asserts stability line == latest
+              tag, <code>[Unreleased]</code> base == latest tag, every tag has a
+              link ref, and the ADR range matches the directory. Gate it beside
+              <code>openapi-lockstep</code>.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="issue-4">
+            <span class="severity severity-important">Important &middot; Discipline vs architecture</span>
+            <h3>Process invariants live in discipline, not in the machine</h3>
+            <div class="where">
+              "read before edit" &middot; "ALL means ALL" &middot; scope honesty
+            </div>
+            <p>
+              This session's mistakes were all "forgot / over-claimed" class: an
+              edit attempted before a read, a TOC line dropped while editing, an
+              internal claim of full file coverage that was not literally true.
+              These are not skill failures; they are missing constraints. An
+              environment that makes read-before-edit and scope declaration
+              mandatory turns three of them into impossibilities.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Fix: hooks over willpower</strong>
+              Use pre-tool hooks to enforce read-before-edit and to force an
+              explicit scope manifest ("read: N of M; skipped: <em>list</em>")
+              on any "ALL" request. Invariants belong in the harness, not in a
+              checklist a tired agent skips.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="issue-5">
+            <span class="severity severity-important">Important &middot; Split brains</span>
+            <h3>Split brains recur because nothing forbids them</h3>
+            <div class="where">
+              counts &middot; versions &middot; token names &middot; test helpers
+            </div>
+            <p>
+              The same fact gets restated in several files and drifts: consumer
+              counts went 9&rarr;14&rarr;15 across three sessions; an aggregate
+              test helper <code>sevRank</code> duplicated production
+              <code>Status.Rank()</code>; the HTML report kit itself had paired
+              glow-tokens that drifted until they were unified behind one
+              vocabulary and a <code>sync-check</code>.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Fix: the kit's own solution, generalized</strong>
+              One source of truth per fact + a sync-check that fails on drift.
+              The kit proved the pattern (vendored copy + <code>--check</code>
+              exit 1). Apply it to doc numbers, counts, and shared helpers.
+            </div>
+          </div>
+
+          <div class="issue issue-important" id="issue-6">
+            <span class="severity severity-important">Important &middot; Concurrency</span>
+            <h3>Multiple writers, unverified commits</h3>
+            <div class="where">
+              docs/status/2026-09-18 &sect;d &middot; the auto-commit daemon
+            </div>
+            <p>
+              A prior session documented two agent sessions editing one working
+              tree &mdash; mixed "heuristic" commits and a red <code>master</code>
+              from a lint break the daemon committed unverified. The queue
+              already serializes work per repo ("at most one in-flight task per
+              repo"); sessions do not.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Fix: one worktree per session, verify-before-commit</strong>
+              Enforce a single-writer-per-checkout rule (git worktree per
+              session) and move verification before the commit, not after &mdash;
+              a pre-commit gate, not a post-hoc CI run.
+            </div>
+          </div>
+
+          <div class="issue issue-nice" id="issue-7">
+            <span class="severity severity-nice">Nice to have &middot; Flow</span>
+            <h3>Owner decisions stall sessions</h3>
+            <div class="where">
+              the G1&ndash;G3 gate pattern already works
+            </div>
+            <p>
+              Sessions park on owner calls ("release now or hold?", "who owns
+              this repo?"). The 2026-10-03 plan already solved it: encode the
+              gate with a recommended default and execute unless overridden.
+              Make that universal.
             </p>
           </div>
 
-          <!-- Issue 3 -->
-          <div class="issue issue-nice" id="issue-3">
-            <span class="severity severity-nice"
-              >Nice to have &middot; Low impact</span
-            >
-            <h3>Nice-to-have improvement</h3>
-            <div class="where">docs/ or config</div>
+          <div class="issue issue-nice" id="issue-8">
+            <span class="severity severity-nice">Nice to have &middot; Unit of work</span>
+            <h3>The repo is treated as the unit of work; the fleet is</h3>
+            <div class="where">
+              15 direct + 16 indirect consumers behind two bridges
+            </div>
             <p>
-              Minor polish, documentation gaps, or future-proofing suggestions
-              go here.
+              A go-health change is a fleet event, yet process runs per-repo.
+              Cross-repo follow-ups leak into per-repo TODO_LISTs and stall
+              (CV skew, six unrun suites). Model the fleet as a graph and let
+              the tools carry the edges.
             </p>
           </div>
         </section>
 
-        <!-- Proposal -->
-        <section id="proposal">
-          <h2><span class="num">02</span>What the solution could look like</h2>
+        <!-- Redesign -->
+        <section id="redesign">
+          <h2><span class="num">03</span>What the solution could look like</h2>
           <p>
-            If the findings were fixed, what would the new state be? Show the
-            target API, structure, or workflow.
+            A closed intent loop that mirrors the artifact loop. The capture and
+            execution ends already exist; the redesign adds the two connectors
+            and the gates that keep the loop honest.
           </p>
-          <pre><code>// Target state after the recommended changes
-type BetterAPI struct {
-    Field string
-}</code></pre>
+          <div class="dep-tree">
+            <span class="root">intent</span>
+            &#9500;&#9472; capture &nbsp;<span class="ok">todo-list-ai</span> + report &sect;f<br />
+            &#9500;&#9472; ledger &nbsp;<span class="ok">TODO_LIST.md</span> (checkbox + &mdash; P[n] grammar)<br />
+            &#9500;&#9472; connector <span class="unwanted">report &sect;f &rarr; rows</span> &nbsp;<em>&larr; BUILD</em><br />
+            &#9500;&#9472; queue &nbsp;&nbsp;&nbsp;<span class="ok">go-taskqueue/internal/harvest</span> (citation, drift, prune)<br />
+            &#9500;&#9472; execute &nbsp;<span class="ok">agent pool</span> &rarr; report + <span class="unwanted">TQ_RESULT items</span> &larr; BUILD<br />
+            &#9500;&#9472; file &nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">docs-organizer</span><br />
+            &#9492;&#9472; sync &nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">Taskwarrior &rarr; tasks.home.lan</span>
+          </div>
+
+          <h3 style="margin-top: 2rem">Migration steps</h3>
+          <div class="migration-step">
+            <div class="migration-num">1</div>
+            <div class="migration-content">
+              <h4>Freeze the intent schema on the existing grammar</h4>
+              <p>
+                Adopt TODO_LIST.md as the canonical ledger. Define the row
+                grammar the fleet already parses (checkbox, <code>&mdash; P[1-4]</code>,
+                a citation annotation carrying <code>report</code> +
+                <code>file:line</code> + git SHA). No new file, no new format.
+              </p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">2</div>
+            <div class="migration-content">
+              <h4>Build the report&rarr;ledger extractor</h4>
+              <p>
+                Turn docs-health HARVEST into a script: parse a report's &sect;f,
+                emit ledger rows with provenance, dedupe against existing rows.
+                This is the connector that replaces the session's manual
+                transcription.
+              </p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">3</div>
+            <div class="migration-content">
+              <h4>Extend the report contract from count to items</h4>
+              <p>
+                Give reports a machine-readable NEXT block; widen
+                <code>TQ_RESULT</code> to carry it. Archival then follows from a
+                query: no open task, every item routed &rArr; archivable.
+              </p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">4</div>
+            <div class="migration-content">
+              <h4>Port the drift alarm into the gate sweep</h4>
+              <p>
+                One <code>.#docs-check</code>: version line == latest tag,
+                changelog base == latest tag, ADR range == directory, counts
+                derived not stated. Add to <code>.#gates</code> next to
+                <code>openapi-lockstep</code>.
+              </p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">5</div>
+            <div class="migration-content">
+              <h4>Move process invariants into the harness</h4>
+              <p>
+                Pre-tool hook: read-before-edit. Scope hook: "ALL" requires an
+                explicit read/skip manifest. Pre-commit gate: no unverified
+                commit. These convert repeated discipline failures into
+                impossibilities.
+              </p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">6</div>
+            <div class="migration-content">
+              <h4>Single-writer orchestration</h4>
+              <p>
+                One git worktree per session; let the queue own per-repo
+                serialization. This retires the mixed-commit / red-master class
+                documented on 2026-09-18.
+              </p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">7</div>
+            <div class="migration-content">
+              <h4>Funnel + mirror</h4>
+              <p>
+                Make <code>todo-list-ai &rarr; TODO_LIST &rarr; tq</code> the
+                default intake, <code>docs-organizer</code> the filing step, and
+                Taskwarrior the human cockpit mirroring the ledger. One truth,
+                several views.
+              </p>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 2rem">Before &amp; after</h3>
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Dimension</th>
+                <th>Today</th>
+                <th>Target</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Find next work</td>
+                <td class="no">reread reports by hand</td>
+                <td class="yes">one queue query</td>
+              </tr>
+              <tr>
+                <td>Doc numbers/versions</td>
+                <td class="no">hand-maintained, drifts</td>
+                <td class="yes">derived + gated</td>
+              </tr>
+              <tr>
+                <td>Archive a report</td>
+                <td class="no">manual judgement</td>
+                <td class="yes">decidable by query</td>
+              </tr>
+              <tr>
+                <td>Process rules</td>
+                <td class="no">discipline / memory</td>
+                <td class="yes">hooks / gates</td>
+              </tr>
+              <tr>
+                <td>Concurrency</td>
+                <td class="no">shared tree, daemon commits</td>
+                <td class="yes">worktree per session, verify-first</td>
+              </tr>
+              <tr>
+                <td>Cross-repo work</td>
+                <td class="no">leaks, stalls</td>
+                <td class="yes">fleet graph in the queue</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Fleet map -->
+        <section id="fleet">
+          <h2><span class="num">04</span>The fleet, already in place</h2>
+          <p>
+            These are shipped tools, not proposals. The redesign mostly
+            <em>connects</em> them.
+          </p>
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>Tool</th>
+                <th>Layer</th>
+                <th>Owns</th>
+                <th>go-health tie</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>docs-organizer</code></td>
+                <td>Filing</td>
+                <td>timestamped <code>docs/</code> layout, <code>git mv</code></td>
+                <td>&mdash;</td>
+              </tr>
+              <tr>
+                <td><code>todo-list-ai</code> (TS / Go)</td>
+                <td>Extraction</td>
+                <td>AI TODO/action-item scan &rarr; prioritized list</td>
+                <td>&mdash;</td>
+              </tr>
+              <tr>
+                <td><code>go-taskqueue</code> (<code>tq</code>)</td>
+                <td>Execution + ledger</td>
+                <td>harvest, citation, provenance, drift, prune, agent pool</td>
+                <td class="yes">consumes v0.4.1</td>
+              </tr>
+              <tr>
+                <td>Taskwarrior + <code>tasks.home.lan</code></td>
+                <td>Personal sync</td>
+                <td>cross-machine, E2E-encrypted ledger</td>
+                <td>&mdash;</td>
+              </tr>
+              <tr>
+                <td><code>go-health</code></td>
+                <td>Probe SDK</td>
+                <td>health endpoints of tq + dashboard</td>
+                <td class="yes">this session's subject</td>
+              </tr>
+            </tbody>
+          </table>
           <div class="callout callout-teal">
-            <strong>This is the target</strong>
-            Summarize why this state is better and what it unlocks.
+            <strong>Renewable asset, not a rewrite</strong>
+            The harvest engine already does citation and drift. The extractor
+            (step 2) feeds it; the report contract (step 3) closes the loop. No
+            component is replaced.
+          </div>
+        </section>
+
+        <!-- Guardrails -->
+        <section id="guardrails">
+          <h2><span class="num">05</span>Guardrails to hold the line</h2>
+          <p>Six invariants that, if enforced, prevent the whole defect class.</p>
+          <div class="grid-2">
+            <div class="card card-solution">
+              <strong>One source of truth per fact</strong>
+              If two files state it, one is derived. Split brains are banned by
+              construction.
+            </div>
+            <div class="card card-solution">
+              <strong>Derive, don't duplicate</strong>
+              Counts, versions, ranges come from code/tags/dirs, and a gate
+              re-derives them.
+            </div>
+            <div class="card card-warning">
+              <strong>Read the prior report first</strong>
+              Session step 0 is the previous report. It converts "implement X"
+              into "verify + close + execute follow-ups."
+            </div>
+            <div class="card card-warning">
+              <strong>Encode process, don't remember it</strong>
+              Read-before-edit, scope manifests, verify-before-commit are hooks,
+              not habits.
+            </div>
+            <div class="card card-solution">
+              <strong>Decide with defaults</strong>
+              Every owner gate ships a recommended default and executes unless
+              overridden.
+            </div>
+            <div class="card card-warning">
+              <strong>Fleet-first, repo-second</strong>
+              Treat cross-repo work as the default unit; the repo is a node.
+            </div>
           </div>
         </section>
 
         <!-- Appendix -->
         <section id="appendix">
-          <h2><span class="num">03</span>Appendix</h2>
+          <h2><span class="num">06</span>Appendix &mdash; priority matrix</h2>
           <p>
-            Methodology, links to related files, or a priority matrix can live
-            here.
+            Sequenced by leverage. Steps 1&ndash;4 turn this session's manual
+            work into a query; 5&ndash;7 convert recurring disciplines into
+            architecture.
           </p>
           <table class="compare">
             <thead>
               <tr>
-                <th>Issue</th>
+                <th>Change</th>
                 <th>Severity</th>
                 <th>Effort</th>
                 <th>Status</th>
@@ -1045,28 +1511,57 @@ type BetterAPI struct {
             </thead>
             <tbody>
               <tr>
-                <td>Issue one</td>
+                <td>Intent schema on TODO_LIST grammar</td>
                 <td class="no">Critical</td>
                 <td>Low</td>
                 <td class="no">Open</td>
               </tr>
               <tr>
-                <td>Issue two</td>
-                <td class="no">Important</td>
+                <td>Report&rarr;ledger extractor</td>
+                <td class="no">Critical</td>
                 <td>Medium</td>
-                <td class="yes">In progress</td>
+                <td class="no">Open</td>
+              </tr>
+              <tr>
+                <td>Report NEXT block / TQ_RESULT items</td>
+                <td class="no">Critical</td>
+                <td>Medium</td>
+                <td class="no">Open</td>
+              </tr>
+              <tr>
+                <td>Drift alarm in <code>.#gates</code></td>
+                <td>Important</td>
+                <td>Low</td>
+                <td class="no">Open</td>
+              </tr>
+              <tr>
+                <td>Read-before-edit + scope hooks</td>
+                <td>Important</td>
+                <td>Low</td>
+                <td class="no">Open</td>
+              </tr>
+              <tr>
+                <td>Single-writer worktree + pre-commit gate</td>
+                <td>Important</td>
+                <td>Low</td>
+                <td class="no">Open</td>
+              </tr>
+              <tr>
+                <td>Fleet graph in the queue</td>
+                <td>Nice</td>
+                <td>High</td>
+                <td class="yes">partial (tq)</td>
               </tr>
             </tbody>
           </table>
+          <div class="callout callout-amber">
+            <strong>Evidence base</strong>
+            This session's status report
+            (<code>docs/status/2026-10-04_11-39_docs-health-audit-living-docs-and-archive-sweep.md</code>),
+            the 2026-10-02/03 DX + Pareto reports, the 2026-09-18 &sect;d
+            concurrency incident, and <code>go-taskqueue/internal/harvest</code>.
+          </div>
         </section>
-
-        <!-- Footer -->
-        <footer class="footer">
-          <p>
-            Generated YYYY-MM-DD &middot; Reviewed against version X.Y.Z
-            &middot; All claims verified against source code where noted
-          </p>
-        </footer>
       </main>
     </div>
 

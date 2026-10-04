@@ -158,7 +158,7 @@ Raw ideas, none scheduled:
   too slow for race jobs
 - Raise the per-push fuzz budget above 10s/target if CI cost allows
 
-## Raw ideas (harvested 2026-10-02, report-1 §f)
+## Raw ideas (harvested 2026-10-02, report-1 §f; extended 2026-10-04 from the 2026-09-18 report)
 
 - Opt-in system-inventory composition on the **dashboard side**: host/OS/
   storage panels fed by consumer-side checks (never probe fields) — ADR-007
@@ -171,6 +171,16 @@ Raw ideas, none scheduled:
   principle — scalars don't merge in aggregate/federation, so free-form
   metadata would lie in fleet views. If it ever resurfaces, it needs a
   merge rule per key first (see docs/adr/ADR-007-no-system-inventory.md).
+- `WithTransitionHook` — fire only on a check status change (the
+  alerting-natural shape; `Since` makes transitions derivable today, but an
+  explicit hook removes per-consumer diffing bugs). Needs a design note first
+  (severity mapping, overlapping batches, panic isolation). 2026-09-18 report
+  §f4/§f18.
+- `healthtest` consumer helper package (fake batch, recording recorder, ready
+  assertions) — needs a design note + owner decision before any API surface.
+  2026-09-18 report §f19.
+- Extend `docs/openapi.yaml` to cover the federation endpoints (the spec
+  states aggregate coverage; federation is still implicit). 2026-09-18 §f38.
 
 ## Non-goals
 

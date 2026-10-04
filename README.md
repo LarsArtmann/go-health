@@ -35,6 +35,7 @@ Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a s
 - [Troubleshooting](#troubleshooting)
 - [Fleet](#fleet)
 - [Contributing](#contributing)
+- [Project Docs](#project-docs)
 - [License](#license)
 
 ---

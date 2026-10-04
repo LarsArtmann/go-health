@@ -20,7 +20,7 @@ kept for history; do not treat them as current truth.
 | File | Why it stays |
 | ---- | ------------ |
 | `2026-09-15_08-55_otel-monitoring-integration-assessment-and-self-review.md` | OTEL composition example + Gatus recipe still open (ROADMAP Theme 2) |
-| `2026-09-18_09-46_next-level-hardening-and-concurrent-federation-session.md` | carried forward into later sessions; not yet swept |
+| `2026-09-18_09-46_next-level-hardening-and-concurrent-federation-session.md` | Kept — open ideas harvested | WithTransitionHook, `healthtest`, OpenAPI-federation all routed to ROADMAP raw ideas 2026-10-04; report not yet fully annotated |
 | `2026-09-22_*.md` (4) | cross-repo fleet remediation; local-only pushes + several open consumer fixes |
 | `2026-09-04_*.md` (3) | reference anchors cited by older archived reports |
 | `2026-10-03_03-11_pareto-plan-executed-and-verified.md` | the current harvest source (not yet superseded) |

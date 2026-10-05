@@ -19,11 +19,11 @@ sweeps them.
 
 ### 1. Grounded the personal task stack
 
-| Fact | Evidence |
-| ---- | -------- |
-| `task` = Taskwarrior **3.5.0**; DB empty (hence "No matches") | `task --version` |
-| `tasks.home.lan` = **TaskChampion sync server v0.7.1** (sync backend, not a web UI) | fetched `https://tasks.home.lan` |
-| Wired: `sync.server.url = https://tasks.home.lan`, `sync.encryption_secret` set, `data.location = ~/.local/share/task` | `task show` |
+| Fact                                                                                                                   | Evidence                         |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `task` = Taskwarrior **3.5.0**; DB empty (hence "No matches")                                                          | `task --version`                 |
+| `tasks.home.lan` = **TaskChampion sync server v0.7.1** (sync backend, not a web UI)                                    | fetched `https://tasks.home.lan` |
+| Wired: `sync.server.url = https://tasks.home.lan`, `sync.encryption_secret` set, `data.location = ~/.local/share/task` | `task show`                      |
 
 ### 2. Mapped the four fleet projects (and where go-health sits)
 
@@ -69,7 +69,7 @@ Delivered an honest assessment (see §d) rather than defending it.
    `docs-organizer` and `todo-list-ai` claims are README-derived and carry no
    source citation in the report.
 3. **The intent-ledger idea.** I identified that the ledger already exists
-   (`tq` harvest over TODO_LIST.md) and that the gap is a *connector*, but the
+   (`tq` harvest over TODO_LIST.md) and that the gap is a _connector_, but the
    connector is still a sketch — no row format, no query, no hook config.
 4. **"View ALL 2026-0\* files"** from the earlier part of the session is still
    not literally complete (the 11:39 report lists the read/skip split).
@@ -98,7 +98,7 @@ Ranked by how much it undercuts the work:
 
 1. **Fabricated the scorecard metrics.** The report's headline visual is
    `9 / 3 / 4 / 2` — invented, no methodology, not reproducible. A report whose
-   thesis is *rigor and mechanistic verification* leads with fabricated numbers.
+   thesis is _rigor and mechanistic verification_ leads with fabricated numbers.
    This is the exact anti-pattern (trophy-case metrics) I criticized one turn
    earlier. Worst offense of the session.
 2. **A rigor report that skipped rigor.** Fleet claims sourced from READMEs were
@@ -148,58 +148,58 @@ Ranked by how much it undercuts the work:
 
 _Ranked. `R` = the report v2; the rest are the session's real follow-ups._
 
-| #  | Task | Bucket |
-| -- | ---- | ------ |
-| 1  | R: replace the invented scorecard with a **derived statistic** (e.g. mechanically-checkable doc facts vs gated ones), recomputable by the reader | report |
-| 2  | R: add a **source-cited verification table** — every fleet claim → `file:line` or `UNVERIFIED` | report |
-| 3  | R: verify `docs-organizer` and `todo-list-ai` claims against source before citing | verify |
-| 4  | R: include the **concrete artifact** — the ledger row grammar, the `tq`/`jq` query, the hook config | report |
-| 5  | R: add the **process-metrics section** (harvest latency, open-intent age, report→todo conversion, drift count) | report |
-| 6  | R: add a **steelman / limits** section (what mechanizing intent loses) | report |
-| 7  | R: end with **one recommended first action** + cost + first verifiable step | report |
-| 8  | R: decide the report's audience (decision memo vs agent spec) and write for it | report |
-| 9  | R: render the HTML (screenshot) and fix any visual defects (hero shapes, "diagram" row, dep-tree) | report |
-| 10 | R: build the drift alarm into `.#gates` as the low-risk, self-contained first win | automation |
-| 11 | R: keep the report to one page of thesis + one page of evidence + one page of plan (cut padding) | report |
-| 12 | Read `references/lessons.md`; reconcile recommendations with existing cross-project lessons | docs |
-| 13 | Port the "report → ledger" extractor spec (row format + dedupe) into a standalone design note | design |
-| 14 | Extend the report contract: machine-readable NEXT block; widen `TQ_RESULT` from count to items | design |
-| 15 | Write a `.#docs-check` flake app: version line == latest tag, changelog base == latest tag, ADR range == dir | automation |
-| 16 | Pre-tool hook: enforce read-before-edit (retire this session's AGENTS.md round trip) | tooling |
-| 17 | Scope hook: any "ALL" request requires an explicit read/skip manifest | tooling |
-| 18 | Pre-commit gate so the daemon cannot commit unverified code (the 2026-09-18 red-master class) | tooling |
-| 19 | Single-writer policy: one git worktree per session; document it | process |
-| 20 | Archive `2026-09-15_08-55` (OTEL) after routing its §f to ROADMAP | docs |
-| 21 | Archive `2026-09-18_09-46` after full annotation | docs |
-| 22 | Classify + archive the four `2026-09-22` reports | docs |
-| 23 | Decide the fate of the three `2026-09-04` anchors | decision |
-| 24 | Read/classify the unread 2026-0\* files (planning ×4, research ×2, announcements ×4) | docs |
-| 25 | DOMAIN_LANGUAGE + AGENTS line-ref anti-rot pass | docs |
-| 26 | Verify FEATURES benchmark rows against a fresh `-count=3` run | verify |
-| 27 | Decide the CV bump (go-health v0.4.x + `go 1.27`) — is that repo mine to edit? | decision |
-| 28 | Run the remaining consumer suites (fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier) | verify |
-| 29 | File the two upstream bridge issues (drafts ready) | upstream |
-| 30 | Cut v0.4.2 (CHANGELOG payload is ready; docs point at released v0.4.1) | release |
-| 31 | Draft the v0.4.2 announcement (validation is a boot-contract change) | release |
-| 32 | Run the dashboard suite against v0.4.2 pre-tag | verify |
-| 33 | Fresh-user sim against released v0.4.2 (no replace) | verify |
-| 34 | `health/checks` fuzz + benchmarks + coverage | code |
-| 35 | Version-skew CI script (fleet pins vs latest tag) | automation |
-| 36 | ServiceName call-site inventory + rewrite script (v0.5 staging) | v0.5 |
-| 37 | Finalize rename staging table | v0.5 |
-| 38 | Aggregate-validation integration test | test |
-| 39 | `mergeResponses` port prep | v0.5 |
-| 40 | Federation validation-semantics doc | docs |
-| 41 | Design note: `WithTransitionHook` | design |
-| 42 | Design note: `healthtest` helper | design |
-| 43 | OpenAPI: cover federation endpoints | docs |
-| 44 | Publish v0.1.1/v0.1.2 announcement (owner) | owner |
-| 45 | Post samber/do #318 comment (owner) | owner |
-| 46 | Decide coverage-threshold CI job (owner) | owner |
-| 47 | Confirm Taskwarrior UDA/context schema for the go-health project before seeding | design |
-| 48 | Prototype `tq` ↔ Taskwarrior sync (ledger projection) | design |
-| 49 | Add a "process metrics" appendix to the next status report (prove the loop works) | process |
-| 50 | Re-run this session's review after v2 to measure whether the fixes landed | process |
+| #  | Task                                                                                                                                             | Bucket     |
+| -- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1  | R: replace the invented scorecard with a **derived statistic** (e.g. mechanically-checkable doc facts vs gated ones), recomputable by the reader | report     |
+| 2  | R: add a **source-cited verification table** — every fleet claim → `file:line` or `UNVERIFIED`                                                   | report     |
+| 3  | R: verify `docs-organizer` and `todo-list-ai` claims against source before citing                                                                | verify     |
+| 4  | R: include the **concrete artifact** — the ledger row grammar, the `tq`/`jq` query, the hook config                                              | report     |
+| 5  | R: add the **process-metrics section** (harvest latency, open-intent age, report→todo conversion, drift count)                                   | report     |
+| 6  | R: add a **steelman / limits** section (what mechanizing intent loses)                                                                           | report     |
+| 7  | R: end with **one recommended first action** + cost + first verifiable step                                                                      | report     |
+| 8  | R: decide the report's audience (decision memo vs agent spec) and write for it                                                                   | report     |
+| 9  | R: render the HTML (screenshot) and fix any visual defects (hero shapes, "diagram" row, dep-tree)                                                | report     |
+| 10 | R: build the drift alarm into `.#gates` as the low-risk, self-contained first win                                                                | automation |
+| 11 | R: keep the report to one page of thesis + one page of evidence + one page of plan (cut padding)                                                 | report     |
+| 12 | Read `references/lessons.md`; reconcile recommendations with existing cross-project lessons                                                      | docs       |
+| 13 | Port the "report → ledger" extractor spec (row format + dedupe) into a standalone design note                                                    | design     |
+| 14 | Extend the report contract: machine-readable NEXT block; widen `TQ_RESULT` from count to items                                                   | design     |
+| 15 | Write a `.#docs-check` flake app: version line == latest tag, changelog base == latest tag, ADR range == dir                                     | automation |
+| 16 | Pre-tool hook: enforce read-before-edit (retire this session's AGENTS.md round trip)                                                             | tooling    |
+| 17 | Scope hook: any "ALL" request requires an explicit read/skip manifest                                                                            | tooling    |
+| 18 | Pre-commit gate so the daemon cannot commit unverified code (the 2026-09-18 red-master class)                                                    | tooling    |
+| 19 | Single-writer policy: one git worktree per session; document it                                                                                  | process    |
+| 20 | Archive `2026-09-15_08-55` (OTEL) after routing its §f to ROADMAP                                                                                | docs       |
+| 21 | Archive `2026-09-18_09-46` after full annotation                                                                                                 | docs       |
+| 22 | Classify + archive the four `2026-09-22` reports                                                                                                 | docs       |
+| 23 | Decide the fate of the three `2026-09-04` anchors                                                                                                | decision   |
+| 24 | Read/classify the unread 2026-0\* files (planning ×4, research ×2, announcements ×4)                                                             | docs       |
+| 25 | DOMAIN_LANGUAGE + AGENTS line-ref anti-rot pass                                                                                                  | docs       |
+| 26 | Verify FEATURES benchmark rows against a fresh `-count=3` run                                                                                    | verify     |
+| 27 | Decide the CV bump (go-health v0.4.x + `go 1.27`) — is that repo mine to edit?                                                                   | decision   |
+| 28 | Run the remaining consumer suites (fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier)                                       | verify     |
+| 29 | File the two upstream bridge issues (drafts ready)                                                                                               | upstream   |
+| 30 | Cut v0.4.2 (CHANGELOG payload is ready; docs point at released v0.4.1)                                                                           | release    |
+| 31 | Draft the v0.4.2 announcement (validation is a boot-contract change)                                                                             | release    |
+| 32 | Run the dashboard suite against v0.4.2 pre-tag                                                                                                   | verify     |
+| 33 | Fresh-user sim against released v0.4.2 (no replace)                                                                                              | verify     |
+| 34 | `health/checks` fuzz + benchmarks + coverage                                                                                                     | code       |
+| 35 | Version-skew CI script (fleet pins vs latest tag)                                                                                                | automation |
+| 36 | ServiceName call-site inventory + rewrite script (v0.5 staging)                                                                                  | v0.5       |
+| 37 | Finalize rename staging table                                                                                                                    | v0.5       |
+| 38 | Aggregate-validation integration test                                                                                                            | test       |
+| 39 | `mergeResponses` port prep                                                                                                                       | v0.5       |
+| 40 | Federation validation-semantics doc                                                                                                              | docs       |
+| 41 | Design note: `WithTransitionHook`                                                                                                                | design     |
+| 42 | Design note: `healthtest` helper                                                                                                                 | design     |
+| 43 | OpenAPI: cover federation endpoints                                                                                                              | docs       |
+| 44 | Publish v0.1.1/v0.1.2 announcement (owner)                                                                                                       | owner      |
+| 45 | Post samber/do #318 comment (owner)                                                                                                              | owner      |
+| 46 | Decide coverage-threshold CI job (owner)                                                                                                         | owner      |
+| 47 | Confirm Taskwarrior UDA/context schema for the go-health project before seeding                                                                  | design     |
+| 48 | Prototype `tq` ↔ Taskwarrior sync (ledger projection)                                                                                            | design     |
+| 49 | Add a "process metrics" appendix to the next status report (prove the loop works)                                                                | process    |
+| 50 | Re-run this session's review after v2 to measure whether the fixes landed                                                                        | process    |
 
 ---
 
@@ -208,8 +208,8 @@ _Ranked. `R` = the report v2; the rest are the session's real follow-ups._
 1. **Which first — report v2 or the cheap gate?** The HTML v2 (evidence table +
    concrete artifact + decision) is ~1 hour of writing and delivers a decision
    memo; the drift alarm is a ~30-minute self-contained `.#gates` win. I cannot
-   rank them without knowing whether you want the *thinking* fixed first or a
-   *runnable* improvement now.
+   rank them without knowing whether you want the _thinking_ fixed first or a
+   _runnable_ improvement now.
 2. **Is `go-taskqueue` mine to extend?** The connector (report §f → ledger rows)
    wants to live in or beside `tq`'s harvest engine. Is that repo one I should
    edit in a session, or is it owned by another flow — i.e. is the connector

@@ -83,58 +83,58 @@ Nothing destructive (read-only session). Honest failures:
 
 _Brainstorm, not commitment list. Carries Phase 1 items forward; the two reports together feed one HARVEST._
 
-| #  | Task                                                                                                                                              | Bucket   |
-| -- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-~~| 1  | Reproduce the typo footgun as a failing test (unknown critical name → startup latch never sets)                                                   | test     |~~ done — probe_critical_names_test.go
-~~| 2  | Verify the exact samber/do injector enumeration method for service-name validation                                                                | verify   |~~ done — verified then rejected
-~~| 3  | Search `docs/` (ADRs + rejected-designs) for any prior "checks subpackage"/batteries decision                                                     | verify   |~~ done — start-validation-design cites prior work
-~~| 4  | Draft the design note for `ErrUnknownCriticalService` + `Start()`-time validation                                                                 | design   |~~ done — docs/start-validation-design.md
-~~| 5  | Compat analysis: does a `Start()` error break any of the 30 consumers (env-specific names)?                                                       | verify   |~~ done — fleet compat scan
-~~| 6  | Fleet grep of every `WithCriticalServices` call to inventory critical-name usage                                                                  | survey   |~~ done — start-validation-design inventory
-~~| 7  | Decide gating posture: hard error vs eval-hook diagnostic vs dev-mode strictness                                                                  | decision |~~ done — hard error at Start (batch-based)
-~~| 8  | Prototype `health/checks` (Disk/Memory/HTTP/Database), zero new deps                                                                              | code     |~~ done — checks/checks.go (v0.4.2 Unreleased)
-~~| 9  | Read CV `SystemResources` + fir `CheckDiskSpace` fully; pin threshold/severity semantics                                                          | verify   |~~ done — batteries-ownership-decision + cookbook
-~~| 10 | Decide batteries ownership: core subpackage vs separate module vs go-appkit/health                                                                | decision |~~ done — core subpackage (docs/batteries-ownership-decision.md)
-~~| 11 | Inspect go-appkit/health criticality defaults — does the bridge derive critical correctly?                                                        | verify   |~~ done — docs/bridge-golden-path.md
-~~| 12 | Inspect cqrs-htmx/health criticality defaults (are projection checks critical?)                                                                   | verify   |~~ done — docs/bridge-golden-path.md
-~~| 13 | Design the "bridges are the golden path" story (ecosystem, 16/30 consumers)                                                                       | design   |~~ done — docs/bridge-golden-path.md
-~~| 14 | README decision table: which constructor for which need (durations, non-injector, etc.)                                                           | docs     |~~ done — README constructor table
-~~| 15 | Evaluate `health.Setup`/`MustNew` convenience (or reject with rationale)                                                                          | design   |~~ done — rejected (docs/setup-convenience-design.md)
-~~| 16 | Evaluate `health.InvokeCritical` helper vs documentation-only eager invocation                                                                    | design   |~~ done — rejected (docs/automation-design-notes.md)
-~~| 17 | Consolidate version stamping: `WithVersion` + `VersionHandler` + ldflags one recipe                                                               | docs     |~~ done — README version-stamping recipe
-~~| 18 | Evaluate `WithVersionFromBuildInfo` (or reject)                                                                                                   | design   |~~ done — rejected (two-line recipe covers it)
-~~| 19 | Publish the full Option reference (all knobs incl. BootTime/LiveThrottle/ShutdownGrace)                                                           | docs     |~~ done — README Configuration Reference
-~~| 20 | Audit `WithInstanceID` adoption across 30 consumers                                                                                               | survey   |~~ done — docs/adoption-matrix.md
-~~| 21 | Audit `NewChecks` adoption                                                                                                                        | survey   |~~ done — adoption-matrix
-~~| 22 | Audit `NewWithDetailedCheck`/`DetailedHealthRecorder` adoption                                                                                    | survey   |~~ done — adoption-matrix
-~~| 23 | Audit `WithEvaluationHook` adoption                                                                                                               | survey   |~~ done — adoption-matrix
-~~| 24 | Audit `WithAllowedMethods`/`WithGETOnly` adoption (deprecation-removal input)                                                                     | survey   |~~ done — adoption-matrix
-~~| 25 | Audit `WithLiveThrottle` adoption                                                                                                                 | survey   |~~ done — adoption-matrix (zero adopters; document-as-protective)
-~~| 26 | Audit `WithShutdownGracePeriod` adoption                                                                                                          | survey   |~~ done — adoption-matrix
-~~| 27 | Audit aggregate `Healthz` adoption                                                                                                                | survey   |~~ done — adoption-matrix
-~~| 28 | Audit `AwaitReady`/`MarkShuttingDown` adoption                                                                                                    | survey   |~~ done — adoption-matrix
-~~| 29 | Audit `WithNowFunc` usage — confirm tests-only, catch prod misuse                                                                                 | survey   |~~ done — adoption-matrix (tests-only)
-~~| 30 | Ghost-feature review: zero-adoption features → integrate, document-as-intended, or retire                                                         | review   |~~ done — adoption-matrix verdict
-~~| 31 | Split-brain fix: critical-name identity (string vs typed `ServiceName`)                                                                           | design   |~~ done — docs/servicename-design.md
-~~| 32 | Split-brain fix: version identity (WithVersion/VersionHandler/ldflags/VCS)                                                                        | design   |~~ done — README recipe + adoption-matrix
-~~| 33 | Write the DX golden-path doc (or extend README) from this analysis                                                                                | docs     |~~ done — README (Tier-3 golden path)
-~~| 34 | HARVEST both reports' (f) into TODO_LIST.md / ROADMAP.md                                                                                          | docs     |~~ done — harvested
-~~| 35 | Update AGENTS.md consumer inventory: 14 direct consumers (add nsfw-classifier, webphone, go-taskqueue, projects-management-automation, cqrs-htmx) | docs     |~~ done — 15 direct + 16 indirect
-~~| 36 | Update AGENTS.md with the 4 consumer patterns + DX friction points                                                                                | docs     |~~ done — four patterns documented
-~~| 37 | Genre-comparison doc / ADR (probe vs status page, paperless-ngx case study)                                                                       | docs     |~~ done — docs/system-status-vs-probe.md + ADR-007
-~~| 38 | Alias-safe re-verification of aggregate/federation non-adoption                                                                                   | verify   |~~ done — adoption-matrix
-~~| 39 | Resolve go-taskqueue's go-health usage (empty grep)                                                                                               | verify   |~~ done — resolved (v0.4.1)
-~~| 40 | Re-verify go-health-dashboard federation usage in dashboard source                                                                                | verify   |~~ done — dashboard source
-~~| 41 | Run consumer test suites for the 8 direct app consumers                                                                                           | verify   |~~ done — routed to TODO_LIST verification train
-~~| 42 | Version-skew audit (cqrs-htmx v4.7.0–v4.13.0; go-appkit v0.5.1/v0.7.0) vs v0.4.1                                                                  | verify   |~~ done — 2026-10-03 skew table
-~~| 43 | Record the paperless-ngx checkout pin used for the comparison                                                                                     | verify   |~~ done — pinned
-~~| 44 | Security note: unauthenticated probe endpoints vs staff-only status page (info-leak threat model)                                                 | docs     |~~ done — docs/probe-threat-model.md
-~~| 45 | Evaluate a project skill/template that wires go-health correctly by default (agent-skill lever)                                                   | design   |~~ done — rejected (docs/automation-design-notes.md)
-~~| 46 | Evaluate a vet/analyzer for critical-name mismatches (doanalyzerv2 infra exists)                                                                  | design   |~~ done — rejected with revisit trigger (automation-design-notes)
-~~| 47 | Define acceptance criteria for the `Start()`-validation change                                                                                    | design   |~~ done — docs/start-validation-design.md
-~~| 48 | Decide whether `Validate()` grows or a new method owns critical-name checking                                                                     | decision |~~ done — batch-based validation at Start (start-validation-design)
-~~| 49 | Simulate a fresh user (copy README quick start, run) to measure the golden-path gap                                                               | verify   |~~ done — README quickstart fails actionably (2026-10-03)
-~~| 50 | Carry the 3 open questions (below) to a decision                                                                                                  | decision |~~ done — resolved (hard error, core subpackage, repro-first)
+| #  | Task | Bucket                                                                                                                                            |
+| -- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~ | 1    | Reproduce the typo footgun as a failing test (unknown critical name → startup latch never sets)                                                   |
+| ~~ | 2    | Verify the exact samber/do injector enumeration method for service-name validation                                                                |
+| ~~ | 3    | Search `docs/` (ADRs + rejected-designs) for any prior "checks subpackage"/batteries decision                                                     |
+| ~~ | 4    | Draft the design note for `ErrUnknownCriticalService` + `Start()`-time validation                                                                 |
+| ~~ | 5    | Compat analysis: does a `Start()` error break any of the 30 consumers (env-specific names)?                                                       |
+| ~~ | 6    | Fleet grep of every `WithCriticalServices` call to inventory critical-name usage                                                                  |
+| ~~ | 7    | Decide gating posture: hard error vs eval-hook diagnostic vs dev-mode strictness                                                                  |
+| ~~ | 8    | Prototype `health/checks` (Disk/Memory/HTTP/Database), zero new deps                                                                              |
+| ~~ | 9    | Read CV `SystemResources` + fir `CheckDiskSpace` fully; pin threshold/severity semantics                                                          |
+| ~~ | 10   | Decide batteries ownership: core subpackage vs separate module vs go-appkit/health                                                                |
+| ~~ | 11   | Inspect go-appkit/health criticality defaults — does the bridge derive critical correctly?                                                        |
+| ~~ | 12   | Inspect cqrs-htmx/health criticality defaults (are projection checks critical?)                                                                   |
+| ~~ | 13   | Design the "bridges are the golden path" story (ecosystem, 16/30 consumers)                                                                       |
+| ~~ | 14   | README decision table: which constructor for which need (durations, non-injector, etc.)                                                           |
+| ~~ | 15   | Evaluate `health.Setup`/`MustNew` convenience (or reject with rationale)                                                                          |
+| ~~ | 16   | Evaluate `health.InvokeCritical` helper vs documentation-only eager invocation                                                                    |
+| ~~ | 17   | Consolidate version stamping: `WithVersion` + `VersionHandler` + ldflags one recipe                                                               |
+| ~~ | 18   | Evaluate `WithVersionFromBuildInfo` (or reject)                                                                                                   |
+| ~~ | 19   | Publish the full Option reference (all knobs incl. BootTime/LiveThrottle/ShutdownGrace)                                                           |
+| ~~ | 20   | Audit `WithInstanceID` adoption across 30 consumers                                                                                               |
+| ~~ | 21   | Audit `NewChecks` adoption                                                                                                                        |
+| ~~ | 22   | Audit `NewWithDetailedCheck`/`DetailedHealthRecorder` adoption                                                                                    |
+| ~~ | 23   | Audit `WithEvaluationHook` adoption                                                                                                               |
+| ~~ | 24   | Audit `WithAllowedMethods`/`WithGETOnly` adoption (deprecation-removal input)                                                                     |
+| ~~ | 25   | Audit `WithLiveThrottle` adoption                                                                                                                 |
+| ~~ | 26   | Audit `WithShutdownGracePeriod` adoption                                                                                                          |
+| ~~ | 27   | Audit aggregate `Healthz` adoption                                                                                                                |
+| ~~ | 28   | Audit `AwaitReady`/`MarkShuttingDown` adoption                                                                                                    |
+| ~~ | 29   | Audit `WithNowFunc` usage — confirm tests-only, catch prod misuse                                                                                 |
+| ~~ | 30   | Ghost-feature review: zero-adoption features → integrate, document-as-intended, or retire                                                         |
+| ~~ | 31   | Split-brain fix: critical-name identity (string vs typed `ServiceName`)                                                                           |
+| ~~ | 32   | Split-brain fix: version identity (WithVersion/VersionHandler/ldflags/VCS)                                                                        |
+| ~~ | 33   | Write the DX golden-path doc (or extend README) from this analysis                                                                                |
+| ~~ | 34   | HARVEST both reports' (f) into TODO_LIST.md / ROADMAP.md                                                                                          |
+| ~~ | 35   | Update AGENTS.md consumer inventory: 14 direct consumers (add nsfw-classifier, webphone, go-taskqueue, projects-management-automation, cqrs-htmx) |
+| ~~ | 36   | Update AGENTS.md with the 4 consumer patterns + DX friction points                                                                                |
+| ~~ | 37   | Genre-comparison doc / ADR (probe vs status page, paperless-ngx case study)                                                                       |
+| ~~ | 38   | Alias-safe re-verification of aggregate/federation non-adoption                                                                                   |
+| ~~ | 39   | Resolve go-taskqueue's go-health usage (empty grep)                                                                                               |
+| ~~ | 40   | Re-verify go-health-dashboard federation usage in dashboard source                                                                                |
+| ~~ | 41   | Run consumer test suites for the 8 direct app consumers                                                                                           |
+| ~~ | 42   | Version-skew audit (cqrs-htmx v4.7.0–v4.13.0; go-appkit v0.5.1/v0.7.0) vs v0.4.1                                                                  |
+| ~~ | 43   | Record the paperless-ngx checkout pin used for the comparison                                                                                     |
+| ~~ | 44   | Security note: unauthenticated probe endpoints vs staff-only status page (info-leak threat model)                                                 |
+| ~~ | 45   | Evaluate a project skill/template that wires go-health correctly by default (agent-skill lever)                                                   |
+| ~~ | 46   | Evaluate a vet/analyzer for critical-name mismatches (doanalyzerv2 infra exists)                                                                  |
+| ~~ | 47   | Define acceptance criteria for the `Start()`-validation change                                                                                    |
+| ~~ | 48   | Decide whether `Validate()` grows or a new method owns critical-name checking                                                                     |
+| ~~ | 49   | Simulate a fresh user (copy README quick start, run) to measure the golden-path gap                                                               |
+| ~~ | 50   | Carry the 3 open questions (below) to a decision                                                                                                  |
 
 ## g) Three questions I cannot figure out myself
 

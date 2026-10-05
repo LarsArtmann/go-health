@@ -29,33 +29,33 @@
 ## b) PARTIALLY DONE
 
 ~~1. **Gate sweep**: ran the gates individually, but never the one-command~~ done — the one-command `.#gates` sweep (incl. gosec/govulncheck) exists and ran green (2026-09-16 §a2)
-   `nix run .#gates` meta-sweep; gosec/govulncheck not run this session
-   (no new deps, no crypto — low risk, but the project's own pre-push bar
-   was not executed end-to-end).
+`nix run .#gates` meta-sweep; gosec/govulncheck not run this session
+(no new deps, no crypto — low risk, but the project's own pre-push bar
+was not executed end-to-end).
 ~~2. **Fuzz**: `nix run .#fuzz` ran; visible tail confirmed the aggregate~~ done — weekly-long fuzz app + scheduled workflow green; dispatched 2026-09-22
-   target PASS — the root package's fuzz result scrolled out of the tail
-   filter (earlier plain `go test` runs pass the seed corpus). Verifiable in
-   one command, not re-verified before reporting "fuzz pass".
+target PASS — the root package's fuzz result scrolled out of the tail
+filter (earlier plain `go test` runs pass the seed corpus). Verifiable in
+one command, not re-verified before reporting "fuzz pass".
 ~~3. **Performance story**: I claim tracker/adapter overhead is "negligible"~~ done — `BenchmarkEvaluate_TrackerDelta` measured (v0.4.0) and FEATURES re-baselined
-   but never measured it. The evaluate path now allocates 2 extra maps per
-   batch (`errorsOf` view + tracker rebuild); no benchmark added or re-run;
-   FEATURES.md performance table predates the change.
+but never measured it. The evaluate path now allocates 2 extra maps per
+batch (`errorsOf` view + tracker rebuild); no benchmark added or re-run;
+FEATURES.md performance table predates the change.
 
 ## c) NOT STARTED
 
 ~~1. **Issue #2 reply/close** — no comment posted with the design answer~~ done — commented + closed as completed 2026-09-16 (2026-09-16 §a4)
-   (omitzero + `duration_ns` rationale). Deliberately not posted without
-   owner instruction.
+(omitzero + `duration_ns` rationale). Deliberately not posted without
+owner instruction.
 ~~2. **Dashboard adoption** — the entire point of the issue. The dashboard~~ done — dashboard renders `since`/`duration_ns` + timeline/collapse, pinned by golden + screenshot fixture (AGENTS consumer verification)
-   still renders placeholders; nothing consumes `since`/`duration_ns` yet.
-   Verified compatible, not yet adapted.
+still renders placeholders; nothing consumes `since`/`duration_ns` yet.
+Verified compatible, not yet adapted.
 ~~3. **`samber-do-auditlog`** — does not implement `DetailedHealthRecorder`~~ routed to TODO_LIST (Blocked) — owner decision; the row premise was corrected 2026-09-22 (auditlog does not time health checks)
-   yet, even though it likely times checks internally for its audit log;
-   the optional interface ships with zero real implementors.
+yet, even though it likely times checks internally for its audit log;
+the optional interface ships with zero real implementors.
 ~~4. **TODO_LIST.md harvest** — follow-ups from this session (below) are not~~ done — harvested 2026-09-16 §a10
-   routed into TODO_LIST/ROADMAP yet.
+routed into TODO_LIST/ROADMAP yet.
 ~~5. **Upstream ask to samber/do** — richer batch results (per-check timing)~~ done — draft in docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md (filing is an owner call)
-   would let the injector path populate `duration_ns`; no issue filed.
+would let the injector path populate `duration_ns`; no issue filed.
 
 ## d) TOTALLY FUCKED UP!
 
@@ -133,71 +133,71 @@ Self-review (the 11 questions, condensed):
 ## f) Up to 50 things to do next (session-scoped, ranked)
 
 ~~1. Reply to issue #2 with the design answer + link the design doc (owner~~ done — comment posted + issue closed 2026-09-16 §a4
-   decides close-vs-await-release).
+decides close-vs-await-release).
 ~~2. Dashboard: render "failing since HH:MM (Nm)" column from `check.since`.~~ done — dashboard `status.go` rowMetadataTexts
 ~~3. Dashboard: derive the status-changes timeline from `since` instead of~~ done — dashboard history.go timeline
-   the sampling clock; kill the placeholder columns.
+the sampling clock; kill the placeholder columns.
 ~~4. Dashboard: render `duration_ns` (format µs/ms adaptively); hide when~~ done — dashboard formatCheckDuration (adaptive, absent-when-unknown)
-   absent.
+absent.
 ~~5. Dashboard: "stable for Xh" collapse summaries for healthy groups.~~ done — dashboard applyCollapsePolicy + TestCollapse_*
 ~~6. Decide the release vehicle: v0.1.4 now (CHANGELOG `[Unreleased]` is~~ done — shipped as v0.2.0 on 2026-09-16
-   meaty) or batch; then tag + proxy-verify per go-release skill.
+meaty) or batch; then tag + proxy-verify per go-release skill.
 ~~7. Run the full `nix run .#gates` once (incl. gosec/govulncheck) as the~~ done — ran green 2026-09-16 §a2
-   pre-release check.
+pre-release check.
 ~~8. Add `BenchmarkEvaluate` (and/or buildChecks) before/after tracker;~~ done — `BenchmarkEvaluate_TrackerDelta` in v0.4.0 CHANGELOG
-   record the delta in FEATURES.md performance table.
+record the delta in FEATURES.md performance table.
 ~~9. Re-baseline the existing FEATURES.md benchmark rows on current code.~~ done — FEATURES evaluate/tracker rows re-baselined 2026-09-22
 ~~10. Add a populated `Since`/`DurationNanos` case to~~ done — fuzz signature + seed added 2026-09-16 §a5
-    `FuzzResponseMarshalDeterministic` seeds (anchor the new fields).
+`FuzzResponseMarshalDeterministic` seeds (anchor the new fields).
 ~~11. File the samber/do upstream issue: richer health-check batch results~~ done — draft ready (owner files); TODO_LIST Owner Actions
-    (per-service timing) so the injector path can populate `duration_ns`.
+(per-service timing) so the injector path can populate `duration_ns`.
 ~~12. samber-do-auditlog: implement `DetailedHealthRecorder` (it already~~ done — routed to TODO_LIST Blocked (owner decision)
-    times checks internally for the audit log) — first real implementor.
+times checks internally for the audit log) — first real implementor.
 ~~13. HARVEST this report's items 1–5/7–25 into TODO_LIST.md / ROADMAP.md~~ done — harvested 2026-09-16 §a10
-    (docs-health HARVEST).
+(docs-health HARVEST).
 ~~14. Consider a `TestCheck_JSONOmitZero` companion asserting~~ done — e2e omitzero test added 2026-09-16 §a6
-    `duration_ns:0` is absent _inside a full response_ through
-    `writeResponse` (plain injector path e2e).
+`duration_ns:0` is absent _inside a full response_ through
+`writeResponse` (plain injector path e2e).
 ~~15. Startup handler godoc: mention checks carry `since` (one line).~~ done — 2026-09-16 §a7
 ~~16. Fix the openapi.yaml `info.version` (still 0.1.0 — pre-existing drift).~~ done — 2026-09-16 §a8 (now 0.5.0 after VersionHandler)
 ~~17. Make the `ExampleNewWithDetailedCheck` output fully deterministic~~ done — v0.3.0 CHANGELOG (deterministic label fix)
-    (assert non-negative or inject duration semantics).
+(assert non-negative or inject duration semantics).
 ~~18. `lsp_restart` hygiene: stale "unused" diagnostics persisted all~~ done — recorded in global AGENTS.md
-    session; note in global memory to distrust LSP when CLI lint
-    disagrees.
+session; note in global memory to distrust LSP when CLI lint
+disagrees.
 ~~19. Record the "probe the encoder before designing the wire" lesson in~~ done — AGENTS.md gotcha + docs/check-metadata-design.md
-    global AGENTS.md cross-cutting lessons.
+global AGENTS.md cross-cutting lessons.
 ~~20. Consider tracker allocation micro-optimization ONLY IF the benchmark~~ Won't implement — measured negligible (~+355 ns/Evaluate); not worth it
-    (item 8) shows it matters (reuse buffer / COW map swap).
+(item 8) shows it matters (reuse buffer / COW map swap).
 ~~21. Evaluate-path: consider fusing `errorsOf` into classifier (classifier~~ Won't implement — measurement showed no need
-    over CheckDetail) to drop one per-batch map — again, only if measured.
+over CheckDetail) to drop one per-batch map — again, only if measured.
 ~~22. Document (README or cookbook) a "detailed checks cookbook": how a~~ done — docs/detailed-checks-cookbook.md (v0.4.0)
-    service self-times and composes via `NewWithDetailedCheck`.
+service self-times and composes via `NewWithDetailedCheck`.
 ~~23. Dashboard cookbook entry for the new fields (docs/integrations.md~~ done — dashboard adopted both fields
-    upstream).
+upstream).
 ~~24. Once dashboard adopts: add an integration test in the dashboard repo~~ done — dashboard golden test + timedScreenshotRecorder fixture
-    pinning `since`/`duration_ns` rendering (placeholder regression).
+pinning `since`/`duration_ns` rendering (placeholder regression).
 ~~25. Deprecation decision (v0.2 planning): unify latency units — either~~ done — ADR-006 (duration units stay split by granularity)
-    `total_latency_ns` or document the split forever; ADR-style doc if
-    deferred.
+`total_latency_ns` or document the split forever; ADR-style doc if
+deferred.
 ~~26. Add `tracker.go` to the doanalyzerv2 analyzer sweep inputs (already in~~ done — 2026-09-16 §a9 (0 findings)
-    package — verify 0 findings claim still holds for new file).
+package — verify 0 findings claim still holds for new file).
 ~~27. Check `middleware_example_test.go`/`prometheus_example_test.go` docs~~ done — 2026-09-27 prose sweep
-    for stale wire examples (they pass; just prose review).
+for stale wire examples (they pass; just prose review).
 ~~28. Next session start: re-run `nix run .#fuzz` and read the FULL output~~ done — weekly-long fuzz green 2026-09-22
-    (close the b-2 gap from this report).
+(close the b-2 gap from this report).
 
 ## g) Questions I cannot answer myself
 
 ~~1. **Release**: is this the v0.1.4 release vehicle (tag now), or hold for~~ done (resolved — v0.2.0 shipped 2026-09-16; design answer posted on issue #2)
-   more items — and should I post the design answer on issue #2 in your
-   voice (github-voice) for you to approve?
+more items — and should I post the design answer on issue #2 in your
+voice (github-voice) for you to approve?
 ~~2. **Dashboard adoption**: want me to implement the `since`/`duration_ns`~~ done (resolved — dashboard adopted the fields 2026-09-22)
-   rendering in `go-health-dashboard` next (new session, its own repo), or
-   do you own that side?
+rendering in `go-health-dashboard` next (new session, its own repo), or
+do you own that side?
 ~~3. **Units**: keep dual latency units forever (`total_latency_ms` +~~ done (resolved — ADR-006 keeps the split by granularity)
-   `duration_ns`), or plan a v0.2 unification (breaking) while the library
-   is still v0.x-alpha?
+`duration_ns`), or plan a v0.2 unification (breaking) while the library
+is still v0.x-alpha?
 
 ---
 

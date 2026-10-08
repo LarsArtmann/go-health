@@ -84,8 +84,8 @@ boundary note.
 3. **Final gate sweep + push.** The session's standing instruction was "git
    push when done"; the tree is ~12 commits ahead of origin with the lint
    gate currently red — not pushed, deliberately.
-~~4. TODO_LIST deletion pass (see b3) and the drift-gate self-check afterwards.~~ done — the 20:58 session's TODO sync (6716a24) + this sweep's rebuild
-~~5. From the plan's owner-blocked list (untouched by design): dashboard suite~~ done — routed: archive sweep executed by this sweep; the rest live in TODO_LIST/ROADMAP rows
+   ~~4. TODO_LIST deletion pass (see b3) and the drift-gate self-check afterwards.~~ done — the 20:58 session's TODO sync (6716a24) + this sweep's rebuild
+   ~~5. From the plan's owner-blocked list (untouched by design): dashboard suite~~ done — routed: archive sweep executed by this sweep; the rest live in TODO_LIST/ROADMAP rows
    against released v0.5.0, consumer test train, CV bump (G3), upstream
    filings (G2), archive sweep, version-skew CI, FEATURES benchmark re-verify
    at `-count=3` fresh runs, the v0.6 type window (ServiceName, merge
@@ -220,18 +220,18 @@ owner/external._
 ## g) Questions I cannot answer myself
 
 ~~1. **Push policy for this session:** the tree is ~12 commits ahead of origin~~ answered by action — gates went green the same evening (20:58 §a3); push remains owner-gated (1 commit ahead now)
-   with 3 lint findings open. Do you want me to finish items 1–5 and push
-   gates-green (my recommendation), or push the current state now and fix
-   lint in a follow-up?
+with 3 lint findings open. Do you want me to finish items 1–5 and push
+gates-green (my recommendation), or push the current state now and fix
+lint in a follow-up?
 ~~2. **Release vehicle for the Shutdown-hang fix:** it is a real bug in~~ open — owner question (carried as the 20:58 report's §g2)
-   released v0.5.0 (hang on `Shutdown()` after a rejected critical name).
-   Do you want a v0.5.1 cut once gates are green, or should the fix ride in
-   the next feature release? (This is a G1-class timing call.)
+released v0.5.0 (hang on `Shutdown()` after a rejected critical name).
+Do you want a v0.5.1 cut once gates are green, or should the fix ride in
+the next feature release? (This is a G1-class timing call.)
 ~~3. **Daemon vs commit discipline:** the auto-commit daemon kept sweeping~~ answered by practice — races documented as a hazard (AGENTS Gotcha); daemon stays on
-   half-finished work into `chore:` commits, which made "commit after each
-   smallest change" produce misleading intermediate history (§d2). Should
-   execution sessions like this pause the daemon, or should I keep racing it
-   and phrase artifact claims conservatively?
+half-finished work into `chore:` commits, which made "commit after each
+smallest change" produce misleading intermediate history (§d2). Should
+execution sessions like this pause the daemon, or should I keep racing it
+and phrase artifact claims conservatively?
 
 ---
 

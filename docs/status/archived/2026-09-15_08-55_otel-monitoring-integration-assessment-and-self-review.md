@@ -17,22 +17,22 @@
 
 ## b) PARTIALLY DONE
 
-| # | Item                                                                                                                                                                                                                                                            | What's missing                       |
-| - | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 1 | ~~**OTEL verdict** — assessed as "seam exists, no verified path"; the actual spike was offered but not executed (awaiting decision).~~ open — → ROADMAP Theme 2 (spike routed 2026-10-08 with this report's findings) | The spike itself.                    |
-| 2 | ~~**monitor365 fit** — claimed "generic HTTP only, nothing obviously missing" WITHOUT verifying whether monitor365 has an HTTP-check/collector mechanism that could consume probes natively. Assertion, not verification.~~ UNVERIFIED — never drilled; still open for the owner's platform call | Read monitor365's collector surface. |
-| 3 | ~~**Gatus capability claims** — asserted `[BODY] pat(...)` works for JSON status assertions; did not verify against the Gatus version SystemNix actually pins.~~ UNVERIFIED — still unverified against the Gatus version SystemNix pins | Version-checked confirmation.        |
+| # | Item                                                                                                                                                                                                                                                                                                                                                  | What's missing                       |
+| - | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1 | ~~**OTEL verdict** — assessed as "seam exists, no verified path"; the actual spike was offered but not executed (awaiting decision).~~ open — → ROADMAP Theme 2 (spike routed 2026-10-08 with this report's findings)                                                                                                                                 | The spike itself.                    |
+| 2 | ~~**monitor365 fit** — claimed "generic HTTP only, nothing obviously missing" WITHOUT verifying whether monitor365 has an HTTP-check/collector mechanism that could consume probes natively. Assertion, not verification.~~ UNVERIFIED — never drilled; still open for the owner's platform call                                                      | Read monitor365's collector surface. |
+| 3 | ~~**Gatus capability claims** — asserted `[BODY] pat(...)` works for JSON status assertions; did not verify against the Gatus version SystemNix actually pins.~~ UNVERIFIED — still unverified against the Gatus version SystemNix pins                                                                                                               | Version-checked confirmation.        |
 | 4 | ~~**Consumer enumeration** — found cv via `rg "go-health"`; services vendored as flakes (discordsync, bank-sync, overview) wouldn't match that string in SystemNix. The stale `go-health_3` pin PROVES at least one more consumer exists that I did not identify.~~ superseded — docs/adoption-matrix.md (2026-10-02) is the consumer source of truth | Identify the stale-pin consumer.     |
-| 5 | ~~**signoz-coverage interaction** — never checked whether a go-health-only service would pass SystemNix's eval-time coverage registry (every service must emit traces/logs). If it wouldn't, "integrates well" is only half-true for OTEL-first services.~~ cross-repo (SystemNix) — never checked | Registry wiring-class check.         |
+| 5 | ~~**signoz-coverage interaction** — never checked whether a go-health-only service would pass SystemNix's eval-time coverage registry (every service must emit traces/logs). If it wouldn't, "integrates well" is only half-true for OTEL-first services.~~ cross-repo (SystemNix) — never checked                                                    | Registry wiring-class check.         |
 
 ## c) NOT STARTED
 
-| # | Item                                                                                                                                                 |
-| - | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| # | Item                                                                                                                                                                                                 |
+| - | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1 | ~~OTEL composition example (hook → OTLP gauges/logs via Go SDK, separate example module to keep go.mod single-dependency) — **the identified top gap**~~ open — → ROADMAP Theme 2 (top verified gap) |
-| 2 | ~~`docs/gatus-integration.md` recipe extracted from the proven cv.nix pattern~~ open — → ROADMAP Theme 2 |
-| 3 | ~~node_exporter textfile-collector snippet alongside the Prometheus example~~ open — → ROADMAP Theme 2 |
-| 4 | ~~HARVEST of this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` (docs-health loop-closure — deferred per "wait for instructions")~~ done — routed to ROADMAP Theme 2 (2026-10-08) |
+| 2 | ~~`docs/gatus-integration.md` recipe extracted from the proven cv.nix pattern~~ open — → ROADMAP Theme 2                                                                                             |
+| 3 | ~~node_exporter textfile-collector snippet alongside the Prometheus example~~ open — → ROADMAP Theme 2                                                                                               |
+| 4 | ~~HARVEST of this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` (docs-health loop-closure — deferred per "wait for instructions")~~ done — routed to ROADMAP Theme 2 (2026-10-08)          |
 
 ## d) TOTALLY FUCKED UP
 

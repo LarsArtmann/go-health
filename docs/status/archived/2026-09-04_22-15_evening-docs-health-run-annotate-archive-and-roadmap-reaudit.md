@@ -46,19 +46,19 @@ fmt 0 changed, flake check). Health scores post-fix: **Accuracy 10/10, Fitness 1
 ## b) PARTIALLY DONE
 
 ~~1. **Verdict completeness on two 08-07 stragglers** — `09-12` §e4 (startup-latch~~ open (minor) — archived 08-07 files stay as-is (closed history)
-   context cancellation) carries its own mitigation evidence but no grammar-compliant
-   verdict marker; `14-15` §b3–b5 are meta-notes left unmarked (judgment call: not work
-   items). A strict "every numbered item carries a verdict" reading flags both.
+context cancellation) carries its own mitigation evidence but no grammar-compliant
+verdict marker; `14-15` §b3–b5 are meta-notes left unmarked (judgment call: not work
+items). A strict "every numbered item carries a verdict" reading flags both.
 ~~2. **TODO_LIST evidence quality** — the 7 unblocked rows cite report sections and file~~ superseded — TODO_LIST rebuilt open-only with an Evidence column (2026-10-04/08 sweeps)
-   paths, but not every row carries a fresh `file:line` verified this session (e.g. the
-   property-test row cites `aggregate/aggregate.go` without a line).
+paths, but not every row carries a fresh `file:line` verified this session (e.g. the
+property-test row cites `aggregate/aggregate.go` without a line).
 ~~3. **External claims trusted from reports, not re-fetched** — "pkg.go.dev v0.1.1~~ superseded — later releases verified end-to-end (v0.4.0, v0.5.0)
-   rendered" (19-25 §a1) and CI green-ness were taken from report evidence, not
-   re-verified live this session; the v0.1.2 render check remains a TODO_LIST row.
+rendered" (19-25 §a1) and CI green-ness were taken from report evidence, not
+re-verified live this session; the v0.1.2 render check remains a TODO_LIST row.
 ~~4. **21-31 report deliberately untouched** — freshest snapshot, feeds TODO_LIST; but a~~ done — resolved by this 2026-10-08 sweep (21-31 annotated + archived)
-   future run should re-check its §b items once the owner decisions land.
+future run should re-check its §b items once the owner decisions land.
 ~~5. **This report** — written at session end, not at the moment of the last doc edit;~~ NOT-DO — process note about report timing, not a work item
-   the daemon committed the working tree before the report existed (see d4).
+the daemon committed the working tree before the report existed (see d4).
 
 ## c) NOT STARTED (all tracked, none silently dropped)
 
@@ -163,7 +163,7 @@ fmt 0 changed, flake check). Health scores post-fix: **Accuracy 10/10, Fitness 1
 ~~21. Go 1.27 floor bump (directive + drop GOEXPERIMENT) when 1.26 support drops.~~ done — v0.4.0: go 1.27 floor + GOEXPERIMENT dropped
 ~~22. Promote erraudit/doanalyzerv2 to CI if either becomes public.~~ covered — ROADMAP Theme 7 raw idea
 ~~23. Dependabot/Renovate for flake inputs + pinned action SHAs (subsumes Go patch~~ open — → ROADMAP Theme 7
-    tracking); auto-merge rules as separate policy call.
+tracking); auto-merge rules as separate policy call.
 ~~24. Non-nix CI matrix job (plain `go test`) for OS/arch honesty.~~ open — → ROADMAP Theme 7
 ~~25. arm64 native runner evaluation if QEMU stays too slow.~~ open — → ROADMAP Theme 7
 ~~26. Raise per-push fuzz budget above 10s/target if CI cost allows.~~ open — → ROADMAP Theme 7
@@ -187,25 +187,26 @@ fmt 0 changed, flake check). Health scores post-fix: **Accuracy 10/10, Fitness 1
 ~~44. Example: live-vs-cached mode side-by-side (21-31 §f27).~~ open (nice-to-have) — not carried
 ~~45. Shellcheck `tools/doanalyzerv2/run.sh` if shellcheck joins treefmt (21-31 §f47).~~ open (minor) — not carried
 ~~46. Consider `omitzero` migration for always-emitted scalar fields (v0.2.0+ wire~~ done — v0.2.0 omitzero wire
-    decision; needs changelog callout) (21-31 §f45).
+decision; needs changelog callout) (21-31 §f45).
 ~~47. Evaluate auto-generated GitHub release notes vs hand-curated excerpt (21-31 §f40).~~ open (nice-to-have) — not carried
 ~~48. Add a small index/README for `docs/status/archived/` (navigation + archive rule).~~ done — docs/status/archived/README.md (2026-10-04; updated by this sweep)
 ~~49. Pause-daemon (or commit-fast) practice around release/doc ops (19-25 §e5).~~ standing practice — the daemon still wins races sometimes
 ~~50. Re-run this docs-health AUDIT after the owner answers land (G3/vehicle/coverage~~ done — this 2026-10-08 sweep is the re-run
-    change TODO_LIST shape and unblock the archive trail again).
+change TODO_LIST shape and unblock the archive trail again).
 
 ## g) QUESTIONS ONLY YOU CAN ANSWER (3)
 
 ~~1. **Release vehicle (G2 follow-up):** the aggregate slash-name contract sits~~ done — v0.1.3 shipped 2026-09-04 (owner: "Ship v0.1.3 now!", 22-37 report)
-   unreleased in CHANGELOG `[Unreleased]`. Cut **v0.1.3 now** (small, contract-only),
-   or let it ride in **v0.2.0** with `errors.Join` + `SourceStatuses()`? Your veto
-   window closes when consumers adopt the stricter validation.
+unreleased in CHANGELOG `[Unreleased]`. Cut **v0.1.3 now** (small, contract-only),
+or let it ride in **v0.2.0** with `errors.Join` + `SourceStatuses()`? Your veto
+window closes when consumers adopt the stricter validation.
 ~~2. **Branch protection (G3):** shall I run the ready-to-run command (5 required checks~~ done — branch protection ENABLED (gh api .protection, 2026-10-08)
-   - linear history, `enforce_admins:false` keeps your bypass)? It changes push
-     semantics for non-admins on `master` — the only reason it hasn't been flipped.
-~~3. **Coverage-threshold job:** do you want CI to fail below 97% statement coverage~~ still open — TODO_LIST Blocked row (coverage threshold)
-   (baseline is 99.7%)? It's been a blocked policy row for four sessions; a yes is a
-   20-minute CI job, a no lets me delete the row permanently.
+
+- linear history, `enforce_admins:false` keeps your bypass)? It changes push
+  semantics for non-admins on `master` — the only reason it hasn't been flipped.
+  ~~3. **Coverage-threshold job:** do you want CI to fail below 97% statement coverage~~ still open — TODO_LIST Blocked row (coverage threshold)
+  (baseline is 99.7%)? It's been a blocked policy row for four sessions; a yes is a
+  20-minute CI job, a no lets me delete the row permanently.
 
 ---
 

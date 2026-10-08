@@ -52,13 +52,13 @@ Everything below is additive or decision-gated relative to the anti-Verschlimmbe
 
 ## (b) Partially done / deliberately held open
 
-| Item                                                   | State                                               | What remains                                                                                  |
-| ------------------------------------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| ~~Branch protection (T11, G3)~~                        | Branch protection is ENABLED (verified `gh api …/branches/master` `.protection`, 2026-10-08 sweep) — owner executed it since; the ready-to-run command is moot | ~~Owner executes (it blocks non-admin direct pushes; `enforce_admins:false` keeps admin bypass)~~ |
-| ~~Coverage-threshold job (part of T11)~~               | Still open — TODO_LIST Blocked row                  | Owner decision (fail < 97%?)                                                                  |
-| ~~Announcement publishing (T24)~~                      | Still open — TODO_LIST Owner Actions row            | Owner picks channels and posts                                                                |
-| ~~pkg.go.dev render verification (part of T01 micro 1.6)~~ | Superseded — later releases verified end-to-end (v0.4.0: 21:32 §a10-12; v0.5.0 fresh-user sim); the v0.1.2 page is moot | One URL check (in announcement checklist)                                                     |
-| ~~fuzz-long on GitHub (T15)~~                          | Done — run 35756511889 success (2026-09-22 21:01 §a2); weekly schedule green through 2026-10-05 | One `gh workflow run "Fuzz (weekly long)"` to validate the YAML in real CI                    |
+| Item                                                       | State                                                                                                                                                          | What remains                                                                                      |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| ~~Branch protection (T11, G3)~~                            | Branch protection is ENABLED (verified `gh api …/branches/master` `.protection`, 2026-10-08 sweep) — owner executed it since; the ready-to-run command is moot | ~~Owner executes (it blocks non-admin direct pushes; `enforce_admins:false` keeps admin bypass)~~ |
+| ~~Coverage-threshold job (part of T11)~~                   | Still open — TODO_LIST Blocked row                                                                                                                             | Owner decision (fail < 97%?)                                                                      |
+| ~~Announcement publishing (T24)~~                          | Still open — TODO_LIST Owner Actions row                                                                                                                       | Owner picks channels and posts                                                                    |
+| ~~pkg.go.dev render verification (part of T01 micro 1.6)~~ | Superseded — later releases verified end-to-end (v0.4.0: 21:32 §a10-12; v0.5.0 fresh-user sim); the v0.1.2 page is moot                                        | One URL check (in announcement checklist)                                                         |
+| ~~fuzz-long on GitHub (T15)~~                              | Done — run 35756511889 success (2026-09-22 21:01 §a2); weekly schedule green through 2026-10-05                                                                | One `gh workflow run "Fuzz (weekly long)"` to validate the YAML in real CI                        |
 
 ## (c) Not started (correctly — out of scope)
 

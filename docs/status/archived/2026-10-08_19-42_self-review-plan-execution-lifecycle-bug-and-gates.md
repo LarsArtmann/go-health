@@ -53,43 +53,43 @@ boundary note.
 ## b) PARTIALLY DONE
 
 ~~1. **Lint cleanliness of the new Go code.** First lint run found 12 findings~~ done — the 20:58 session fixed the real blocker (makezero `b2b9ed0`); lint 0 issues (20:58 §a1)
-   (paralleltest ×1, wsl_v5 ×11); one fix round landed (blank lines,
-   `t.Parallel()`); **3 findings remain open right now**: `cyclop` on
-   `FuzzBatteries` (complexity 14 > max 12) and 2 wsl_v5. Tests stay green;
-   the gate is red. This is the blocking tail of plan step 5.
+(paralleltest ×1, wsl_v5 ×11); one fix round landed (blank lines,
+`t.Parallel()`); **3 findings remain open right now**: `cyclop` on
+`FuzzBatteries` (complexity 14 > max 12) and 2 wsl_v5. Tests stay green;
+the gate is red. This is the blocking tail of plan step 5.
 ~~2. **The self-review HTML report's status table** claims "Fixed — banner~~ done — every claim true at push time; intermediate history accepted
-   added / labels updated / in announcement" — all true as of now, but the
-   daemon committed the report before those fixes landed (see §d2). At push
-   time every claim is true; intermediate history temporarily lied.
+added / labels updated / in announcement" — all true as of now, but the
+daemon committed the report before those fixes landed (see §d2). At push
+time every claim is true; intermediate history temporarily lied.
 ~~3. **TODO_LIST sync** (plan step 9): four rows are now done in reality~~ done — the 20:58 session's TODO sync (`6716a24`) + the 2026-10-08 sweep's rebuild
-   (drift-alarm gate, aggregate-validation test, checks fuzz+bench,
-   announcement draft) but TODO_LIST still lists them as TODO; the
-   ServiceName row's "vehicle label still says v0.5" parenthetical is also
-   stale after the de-drift. Not yet deleted/updated.
+(drift-alarm gate, aggregate-validation test, checks fuzz+bench,
+announcement draft) but TODO_LIST still lists them as TODO; the
+ServiceName row's "vehicle label still says v0.5" parenthetical is also
+stale after the de-drift. Not yet deleted/updated.
 ~~4. **Commit granularity vs the daemon**: explicit commits landed for the~~ accepted — daemon races remain a documented hazard (AGENTS Gotcha)
-   banner, announcement, drift gate, lifecycle fix, and CHANGELOG; but the
-   drift-gate flake.nix work, the lint-fix round, FEATURES rows, AGENTS rows,
-   and the workflow edits were swept into `chore:` daemon commits
-   (`2b4268d`, `c6ffd5b`, `712b221`, `d4f7f3d`, `15b669d`, `247dc64`), so the
-   history's change-grouping is partially heuristic rather than deliberate.
+banner, announcement, drift gate, lifecycle fix, and CHANGELOG; but the
+drift-gate flake.nix work, the lint-fix round, FEATURES rows, AGENTS rows,
+and the workflow edits were swept into `chore:` daemon commits
+(`2b4268d`, `c6ffd5b`, `712b221`, `d4f7f3d`, `15b669d`, `247dc64`), so the
+history's change-grouping is partially heuristic rather than deliberate.
 
 ---
 
 ## c) NOT STARTED
 
 ~~1. **Plan step 8 — federation validation semantics doc** (remotes never hit~~ done — `7fe2b22` (20:58 §a4)
-   `ErrUnknownCriticalService`; fetch-side is a different universe; plan R21).
+`ErrUnknownCriticalService`; fetch-side is a different universe; plan R21).
 ~~2. **Plan step 9 remainder — DOMAIN_LANGUAGE + AGENTS symbol-ref anti-rot**~~ done — `6716a24` (20:58 §a5)
-   (bare `probe.go:54`-class line refs → symbol names; plan R20).
+(bare `probe.go:54`-class line refs → symbol names; plan R20).
 ~~3. **Final gate sweep + push.** The session's standing instruction was "git~~ split — gates green the same evening (20:58 §a3); push stays owner-gated
-   push when done"; the tree is ~12 commits ahead of origin with the lint
-   gate currently red — not pushed, deliberately.
-   ~~4. TODO_LIST deletion pass (see b3) and the drift-gate self-check afterwards.~~ done — the 20:58 session's TODO sync (6716a24) + this sweep's rebuild
-   ~~5. From the plan's owner-blocked list (untouched by design): dashboard suite~~ done — routed: archive sweep executed by this sweep; the rest live in TODO_LIST/ROADMAP rows
-   against released v0.5.0, consumer test train, CV bump (G3), upstream
-   filings (G2), archive sweep, version-skew CI, FEATURES benchmark re-verify
-   at `-count=3` fresh runs, the v0.6 type window (ServiceName, merge
-   primitive, staged renames).
+push when done"; the tree is ~12 commits ahead of origin with the lint
+gate currently red — not pushed, deliberately.
+~~4. TODO_LIST deletion pass (see b3) and the drift-gate self-check afterwards.~~ done — the 20:58 session's TODO sync (6716a24) + this sweep's rebuild
+~~5. From the plan's owner-blocked list (untouched by design): dashboard suite~~ done — routed: archive sweep executed by this sweep; the rest live in TODO_LIST/ROADMAP rows
+against released v0.5.0, consumer test train, CV bump (G3), upstream
+filings (G2), archive sweep, version-skew CI, FEATURES benchmark re-verify
+at `-count=3` fresh runs, the v0.6 type window (ServiceName, merge
+primitive, staged renames).
 
 ---
 
@@ -162,58 +162,58 @@ _Ranked by impact vs effort. Items 1–6 are the interrupted tail of THIS
 session's plan; 7+ are the standing TODO_LIST/backlog. (B) = blocked on
 owner/external._
 
-| #  | Task                                                                                                                                                  | Bucket     | Impact  | Effort |
-| -- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| 1  | ~~Fix the 3 open lint findings: extract per-battery fuzz helpers (cyclop 14→≤12) + 2 wsl blanks~~ done — `b2b9ed0` (makezero) + extracted helpers (20:59 §a5); lint 0 issues | lint       | High    | 15min  |
-| 2  | ~~TODO_LIST sync: delete 4 done rows (drift gate, aggregate test, checks fuzz/bench, announcement), refresh ServiceName row note, re-run `.#docs-check`~~ done — `6716a24` + this sweep's TODO rebuild | docs       | High    | 15min  |
-| 3  | ~~Federation validation semantics doc (plan R21)~~ done — `7fe2b22` | docs       | Low-Med | 25min  |
-| 4  | ~~DOMAIN_LANGUAGE + AGENTS symbol-ref anti-rot (plan R20)~~ done — `6716a24` | docs       | Low     | 30min  |
-| 5  | ~~Final full `nix run .#gates` sweep~~ done — 20:58 §a3 full gates sweep | verify     | High    | 10min  |
-| 6  | ~~Push (decision: only after 1–5)~~ still open — owner call (push policy, 20:58 §g1) | release    | High    | 2min   |
-| 7  | ~~(B) go-health-dashboard full suite against released v0.5.0 — the one deep consumer; also covers the lifecycle-fix regression risk~~ open — TODO_LIST Release-follow-through row (dashboard suite vs v0.5.0) | verify     | High    | 40min  |
-| 8  | ~~(B) Decide v0.5.1 bugfix release for the Shutdown-hang fix (it shipped in v0.5.0; sitting in `[Unreleased]`) vs waiting for the next feature release~~ open — owner question (v0.5.1 vehicle; 20:58 §g2) | release    | High    | owner  |
-| 9  | ~~(B) File go-appkit/health + cqrs-htmx/health upstream issues (drafts ready, G2)~~ open — TODO_LIST Fleet-proof row (G2) | upstream   | High    | 40min  |
-| 10 | ~~(B) Bump CV to go-health v0.5.x + go 1.27 (G3)~~ open — TODO_LIST Fleet-proof row (G3) | consumer   | Med     | 45min  |
-| 11 | ~~(B) Consumer test train vs v0.5.0 tag: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier~~ open — TODO_LIST Fleet-proof row | verify     | Med     | 45min  |
-| 12 | ~~(B) Publish the v0.5.0 announcement (draft ready)~~ still open — TODO_LIST Owner Actions row | owner      | Med     | 10min  |
-| 13 | ~~(B) Publish v0.1.1/v0.1.2 announcement (draft ready since 2026-09-04)~~ still open — TODO_LIST Owner Actions row | owner      | Low     | 15min  |
-| 14 | ~~(B) Post samber/do#318 comment (draft ready)~~ still open — TODO_LIST Owner Actions row | owner      | Med     | 5min   |
-| 15 | ~~(B) Coverage-threshold CI job decision~~ still open — TODO_LIST Blocked row | owner      | Med     | 20min  |
-| 16 | ~~Version-skew CI script: fleet go.mod pins vs latest tag, fail-on-drift~~ open — TODO_LIST Hardening row (version-skew CI) | automation | Med     | 45min  |
-| 17 | ~~FEATURES benchmark re-verify at fresh `-count=3` (all rows, not just checks)~~ open — TODO_LIST Hardening row (FEATURES bench re-verify) | verify     | Low-Med | 45min  |
-| 18 | ~~Status-report archive sweep: 2026-09-15_08-55 (route §f first), 2026-09-18_09-46, four 2026-09-22 reports, three 2026-09-04 anchors~~ done — the 2026-10-08 sweep (11 reports annotated + archived) | docs       | Low     | 2h     |
-| 19 | ~~Aggregate handler (HTTP-path) benchmarks complementing the merge benchmark (ROADMAP)~~ open — → ROADMAP Theme 6 | code       | Low     | 45min  |
-| 20 | ~~Feed golden-fixture inputs into the aggregate fuzz seed corpus (ROADMAP)~~ open — → ROADMAP Theme 6 | code       | Low     | 30min  |
-| 21 | ~~Throttled live path benchmark under contention (ROADMAP)~~ open — → ROADMAP Theme 6 | code       | Low     | 40min  |
-| 22 | ~~Throttle-window boundary fuzz with fake clock (ROADMAP)~~ open — → ROADMAP Theme 6 | code       | Low     | 45min  |
-| 23 | ~~Combine aggregate handler fuzz with throttle/cache modes (ROADMAP)~~ open — → ROADMAP Theme 6 | code       | Low     | 45min  |
-| 24 | ~~`-count=N` race-suite stress in CI if flakiness stays zero (ROADMAP)~~ open — → ROADMAP Theme 6 | CI         | Low     | 30min  |
-| 25 | ~~OpenTelemetry spans on Evaluate via the hook seam (ROADMAP Theme 2)~~ open — → ROADMAP Theme 2 (routed with the 2026-09-15 findings) | feature    | Med     | 2h+    |
-| 26 | ~~`Response.TotalLatencyMs` as float64 for sub-ms precision (ROADMAP Theme 2)~~ open — → ROADMAP Theme 2 | feature    | Low     | 1h     |
-| 27 | ~~`Probe.Snapshot()` structured-logging accessor (ROADMAP Theme 2, demand-gated)~~ open — → ROADMAP Theme 2 | feature    | Low     | 1h     |
-| 28 | ~~`AwaitReady` cache-aware poll interval (ROADMAP Theme 1)~~ open — → ROADMAP Theme 1 | feature    | Low     | 1h     |
-| 29 | ~~`errors.Join` in `aggregate.New` (next-minor candidate, design + spike ready)~~ open — → ROADMAP Theme 7 | feature    | Med     | 1h     |
-| 30 | ~~`Aggregate.SourceStatuses()` per-source accessor (next-minor candidate)~~ open — → ROADMAP Theme 7 | feature    | Med     | 1h     |
-| 31 | ~~`federation.Prober.Healthz()` parity design note (next-minor candidate)~~ open — → ROADMAP Theme 7 | design     | Low-Med | 45min  |
-| 32 | ~~Design note: `WithTransitionHook` (ROADMAP harvested idea)~~ covered — ROADMAP raw idea (WithTransitionHook) | design     | Low-Med | 1h     |
-| 33 | ~~Design note: `healthtest` consumer helper package~~ covered — ROADMAP raw idea (healthtest) | design     | Low-Med | 1h     |
-| 34 | ~~Extend openapi.yaml to cover federation endpoints~~ open — → ROADMAP raw idea (openapi federation coverage) | docs       | Low-Med | 1h     |
-| 35 | ~~Port the drift-alarm idea to the fleet: same gate in the other 15 consumers (mechanize fleet-wide doc sync)~~ open (nice-to-have) — fleet port never run | automation | Med     | 2h     |
-| 36 | ~~Extend `.#docs-check`: verify AGENTS "Packages" list == go.mod packages; FEATURES option count == `grep -c '^func With'`~~ open (nice-to-have) — evidence-deriving checks never added | automation | Low-Med | 30min  |
-| 37 | ~~Add `.#docs-check` to the `ci-emulation` gate list (git-free PATH coverage parity)~~ open (minor) — ci-emulation parity never added | automation | Low     | 10min  |
-| 38 | ~~Annotate the archived `2026-09-16_11-46` §c-style bullet lists the tooling skipped (completeness tail)~~ done — the 2026-10-04 audit's completeness gate re-checked the 09-16 archives | docs       | Low     | 30min  |
-| 39 | ~~Decide the "keep window" policy for docs/status/ (newest 2–3 non-archived)~~ done — the 2026-10-08 sweep applies the keep window (docs/status/ holds the newest two) | decision   | Low     | 15min  |
-| 40 | ~~Add the docs-health sweep step to the release checklist in CONTRIBUTING (process, not memory)~~ open (nice-to-have) — release-checklist sweep step never added | process    | Low     | 10min  |
-| 41 | ~~Wire `.#docs-check` failure into the release checklist as a pre-tag step~~ open (minor) — pre-tag wiring never added | process    | Low     | 5min   |
-| 42 | ~~Sweep the archived reports for remaining bare items (grep gate)~~ done — the 2026-10-08 sweep's grep gate ran over the whole archived dir | docs       | Low     | 30min  |
-| 43 | ~~Re-run the internal-link sweep across docs/** (not just living docs), skipping code fences~~ open (minor) — full docs/** sweep never run (lychee covers it in BuildFlow runs) | verify     | Low     | 30min  |
-| 44 | ~~Render-check the two HTML reports (screenshot pass, not just structural grep)~~ NOT-DO — render checks never run; structural validation accepted | verify     | Low     | 20min  |
+| #  | Task                                                                                                                                                                                                                             | Bucket     | Impact  | Effort |
+| -- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| 1  | ~~Fix the 3 open lint findings: extract per-battery fuzz helpers (cyclop 14→≤12) + 2 wsl blanks~~ done — `b2b9ed0` (makezero) + extracted helpers (20:59 §a5); lint 0 issues                                                     | lint       | High    | 15min  |
+| 2  | ~~TODO_LIST sync: delete 4 done rows (drift gate, aggregate test, checks fuzz/bench, announcement), refresh ServiceName row note, re-run `.#docs-check`~~ done — `6716a24` + this sweep's TODO rebuild                           | docs       | High    | 15min  |
+| 3  | ~~Federation validation semantics doc (plan R21)~~ done — `7fe2b22`                                                                                                                                                              | docs       | Low-Med | 25min  |
+| 4  | ~~DOMAIN_LANGUAGE + AGENTS symbol-ref anti-rot (plan R20)~~ done — `6716a24`                                                                                                                                                     | docs       | Low     | 30min  |
+| 5  | ~~Final full `nix run .#gates` sweep~~ done — 20:58 §a3 full gates sweep                                                                                                                                                         | verify     | High    | 10min  |
+| 6  | ~~Push (decision: only after 1–5)~~ still open — owner call (push policy, 20:58 §g1)                                                                                                                                             | release    | High    | 2min   |
+| 7  | ~~(B) go-health-dashboard full suite against released v0.5.0 — the one deep consumer; also covers the lifecycle-fix regression risk~~ open — TODO_LIST Release-follow-through row (dashboard suite vs v0.5.0)                    | verify     | High    | 40min  |
+| 8  | ~~(B) Decide v0.5.1 bugfix release for the Shutdown-hang fix (it shipped in v0.5.0; sitting in `[Unreleased]`) vs waiting for the next feature release~~ open — owner question (v0.5.1 vehicle; 20:58 §g2)                       | release    | High    | owner  |
+| 9  | ~~(B) File go-appkit/health + cqrs-htmx/health upstream issues (drafts ready, G2)~~ open — TODO_LIST Fleet-proof row (G2)                                                                                                        | upstream   | High    | 40min  |
+| 10 | ~~(B) Bump CV to go-health v0.5.x + go 1.27 (G3)~~ open — TODO_LIST Fleet-proof row (G3)                                                                                                                                         | consumer   | Med     | 45min  |
+| 11 | ~~(B) Consumer test train vs v0.5.0 tag: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier~~ open — TODO_LIST Fleet-proof row                                                                               | verify     | Med     | 45min  |
+| 12 | ~~(B) Publish the v0.5.0 announcement (draft ready)~~ still open — TODO_LIST Owner Actions row                                                                                                                                   | owner      | Med     | 10min  |
+| 13 | ~~(B) Publish v0.1.1/v0.1.2 announcement (draft ready since 2026-09-04)~~ still open — TODO_LIST Owner Actions row                                                                                                               | owner      | Low     | 15min  |
+| 14 | ~~(B) Post samber/do#318 comment (draft ready)~~ still open — TODO_LIST Owner Actions row                                                                                                                                        | owner      | Med     | 5min   |
+| 15 | ~~(B) Coverage-threshold CI job decision~~ still open — TODO_LIST Blocked row                                                                                                                                                    | owner      | Med     | 20min  |
+| 16 | ~~Version-skew CI script: fleet go.mod pins vs latest tag, fail-on-drift~~ open — TODO_LIST Hardening row (version-skew CI)                                                                                                      | automation | Med     | 45min  |
+| 17 | ~~FEATURES benchmark re-verify at fresh `-count=3` (all rows, not just checks)~~ open — TODO_LIST Hardening row (FEATURES bench re-verify)                                                                                       | verify     | Low-Med | 45min  |
+| 18 | ~~Status-report archive sweep: 2026-09-15_08-55 (route §f first), 2026-09-18_09-46, four 2026-09-22 reports, three 2026-09-04 anchors~~ done — the 2026-10-08 sweep (13 reports annotated + archived)                            | docs       | Low     | 2h     |
+| 19 | ~~Aggregate handler (HTTP-path) benchmarks complementing the merge benchmark (ROADMAP)~~ open — → ROADMAP Theme 6                                                                                                                | code       | Low     | 45min  |
+| 20 | ~~Feed golden-fixture inputs into the aggregate fuzz seed corpus (ROADMAP)~~ open — → ROADMAP Theme 6                                                                                                                            | code       | Low     | 30min  |
+| 21 | ~~Throttled live path benchmark under contention (ROADMAP)~~ open — → ROADMAP Theme 6                                                                                                                                            | code       | Low     | 40min  |
+| 22 | ~~Throttle-window boundary fuzz with fake clock (ROADMAP)~~ open — → ROADMAP Theme 6                                                                                                                                             | code       | Low     | 45min  |
+| 23 | ~~Combine aggregate handler fuzz with throttle/cache modes (ROADMAP)~~ open — → ROADMAP Theme 6                                                                                                                                  | code       | Low     | 45min  |
+| 24 | ~~`-count=N` race-suite stress in CI if flakiness stays zero (ROADMAP)~~ open — → ROADMAP Theme 6                                                                                                                                | CI         | Low     | 30min  |
+| 25 | ~~OpenTelemetry spans on Evaluate via the hook seam (ROADMAP Theme 2)~~ open — → ROADMAP Theme 2 (routed with the 2026-09-15 findings)                                                                                           | feature    | Med     | 2h+    |
+| 26 | ~~`Response.TotalLatencyMs` as float64 for sub-ms precision (ROADMAP Theme 2)~~ open — → ROADMAP Theme 2                                                                                                                         | feature    | Low     | 1h     |
+| 27 | ~~`Probe.Snapshot()` structured-logging accessor (ROADMAP Theme 2, demand-gated)~~ open — → ROADMAP Theme 2                                                                                                                      | feature    | Low     | 1h     |
+| 28 | ~~`AwaitReady` cache-aware poll interval (ROADMAP Theme 1)~~ open — → ROADMAP Theme 1                                                                                                                                            | feature    | Low     | 1h     |
+| 29 | ~~`errors.Join` in `aggregate.New` (next-minor candidate, design + spike ready)~~ open — → ROADMAP Theme 7                                                                                                                       | feature    | Med     | 1h     |
+| 30 | ~~`Aggregate.SourceStatuses()` per-source accessor (next-minor candidate)~~ open — → ROADMAP Theme 7                                                                                                                             | feature    | Med     | 1h     |
+| 31 | ~~`federation.Prober.Healthz()` parity design note (next-minor candidate)~~ open — → ROADMAP Theme 7                                                                                                                             | design     | Low-Med | 45min  |
+| 32 | ~~Design note: `WithTransitionHook` (ROADMAP harvested idea)~~ covered — ROADMAP raw idea (WithTransitionHook)                                                                                                                   | design     | Low-Med | 1h     |
+| 33 | ~~Design note: `healthtest` consumer helper package~~ covered — ROADMAP raw idea (healthtest)                                                                                                                                    | design     | Low-Med | 1h     |
+| 34 | ~~Extend openapi.yaml to cover federation endpoints~~ open — → ROADMAP raw idea (openapi federation coverage)                                                                                                                    | docs       | Low-Med | 1h     |
+| 35 | ~~Port the drift-alarm idea to the fleet: same gate in the other 15 consumers (mechanize fleet-wide doc sync)~~ open (nice-to-have) — fleet port never run                                                                       | automation | Med     | 2h     |
+| 36 | ~~Extend `.#docs-check`: verify AGENTS "Packages" list == go.mod packages; FEATURES option count == `grep -c '^func With'`~~ open (nice-to-have) — evidence-deriving checks never added                                          | automation | Low-Med | 30min  |
+| 37 | ~~Add `.#docs-check` to the `ci-emulation` gate list (git-free PATH coverage parity)~~ open (minor) — ci-emulation parity never added                                                                                            | automation | Low     | 10min  |
+| 38 | ~~Annotate the archived `2026-09-16_11-46` §c-style bullet lists the tooling skipped (completeness tail)~~ done — the 2026-10-04 audit's completeness gate re-checked the 09-16 archives                                         | docs       | Low     | 30min  |
+| 39 | ~~Decide the "keep window" policy for docs/status/ (newest 2–3 non-archived)~~ done — the 2026-10-08 sweep applies the keep window (docs/status/ holds the newest two)                                                           | decision   | Low     | 15min  |
+| 40 | ~~Add the docs-health sweep step to the release checklist in CONTRIBUTING (process, not memory)~~ open (nice-to-have) — release-checklist sweep step never added                                                                 | process    | Low     | 10min  |
+| 41 | ~~Wire `.#docs-check` failure into the release checklist as a pre-tag step~~ open (minor) — pre-tag wiring never added                                                                                                           | process    | Low     | 5min   |
+| 42 | ~~Sweep the archived reports for remaining bare items (grep gate)~~ done — the 2026-10-08 sweep's grep gate ran over the whole archived dir                                                                                      | docs       | Low     | 30min  |
+| 43 | ~~Re-run the internal-link sweep across docs/** (not just living docs), skipping code fences~~ open (minor) — full docs/** sweep never run (lychee covers it in BuildFlow runs)                                                  | verify     | Low     | 30min  |
+| 44 | ~~Render-check the two HTML reports (screenshot pass, not just structural grep)~~ NOT-DO — render checks never run; structural validation accepted                                                                               | verify     | Low     | 20min  |
 | 45 | ~~Reconcile the 2026-10-04 process report v2 upgrades (derived statistics) with this report's counts — or retire the series~~ done — the series was reconciled (correction banner `5c60f0d`) and retired by the 2026-10-08 sweep | docs       | Low     | 30min  |
-| 46 | ~~Consider `checks` package coverage report (plan R13 remainder: coverage-gap close)~~ open (minor) — checks coverage report never produced | verify     | Low-Med | 30min  |
-| 47 | ~~Document the fuzz corpus signature-freeze contract in checks/checks_fuzz_test.go (done) + add the same note to the other three targets~~ done — the contract note lives in checks/checks_fuzz_test.go (v0.5.0) | docs       | Low     | 15min  |
-| 48 | ~~`WithShutdownGracePeriod` interaction test for the new disarm path (failed Start while grace configured)~~ open (minor) — interaction test never written | test       | Low-Med | 20min  |
-| 49 | ~~Add `ErrUnknownCriticalService` composition test for federation-adjacent standalone probes (mirror of the aggregate one)~~ open (minor) — federation-adjacent composition test never written | test       | Low     | 15min  |
-| 50 | ~~Re-run this self-review series after the v0.5.1/v0.6 decision to measure whether the drift gate + checklist mechanization closed the class~~ done — the 2026-10-08 sweep is that re-run | process    | Low     | 20min  |
+| 46 | ~~Consider `checks` package coverage report (plan R13 remainder: coverage-gap close)~~ open (minor) — checks coverage report never produced                                                                                      | verify     | Low-Med | 30min  |
+| 47 | ~~Document the fuzz corpus signature-freeze contract in checks/checks_fuzz_test.go (done) + add the same note to the other three targets~~ done — the contract note lives in checks/checks_fuzz_test.go (v0.5.0)                 | docs       | Low     | 15min  |
+| 48 | ~~`WithShutdownGracePeriod` interaction test for the new disarm path (failed Start while grace configured)~~ open (minor) — interaction test never written                                                                       | test       | Low-Med | 20min  |
+| 49 | ~~Add `ErrUnknownCriticalService` composition test for federation-adjacent standalone probes (mirror of the aggregate one)~~ open (minor) — federation-adjacent composition test never written                                   | test       | Low     | 15min  |
+| 50 | ~~Re-run this self-review series after the v0.5.1/v0.6 decision to measure whether the drift gate + checklist mechanization closed the class~~ done — the 2026-10-08 sweep is that re-run                                        | process    | Low     | 20min  |
 
 ---
 

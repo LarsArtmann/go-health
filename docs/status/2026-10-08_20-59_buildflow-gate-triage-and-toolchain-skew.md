@@ -75,9 +75,9 @@ session's output, and one of my regressions was fixed by that session, not by me
    (`nix build . && nix run .#reinstall`).
 5. **Doc consistency for the module rename:** `main.go` doc comment still says "Command
    doanalyzerv2-runner"; CONTRIBUTING.md / run.sh not audited for old-path references.
-~~6. **CHANGELOG/TODO_LIST/FEATURES:** no entries written for this session's changes~~ resolved by policy — CONTRIBUTING now states docs-only AND internal-only changes stay out of the CHANGELOG (this sweep); FEATURES fuzz row corrected
+   ~~6. **CHANGELOG/TODO_LIST/FEATURES:** no entries written for this session's changes~~ resolved by policy — CONTRIBUTING now states docs-only AND internal-only changes stay out of the CHANGELOG (this sweep); FEATURES fuzz row corrected
    (module path fix, federation state-slice refactor, suppression configs, link fixes).
-7. **govulncheck [tools/doanalyzerv2]** ("go mod tidy needed" in run 1): I tidied, but
+6. **govulncheck [tools/doanalyzerv2]** ("go mod tidy needed" in run 1): I tidied, but
    re-verification is pending (step was among "15 skipped (blocked by failures)" in run 2).
 
 ## c) NOT STARTED

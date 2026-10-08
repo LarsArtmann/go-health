@@ -159,9 +159,9 @@ func New(remotes []Remote, opts ...Option) (*Prober, error) {
 		return nil, err
 	}
 
-	states := make([]remoteState, len(remotes))
-	for i, remote := range remotes {
-		states[i] = remoteState{remote: remote}
+	states := make([]remoteState, 0, len(remotes))
+	for _, remote := range remotes {
+		states = append(states, remoteState{remote: remote})
 	}
 
 	return &Prober{

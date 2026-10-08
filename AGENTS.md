@@ -23,6 +23,7 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 | `nix run .#security`         | Run gosec                                                                                                      |
 | `nix run .#build`            | Build all packages                                                                                             |
 | `nix run .#openapi-lockstep` | Verify the golden wire format stays covered by `docs/openapi.yaml` (also a `checks.*` under `nix flake check`) |
+| `nix run .#docs-check`       | Docs drift alarm: README/AGENTS/CHANGELOG/FEATURES in sync with the latest tag (also a `checks.*` under `nix flake check`, and part of `.#gates`) |
 | `nix fmt`                    | Format code (gofumpt, goimports)                                                                               |
 | `nix flake check`            | Validate flake + formatting                                                                                    |
 

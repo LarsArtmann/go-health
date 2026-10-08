@@ -32,7 +32,12 @@ func Disk(path string, minFreeBytes uint64) func(ctx context.Context) error {
 			return fmt.Errorf("checks: statfs %s: %w", path, err)
 		}
 
-		available := stat.Bavail * uint64(stat.Bsize)
+		var blockSize uint64
+		if stat.Bsize > 0 {
+			blockSize = uint64(stat.Bsize)
+		}
+
+		available := stat.Bavail * blockSize
 
 		if available < minFreeBytes {
 			return fmt.Errorf(

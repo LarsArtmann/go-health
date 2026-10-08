@@ -18,7 +18,7 @@ func sevRank(status health.Status) int {
 		return 0
 	case health.StatusWarn:
 		return 1
-	case health.StatusPass:
+	case health.StatusPass, health.StatusOff:
 		return 2
 	default:
 		return 2

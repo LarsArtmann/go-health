@@ -20,6 +20,19 @@ var _ do.HealthcheckerWithContext = (*exampleDB)(nil)
 
 func (*exampleDB) HealthCheck(_ context.Context) error { return nil }
 
+// ExampleOff shows how to mark an intentionally unconfigured dependency:
+// the check renders "status":"off" with the enable recipe, and the
+// roll-up stays pass.
+func ExampleOff() {
+	check := func(_ context.Context) error {
+		return health.Off("not configured: set database.url / CV_DATABASE_URL to enable analytics")
+	}
+
+	fmt.Println(check(context.Background()))
+
+	// Output: not configured: set database.url / CV_DATABASE_URL to enable analytics
+}
+
 // ExampleNew shows how to create a health Probe wired to a samber/do
 // injector, register a critical service, and evaluate its health.
 func ExampleNew() {

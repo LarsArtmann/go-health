@@ -162,11 +162,15 @@ components:
       properties:
         status:
           type: string
-          enum: [pass, warn, fail]
+          enum: [pass, warn, fail, off]
+          description: off marks a deliberately unconfigured dependency
+            (OffError) — visibility, never a verdict; the roll-up never
+            reports it.
         error:
           type: string
-          description: Failure message when the check did not pass; omitted
-            otherwise.
+          description: Failure message when the check did not pass; for an
+            off check, the configuration detail (usually the enable recipe).
+            Omitted otherwise.
         since:
           type: string
           format: date-time

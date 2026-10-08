@@ -13,12 +13,19 @@ const (
 	// StatusWarn means the service is degraded but functional.
 	// Used for non-critical service failures in readiness responses.
 	StatusWarn Status = "warn"
+	// StatusOff means the check's dependency is deliberately not
+	// configured: an intentional absence, not a failure (an optional
+	// analytics database, a disabled integration). Produced only by the
+	// [Off] sentinel error; the roll-up ([Response.Status]) never reports
+	// it — off is visibility, never a verdict. See
+	// docs/configured-off-design.md.
+	StatusOff Status = "off"
 )
 
 // Rank orders statuses by severity so merges can pick the worst: a lower
-// rank is worse (fail 0, warn 1, pass 2). Unknown values rank as pass:
-// the Status type is validated at the boundaries, and an unknown must not
-// fail a merge ([aggregate.Aggregate], [federation namespace]). Merge
+// rank is worse (fail 0, warn 1, pass 2, off 2). Unknown values rank as
+// pass: the Status type is validated at the boundaries, and an unknown must
+// not fail a merge ([aggregate.Aggregate], [federation namespace]). Merge
 // sites compare `got.Rank() < worst.Rank()` to keep the more severe one.
 func (s Status) Rank() int {
 	switch s {
@@ -26,7 +33,7 @@ func (s Status) Rank() int {
 		return 0
 	case StatusWarn:
 		return 1
-	case StatusPass:
+	case StatusPass, StatusOff:
 		return 2
 	default:
 		return 2
@@ -37,7 +44,9 @@ func (s Status) Rank() int {
 type Check struct {
 	// Status is the health status of this individual check.
 	Status Status `json:"status"`
-	// Error contains the failure message when Status is not pass.
+	// Error contains the failure message when Status is not pass. For an
+	// off check (StatusOff) it carries the configuration detail — usually
+	// the enable recipe — instead of a failure.
 	Error string `json:"error,omitempty"`
 	// Since is when this check entered its current status, as observed by
 	// the probe: the time of the first batch that reported the current
@@ -61,11 +70,44 @@ type Check struct {
 	DurationNanos int64 `json:"duration_ns,omitzero"`
 }
 
+// OffError marks a check as deliberately not configured — an intentional
+// absence, not a failure. Return it from any check executor (a
+// [CheckFunc], a [NewWithHealthCheck] batch, or a samber/do
+// HealthcheckerWithContext service) to render the check with [StatusOff]
+// and its detail text:
+//
+//	health.Off("not configured: set database.url / CV_DATABASE_URL to enable analytics")
+//
+// An off check never fails readiness, never blocks the startup latch, and
+// never warns the roll-up — but the row stays visible on every health
+// surface, carrying the enable recipe in the Error field. Detail should
+// state what is (not) configured and how to enable it. Wrap-free by
+// design: wrapping is preserved via errors.As, but a lost sentinel degrades
+// to a plain warn/fail, so return the sentinel unwrapped.
+type OffError struct {
+	// Detail explains what is not configured and how to enable it.
+	Detail string
+}
+
+// Error implements error so [Off] results flow the plain-error health-check
+// channel (map[string]error, samber/do HealthcheckerWithContext). The
+// message is the Detail verbatim — the status field already says "off".
+func (e *OffError) Error() string {
+	return e.Detail
+}
+
+// Off returns an [*OffError] marking the check as deliberately not
+// configured. See [OffError].
+func Off(detail string) *OffError {
+	return &OffError{Detail: detail}
+}
+
 // CheckDetail is the executor's raw report for one service check: the outcome
 // plus execution metadata only the executor can know. It is the metadata-rich
 // input accepted by [NewWithDetailedCheck] and [DetailedHealthRecorder].
 // The probe still owns classification: Err is graded against the critical set
-// exactly like a plain map[string]error result, and Since is probe-observed,
+// exactly like a plain map[string]error result (an [*OffError] grades to
+// [StatusOff] regardless of criticality), and Since is probe-observed,
 // so a detail cannot influence Status, Error text, or Since.
 type CheckDetail struct {
 	// Err is the check outcome: nil means the service is healthy. Non-nil

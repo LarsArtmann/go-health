@@ -53,6 +53,25 @@
 // ceremony — construct and route. (A readiness handler over the same probe is
 // the continuous gate; /startupz latches 503 until the checks first pass.)
 //
+// # Configured-Off Checks (Intentional Absence)
+//
+// An optional dependency that is deliberately not configured (a disabled
+// analytics database, an off-by-default integration) is a visible row, not
+// a fault: return [Off] from any check executor and the check renders
+// `"status":"off"` with the enable recipe in its error field. Off never
+// fails readiness, never blocks the startup latch, and never warns the
+// roll-up — an all-off instance reports pass. See
+// docs/configured-off-design.md.
+//
+//	probe := health.NewChecks(map[string]health.CheckFunc{
+//	    "database": func(_ context.Context) error {
+//	        if dbURL == "" {
+//	            return health.Off("not configured: set database.url to enable analytics")
+//	        }
+//	        return db.PingContext(ctx)
+//	    },
+//	})
+//
 // # Audit Integration (Optional)
 //
 // When a [HealthRecorder] is provided via [WithHealthRecorder], every

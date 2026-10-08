@@ -353,10 +353,12 @@ func (p *Prober) fetch(ctx context.Context, remote Remote) fetchResult {
 }
 
 // decodeDocument validates the wire shape beyond JSON syntax: a document
-// without a status, or with a check status that is not pass/warn/fail, is
-// refused whole. Unlike aggregate, which reads trusted in-process probes,
+// without a status, or with a check status that is not pass/warn/fail/off,
+// is refused whole. Unlike aggregate, which reads trusted in-process probes,
 // federation decodes untrusted wire input — rendering an unknown status
-// would let it masquerade as healthy on the merged surface.
+// would let it masquerade as healthy on the merged surface. Off is accepted
+// because it is a known status with pass-tier [health.Status.Rank]: it can
+// never fail or warn the merged roll-up, only annotate a row.
 func decodeDocument(body []byte) fetchResult {
 	var parsed health.Response
 	if err := json.Unmarshal(body, &parsed); err != nil {
@@ -369,7 +371,7 @@ func decodeDocument(body []byte) fetchResult {
 
 	for name, check := range parsed.Checks {
 		switch check.Status {
-		case health.StatusPass, health.StatusWarn, health.StatusFail:
+		case health.StatusPass, health.StatusWarn, health.StatusFail, health.StatusOff:
 		default:
 			return fetchResult{
 				errMsg: fmt.Sprintf("response check %q has invalid status %q", name, check.Status),

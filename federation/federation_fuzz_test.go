@@ -87,7 +87,7 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 			}
 
 			switch check.Status {
-			case health.StatusPass, health.StatusWarn, health.StatusFail:
+			case health.StatusPass, health.StatusWarn, health.StatusFail, health.StatusOff:
 			default:
 				t.Fatalf("accepted remote check %q has invalid status %q", name, check.Status)
 			}

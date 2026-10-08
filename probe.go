@@ -750,7 +750,9 @@ func (p *Probe) evaluateStartup(results map[string]error) bool {
 // A nil error means the service passed; a non-nil error populates the Error
 // field. Failures on critical services are marked StatusFail; failures on
 // non-critical services are marked StatusWarn to distinguish "degraded but
-// functional" from "take this pod out of rotation". Executor-reported
+// functional" from "take this pod out of rotation"; an [*OffError] marks the
+// check StatusOff with its Detail text in Error ("deliberately not
+// configured" — visible, never a verdict). Executor-reported
 // durations are carried through, and every check is stamped with Since —
 // when the probe first observed its current status — via the transition
 // tracker.

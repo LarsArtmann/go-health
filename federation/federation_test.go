@@ -325,6 +325,26 @@ func TestCachedResponse_Merge(t *testing.T) {
 			},
 		},
 		{
+			name:    "off check is accepted and stays pass-tier",
+			remotes: []federation.Remote{{Name: "a", URL: ""}},
+			servers: []jsonRemote{serveDocument(t, health.Response{
+				Status: health.StatusPass,
+				Checks: map[string]health.Check{
+					"db": {
+						Status: health.StatusOff,
+						Error:  "not configured: set database.url to enable",
+					},
+				},
+			})},
+			wantStatus: health.StatusPass,
+			wantChecks: map[string]health.Check{
+				"a/db": {
+					Status: health.StatusOff,
+					Error:  "not configured: set database.url to enable",
+				},
+			},
+		},
+		{
 			name: "shutting-down remote forces fail",
 			remotes: []federation.Remote{
 				{Name: "a", URL: ""},

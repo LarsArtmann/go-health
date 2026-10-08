@@ -25,6 +25,7 @@ func TestStatus_Rank(t *testing.T) {
 		health.StatusFail: 0,
 		health.StatusWarn: 1,
 		health.StatusPass: 2,
+		health.StatusOff:  2,
 		"degraded":        2,
 		"":                2,
 	} {

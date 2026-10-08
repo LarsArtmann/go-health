@@ -36,7 +36,7 @@ Single-package library (`health`) with these source files:
 
 ```
 doc.go           — Package doc comment (quick start, three-probe rationale, caching, shutdown)
-types.go         — Status enum (pass/fail/warn, frozen), Check (incl. Since, DurationNanos), CheckDetail, Response data model (incl. instance_id, timestamp omitzero)
+types.go         — Status enum (check level: pass/fail/warn/off; the roll-up stays pass/fail/warn), Off/OffError configured-off sentinel, Check (incl. Since, DurationNanos), CheckDetail, Response data model (incl. instance_id, timestamp omitzero)
 probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate(), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate, CachedResponse (lock-free read + shutdown overlay), accessors, runHealthChecks (with panic recovery), buildChecks (Since stamping + duration carry), errorsOf/detailOf adapters
 tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.Since inside buildChecks (probe-observed, prunes absent checks)
 classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
@@ -97,7 +97,8 @@ in-process `sql.Register` fake driver — no driver dependency, ever.
 - **Method-set enforcement** — `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse). Off by default. `WithGETOnly()` is **deprecated** (v0.1.1) but still functional — it is the zero-arg equivalent; keep its tests until removal is decided. Middleware composes outside this guard (see docs/middleware-design.md).
 - **Deterministic clock seam** — `p.now()` (backed by `WithNowFunc`) drives uptime, `Response.Timestamp`, and live-throttle freshness. Latency measurement stays on the real clock. Tests inject a fixed clock instead of sleeping.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly; so does `go-appkit/flightrecorderhealth.Trigger` (captures a flight-recorder snapshot when checks fail).
-- **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down).
+- **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down). `Off` sentinel results are excluded from the roll-up entirely (docs/configured-off-design.md).
+- **Configured-off checks** — `Off(detail)` marks an intentionally unconfigured dependency: renders `"status":"off"` (check level only), pass-tier in `Rank`, excluded from the roll-up, satisfies the startup latch, never fails readiness. The roll-up enum stays frozen; see docs/configured-off-design.md for the starting-status distinction and the federation rollout order (old federation consumers refuse off documents — producers ship last).
 - **`aggregate` is passive and lock-free by construction** — merge-on-read: every read performs
   one atomic `CachedResponse` load per source. No goroutines, no scheduler, no staleness of its
   own; freshness is bounded by the slowest source's refresh interval. Scalars (`Version`,
@@ -167,7 +168,7 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 ## Gotchas
 
 - **samber/do v2.1.0 behavior** — never-invoked lazy services appear in `HealthCheckWithContext` results with nil error. Eagerly invoke critical services at boot for the startup probe to be meaningful.
-- **Three-state classify** — `classify` returns `pass`/`warn`/`fail`. The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
+- **Three-state classify** — `classify` returns `pass`/`warn`/`fail` (off results are excluded — docs/configured-off-design.md). The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
 - **Config validation** — `Probe.Validate()` checks `timeout > 0` and `refreshInterval >= 0`. `Start()` calls `Validate()` and returns an error on invalid config — callers should check the error from `Start()`.
 - **No GOEXPERIMENT needed since the go 1.27 floor** — `handlers.go` (and
   `aggregate/aggregate.go`) import `encoding/json/v2`, which is stable stdlib
@@ -226,6 +227,7 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 | [docs/classification-2.0-design.md](docs/classification-2.0-design.md)                           | Rejected: weights, circuit-breaker, MaxConcurrent, per-service caching                                                                                                                                                            |
 | [docs/multi-tenant-design.md](docs/multi-tenant-design.md)                                       | Rejected: child scopes, `WithProbeName`, runtime criticality toggles                                                                                                                                                              |
 | [docs/starting-status-design.md](docs/starting-status-design.md)                                 | Rejected: fourth Status value, Status input validation                                                                                                                                                                            |
+| [docs/configured-off-design.md](docs/configured-off-design.md)                                   | Accepted: check-level `off` status via the `Off()` sentinel — intentional absence as a visible row; distinguishes the starting-status rejection; federation rollout order                                                          |
 | [docs/content-negotiation-design.md](docs/content-negotiation-design.md)                         | Why content negotiation / HTML rendering is rejected; composition pattern instead                                                                                                                                                 |
 | [docs/etag-rejection-design.md](docs/etag-rejection-design.md)                                   | Rejected: ETag/`If-None-Match` on health endpoints; status-truth freshness beats 304 savings                                                                                                                                      |
 | [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md)                     | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers                                                                                                                                                        |

@@ -41,18 +41,19 @@ func main() {
 		fatalf("analyze %s: %v", abs, err)
 	}
 
-	for _, d := range detections {
-		fmt.Printf(
+	for _, finding := range detections {
+		fmt.Fprintf(
+			os.Stdout,
 			"%s:%d: [%s] %s\n  %s\n",
-			d.FilePath,
-			d.Line,
-			d.PatternName(),
-			d.Message,
-			d.Suggestion,
+			finding.FilePath,
+			finding.Line,
+			finding.PatternName(),
+			finding.Message,
+			finding.Suggestion,
 		)
 	}
 
-	fmt.Printf("doanalyzerv2: %d finding(s)\n", len(detections))
+	fmt.Fprintf(os.Stdout, "doanalyzerv2: %d finding(s)\n", len(detections))
 
 	if len(detections) > 0 {
 		os.Exit(1)

@@ -1,0 +1,27 @@
+# go-structure-linter project config (honored by the SDK and the CLI).
+# This repository is a published Go LIBRARY: the root package IS the public
+# `health` API (github.com/larsartmann/go-health), imported directly by the
+# consumer fleet. These five layout rules reject a deliberately-flat library
+# layout; every other rule category stays active.
+#
+# Fleet precedent: go-appkit and go-error-family carry the same excludes for
+# the same reason (verified 2026-09-29 that the installed binary honors
+# exclude_patterns).
+exclude_patterns:
+  # The 8 root *.go files are the public `health` package. Moving them under
+  # /pkg/ or /internal/ would change the import path of a released module —
+  # a breaking restructure with zero benefit.
+  - root-package-files
+  # All four packages (health, aggregate, federation, checks) are public API;
+  # the repo deliberately contains no non-public code to relocate.
+  - internal-directory
+  # Examples are godoc Example functions in example_test.go — the idiomatic
+  # library pattern, compiled and run by `go test ./...` (the outcome the
+  # rule wants from an examples/ module).
+  - examples-directory
+  # The OpenAPI wire contract deliberately lives at docs/openapi.yaml, guarded
+  # by the flake's openapi-lockstep check and linked from AGENTS/README/docs.
+  - api-directory
+  # Build automation is owned by flake.nix apps + BuildFlow; there are no
+  # build scripts (and the fleet policy is not to add any).
+  - scripts-directory

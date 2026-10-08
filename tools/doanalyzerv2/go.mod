@@ -1,4 +1,4 @@
-module doanalyzerv2-runner
+module github.com/larsartmann/go-health/tools/doanalyzerv2
 
 go 1.27.1
 

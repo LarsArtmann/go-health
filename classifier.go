@@ -9,9 +9,9 @@ import (
 // they are excluded from the failure roll-up, satisfy the startup latch,
 // and grade to [StatusOff] regardless of criticality.
 func isOff(err error) bool {
-	var off *OffError
+	_, ok := errors.AsType[*OffError](err)
 
-	return errors.As(err, &off)
+	return ok
 }
 
 // classifier rolls raw health-check results into the library's decisions:

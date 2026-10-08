@@ -1,0 +1,30 @@
+# BuildFlow Configuration — non-default settings only (compiled-in defaults
+# cover everything else; a missing config file is fully valid).
+
+# Render-level per-tool warning ceilings (summary collapse; never gates —
+# the findings gate still fails on unfixable errors). Set 2026-10-08 with
+# ~20% headroom over the steady-state finding counts; growth past a ceiling
+# re-surfaces via the [OVER budget] marker as a noise-drift tripwire.
+warnings_budget:
+  # samber/lo suggestion advisories: samber/lo is deliberately absent from
+  # go.mod — this library's dependency policy is samber/do v2 ONLY (AGENTS.md),
+  # so stdlib loops stay. The matched patterns are reported as suggestions the
+  # dependency gate correctly refuses to auto-apply (same rationale as
+  # DiscordSync's 2026-09-22 unskip).
+  go-auto-upgrade: 6
+  # Test-code duplication (63 findings, all *_test.go): table-driven fixtures
+  # and per-test setup blocks are intentional similarity, not copy-paste debt.
+  art-dupl: 80
+  # Design-signal advisories, accepted as documented decisions:
+  #   - Probe/config field sharing (10 fields) and federation config/Prober
+  #     sharing (2) are the functional-options idiom: options write to a
+  #     construction-only config that Probe consumes (AGENTS.md Key Design
+  #     Decisions); the analyzer's mixin suggestion would invert it.
+  #   - The two remaining federation slice-index warnings are the pre-sized
+  #     parallel-fetch buffer (results[i] written by index under wg.Go, read
+  #     after wg.Wait) — safe by construction, same documented pattern as the
+  #     makezero nolint on that slice.
+  #   - strong-ID suggestions (instanceID → InstanceID) are wire-shape design
+  #     decisions reserved for the owner (cf. docs/servicename-design.md),
+  #     not lint-pass material.
+  branching-flow: 14

@@ -119,8 +119,8 @@ type Prober struct {
 	// states holds one entry per remote; index i is the single pairing key
 	// for fetch results, latch reads, and merge — no cross-slice length
 	// invariant exists.
-	states []remoteState
-	client *http.Client
+	states  []remoteState
+	client  *http.Client
 	timeout time.Duration
 }
 

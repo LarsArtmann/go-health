@@ -1,6 +1,6 @@
 # Design: unified merge for `aggregate` and `federation`
 
-**Date:** 2026-10-02 · **Status:** DESIGN ONLY — v0.5 territory. No code changes now.
+**Date:** 2026-10-02 · **Status:** DESIGN ONLY — re-venued 2026-10-08 to the v0.6 window (v0.5.0 shipped without it; body retains its original v0.5 framing). No code changes now. See TODO_LIST "v0.6 window — staging".
 
 ## Problem (P9)
 

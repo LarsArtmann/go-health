@@ -1,6 +1,6 @@
 # Naming integrity: non-breaking docs now, staged renames for v0.5
 
-**Date:** 2026-10-02 · **Status:** ADOPTED (docs portion shipped; renames staged for v0.5). Automated smell detection: clean (0 findings, naming-smells.sh).
+**Date:** 2026-10-02 · **Status:** ADOPTED (docs portion shipped; renames re-venued 2026-10-08 to the v0.6 window — v0.5.0 shipped without them; body retains its original v0.5 framing). Automated smell detection: clean (0 findings, naming-smells.sh).
 
 ## Non-breaking: document the two confusable names (shipped)
 

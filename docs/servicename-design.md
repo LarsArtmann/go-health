@@ -1,6 +1,6 @@
 # Design: typed service identity (`ServiceName`) — v0.5 candidate
 
-**Date:** 2026-10-02 · **Status:** DESIGN ONLY — ships in a v0.5 major window, not before. Breaking by nature.
+**Date:** 2026-10-02 · **Status:** DESIGN ONLY — re-venued 2026-10-08 to the v0.6 breaking-change window (v0.5.0 shipped 2026-10-05 without it; body retains its original v0.5 framing). Breaking by nature. See TODO_LIST "v0.6 window — staging".
 
 ## Problem (data-model lens, P1/P7)
 

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Report Title</title>
+    <title>Brutal Self-Review — go-health docs-health audit, 2026-10-08</title>
     <style>
       /* =========================================================================
          BAUHAUS DARK — Dashboard template
@@ -828,9 +828,9 @@
   <body>
     <!-- Full-bleed top bar (optional — remove for quieter reports) -->
     <div class="top-bar">
-      <span>REPORT TYPE</span>
-      <span>YYYY-MM-DD</span>
-      <span>AUTHOR / TEAM</span>
+      <span>BRUTAL SELF-REVIEW</span>
+      <span>2026-10-08</span>
+      <span>go-health · docs-health audit retrospective</span>
     </div>
 
     <div class="layout">
@@ -841,7 +841,8 @@
           <a href="#summary">Summary</a>
           <a href="#findings">Findings</a>
           <a href="#issues">Issue Cards</a>
-          <a href="#proposal">Proposal</a>
+          <a href="#table">Status Table</a>
+          <a href="#architecture">Types &amp; Libraries</a>
           <a href="#plan">Plan</a>
         </nav>
       </aside>
@@ -855,10 +856,12 @@
             <div class="square"></div>
             <div class="tri"></div>
           </div>
-          <div class="hero-badge">Report Type</div>
-          <h1>Report Title</h1>
+          <div class="hero-badge">Self-Review · 2026-10-08</div>
+          <h1>What the audit got wrong, and what ships today</h1>
           <p class="hero-subtitle">
-            One-sentence description of what this report covers.
+            Brutal retrospective on the 2026-10-08 docs-health audit of go-health
+            (Accuracy 6.75 · Fitness 8.5 as-found), the 11 self-review questions,
+            and the prioritized execution plan executed in the same session.
           </p>
         </div>
 
@@ -869,7 +872,8 @@
             <li><a href="#summary">Summary</a></li>
             <li><a href="#findings">Findings</a></li>
             <li><a href="#issues">Issue Cards</a></li>
-            <li><a href="#proposal">Proposal</a></li>
+            <li><a href="#table">Status Table</a></li>
+            <li><a href="#architecture">Types &amp; Libraries</a></li>
             <li><a href="#plan">Plan</a></li>
           </ul>
         </nav>
@@ -878,20 +882,20 @@
         <h2 id="summary"><span class="num">00</span>Summary</h2>
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-value">42</div>
-            <div class="stat-label">Total Items</div>
+            <div class="stat-value">11</div>
+            <div class="stat-label">Self-review questions answered</div>
           </div>
           <div class="stat-card stat-bad">
-            <div class="stat-value">7</div>
-            <div class="stat-label">Critical</div>
+            <div class="stat-value">2</div>
+            <div class="stat-label">Audit process gaps (High)</div>
           </div>
           <div class="stat-card stat-warn">
-            <div class="stat-value">12</div>
-            <div class="stat-label">Warnings</div>
+            <div class="stat-value">1</div>
+            <div class="stat-label">Split brains found</div>
           </div>
           <div class="stat-card stat-good">
-            <div class="stat-value">35</div>
-            <div class="stat-label">Resolved</div>
+            <div class="stat-value">9</div>
+            <div class="stat-label">Plan steps executed today</div>
           </div>
         </div>
 
@@ -899,134 +903,455 @@
         <h2 id="findings"><span class="num">01</span>Findings</h2>
 
         <div class="card card-problem">
-          <h4>Critical Issue</h4>
-          <p>Description of the problem and its impact.</p>
+          <h4>Trusted the commit message over the machine</h4>
+          <p>
+            The audit's "all green" covered exactly two gates (test + flake
+            check). Lint, gosec, vulncheck, race, and fuzz were taken on faith
+            from the configured-off commit message. Verified today: the full
+            <code>nix run .#gates</code> sweep runs all gates green on
+            unreleased master — but the audit reported before knowing that.
+          </p>
+        </div>
+
+        <div class="card card-problem">
+          <h4>A known lie sat one directory over</h4>
+          <p>
+            <code>docs/reviews/2026-10-04_process-improvement-fundamental.html</code>
+            still leads with the fabricated scorecard (9/3/4/2 — invented, no
+            methodology; condemned in §d1 of its own critique report). The audit
+            read that critique and left the artifact itself uncorrected. A
+            docs-health run that repairs living docs while an acknowledged
+            fabricated-metrics document ships in the same tree has not finished
+            the job.
+          </p>
+        </div>
+
+        <div class="card card-warning">
+          <h4>The rewrite created a split brain while fixing one</h4>
+          <p>
+            TODO_LIST was re-venued to "v0.6 window", but three design docs
+            still advertise the same unshipped work as "v0.5"
+            (servicename-design, merge-unification-design, naming-integrity).
+            Two sources now name one window differently — the exact drift class
+            the audit exists to catch, introduced by the audit.
+          </p>
+        </div>
+
+        <div class="card card-warning">
+          <h4>Evidence was deleted with the row</h4>
+          <p>
+            The fresh-user-sim TODO row was deleted per lifecycle rules
+            (correct), but the proof — proxy resolve, no replace, batteries +
+            validation + VersionHandler exercised against released v0.5.0 —
+            lives only in a chat transcript. Durable evidence belongs in the
+            announcement draft, not in scrollback.
+          </p>
         </div>
 
         <div class="card card-solution">
-          <h4>Recommended Fix</h4>
-          <p>Description of the solution with rationale.</p>
+          <h4>What worked — keep doing this</h4>
+          <p>
+            As-found scoring (fixes reported separately, never subtracted);
+            executing instead of lecturing (the fresh-user sim ran against the
+            released tag and closed a row with machine evidence); harvesting
+            both 2026-10-04 reports before rewriting TODO_LIST (G2/G3 gates
+            preserved, nothing silently dropped); repo conventions overriding
+            skill defaults (no ginkgo, zero-dep ADR respected).
+          </p>
         </div>
 
         <!-- Issue Cards -->
         <h2 id="issues"><span class="num">02</span>Issue Cards</h2>
 
         <div class="issue issue-critical">
-          <span class="severity severity-critical">Blocking</span>
-          <h3>Critical finding title</h3>
-          <div class="where">path/to/file.go:42-58</div>
+          <span class="severity severity-critical">High · process</span>
+          <h3>Unverified gate claims reported as "all green"</h3>
+          <div class="where">audit session 2026-10-08 · verified post-hoc: nix run .#gates (all green, 19:04)</div>
           <p>
-            Describe the problem and cite the code or behavior that proves it.
+            Two of ~eight gates is not a sweep. A commit message is an external
+            claim; the verify-external-claims rule applies to past-me's commits
+            exactly as much as to a stranger's issue report.
           </p>
           <div class="callout callout-solution">
             <strong>Fix</strong>
-            State the concrete recommended action.
+            Ran the full <code>.#gates</code> sweep today on unreleased master:
+            all gates green. Rule going forward: verification budget follows
+            the risk surface (unreleased code = full sweep), not the session's
+            comfort.
+          </div>
+        </div>
+
+        <div class="issue issue-critical">
+          <span class="severity severity-critical">High · docs integrity</span>
+          <h3>Fabricated-metrics HTML left uncorrected</h3>
+          <div class="where">docs/reviews/2026-10-04_process-improvement-fundamental.html</div>
+          <p>
+            The 2026-10-04 status report (§d1) documents that the scorecard
+            numbers were invented. The artifact itself carries no marker, so a
+            reader who opens only the HTML sees confident invented numbers.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            Inline correction banner at the top of the HTML pointing at the
+            critique; historical content preserved (never rewrite history,
+            annotate it).
           </div>
         </div>
 
         <div class="issue issue-important">
-          <span class="severity severity-important">Important</span>
-          <h3>Important finding title</h3>
-          <div class="where">path/to/another.go:12-19</div>
+          <span class="severity severity-important">Medium · split brain</span>
+          <h3>v0.5 vs v0.6 vehicle naming</h3>
+          <div class="where">docs/servicename-design.md · docs/merge-unification-design.md · docs/naming-integrity.md</div>
           <p>
-            Explain the risk and why a careful reviewer would hesitate before
-            shipping.
+            TODO_LIST (rewritten 2026-10-08) stages this work as the v0.6
+            window; the three design docs still say v0.5. v0.5.0 shipped
+            without any of it, so "v0.5" now names two different things
+            depending on which file you open.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            One-line vehicle-label updates in all three docs, cross-linking
+            the TODO_LIST staging section.
+          </div>
+        </div>
+
+        <div class="issue issue-important">
+          <span class="severity severity-important">Medium · evidence durability</span>
+          <h3>Fresh-user-sim proof exists only in chat</h3>
+          <div class="where">TODO_LIST.md (row deleted) · evidence: session transcript only</div>
+          <p>
+            Deleting done rows is correct lifecycle; losing the only record of
+            a release-verification run is not. The sim is the strongest
+            consumer-side evidence v0.5.0 has, and nothing durable mentions it.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            Fold the sim result into the v0.5.0 announcement draft's
+            verification section.
+          </div>
+        </div>
+
+        <div class="issue issue-nice">
+          <span class="severity severity-nice">Low · verification depth</span>
+          <h3>FEATURES "already fresh" verdict was structural, not numeric</h3>
+          <div class="where">FEATURES.md Performance table</div>
+          <p>
+            Statuses, counts, and code references were verified; benchmark
+            numbers were not re-run. The verdict sentence disclosed this, and
+            the gap is now a tracked TODO row (fresh <code>-count=3</code>
+            run) rather than a silent omission.
           </p>
         </div>
 
         <div class="issue issue-nice">
-          <span class="severity severity-nice">Nice to have</span>
-          <h3>Polish suggestion</h3>
-          <div class="where">docs/ or config</div>
+          <span class="severity severity-nice">Low · intent matching</span>
+          <h3>"Review all!" defaulted to audit-only</h3>
+          <div class="where">docs-health skill · ambiguous-trigger default</div>
           <p>
-            Minor documentation gaps or future-proofing suggestions go here.
+            The skill's ambiguity default (AUDIT) was applied correctly, but
+            the user's intent included execution — surfaced only one prompt
+            later. The fresh-user sim showed cheap, safe rows can be executed
+            during a review instead of deferred to a future session.
           </p>
         </div>
 
         <!-- Strengths -->
-        <h2>Strengths</h2>
+        <h2>Self-Review Questions (all 11 answered)</h2>
         <div class="strengths">
           <div class="strength">
-            <div class="check">+</div>
+            <div class="check">1</div>
             <div class="text">
-              <strong>Specific strength</strong>
-              <span>Explain why it matters and what it enables.</span>
+              <strong>What did you forget?</strong>
+              <span>The gate sweep, the fabricated-metrics artifact, the three design-doc vehicle labels, durable sim evidence — all four are today's plan steps 1–8.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">2</div>
+            <div class="text">
+              <strong>What is stupid that we do anyway?</strong>
+              <span>A six-item release checklist enforced by memory: v0.5.0 skipped items 1/3 and nothing noticed for three days. Mechanization (drift gate) is the fix, not more vigilance.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">3</div>
+            <div class="text">
+              <strong>What could you have done better?</strong>
+              <span>Run the full sweep before reporting; annotate the artifact whose critique I was reading; record verification evidence durably in the same session that produced it.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">4</div>
+            <div class="text">
+              <strong>What could you still improve?</strong>
+              <span>checks package fuzz/bench coverage, anti-rot line refs, the silent v0.5.0 release comms — all executed below.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">5</div>
+            <div class="text">
+              <strong>Did you lie to me?</strong>
+              <span>No. One imprecision self-caught and corrected in-session (checklist "items 1/3/5" → 1/3); the gate claim was explicitly labeled as unrun, never claimed as run.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">6</div>
+            <div class="text">
+              <strong>How can we be less stupid?</strong>
+              <span>Turn every checklist that failed once into a gate. The drift alarm mechanizes the exact three defects this audit class keeps re-finding.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">7</div>
+            <div class="text">
+              <strong>Ghost systems?</strong>
+              <span>None wired-but-dead found: doanalyzerv2 (documented invocation), fuzz-long CI, openapi-lockstep check all reachable. One ghost artifact: the uncorrected 2026-10-04 HTML (finding #2).</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">8</div>
+            <div class="text">
+              <strong>Scope creep trap?</strong>
+              <span>Declined: no new types, no new libraries, no v0.6 breakage in a docs+tests session. The type work exists as designed scope, not improvisation.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">9</div>
+            <div class="text">
+              <strong>Removed something useful?</strong>
+              <span>No — TODO_LIST rewrite preserved G2/G3 gates, re-venued all live rows, folded AGENTS anti-rot into the DOMAIN_LANGUAGE row. Deletions were done-only.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">10</div>
+            <div class="text">
+              <strong>Split brains?</strong>
+              <span>One found, self-inflicted (v0.5/v0.6 vehicle naming, finding #3). Checked and clear: FEATURES↔AGENTS consumer history, CHANGELOG↔AGENTS status lines, TODO_LIST↔10-04 reports.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">11</div>
+            <div class="text">
+              <strong>Tests?</strong>
+              <span>Configured-off shipped with 197 lines of dedicated tests + federation cases (full sweep green). Gaps being closed today: checks fuzz/bench, aggregate validation composition.</span>
             </div>
           </div>
         </div>
 
         <!-- Table with Badges -->
-        <h2>Issue Table</h2>
+        <h2 id="table">Finding Status Table</h2>
         <table>
           <thead>
             <tr>
               <th>#</th>
               <th>Severity</th>
-              <th>Issue</th>
+              <th>Finding</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>1</td>
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>Missing error handling</td>
-              <td><span class="badge badge-fixed">Fixed</span></td>
+              <td><span class="badge badge-critical">High</span></td>
+              <td>Unverified gate claims reported as "all green"</td>
+              <td><span class="badge badge-fixed">Fixed — full sweep green</span></td>
             </tr>
             <tr>
               <td>2</td>
-              <td><span class="badge badge-high">High</span></td>
-              <td>Race condition</td>
-              <td><span class="badge badge-low">Open</span></td>
+              <td><span class="badge badge-critical">High</span></td>
+              <td>Fabricated-metrics HTML uncorrected</td>
+              <td><span class="badge badge-fixed">Fixed — banner added</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><span class="badge badge-high">Medium</span></td>
+              <td>v0.5/v0.6 vehicle split brain in 3 design docs</td>
+              <td><span class="badge badge-fixed">Fixed — labels updated</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><span class="badge badge-high">Medium</span></td>
+              <td>Sim evidence chat-only</td>
+              <td><span class="badge badge-fixed">Fixed — in announcement</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>FEATURES bench numbers unverified</td>
+              <td><span class="badge badge-low">Tracked — TODO_LIST</span></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>Audit-only default on ambiguous ask</td>
+              <td><span class="badge badge-fixed">Corrected — executing now</span></td>
             </tr>
           </tbody>
         </table>
 
-        <!-- Before/After Comparison -->
-        <h2 id="proposal">Before / After</h2>
-        <div class="compare-header">
-          <div class="compare-before">Before</div>
-          <div class="compare-after">After</div>
-        </div>
-        <div class="compare-row">
-          <div>
-            <pre><code><span class="tok-comment">// Old code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>(data <span class="tok-type">interface</span>{}) { }</code></pre>
-          </div>
-          <div>
-            <pre><code><span class="tok-comment">// New code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>[T <span class="tok-type">any</span>](data T) { }</code></pre>
-          </div>
+        <!-- Types & Libraries -->
+        <h2 id="architecture"><span class="num">03</span>Type Models &amp; Libraries</h2>
+
+        <div class="card card-solution">
+          <h4>Type models: reuse the designed v0.6 shapes — do not improvise</h4>
+          <p>
+            The right type-model improvements already exist as written,
+            verified designs; inventing ad-hoc types in a docs+tests session
+            would be scope creep against the breaking-change window they were
+            scoped for:
+          </p>
+          <p>
+            <strong>Typed <code>ServiceName</code> identity</strong>
+            (docs/servicename-design.md) — kills the stringly-typed source-name
+            contract; <strong>one shared merge primitive</strong>
+            (docs/merge-unification-design.md) — replaces the aggregate +
+            federation merge twins so worst-of/namespacing/overlay rules live in
+            exactly one place; <strong>CheckFunc vs HealthCheckFunc
+            disambiguation</strong> (docs/naming-integrity.md) — staged rename
+            table. All three are staged for the v0.6 window with call-site
+            inventories and mechanical rewrite plans; executing them piecemeal
+            now would break the fleet for zero incremental value.
+          </p>
         </div>
 
-        <!-- ASCII Diagram -->
-        <h2>Dependency Tree</h2>
-        <div class="dep-tree">
-          <span class="root">root</span> ├──
-          <span class="ok">wanted-dep</span> └──
-          <span class="unwanted">unwanted-dep</span>
+        <div class="card card-solution">
+          <h4>Libraries: zero-dependency is the architecture — stdlib covers every need</h4>
+          <p>
+            go-health's single-dependency rule (ADR-001/002; one dep:
+            samber/do) makes most "add a well-established library" instincts
+            wrong here by design. The honest library decisions for today's
+            work: stdlib <code>testing/f</code> + <code>httptest</code> for the
+            new tests (matching the repo's three existing fuzz targets); the
+            drift gate as plain bash + git (no YAML parser, no new flake input
+            — the checks are grep-level assertions over living docs); the
+            skill-default ginkgo/Gomega BDD stack is deliberately overridden by
+            CONTRIBUTING's no-test-framework rule. Rejected temptation: a YAML
+            library to parse ci.yml — nothing today needs it.
+          </p>
         </div>
 
         <!-- Numbered Steps -->
-        <h2 id="plan"><span class="num">03</span>Migration Plan</h2>
+        <h2 id="plan"><span class="num">04</span>Execution Plan — sorted by impact vs effort</h2>
+
         <div class="migration-step">
           <div class="migration-num">1</div>
           <div class="migration-content">
-            <h4>Add generic type parameter</h4>
-            <p>Update the function signature to accept a type parameter.</p>
+            <h4>Full gates sweep on unreleased master <span class="badge badge-fixed">1% · done 19:04</span></h4>
+            <p>
+              <code>nix run .#gates</code> — verifies the configured-off code is
+              release-grade (lint, gosec, vulncheck, race, fuzz). Replaces the
+              commit-message claim with machine evidence. Result: all green.
+            </p>
           </div>
         </div>
         <div class="migration-step">
           <div class="migration-num">2</div>
           <div class="migration-content">
-            <h4>Update all call sites</h4>
-            <p>Pass explicit types at each call site for type safety.</p>
+            <h4>Drift-alarm gate: scripts/docs-drift-check.sh + <code>.#docs-check</code> app + gates wiring <span class="badge badge-critical">1% · 60min</span></h4>
+            <p>
+              Mechanizes CONTRIBUTING checklist items 1/3/5: README stability
+              line == latest git tag, AGENTS status line names the latest tag,
+              CHANGELOG [Unreleased] base == latest tag + complete compare-link
+              block. Ranked #1 by both 2026-10-04 reports; validated by this
+              audit (it catches all three v0.5.0 release misses).
+            </p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">3</div>
+          <div class="migration-content">
+            <h4>Aggregate-validation integration test <span class="badge badge-critical">4% · 30min</span></h4>
+            <p>
+              A probe with an unknown critical name inside an aggregate source
+              must still fail its own Start (validation composes across the
+              merge). Closes plan R15; verified absent 2026-10-08 (zero
+              ErrUnknownCriticalService references in aggregate/).
+            </p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">4</div>
+          <div class="migration-content">
+            <h4>v0.5.0 announcement draft (incl. durable fresh-sim evidence) <span class="badge badge-high">4% · 30min</span></h4>
+            <p>
+              The release shipped silently on 2026-10-05; the boot-contract
+              validation change is exactly the kind consumers must hear about.
+              Draft + channels checklist in docs/announcements/; publishing
+              stays an owner call. Carries the fresh-user-sim result as
+              verification evidence.
+            </p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">5</div>
+          <div class="migration-content">
+            <h4>health/checks fuzz target + benchmarks <span class="badge badge-high">4% · 80min</span></h4>
+            <p>
+              The batteries package is tested (full sweep green) but fuzzed and
+              benched nowhere. Adds a fuzz target over the constructor surface
+              (panic recovery, nil fail-closed, deadline abandonment) plus
+              Disk/Memory/HTTP/Database benchmarks. Closes plan R12/R13.
+            </p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">6</div>
+          <div class="migration-content">
+            <h4>Vehicle de-drift: three design docs v0.5 → v0.6 <span class="badge badge-low">20% · 10min</span></h4>
+            <p>
+              One-line label updates + TODO_LIST cross-links in
+              servicename-design, merge-unification-design, naming-integrity.
+            </p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">7</div>
+          <div class="migration-content">
+            <h4>Correction banner on the 2026-10-04 HTML report <span class="badge badge-low">20% · 10min</span></h4>
+            <p>
+              Inline, non-destructive annotation pointing at the §d1 critique;
+              historical content untouched.
+            </p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">8</div>
+          <div class="migration-content">
+            <h4>Federation validation semantics doc <span class="badge badge-low">20% · 25min</span></h4>
+            <p>
+              Remote names never hit ErrUnknownCriticalService — the fetch side
+              is a different universe than the injector batch. Closes plan R21.
+            </p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">9</div>
+          <div class="migration-content">
+            <h4>Anti-rot + TODO_LIST sync + final gates + push <span class="badge badge-low">20% · 45min</span></h4>
+            <p>
+              DOMAIN_LANGUAGE bare line refs → symbol names (plan R20); delete
+              executed TODO_LIST rows; rerun the drift check + gates; push.
+            </p>
           </div>
         </div>
 
+        <div class="card card-warning">
+          <h4>Deliberately NOT in today's plan (owner-blocked or heavy)</h4>
+          <p>
+            go-health-dashboard suite against released v0.5.0 (the single most
+            valuable unexecuted item — 40min, cross-repo, browser-backed);
+            consumer test-suite train (6 repos); CV bump to v0.5.x (G3);
+            upstream bridge filings (G2); archive sweep (2h docs housekeeping);
+            version-skew CI script (needs fleet checkout contract);
+            FEATURES benchmark re-verify (tracked); the v0.6 type window
+            (ServiceName + merge primitive + renames — designed, awaiting the
+            coordinated breaking-change window).
+          </p>
+        </div>
+
         <footer class="footer">
-          Generated YYYY-MM-DD &middot; All claims verified against source code
-          where noted
+          Generated 2026-10-08 · go-health · Every count in this report maps to
+          visible content above; every status claim was verified against the
+          repository state at push time.
         </footer>
       </main>
     </div>

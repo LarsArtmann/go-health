@@ -10,7 +10,7 @@ Fleet services carry optional dependencies whose absence is a deliberate
 configuration, not a fault — an optional analytics database, a disabled chat
 provider. Two real cases shaped this design:
 
-1. **CV** synthesizes an explicit `database` row *outside* the probe: the
+1. **CV** synthesizes an explicit `database` row _outside_ the probe: the
    projection layer injects a hand-built `warn` check with the detail
    "intentional absence — analytics features disabled" and rolls it into the
    overall verdict. The row is honest but the vocabulary is wrong — nothing
@@ -27,17 +27,17 @@ graded pass/warn/fail from errors, and the Status enum was frozen.
 
 [starting-status-design.md](starting-status-design.md) rejected a fourth
 Status value (`starting`) and froze the enum. That rejection was about a
-*response-level transient boot state*; `off` differs on every argument:
+_response-level transient boot state_; `off` differs on every argument:
 
-| `starting` argument                                  | Why it does not reject `off`                                                                                                        |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Kubernetes never reads the body                      | Same — which is exactly why off must ride a 200. It does.                                                                            |
-| Nonstandard vocabulary; every consumer needs a case  | Applies, but the cost is one enum case at *check* level in consumers that render rows (the hub already has an unknown-status fallback), and the alternative (CV's prose-warn) costs more: it corrupts the aggregate. |
-| Roll-up ambiguity (`starting` vs `fail` on /readyz)  | Does not apply: off is a per-CHECK annotation; `Response.Status` remains three-state, so there is exactly one roll-up vocabulary.      |
-| "A status that can regress is a mood"                | Off is config-stable per process, not transient.                                                                                     |
-| No do-conformance path                               | Does not apply: off rides the existing error channel — `HealthCheck(ctx) error` returning `Off(...)` is fully expressible.            |
+| `starting` argument                                 | Why it does not reject `off`                                                                                                                                                                                         |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kubernetes never reads the body                     | Same — which is exactly why off must ride a 200. It does.                                                                                                                                                            |
+| Nonstandard vocabulary; every consumer needs a case | Applies, but the cost is one enum case at _check_ level in consumers that render rows (the hub already has an unknown-status fallback), and the alternative (CV's prose-warn) costs more: it corrupts the aggregate. |
+| Roll-up ambiguity (`starting` vs `fail` on /readyz) | Does not apply: off is a per-CHECK annotation; `Response.Status` remains three-state, so there is exactly one roll-up vocabulary.                                                                                    |
+| "A status that can regress is a mood"               | Off is config-stable per process, not transient.                                                                                                                                                                     |
+| No do-conformance path                              | Does not apply: off rides the existing error channel — `HealthCheck(ctx) error` returning `Off(...)` is fully expressible.                                                                                           |
 
-The frozen-enum consequence is narrowed accordingly: the *roll-up* enum
+The frozen-enum consequence is narrowed accordingly: the _roll-up_ enum
 (pass/warn/fail) is still frozen and `Response.Status` will never report
 `off`. The check-level vocabulary grows by one value.
 

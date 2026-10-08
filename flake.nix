@@ -284,6 +284,7 @@
               go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=10s
               go test . -run '^$' -fuzz=FuzzHandlerInput -fuzztime=10s
               go test ./aggregate -run '^$' -fuzz=FuzzAggregateMergeInvariants -fuzztime=10s
+              go test ./checks -run '^$' -fuzz=FuzzBatteries -fuzztime=10s
             '';
 
             # Weekly deep fuzz (see .github/workflows/fuzz-long.yml). A
@@ -293,6 +294,7 @@
               go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=5m "$@"
               go test . -run '^$' -fuzz=FuzzHandlerInput -fuzztime=5m "$@"
               go test ./aggregate -run '^$' -fuzz=FuzzAggregateMergeInvariants -fuzztime=5m "$@"
+              go test ./checks -run '^$' -fuzz=FuzzBatteries -fuzztime=5m "$@"
             '';
 
             clean =

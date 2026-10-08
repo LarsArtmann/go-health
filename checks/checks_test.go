@@ -168,15 +168,15 @@ func init() {
 	sql.Register("healthchecks-fake", fakeDriver{})
 }
 
-func openDB(t *testing.T, dsn string) *sql.DB {
-	t.Helper()
+func openDB(tb testing.TB, dsn string) *sql.DB {
+	tb.Helper()
 
 	handle, err := sql.Open("healthchecks-fake", dsn)
 	if err != nil {
-		t.Fatalf("open: %v", err)
+		tb.Fatalf("open: %v", err)
 	}
 
-	t.Cleanup(func() { _ = handle.Close() })
+	tb.Cleanup(func() { _ = handle.Close() })
 
 	return handle
 }

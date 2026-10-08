@@ -32,7 +32,6 @@
 | Task                                                                                                        | Status | Impact | Effort | Evidence                                                                                      |
 | ----------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------- |
 | go-health-dashboard full suite against released v0.5.0                                                      | TODO   | High   | 40min  | The one deep aggregate+federation consumer; no verification recorded since the 2026-10-05 tag |
-| v0.5.0 announcement draft (boot-contract `ErrUnknownCriticalService` + checks batteries + `VersionHandler`) | TODO   | Med    | 30min  | CHANGELOG `[0.5.0]`; the release shipped with no announcement; publish is an owner call       |
 
 ## Fleet proof & leverage — the 4%
 
@@ -46,22 +45,17 @@
 
 | Task                                                                                                                         | Status | Impact   | Effort | Evidence                                                                                             |
 | ---------------------------------------------------------------------------------------------------------------------------- | ------ | -------- | ------ | ---------------------------------------------------------------------------------------------------- |
-| ServiceName call-site inventory: fleet list → mechanical rewrite script + verification diff                                  | TODO   | High     | 60min  | docs/servicename-design.md (vehicle label there still says v0.5 — update when landing); plan R6      |
+| ServiceName call-site inventory: fleet list → mechanical rewrite script + verification diff                                  | TODO   | High     | 60min  | docs/servicename-design.md (re-venued to the v0.6 window, 2026-10-08); plan R6      |
 | Finalize rename staging: `SanitizeResponse`→`CoerceValidUTF8`, `Since`→`StatusSince`, `WithCriticalChecks` decision table    | TODO   | Med      | 40min  | docs/naming-integrity.md; plan R7                                                                    |
-| Aggregate-validation integration test: a probe with an unknown critical name inside a source (validation composes)           | TODO   | Med-High | 30min  | plan R15; verified 2026-10-08: no `ErrUnknownCriticalService` reference in aggregate/ or federation/ |
 | `mergeResponses` port prep: extract primitive sketch + corpus fixture; port both property suites when the window opens       | TODO   | Med      | 50min  | docs/merge-unification-design.md; plan R11                                                           |
-| Federation validation semantics doc: remote names never hit `ErrUnknownCriticalService` (fetch-side is a different universe) | TODO   | Low-Med  | 25min  | plan R21                                                                                             |
 
 ## Hardening — the tail (100%)
 
 | Task                                                                                                                                                                             | Status | Impact  | Effort | Evidence                                                                                                                                                                    |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `health/checks` fuzz target + benchmarks + coverage-gap close                                                                                                                    | TODO   | Med     | 80min  | plan R12/R13 (package tested, not fuzzed/benched); verified 2026-10-08: zero fuzz/bench funcs in checks/                                                                    |
 | Version-skew CI script: fleet `go.mod` pins vs latest tag, fail-on-drift                                                                                                         | TODO   | Med     | 45min  | plan R14 (CV class of skew caught by machine)                                                                                                                               |
-| Drift-alarm gate: `.#docs-check` flake app + `.#gates` step (README stability line == latest tag, CHANGELOG `[Unreleased]` base + complete link block, ADR range == `docs/adr/`) | TODO   | Med     | 60min  | Both 2026-10-04 reports rank it first; the v0.5.0 release skipped CONTRIBUTING checklist items 1/3 (README + AGENTS lines stale for 3 days, caught by the 2026-10-08 audit) |
 | Verify FEATURES benchmark rows against a fresh `-count=3` run; label single-run rows                                                                                             | TODO   | Low-Med | 45min  | 2026-10-04 audit §c5: table structure verified, numbers never re-run                                                                                                        |
 | Archive resolved status reports: 2026-09-15_08-55 (route §f → ROADMAP Theme 2 first), 2026-09-18_09-46, the four 2026-09-22 reports; decide the three 2026-09-04 anchors         | TODO   | Low     | 2h     | 2026-10-04 audit §b2/§c1; annotation tooling + manifest pattern ready                                                                                                       |
-| DOMAIN_LANGUAGE + AGENTS symbol-ref anti-rot: replace bare line numbers (`probe.go:54`, `di.go:442`) with symbol names                                                           | TODO   | Low     | 30min  | plan R20 (line refs rot every edit); verified 2026-10-08: bare refs still present in both files                                                                             |
 
 ## Owner Actions (artifacts ready, publishing is yours)
 

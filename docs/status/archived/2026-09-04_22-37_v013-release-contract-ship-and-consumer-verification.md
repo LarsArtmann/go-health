@@ -48,35 +48,35 @@ v0.1.3, and I skipped the documented ci-emulation pre-push step.
 
 ## b) PARTIALLY DONE
 
-1. **Announcement draft not updated for v0.1.3** — `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`
+~~1. **Announcement draft not updated for v0.1.3** — `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`~~ still open — TODO_LIST Owner Actions row (draft publish)
    predates this release; publishing is the owner's action, but _updating the draft_
    is mine and it's stale. A `TODO_LIST` row text ("v0.1.1/v0.1.2 announcement") is
    likewise stale. Both are 5-minute fixes I deferred instead of doing.
-2. **pkg.go.dev render unverified** — proxy + `go get` proven; the human-visible page
+~~2. **pkg.go.dev render unverified** — proxy + `go get` proven; the human-visible page~~ superseded — later releases verified end-to-end (v0.4.0, v0.5.0)
    (aggregate + examples + the Changed note) is still propagating. Tracked in
    TODO_LIST as a standing pattern (v0.1.1 needed a re-check too).
-3. **Dashboard push trusted to automation, not verified** — the bump commit
+~~3. **Dashboard push trusted to automation, not verified** — the bump commit~~ cross-repo — superseded by later dashboard bumps (v0.4.0, 2026-09-22 21:32 §a16)
    `773b0ed` is local; that repo showed `ahead 6` of origin and the 21-31 precedent
    says its automation syncs. I did not confirm the push actually happened.
-4. **`go mod verify` / `go mod tidy -diff` not explicitly run in go-health** —
+~~4. **`go mod verify` / `go mod tidy -diff` not explicitly run in go-health** —~~ NOT-DO — hygiene greps + gates + CI covered it; the release checklist carries the lesson
    hygiene greps (replace/pseudo-versions) were done and gates+CI passed, but the
    skill's Phase 3.2 commands were skipped as redundant rather than executed.
-5. **First dashboard test run lacked per-test detail** — `go test ./...` output
+~~5. **First dashboard test run lacked per-test detail** — `go test ./...` output~~ NOT-DO — process note, no work item
    showed FAIL without names; a second run was needed to identify the CSP tests.
    `-v` or full-output capture from the start would have saved a cycle.
 
 ## c) NOT STARTED (all tracked in TODO_LIST/ROADMAP; nothing silently dropped)
 
-- **Owner decisions:** branch protection on `master` (G3, ready-to-run command);
+~~- **Owner decisions:** branch protection on `master` (G3, ready-to-run command);~~ split — branch protection DONE (ENABLED, gh api 2026-10-08); coverage still open (TODO_LIST Blocked)
   coverage-threshold job (fail < 97%?).
-- **Owner action:** publish the announcement (after the draft gets its v0.1.3 update).
-- **Unblocked TODO_LIST rows:** trigger `Fuzz (weekly long)` once via
+~~- **Owner action:** publish the announcement (after the draft gets its v0.1.3 update).~~ still open — TODO_LIST Owner Actions row
+~~- **Unblocked TODO_LIST rows:** trigger `Fuzz (weekly long)` once via~~ done — all seven shipped or routed (ADR-005 v0.3.0; OpenAPI scope v0.3.0; property tests v0.3.0; lockstep v0.4.0; README table 2026-09-18; fuzz run 35756511889; pkg.go.dev superseded)
   `workflow_dispatch`; pkg.go.dev v0.1.3 render check; ADR-005; OpenAPI aggregate
   scope statement; aggregate property tests (idempotence + commutativity);
   OpenAPI↔golden lockstep CI check; README "which probe should I hit?" table.
-- **ROADMAP raw ideas:** Themes 1/2/5/6/7 unchanged (incl. v0.2.0 candidates
+~~- **ROADMAP raw ideas:** Themes 1/2/5/6/7 unchanged (incl. v0.2.0 candidates~~ routed — Themes current through 2026-10-08
   `errors.Join`, `SourceStatuses()`, aggregate `Healthz` parity — design note first).
-- **Deliberately out of scope this session:** the dashboard's CSP/Datastar test
+~~- **Deliberately out of scope this session:** the dashboard's CSP/Datastar test~~ cross-repo — the dashboard repo owns it
   failures (different repo, pre-existing, unrelated to go-health).
 
 ## d) TOTALLY FUCKED UP
@@ -138,72 +138,72 @@ v0.1.3, and I skipped the documented ci-emulation pre-push step.
 > 1–8 are direct v0.1.3 follow-ups; 9–15 the live TODO_LIST; 16–22 ROADMAP Themes
 > 6/7; 23–27 v0.2.0 candidates; 28–50 older leftovers and hygiene.
 
-1. Update the announcement draft for v0.1.3 (headline: slash-name contract) —
+~~1. Update the announcement draft for v0.1.3 (headline: slash-name contract) —~~ superseded — announcement cadence is an owner decision; v0.4.0–v0.5.0 shipped without published announcements
    `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md` is stale.
-2. Fix TODO_LIST announcement row text ("v0.1.1–v0.1.3").
-3. Verify the dashboard bump commit reached its origin (fetch + compare; do not
+~~2. Fix TODO_LIST announcement row text ("v0.1.1–v0.1.3").~~ done — TODO_LIST announcement row text maintained through the 2026-10-08 sweep
+~~3. Verify the dashboard bump commit reached its origin (fetch + compare; do not~~ cross-repo — superseded by later dashboard bumps
    trust the automation blindly).
-4. Verify pkg.go.dev renders v0.1.3 (aggregate + examples + Changed note visible).
-5. Owner: branch protection on `master` (G3, ready-to-run command in TODO_LIST).
-6. Owner: coverage-threshold decision (fail < 97%?).
-7. Owner: publish the announcement once 1–2 land.
-8. Trigger `Fuzz (weekly long)` once via `workflow_dispatch` (5 min).
-9. ADR-005: promote `docs/aggregate-source-name-design.md` into the ADR series.
-10. OpenAPI: state explicitly that aggregate endpoints are covered or scoped out.
-11. Aggregate property tests: merge idempotence + source-order commutativity.
-12. OpenAPI ↔ golden-file lockstep check in CI.
-13. README "which probe should I hit?" decision table.
-14. Add ci-emulation + Phase-8 completeness (announcement, TODO_LIST sweep) to
+~~4. Verify pkg.go.dev renders v0.1.3 (aggregate + examples + Changed note visible).~~ superseded — later releases verified end-to-end
+~~5. Owner: branch protection on `master` (G3, ready-to-run command in TODO_LIST).~~ done — branch protection ENABLED (gh api .protection, 2026-10-08)
+~~6. Owner: coverage-threshold decision (fail < 97%?).~~ still open — TODO_LIST Blocked row
+~~7. Owner: publish the announcement once 1–2 land.~~ still open — TODO_LIST Owner Actions row
+~~8. Trigger `Fuzz (weekly long)` once via `workflow_dispatch` (5 min).~~ done — run 35756511889 success (2026-09-22 21:01 §a2)
+~~9. ADR-005: promote `docs/aggregate-source-name-design.md` into the ADR series.~~ done — ADR-005 shipped v0.3.0
+~~10. OpenAPI: state explicitly that aggregate endpoints are covered or scoped out.~~ done — v0.3.0 aggregate coverage in spec
+~~11. Aggregate property tests: merge idempotence + source-order commutativity.~~ done — property tests shipped v0.3.0
+~~12. OpenAPI ↔ golden-file lockstep check in CI.~~ done — openapi-lockstep shipped v0.4.0
+~~13. README "which probe should I hit?" decision table.~~ done — README decision table (2026-09-18 §a7)
+~~14. Add ci-emulation + Phase-8 completeness (announcement, TODO_LIST sweep) to~~ done — CONTRIBUTING release checklist (2026-09-04 22:15) + CHANGELOG-policy note (2026-10-08)
     CONTRIBUTING's release checklist.
-15. Record the dashboard's pre-existing CSP failure baseline in that repo.
-16. Aggregate handler (HTTP-path) benchmarks complementing the merge benchmark.
-17. Feed golden-fixture inputs into the aggregate fuzz seed corpus.
-18. Benchmark the throttled live path under contention.
-19. Fuzz the throttle-window boundary under concurrency with a fake clock.
-20. Combine aggregate handler fuzz with throttle/cache modes.
-21. `-count=N` race-suite stress in CI if flakiness stays at zero.
-22. Dependabot/Renovate for flake inputs + pinned action SHAs (auto-merge policy
+~~15. Record the dashboard's pre-existing CSP failure baseline in that repo.~~ cross-repo — the dashboard repo owns its baseline file
+~~16. Aggregate handler (HTTP-path) benchmarks complementing the merge benchmark.~~ done — BenchmarkAggregateHandlers (2026-09-18 §a2)
+~~17. Feed golden-fixture inputs into the aggregate fuzz seed corpus.~~ open — → ROADMAP Theme 6
+~~18. Benchmark the throttled live path under contention.~~ open — → ROADMAP Theme 6
+~~19. Fuzz the throttle-window boundary under concurrency with a fake clock.~~ open — → ROADMAP Theme 6
+~~20. Combine aggregate handler fuzz with throttle/cache modes.~~ open — → ROADMAP Theme 6
+~~21. `-count=N` race-suite stress in CI if flakiness stays at zero.~~ open — → ROADMAP Theme 6
+~~22. Dependabot/Renovate for flake inputs + pinned action SHAs (auto-merge policy~~ open — → ROADMAP Theme 7 (flake-input automation)
     separate).
-23. v0.2.0: `errors.Join` in `aggregate.New` (design + spike ready).
-24. v0.2.0: `Aggregate.SourceStatuses()` (design ready).
-25. v0.2.0: aggregate `Healthz` parity — design note before implementing.
-26. Go 1.27 floor bump (directive + drop GOEXPERIMENT) when 1.26 support drops.
-27. Post-v0.2.0: re-run the consumer verification matrix (dashboard vs new release).
-28. Promote erraudit/doanalyzerv2 to CI if either becomes public.
-29. Non-nix CI matrix job (plain `go test`) for OS/arch honesty.
-30. arm64 native runner evaluation if QEMU stays too slow.
-31. Raise per-push fuzz budget above 10s/target if CI cost allows.
-32. gopls stdversion warning suppression (editor noise only).
-33. ETag/`If-None-Match` rejection note (Theme 5) before someone asks.
-34. `AwaitReady` cache-aware poll interval (needs a use case).
-35. OTel spans spike via `WithEvaluationHook` (Theme 2).
-36. `TotalLatencyMs` as `float64` (wire change — gated on consumer need).
-37. `Probe.Snapshot()` accessor (only with a concrete consumer).
-38. `HealthRecorder` signature revisit at v1.0 (ADR-004).
-39. Review `WithGETOnly` pin-tests at v1.0 deprecation burn-down.
-40. Dependabot auto-merge rules decision.
-41. README benchmark-table excerpt for the "fast by design" story.
-42. Example: custom `HealthRecorder` combined with the aggregate.
-43. Example: live-vs-cached mode side-by-side.
-44. Shellcheck `tools/doanalyzerv2/run.sh` if shellcheck joins treefmt.
-45. Consider `omitzero` migration for always-emitted scalar fields (v0.2.0+ wire
+~~23. v0.2.0: `errors.Join` in `aggregate.New` (design + spike ready).~~ open — → ROADMAP Theme 7
+~~24. v0.2.0: `Aggregate.SourceStatuses()` (design ready).~~ open — → ROADMAP Theme 7
+~~25. v0.2.0: aggregate `Healthz` parity — design note before implementing.~~ open — → ROADMAP Theme 7
+~~26. Go 1.27 floor bump (directive + drop GOEXPERIMENT) when 1.26 support drops.~~ superseded — shipped v0.4.0 (go 1.27, no GOEXPERIMENT)
+~~27. Post-v0.2.0: re-run the consumer verification matrix (dashboard vs new release).~~ done as practice — v0.4.0 bump verified; v0.5.0 fresh-user sim
+~~28. Promote erraudit/doanalyzerv2 to CI if either becomes public.~~ open — → ROADMAP Theme 7 raw idea
+~~29. Non-nix CI matrix job (plain `go test`) for OS/arch honesty.~~ open — → ROADMAP Theme 7
+~~30. arm64 native runner evaluation if QEMU stays too slow.~~ open — → ROADMAP Theme 7
+~~31. Raise per-push fuzz budget above 10s/target if CI cost allows.~~ open — → ROADMAP Theme 7
+~~32. gopls stdversion warning suppression (editor noise only).~~ superseded — go 1.27 floor removed the ask
+~~33. ETag/`If-None-Match` rejection note (Theme 5) before someone asks.~~ done — docs/etag-rejection-design.md
+~~34. `AwaitReady` cache-aware poll interval (needs a use case).~~ open — → ROADMAP Theme 1
+~~35. OTel spans spike via `WithEvaluationHook` (Theme 2).~~ open — → ROADMAP Theme 2
+~~36. `TotalLatencyMs` as `float64` (wire change — gated on consumer need).~~ open — → ROADMAP Theme 2
+~~37. `Probe.Snapshot()` accessor (only with a concrete consumer).~~ open — → ROADMAP Theme 2
+~~38. `HealthRecorder` signature revisit at v1.0 (ADR-004).~~ covered — ROADMAP v1.0 criteria (ADR-004)
+~~39. Review `WithGETOnly` pin-tests at v1.0 deprecation burn-down.~~ covered — ROADMAP v1.0 criteria (WithGETOnly)
+~~40. Dependabot auto-merge rules decision.~~ open — → ROADMAP Theme 7
+~~41. README benchmark-table excerpt for the "fast by design" story.~~ superseded — FEATURES holds the numbers
+~~42. Example: custom `HealthRecorder` combined with the aggregate.~~ open (nice-to-have) — not carried
+~~43. Example: live-vs-cached mode side-by-side.~~ open (nice-to-have) — not carried
+~~44. Shellcheck `tools/doanalyzerv2/run.sh` if shellcheck joins treefmt.~~ open (minor) — not carried
+~~45. Consider `omitzero` migration for always-emitted scalar fields (v0.2.0+ wire~~ done (v0.2.0 omitzero for the optional fields); always-emitted scalars keep their shape by design
     decision, changelog callout required).
-46. Evaluate auto-generated GitHub release notes vs hand-curated excerpt.
-47. Add a small index/README for `docs/status/archived/`.
-48. Dashboard: fix the pre-existing CSP/Datastar bundle-pin test failures (that repo).
-49. Machine-readable front-matter for future status reports.
-50. Post-v0.1.x cadence check: if the next fix ships within days, consider batching
+~~46. Evaluate auto-generated GitHub release notes vs hand-curated excerpt.~~ open (nice-to-have) — not carried
+~~47. Add a small index/README for `docs/status/archived/`.~~ done — docs/status/archived/README.md (2026-10-04; updated by this sweep)
+~~48. Dashboard: fix the pre-existing CSP/Datastar bundle-pin test failures (that repo).~~ cross-repo — the dashboard repo owns its CSP baseline
+~~49. Machine-readable front-matter for future status reports.~~ open (minor) — not carried
+~~50. Post-v0.1.x cadence check: if the next fix ships within days, consider batching~~ revisit triggered and answered — manual flow retained through v0.5.0 (ROADMAP Theme 7 decision)
     (the release-automation decision's ~4 releases/year revisit trigger).
 
 ## g) QUESTIONS ONLY YOU CAN ANSWER (3)
 
-1. **Branch protection (G3 — asked three sessions running):** shall I execute the
+~~1. **Branch protection (G3 — asked three sessions running):** shall I execute the~~ done — branch protection ENABLED (gh api .protection, 2026-10-08)
    ready-to-run command (5 required checks + linear history, admin bypass kept)?
    If the answer is "not yet", I will stop re-asking and move it to ROADMAP as a
    decided deferral.
-2. **Coverage threshold:** fail CI below 97% statement coverage (baseline 99.7%)?
+~~2. **Coverage threshold:** fail CI below 97% statement coverage (baseline 99.7%)?~~ still open — TODO_LIST Blocked row (coverage threshold)
    Yes → 20-minute job; No → the TODO_LIST row is deleted permanently.
-3. **Dashboard repo authority:** it is 6 commits ahead of origin (incl. the v0.1.3
+~~3. **Dashboard repo authority:** it is 6 commits ahead of origin (incl. the v0.1.3~~ cross-repo — dashboard authority; later bumps superseded the specific question
    bump) and its automation's push behavior is unverified — do you want me to push
    it (and optionally fix its pre-existing CSP test failures), or is that repo
    exclusively handled on your side?
@@ -211,3 +211,10 @@ v0.1.3, and I skipped the documented ci-emulation pre-push step.
 ---
 
 _Report ends. Awaiting instructions._
+
+## Completion (2026-10-08 docs-health sweep)
+
+Every §b/§c/§f/§g item resolved inline (strikethrough + verdict); §a/§d/§e
+stay as the session's historical record. Surviving open work lives in
+TODO_LIST.md / ROADMAP.md. Archived `git mv` per the archive rule — see
+docs/status/archived/README.md.

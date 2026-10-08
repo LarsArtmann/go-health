@@ -210,3 +210,10 @@ fmt 0 changed, flake check). Health scores post-fix: **Accuracy 10/10, Fitness 1
 ---
 
 _Report ends. Awaiting instructions._
+
+## Completion (2026-10-08 docs-health sweep)
+
+Every §b/§c/§e/§f/§g item resolved inline (strikethrough + verdict); §a/§d
+stay as the session's historical record. Surviving open work lives in
+TODO_LIST.md / ROADMAP.md. Archived `git mv` per the archive rule — see
+docs/status/archived/README.md.

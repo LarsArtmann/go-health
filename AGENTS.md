@@ -8,24 +8,24 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 
 ## Commands
 
-| Command                      | Purpose                                                                                                        |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `nix run .#test`             | Run all tests                                                                                                  |
-| `nix run .#test-race`        | Run all tests with race detector                                                                               |
-| `nix run .#lint`             | Run golangci-lint                                                                                              |
-| `nix run .#vet`              | Run go vet                                                                                                     |
-| `nix run .#coverage`         | Run tests with coverage report                                                                                 |
-| `nix run .#fuzz`             | Run fuzz targets (short budget)                                                                                |
-| `nix run .#gates`            | Full pre-push gate sweep, fail-fast (subset: `nix run .#gates -- lint`)                                        |
-| `nix run .#ci-emulation`     | Re-run gates under a go-free PATH (CI emulation)                                                               |
-| `nix run .#fuzz-long`        | Fuzz targets, 5 min each (weekly CI budget; override: `-- -fuzztime=10s`)                                      |
-| `nix run .#vulncheck`        | Run govulncheck                                                                                                |
-| `nix run .#security`         | Run gosec                                                                                                      |
-| `nix run .#build`            | Build all packages                                                                                             |
-| `nix run .#openapi-lockstep` | Verify the golden wire format stays covered by `docs/openapi.yaml` (also a `checks.*` under `nix flake check`) |
+| Command                      | Purpose                                                                                                                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nix run .#test`             | Run all tests                                                                                                                                     |
+| `nix run .#test-race`        | Run all tests with race detector                                                                                                                  |
+| `nix run .#lint`             | Run golangci-lint                                                                                                                                 |
+| `nix run .#vet`              | Run go vet                                                                                                                                        |
+| `nix run .#coverage`         | Run tests with coverage report                                                                                                                    |
+| `nix run .#fuzz`             | Run fuzz targets (short budget)                                                                                                                   |
+| `nix run .#gates`            | Full pre-push gate sweep, fail-fast (subset: `nix run .#gates -- lint`)                                                                           |
+| `nix run .#ci-emulation`     | Re-run gates under a go-free PATH (CI emulation)                                                                                                  |
+| `nix run .#fuzz-long`        | Fuzz targets, 5 min each (weekly CI budget; override: `-- -fuzztime=10s`)                                                                         |
+| `nix run .#vulncheck`        | Run govulncheck                                                                                                                                   |
+| `nix run .#security`         | Run gosec                                                                                                                                         |
+| `nix run .#build`            | Build all packages                                                                                                                                |
+| `nix run .#openapi-lockstep` | Verify the golden wire format stays covered by `docs/openapi.yaml` (also a `checks.*` under `nix flake check`)                                    |
 | `nix run .#docs-check`       | Docs drift alarm: README/AGENTS/CHANGELOG/FEATURES in sync with the latest tag (also a `checks.*` under `nix flake check`, and part of `.#gates`) |
-| `nix fmt`                    | Format code (gofumpt, goimports)                                                                               |
-| `nix flake check`            | Validate flake + formatting                                                                                    |
+| `nix fmt`                    | Format code (gofumpt, goimports)                                                                                                                  |
+| `nix flake check`            | Validate flake + formatting                                                                                                                       |
 
 Uses `flake.nix` with `flake-parts` + `treefmt-nix`. Single dependency: `github.com/samber/do/v2 v2.1.0`.
 

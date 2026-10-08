@@ -19,26 +19,26 @@ commits (details in §d2).
 
 ### Phase 1 — self-review + plan artifacts
 
-| # | Deliverable | Evidence |
-| - | ----------- | -------- |
-| 1 | Brutal self-review of the audit: 11 questions answered, 6 findings (2 High, 2 Medium, 2 Low), 1 self-inflicted split brain found | `docs/reviews/2026-10-08_19-04_brutal-self-review.html` (nav 6/6 anchors, tags balanced) |
-| 2 | Prior-series cross-check: the 2026-10-04 process report's fabricated scorecard (§d1 of its own critique) was still uncorrected — became finding #2 | `docs/status/2026-10-04_13-13_fleet-mapping-html-process-report-and-self-critique.md` |
-| 3 | Execution plan: 9 steps sorted by work-vs-impact, tier-tagged (1%/4%/20%), embedded in the report; type-model and library questions answered inside (reuse the v0.6 designs; zero-dep ADR respected) | report §04 |
-| 4 | Full `nix run .#gates` sweep on unreleased master — replaced the audit's commit-message trust with machine evidence | "all gates green", 19:04, `/tmp/gates-sweep.log` |
+| # | Deliverable                                                                                                                                                                                          | Evidence                                                                                 |
+| - | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 1 | Brutal self-review of the audit: 11 questions answered, 6 findings (2 High, 2 Medium, 2 Low), 1 self-inflicted split brain found                                                                     | `docs/reviews/2026-10-08_19-04_brutal-self-review.html` (nav 6/6 anchors, tags balanced) |
+| 2 | Prior-series cross-check: the 2026-10-04 process report's fabricated scorecard (§d1 of its own critique) was still uncorrected — became finding #2                                                   | `docs/status/2026-10-04_13-13_fleet-mapping-html-process-report-and-self-critique.md`    |
+| 3 | Execution plan: 9 steps sorted by work-vs-impact, tier-tagged (1%/4%/20%), embedded in the report; type-model and library questions answered inside (reuse the v0.6 designs; zero-dep ADR respected) | report §04                                                                               |
+| 4 | Full `nix run .#gates` sweep on unreleased master — replaced the audit's commit-message trust with machine evidence                                                                                  | "all gates green", 19:04, `/tmp/gates-sweep.log`                                         |
 
 ### Phase 2/3 — fixes and features executed (each verified before moving on)
 
-| # | Change | Verification |
-| - | ------ | ------------ |
-| 1 | v0.5/v0.6 vehicle de-drift: status lines of `docs/servicename-design.md`, `docs/merge-unification-design.md`, `docs/naming-integrity.md` now record the re-venue; TODO_LIST cross-linked | one-line edits, committed by daemon `233ed4d` |
-| 2 | Correction banner on the 2026-10-04 fabricated-metrics HTML (inline, history preserved) | `5c60f0d` |
-| 3 | v0.5.0 announcement draft — leads with the boot-contract validation change; carries the fresh-user-sim result as durable evidence (closes self-review finding #4) | `docs/announcements/2026-10-08_v0.5.0.md`, commit `9b87a88` |
-| 4 | **Drift-alarm gate**: `docsDriftCheck` script + `checks.docs-drift-check` (flake check) + `apps.docs-check` + default `.#gates` member + AGENTS commands row. Mechanizes CONTRIBUTING checklist items 1/3/5 + the ADR range. Store mode falls back to the CHANGELOG's newest release heading (no `.git` in the flake store) | positive: "OK … in sync with v0.5.0"; negative: injected README drift → `DRIFT` + rc=1; `nix flake check` all checks passed; `nix run .#gates -- docs-check` green |
+| # | Change                                                                                                                                                                                                                                                                                                                                           | Verification                                                                                                                                                                                                                            |
+| - | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | v0.5/v0.6 vehicle de-drift: status lines of `docs/servicename-design.md`, `docs/merge-unification-design.md`, `docs/naming-integrity.md` now record the re-venue; TODO_LIST cross-linked                                                                                                                                                         | one-line edits, committed by daemon `233ed4d`                                                                                                                                                                                           |
+| 2 | Correction banner on the 2026-10-04 fabricated-metrics HTML (inline, history preserved)                                                                                                                                                                                                                                                          | `5c60f0d`                                                                                                                                                                                                                               |
+| 3 | v0.5.0 announcement draft — leads with the boot-contract validation change; carries the fresh-user-sim result as durable evidence (closes self-review finding #4)                                                                                                                                                                                | `docs/announcements/2026-10-08_v0.5.0.md`, commit `9b87a88`                                                                                                                                                                             |
+| 4 | **Drift-alarm gate**: `docsDriftCheck` script + `checks.docs-drift-check` (flake check) + `apps.docs-check` + default `.#gates` member + AGENTS commands row. Mechanizes CONTRIBUTING checklist items 1/3/5 + the ADR range. Store mode falls back to the CHANGELOG's newest release heading (no `.git` in the flake store)                      | positive: "OK … in sync with v0.5.0"; negative: injected README drift → `DRIFT` + rc=1; `nix flake check` all checks passed; `nix run .#gates -- docs-check` green                                                                      |
 | 5 | **REAL BUG found and fixed**: `Probe.Start` armed the refresh-loop WaitGroup + cancel before the initial evaluation; critical-name validation failed without disarming → since v0.5.0, a probe with a rejected critical name hangs FOREVER in `Shutdown()` and every retry-`Start` silently no-ops. Failure path now disarms under the same lock | `aggregate/aggregate_validation_test.go` (the 600s test-timeout hang that found it), `TestStart_CriticalValidationFailure_DisarmsLifecycle` (root), race-clean suite, commit `ad9e46b` + CHANGELOG `[Unreleased]` Fixed entry `a806cd5` |
-| 6 | `health/checks` fuzz target `FuzzBatteries` (6 params; pins sentinel-or-nil error surfaces over untrusted paths/thresholds/URL-paths/status-codes/DSNs; per-request status via query param — no handler data race) | 10s run: 438k execs, 0 failures; full `nix run .#fuzz` (now 4 targets) green |
-| 7 | `health/checks` benchmarks ×4, measured `-benchtime=1s -count=3`, medians recorded in FEATURES (Disk ~335 ns · Memory ~9.5 µs · HTTP ~18.3 µs · Database ~533 ns) | `checks/checks_benchmark_test.go`; FEATURES Performance rows added |
-| 8 | Fuzz app wiring: `.#fuzz` + `.#fuzz-long` gained the checks target; `fuzz-long.yml` "four targets" + `checks/testdata/fuzz/` artifact path | flake.nix, workflow edited; app run green |
-| 9 | `openDB` helper widened `*testing.T` → `testing.TB` so benchmarks share the fake driver | builds clean |
+| 6 | `health/checks` fuzz target `FuzzBatteries` (6 params; pins sentinel-or-nil error surfaces over untrusted paths/thresholds/URL-paths/status-codes/DSNs; per-request status via query param — no handler data race)                                                                                                                               | 10s run: 438k execs, 0 failures; full `nix run .#fuzz` (now 4 targets) green                                                                                                                                                            |
+| 7 | `health/checks` benchmarks ×4, measured `-benchtime=1s -count=3`, medians recorded in FEATURES (Disk ~335 ns · Memory ~9.5 µs · HTTP ~18.3 µs · Database ~533 ns)                                                                                                                                                                                | `checks/checks_benchmark_test.go`; FEATURES Performance rows added                                                                                                                                                                      |
+| 8 | Fuzz app wiring: `.#fuzz` + `.#fuzz-long` gained the checks target; `fuzz-long.yml` "four targets" + `checks/testdata/fuzz/` artifact path                                                                                                                                                                                                       | flake.nix, workflow edited; app run green                                                                                                                                                                                               |
+| 9 | `openDB` helper widened `*testing.T` → `testing.TB` so benchmarks share the fake driver                                                                                                                                                                                                                                                          | builds clean                                                                                                                                                                                                                            |
 
 ### Also landed earlier in this conversation (the audit itself, recap)
 
@@ -162,58 +162,58 @@ _Ranked by impact vs effort. Items 1–6 are the interrupted tail of THIS
 session's plan; 7+ are the standing TODO_LIST/backlog. (B) = blocked on
 owner/external._
 
-| #  | Task                                                                                          | Bucket      | Impact | Effort |
-| -- | --------------------------------------------------------------------------------------------- | ----------- | ------ | ------ |
-| 1  | Fix the 3 open lint findings: extract per-battery fuzz helpers (cyclop 14→≤12) + 2 wsl blanks | lint        | High   | 15min  |
-| 2  | TODO_LIST sync: delete 4 done rows (drift gate, aggregate test, checks fuzz/bench, announcement), refresh ServiceName row note, re-run `.#docs-check` | docs | High | 15min |
-| 3  | Federation validation semantics doc (plan R21)                                                | docs        | Low-Med | 25min |
-| 4  | DOMAIN_LANGUAGE + AGENTS symbol-ref anti-rot (plan R20)                                       | docs        | Low    | 30min  |
-| 5  | Final full `nix run .#gates` sweep                                                            | verify      | High   | 10min  |
-| 6  | Push (decision: only after 1–5)                                                               | release     | High   | 2min   |
-| 7  | (B) go-health-dashboard full suite against released v0.5.0 — the one deep consumer; also covers the lifecycle-fix regression risk | verify | High | 40min |
-| 8  | (B) Decide v0.5.1 bugfix release for the Shutdown-hang fix (it shipped in v0.5.0; sitting in `[Unreleased]`) vs waiting for the next feature release | release | High | owner |
-| 9  | (B) File go-appkit/health + cqrs-htmx/health upstream issues (drafts ready, G2)               | upstream    | High   | 40min  |
-| 10 | (B) Bump CV to go-health v0.5.x + go 1.27 (G3)                                                | consumer    | Med    | 45min  |
-| 11 | (B) Consumer test train vs v0.5.0 tag: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier | verify | Med | 45min |
-| 12 | (B) Publish the v0.5.0 announcement (draft ready)                                             | owner       | Med    | 10min  |
-| 13 | (B) Publish v0.1.1/v0.1.2 announcement (draft ready since 2026-09-04)                         | owner       | Low    | 15min  |
-| 14 | (B) Post samber/do#318 comment (draft ready)                                                  | owner       | Med    | 5min   |
-| 15 | (B) Coverage-threshold CI job decision                                                        | owner       | Med    | 20min  |
-| 16 | Version-skew CI script: fleet go.mod pins vs latest tag, fail-on-drift                        | automation  | Med    | 45min  |
-| 17 | FEATURES benchmark re-verify at fresh `-count=3` (all rows, not just checks)                  | verify      | Low-Med | 45min |
-| 18 | Status-report archive sweep: 2026-09-15_08-55 (route §f first), 2026-09-18_09-46, four 2026-09-22 reports, three 2026-09-04 anchors | docs | Low | 2h |
-| 19 | Aggregate handler (HTTP-path) benchmarks complementing the merge benchmark (ROADMAP)          | code        | Low    | 45min |
-| 20 | Feed golden-fixture inputs into the aggregate fuzz seed corpus (ROADMAP)                      | code        | Low    | 30min |
-| 21 | Throttled live path benchmark under contention (ROADMAP)                                      | code        | Low    | 40min |
-| 22 | Throttle-window boundary fuzz with fake clock (ROADMAP)                                       | code        | Low    | 45min |
-| 23 | Combine aggregate handler fuzz with throttle/cache modes (ROADMAP)                            | code        | Low    | 45min |
-| 24 | `-count=N` race-suite stress in CI if flakiness stays zero (ROADMAP)                          | CI          | Low    | 30min |
-| 25 | OpenTelemetry spans on Evaluate via the hook seam (ROADMAP Theme 2)                           | feature     | Med    | 2h+    |
-| 26 | `Response.TotalLatencyMs` as float64 for sub-ms precision (ROADMAP Theme 2)                   | feature     | Low    | 1h     |
-| 27 | `Probe.Snapshot()` structured-logging accessor (ROADMAP Theme 2, demand-gated)                | feature     | Low    | 1h     |
-| 28 | `AwaitReady` cache-aware poll interval (ROADMAP Theme 1)                                      | feature     | Low    | 1h     |
-| 29 | `errors.Join` in `aggregate.New` (next-minor candidate, design + spike ready)                 | feature     | Med    | 1h     |
-| 30 | `Aggregate.SourceStatuses()` per-source accessor (next-minor candidate)                       | feature     | Med    | 1h     |
-| 31 | `federation.Prober.Healthz()` parity design note (next-minor candidate)                       | design      | Low-Med | 45min |
-| 32 | Design note: `WithTransitionHook` (ROADMAP harvested idea)                                    | design      | Low-Med | 1h    |
-| 33 | Design note: `healthtest` consumer helper package                                             | design      | Low-Med | 1h    |
-| 34 | Extend openapi.yaml to cover federation endpoints                                             | docs        | Low-Med | 1h    |
-| 35 | Port the drift-alarm idea to the fleet: same gate in the other 15 consumers (mechanize fleet-wide doc sync) | automation | Med | 2h |
-| 36 | Extend `.#docs-check`: verify AGENTS "Packages" list == go.mod packages; FEATURES option count == `grep -c '^func With'` | automation | Low-Med | 30min |
-| 37 | Add `.#docs-check` to the `ci-emulation` gate list (git-free PATH coverage parity)            | automation  | Low    | 10min |
-| 38 | Annotate the archived `2026-09-16_11-46` §c-style bullet lists the tooling skipped (completeness tail) | docs | Low | 30min |
-| 39 | Decide the "keep window" policy for docs/status/ (newest 2–3 non-archived)                    | decision    | Low    | 15min |
-| 40 | Add the docs-health sweep step to the release checklist in CONTRIBUTING (process, not memory) | process     | Low    | 10min |
-| 41 | Wire `.#docs-check` failure into the release checklist as a pre-tag step                      | process     | Low    | 5min  |
-| 42 | Sweep the archived reports for remaining bare items (grep gate)                               | docs        | Low    | 30min |
-| 43 | Re-run the internal-link sweep across docs/** (not just living docs), skipping code fences    | verify      | Low    | 30min |
-| 44 | Render-check the two HTML reports (screenshot pass, not just structural grep)                 | verify      | Low    | 20min |
-| 45 | Reconcile the 2026-10-04 process report v2 upgrades (derived statistics) with this report's counts — or retire the series | docs | Low | 30min |
-| 46 | Consider `checks` package coverage report (plan R13 remainder: coverage-gap close)            | verify      | Low-Med | 30min |
-| 47 | Document the fuzz corpus signature-freeze contract in checks/checks_fuzz_test.go (done) + add the same note to the other three targets | docs | Low | 15min |
-| 48 | `WithShutdownGracePeriod` interaction test for the new disarm path (failed Start while grace configured) | test | Low-Med | 20min |
-| 49 | Add `ErrUnknownCriticalService` composition test for federation-adjacent standalone probes (mirror of the aggregate one) | test | Low | 15min |
-| 50 | Re-run this self-review series after the v0.5.1/v0.6 decision to measure whether the drift gate + checklist mechanization closed the class | process | Low | 20min |
+| #  | Task                                                                                                                                                  | Bucket     | Impact  | Effort |
+| -- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| 1  | Fix the 3 open lint findings: extract per-battery fuzz helpers (cyclop 14→≤12) + 2 wsl blanks                                                         | lint       | High    | 15min  |
+| 2  | TODO_LIST sync: delete 4 done rows (drift gate, aggregate test, checks fuzz/bench, announcement), refresh ServiceName row note, re-run `.#docs-check` | docs       | High    | 15min  |
+| 3  | Federation validation semantics doc (plan R21)                                                                                                        | docs       | Low-Med | 25min  |
+| 4  | DOMAIN_LANGUAGE + AGENTS symbol-ref anti-rot (plan R20)                                                                                               | docs       | Low     | 30min  |
+| 5  | Final full `nix run .#gates` sweep                                                                                                                    | verify     | High    | 10min  |
+| 6  | Push (decision: only after 1–5)                                                                                                                       | release    | High    | 2min   |
+| 7  | (B) go-health-dashboard full suite against released v0.5.0 — the one deep consumer; also covers the lifecycle-fix regression risk                     | verify     | High    | 40min  |
+| 8  | (B) Decide v0.5.1 bugfix release for the Shutdown-hang fix (it shipped in v0.5.0; sitting in `[Unreleased]`) vs waiting for the next feature release  | release    | High    | owner  |
+| 9  | (B) File go-appkit/health + cqrs-htmx/health upstream issues (drafts ready, G2)                                                                       | upstream   | High    | 40min  |
+| 10 | (B) Bump CV to go-health v0.5.x + go 1.27 (G3)                                                                                                        | consumer   | Med     | 45min  |
+| 11 | (B) Consumer test train vs v0.5.0 tag: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier                                         | verify     | Med     | 45min  |
+| 12 | (B) Publish the v0.5.0 announcement (draft ready)                                                                                                     | owner      | Med     | 10min  |
+| 13 | (B) Publish v0.1.1/v0.1.2 announcement (draft ready since 2026-09-04)                                                                                 | owner      | Low     | 15min  |
+| 14 | (B) Post samber/do#318 comment (draft ready)                                                                                                          | owner      | Med     | 5min   |
+| 15 | (B) Coverage-threshold CI job decision                                                                                                                | owner      | Med     | 20min  |
+| 16 | Version-skew CI script: fleet go.mod pins vs latest tag, fail-on-drift                                                                                | automation | Med     | 45min  |
+| 17 | FEATURES benchmark re-verify at fresh `-count=3` (all rows, not just checks)                                                                          | verify     | Low-Med | 45min  |
+| 18 | Status-report archive sweep: 2026-09-15_08-55 (route §f first), 2026-09-18_09-46, four 2026-09-22 reports, three 2026-09-04 anchors                   | docs       | Low     | 2h     |
+| 19 | Aggregate handler (HTTP-path) benchmarks complementing the merge benchmark (ROADMAP)                                                                  | code       | Low     | 45min  |
+| 20 | Feed golden-fixture inputs into the aggregate fuzz seed corpus (ROADMAP)                                                                              | code       | Low     | 30min  |
+| 21 | Throttled live path benchmark under contention (ROADMAP)                                                                                              | code       | Low     | 40min  |
+| 22 | Throttle-window boundary fuzz with fake clock (ROADMAP)                                                                                               | code       | Low     | 45min  |
+| 23 | Combine aggregate handler fuzz with throttle/cache modes (ROADMAP)                                                                                    | code       | Low     | 45min  |
+| 24 | `-count=N` race-suite stress in CI if flakiness stays zero (ROADMAP)                                                                                  | CI         | Low     | 30min  |
+| 25 | OpenTelemetry spans on Evaluate via the hook seam (ROADMAP Theme 2)                                                                                   | feature    | Med     | 2h+    |
+| 26 | `Response.TotalLatencyMs` as float64 for sub-ms precision (ROADMAP Theme 2)                                                                           | feature    | Low     | 1h     |
+| 27 | `Probe.Snapshot()` structured-logging accessor (ROADMAP Theme 2, demand-gated)                                                                        | feature    | Low     | 1h     |
+| 28 | `AwaitReady` cache-aware poll interval (ROADMAP Theme 1)                                                                                              | feature    | Low     | 1h     |
+| 29 | `errors.Join` in `aggregate.New` (next-minor candidate, design + spike ready)                                                                         | feature    | Med     | 1h     |
+| 30 | `Aggregate.SourceStatuses()` per-source accessor (next-minor candidate)                                                                               | feature    | Med     | 1h     |
+| 31 | `federation.Prober.Healthz()` parity design note (next-minor candidate)                                                                               | design     | Low-Med | 45min  |
+| 32 | Design note: `WithTransitionHook` (ROADMAP harvested idea)                                                                                            | design     | Low-Med | 1h     |
+| 33 | Design note: `healthtest` consumer helper package                                                                                                     | design     | Low-Med | 1h     |
+| 34 | Extend openapi.yaml to cover federation endpoints                                                                                                     | docs       | Low-Med | 1h     |
+| 35 | Port the drift-alarm idea to the fleet: same gate in the other 15 consumers (mechanize fleet-wide doc sync)                                           | automation | Med     | 2h     |
+| 36 | Extend `.#docs-check`: verify AGENTS "Packages" list == go.mod packages; FEATURES option count == `grep -c '^func With'`                              | automation | Low-Med | 30min  |
+| 37 | Add `.#docs-check` to the `ci-emulation` gate list (git-free PATH coverage parity)                                                                    | automation | Low     | 10min  |
+| 38 | Annotate the archived `2026-09-16_11-46` §c-style bullet lists the tooling skipped (completeness tail)                                                | docs       | Low     | 30min  |
+| 39 | Decide the "keep window" policy for docs/status/ (newest 2–3 non-archived)                                                                            | decision   | Low     | 15min  |
+| 40 | Add the docs-health sweep step to the release checklist in CONTRIBUTING (process, not memory)                                                         | process    | Low     | 10min  |
+| 41 | Wire `.#docs-check` failure into the release checklist as a pre-tag step                                                                              | process    | Low     | 5min   |
+| 42 | Sweep the archived reports for remaining bare items (grep gate)                                                                                       | docs       | Low     | 30min  |
+| 43 | Re-run the internal-link sweep across docs/** (not just living docs), skipping code fences                                                            | verify     | Low     | 30min  |
+| 44 | Render-check the two HTML reports (screenshot pass, not just structural grep)                                                                         | verify     | Low     | 20min  |
+| 45 | Reconcile the 2026-10-04 process report v2 upgrades (derived statistics) with this report's counts — or retire the series                             | docs       | Low     | 30min  |
+| 46 | Consider `checks` package coverage report (plan R13 remainder: coverage-gap close)                                                                    | verify     | Low-Med | 30min  |
+| 47 | Document the fuzz corpus signature-freeze contract in checks/checks_fuzz_test.go (done) + add the same note to the other three targets                | docs       | Low     | 15min  |
+| 48 | `WithShutdownGracePeriod` interaction test for the new disarm path (failed Start while grace configured)                                              | test       | Low-Med | 20min  |
+| 49 | Add `ErrUnknownCriticalService` composition test for federation-adjacent standalone probes (mirror of the aggregate one)                              | test       | Low     | 15min  |
+| 50 | Re-run this self-review series after the v0.5.1/v0.6 decision to measure whether the drift gate + checklist mechanization closed the class            | process    | Low     | 20min  |
 
 ---
 

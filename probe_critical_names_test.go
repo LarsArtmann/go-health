@@ -261,10 +261,12 @@ func TestStart_CriticalValidationFailure_DisarmsLifecycle(t *testing.T) {
 	}
 
 	done := make(chan struct{})
+
 	go func() {
 		probe.Shutdown()
 		close(done)
 	}()
+
 	select {
 	case <-done:
 	case <-time.After(2 * time.Second):

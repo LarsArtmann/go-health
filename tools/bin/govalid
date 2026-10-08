@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Toolchain pin for BuildFlow's govalid-generate step (referenced by
+# .buildflow.yml tool_paths). The system govalid (built 2026-09-17, go
+# 1.27.0 era) shells out to a go that cannot load the tools/doanalyzerv2
+# module graph (requires go 1.27.1 — see AGENTS.md "Go-directive patch
+# floors" gotcha). GOTOOLCHAIN=auto lets that go self-switch. Drop this
+# wrapper when the graph no longer requires a newer patch than BuildFlow's go.
+export GOTOOLCHAIN="${GOTOOLCHAIN:-auto}"
+exec /run/current-system/sw/bin/govalid "$@"

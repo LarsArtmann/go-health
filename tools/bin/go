@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Toolchain pin for BuildFlow's go-generate step (referenced by
+# .buildflow.yml tool_paths). The BuildFlow closure currently resolves `go`
+# to 1.27.0, which cannot load the tools/doanalyzerv2 module graph (its
+# replace target requires go 1.27.1 — see AGENTS.md "Go-directive patch
+# floors" gotcha). Exec the system go 1.27.1 directly; drop this wrapper
+# when the graph no longer requires a newer patch than BuildFlow's go.
+exec /run/current-system/sw/bin/go "$@"

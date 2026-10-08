@@ -11,6 +11,17 @@
 env:
   GOTOOLCHAIN: auto
 
+# Generator steps resolve their `go`/`govalid` from this directory first
+# (cmdrun LookPath preference). The BuildFlow closure's go is 1.27.0 and the
+# stale binary loses the config env for generator spawns in full mode, so
+# neither can load the tools/doanalyzerv2 graph (requires go 1.27.1 — AGENTS.md
+# "Go-directive patch floors" gotcha). The wrappers pin the system go 1.27.1 /
+# an auto-switching govalid. Drop both wrappers and this block once the graph
+# no longer requires a newer patch than BuildFlow's toolchain.
+tool_paths:
+  go-generate: tools/bin
+  govalid-generate: tools/bin
+
 # Render-level per-tool warning ceilings (summary collapse; never gates —
 # the findings gate still fails on unfixable errors). Set 2026-10-08 with
 # ~20% headroom over the steady-state finding counts; growth past a ceiling

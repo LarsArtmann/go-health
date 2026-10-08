@@ -94,6 +94,60 @@
               echo "openapi-lockstep: $golden is fully covered by docs/openapi.yaml"
             '';
           };
+
+          # Docs drift alarm: mechanizes the CONTRIBUTING "Release / API-Sync
+          # Checklist" items that a manual release keeps skipping (the v0.5.0
+          # release left the README stability line and the AGENTS status line
+          # stale for three days). One script backs the flake check (CI runs
+          # it) and the local app (nix run .#docs-check).
+          docsDriftCheck = pkgs.writeShellApplication {
+            name = "docs-drift-check";
+            runtimeInputs = [
+              pkgs.git
+              pkgs.grep
+            ];
+            text = ''
+              root="$(git rev-parse --show-toplevel)"
+              cd "$root"
+
+              fail=0
+              drift() {
+                echo "docs-drift-check: DRIFT: $*" >&2
+                fail=1
+              }
+
+              latest="$(git tag -l --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)"
+              if [ -z "$latest" ]; then
+                echo "docs-drift-check: no semver tag found; nothing to verify" >&2
+                exit 1
+              fi
+              ver="${latest#v}"
+              ver_re="${ver//./\\.}"
+
+              grep -q "> \*\*Stability:\*\* ${latest} alpha" README.md \
+                || drift "README stability line is not '${latest} alpha' (CONTRIBUTING checklist item 1)"
+
+              grep -q "${latest} released" AGENTS.md \
+                || drift "AGENTS.md status line does not name the latest tag ${latest} (checklist item 3)"
+
+              grep -q "^\[Unreleased\]: .*/compare/${latest}\.\.\.HEAD" CHANGELOG.md \
+                || drift "CHANGELOG [Unreleased] compare base is not ${latest} (checklist item 5)"
+
+              grep -Eq "^\[(v)?${ver_re}\]: " CHANGELOG.md \
+                || drift "CHANGELOG compare-link definition missing for ${latest}"
+
+              adr_max="$(ls docs/adr | grep -oE '[0-9]+' | sort -n | tail -n1)"
+              if [ -n "$adr_max" ]; then
+                grep -qE "ADR-001\.\.0?${adr_max}" FEATURES.md \
+                  || drift "FEATURES.md ADR range does not cover ADR-00${adr_max}"
+              fi
+
+              if [ "$fail" -eq 0 ]; then
+                echo "docs-drift-check: OK - README/AGENTS/CHANGELOG/FEATURES in sync with ${latest}"
+              fi
+              exit "$fail"
+            '';
+          };
         in
         {
           treefmt = {
@@ -115,6 +169,12 @@
           checks.openapi-lockstep = pkgs.runCommand "openapi-lockstep" { } ''
             cd ${self}
             ${lib.getExe openapiLockstep}
+            touch $out
+          '';
+
+          checks.docs-drift-check = pkgs.runCommand "docs-drift-check" { } ''
+            cd ${self}
+            ${lib.getExe docsDriftCheck}
             touch $out
           '';
 
@@ -143,6 +203,12 @@
               type = "app";
               program = lib.getExe openapiLockstep;
               meta.description = "Verify the golden wire format stays covered by docs/openapi.yaml (paths override: spec golden)";
+            };
+
+            docs-check = {
+              type = "app";
+              program = lib.getExe docsDriftCheck;
+              meta.description = "Verify README/AGENTS/CHANGELOG/FEATURES stay in sync with the latest tag (CONTRIBUTING release checklist)";
             };
 
             test = mkApp "test" "Run all tests" [ goPkg ] ''
@@ -234,7 +300,7 @@
             gates =
               mkApp "gates" "Run the full pre-push gate sweep, fail-fast (same gates as CI)" [ pkgs.nix ]
                 ''
-                  gates="''${*:-test-race vet lint vulncheck security fuzz}"
+                  gates="''${*:-test-race vet lint vulncheck security fuzz docs-check}"
                   # shellcheck disable=SC2086 # word splitting over gate names is intended
                   for gate in $gates; do
                     echo "=== gate: $gate ==="

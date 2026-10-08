@@ -15,19 +15,19 @@ silently blocks the startup latch?
 The answer is no, by design. Verified 2026-10-08: no production code in
 `aggregate/` or `federation/` references `ErrUnknownCriticalService` — the
 sentinel lives only in `probe.go`. The one match outside it,
-`aggregate/aggregate_validation_test.go`, asserts that a misconfigured *source
-probe's* own `Start()` fails inside `aggregate.New` composition: the error
+`aggregate/aggregate_validation_test.go`, asserts that a misconfigured _source
+probe's_ own `Start()` fails inside `aggregate.New` composition: the error
 propagates from the inner probe, not from aggregate. (See
 `aggregate_validation_test.go`, the 2026-10-08 integration test.)
 
 ## The two validation universes
 
-|                    | Root probe (`health.Probe`)                      | Federation (`federation.Prober`)                                                              |
-| ------------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| Identity input     | `WithCriticalServices` names                     | `Remote{Name, URL}`                                                                           |
-| Validated against  | keys of the initial evaluation batch             | nothing — remote names are labels, never matched                                              |
-| Enforcement point  | `Start()` hard error (`ErrUnknownCriticalService`) | construction (`validateRemotes`) + per-fetch wire decode (`decodeDocument`)                   |
-| Typo failure mode  | silent: latch never sets, pod never ready        | loud: mislabeled row at worst; wrong URL → synthetic `name/reachable` FAIL → readiness 503    |
+|                   | Root probe (`health.Probe`)                        | Federation (`federation.Prober`)                                                           |
+| ----------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Identity input    | `WithCriticalServices` names                       | `Remote{Name, URL}`                                                                        |
+| Validated against | keys of the initial evaluation batch               | nothing — remote names are labels, never matched                                           |
+| Enforcement point | `Start()` hard error (`ErrUnknownCriticalService`) | construction (`validateRemotes`) + per-fetch wire decode (`decodeDocument`)                |
+| Typo failure mode | silent: latch never sets, pod never ready          | loud: mislabeled row at worst; wrong URL → synthetic `name/reachable` FAIL → readiness 503 |
 
 ## Why federation needs no name validation
 
@@ -86,7 +86,7 @@ v0.5.0+ accepts `off`.
 
 ## Verdict
 
-No mechanism changes. The root probe validates *identity against its check
-universe* because identity typos there are silent; federation validates
-*construction parameters and wire documents* because its identity typos are
+No mechanism changes. The root probe validates _identity against its check
+universe_ because identity typos there are silent; federation validates
+_construction parameters and wire documents_ because its identity typos are
 cosmetic and its real hazards (URL, payload) already fail loud.

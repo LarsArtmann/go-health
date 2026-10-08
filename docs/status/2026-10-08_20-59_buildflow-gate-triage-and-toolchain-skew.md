@@ -134,6 +134,7 @@ session's output, and one of my regressions was fixed by that session, not by me
 ## f) NEXT (prioritized, ~50)
 
 **Gate restoration (P0):**
+
 1. `BUILDFLOW_NO_RESULT_CACHE=1 buildflow -s govalid-generate --verbose` — confirm the concurrent session's `go 1.27.1` revert cleared the skew.
 2. If cleared: full `buildflow --fix --build-mode=full` → demand exit 0 + findings gate evaluated.
 3. If not cleared: diagnose where go 1.27.0 comes from for govalid/go-licenses/golangci (their nix-run PATH), and pin via `.buildflow.yml` `tool_paths` (BuildFlow-repo precedent for go-licenses) or `env:` GOTOOLCHAIN handling.
@@ -208,4 +209,4 @@ session's output, and one of my regressions was fixed by that session, not by me
 
 ---
 
-*Prepared with AI assistance (GLM-5.3-Flash via [Crush](https://github.com/charmbracelet/crush)); findings verified against tool output captured in this session; concurrent-session commits (`b2b9ed0`, `7fe2b22`) attributed, not claimed.*
+_Prepared with AI assistance (GLM-5.3-Flash via [Crush](https://github.com/charmbracelet/crush)); findings verified against tool output captured in this session; concurrent-session commits (`b2b9ed0`, `7fe2b22`) attributed, not claimed._

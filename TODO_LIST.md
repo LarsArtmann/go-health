@@ -29,9 +29,9 @@
 
 ## Release follow-through — the 1% (v0.5.0 shipped 2026-10-05, verification did not)
 
-| Task                                                                                                        | Status | Impact | Effort | Evidence                                                                                      |
-| ----------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------- |
-| go-health-dashboard full suite against released v0.5.0                                                      | TODO   | High   | 40min  | The one deep aggregate+federation consumer; no verification recorded since the 2026-10-05 tag |
+| Task                                                   | Status | Impact | Effort | Evidence                                                                                      |
+| ------------------------------------------------------ | ------ | ------ | ------ | --------------------------------------------------------------------------------------------- |
+| go-health-dashboard full suite against released v0.5.0 | TODO   | High   | 40min  | The one deep aggregate+federation consumer; no verification recorded since the 2026-10-05 tag |
 
 ## Fleet proof & leverage — the 4%
 
@@ -43,19 +43,19 @@
 
 ## v0.6 window — staging (20%)
 
-| Task                                                                                                                         | Status | Impact   | Effort | Evidence                                                                                             |
-| ---------------------------------------------------------------------------------------------------------------------------- | ------ | -------- | ------ | ---------------------------------------------------------------------------------------------------- |
-| ServiceName call-site inventory: fleet list → mechanical rewrite script + verification diff                                  | TODO   | High     | 60min  | docs/servicename-design.md (re-venued to the v0.6 window, 2026-10-08); plan R6      |
-| Finalize rename staging: `SanitizeResponse`→`CoerceValidUTF8`, `Since`→`StatusSince`, `WithCriticalChecks` decision table    | TODO   | Med      | 40min  | docs/naming-integrity.md; plan R7                                                                    |
-| `mergeResponses` port prep: extract primitive sketch + corpus fixture; port both property suites when the window opens       | TODO   | Med      | 50min  | docs/merge-unification-design.md; plan R11                                                           |
+| Task                                                                                                                      | Status | Impact | Effort | Evidence                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------ |
+| ServiceName call-site inventory: fleet list → mechanical rewrite script + verification diff                               | TODO   | High   | 60min  | docs/servicename-design.md (re-venued to the v0.6 window, 2026-10-08); plan R6 |
+| Finalize rename staging: `SanitizeResponse`→`CoerceValidUTF8`, `Since`→`StatusSince`, `WithCriticalChecks` decision table | TODO   | Med    | 40min  | docs/naming-integrity.md; plan R7                                              |
+| `mergeResponses` port prep: extract primitive sketch + corpus fixture; port both property suites when the window opens    | TODO   | Med    | 50min  | docs/merge-unification-design.md; plan R11                                     |
 
 ## Hardening — the tail (100%)
 
-| Task                                                                                                                                                                             | Status | Impact  | Effort | Evidence                                                                                                                                                                    |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Version-skew CI script: fleet `go.mod` pins vs latest tag, fail-on-drift                                                                                                         | TODO   | Med     | 45min  | plan R14 (CV class of skew caught by machine)                                                                                                                               |
-| Verify FEATURES benchmark rows against a fresh `-count=3` run; label single-run rows                                                                                             | TODO   | Low-Med | 45min  | 2026-10-04 audit §c5: table structure verified, numbers never re-run                                                                                                        |
-| Archive resolved status reports: 2026-09-15_08-55 (route §f → ROADMAP Theme 2 first), 2026-09-18_09-46, the four 2026-09-22 reports; decide the three 2026-09-04 anchors         | TODO   | Low     | 2h     | 2026-10-04 audit §b2/§c1; annotation tooling + manifest pattern ready                                                                                                       |
+| Task                                                                                                                                                                     | Status | Impact  | Effort | Evidence                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------- | ------ | --------------------------------------------------------------------- |
+| Version-skew CI script: fleet `go.mod` pins vs latest tag, fail-on-drift                                                                                                 | TODO   | Med     | 45min  | plan R14 (CV class of skew caught by machine)                         |
+| Verify FEATURES benchmark rows against a fresh `-count=3` run; label single-run rows                                                                                     | TODO   | Low-Med | 45min  | 2026-10-04 audit §c5: table structure verified, numbers never re-run  |
+| Archive resolved status reports: 2026-09-15_08-55 (route §f → ROADMAP Theme 2 first), 2026-09-18_09-46, the four 2026-09-22 reports; decide the three 2026-09-04 anchors | TODO   | Low     | 2h     | 2026-10-04 audit §b2/§c1; annotation tooling + manifest pattern ready |
 
 ## Owner Actions (artifacts ready, publishing is yours)
 

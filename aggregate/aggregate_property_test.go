@@ -148,7 +148,7 @@ func expectedWorstOf(sources []aggregate.Source) (health.Status, bool, int64) {
 			maxLatency = resp.TotalLatencyMs
 		}
 
-		if sevRank(resp.Status) < sevRank(status) {
+		if resp.Status.Rank() < status.Rank() {
 			status = resp.Status
 		}
 	}

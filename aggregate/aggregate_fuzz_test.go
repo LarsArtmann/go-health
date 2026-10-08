@@ -11,20 +11,6 @@ import (
 	aggregate "github.com/larsartmann/go-health/aggregate"
 )
 
-// sevRank mirrors the aggregate's worst-of merge order: lower is worse.
-func sevRank(status health.Status) int {
-	switch status {
-	case health.StatusFail:
-		return 0
-	case health.StatusWarn:
-		return 1
-	case health.StatusPass, health.StatusOff:
-		return 2
-	default:
-		return 2
-	}
-}
-
 // fuzzRequest builds a plain GET request for handler smoke assertions.
 func fuzzRequest(t *testing.T) *http.Request {
 	t.Helper()
@@ -211,7 +197,7 @@ func foldSources(sources map[string]health.Response) mergeExpectation {
 	want := mergeExpectation{status: health.StatusPass}
 
 	for _, cached := range sources {
-		if sevRank(cached.Status) < sevRank(want.status) {
+		if cached.Status.Rank() < want.status.Rank() {
 			want.status = cached.Status
 		}
 

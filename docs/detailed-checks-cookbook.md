@@ -118,6 +118,12 @@ Escape hatches, in order of preference:
 3. Upstream: samber/do exposing per-service timing would light this path up
    for free (tracked in TODO_LIST.md).
 
+One thing the raw path does NOT lose: `Start()`-time critical-name validation
+(`ErrUnknownCriticalService`) is batch-based, so it covers `NewChecks` batches
+and standalone constructors exactly like the injector path — a typo'd
+`WithCriticalServices` name fails `Start` on every construction route. See
+docs/start-validation-design.md.
+
 ## Reading the numbers
 
 - Durations are **per execution**, not per request: a cached readiness

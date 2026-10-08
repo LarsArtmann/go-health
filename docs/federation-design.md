@@ -174,6 +174,11 @@ body drain on non-200 responses for connection reuse.
 - **No health status synthesis for staleness.** An unreachable remote
   reports `fail` because the fetch failed — that is an observation, not
   a guess about the remote's services.
+- **No `ErrUnknownCriticalService` on the fetch side.** `Start()`-time
+  critical-name validation applies to a probe's own evaluation batch;
+  remote names are a different universe (a typo'd remote name surfaces
+  as its `name/reachable` fail row instead). See
+  [federation-validation-semantics.md](federation-validation-semantics.md).
 
 ## Alternatives considered
 

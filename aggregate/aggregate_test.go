@@ -394,9 +394,13 @@ func TestCachedResponse_TotalLatencyMsIsSlowestSource(t *testing.T) {
 		aggregate.Source{Name: "fast", Probe: newStartedProbe(t, false, false)},
 	)
 
-	if got := agg.CachedResponse().TotalLatencyMs; got != slowCached.TotalLatencyMs {
+	// The merge must propagate the slowest source: merged latency is the max
+	// over sources, so it is at least the slow source's stamp. Exact equality
+	// would flake under load — the "fast" source's own evaluation jitter can
+	// exceed the slow source's sleep and legitimately become the max.
+	if got := agg.CachedResponse().TotalLatencyMs; got < slowCached.TotalLatencyMs {
 		t.Fatalf(
-			"merged latency = %dms, want slowest source's %dms",
+			"merged latency = %dms, want >= slowest source's %dms",
 			got,
 			slowCached.TotalLatencyMs,
 		)

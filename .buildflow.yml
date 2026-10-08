@@ -1,6 +1,16 @@
 # BuildFlow Configuration — non-default settings only (compiled-in defaults
 # cover everything else; a missing config file is fully valid).
 
+# Tool subprocess environment. GOTOOLCHAIN=auto lets the go binary that
+# BuildFlow's package-loading tools shell out to (govalid, go-licenses,
+# govulncheck — currently 1.27.0 from the stale binary closure, see the
+# binary-freshness preflight warn) auto-switch when a module graph requires a
+# newer patch (2026-10-08: tools/doanalyzerv2 -> branching-flow -> released
+# samber-linter v0.4.0 declares go 1.27.1). No-op once nothing in the graph
+# exceeds the running toolchain; revisit when BuildFlow is rebuilt at HEAD.
+env:
+  GOTOOLCHAIN: auto
+
 # Render-level per-tool warning ceilings (summary collapse; never gates —
 # the findings gate still fails on unfixable errors). Set 2026-10-08 with
 # ~20% headroom over the steady-state finding counts; growth past a ceiling
@@ -10,8 +20,11 @@ warnings_budget:
   # go.mod — this library's dependency policy is samber/do v2 ONLY (AGENTS.md),
   # so stdlib loops stay. The matched patterns are reported as suggestions the
   # dependency gate correctly refuses to auto-apply (same rationale as
-  # DiscordSync's 2026-09-22 unskip).
-  go-auto-upgrade: 6
+  # DiscordSync's 2026-09-22 unskip). Raised 6→8 on 2026-10-08 after the
+  # tripwire fired: the detailOf/errorsOf adapters in probe.go (AGENTS.md
+  # architecture listing) added two SliceToMap-pattern matches; investigated
+  # and confirmed the same intentional class, not copy-paste debt.
+  go-auto-upgrade: 8
   # Test-code duplication (63 findings, all *_test.go): table-driven fixtures
   # and per-test setup blocks are intentional similarity, not copy-paste debt.
   art-dupl: 80

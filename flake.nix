@@ -104,11 +104,13 @@
             name = "docs-drift-check";
             runtimeInputs = [
               pkgs.git
-              pkgs.grep
+              pkgs.gnugrep
             ];
             text = ''
-              root="$(git rev-parse --show-toplevel)"
-              cd "$root"
+              root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+              if [ -n "$root" ]; then
+                cd "$root"
+              fi
 
               fail=0
               drift() {
@@ -116,34 +118,45 @@
                 fail=1
               }
 
-              latest="$(git tag -l --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)"
+              latest="$(git tag -l --sort=-v:refname 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)"
               if [ -z "$latest" ]; then
-                echo "docs-drift-check: no semver tag found; nothing to verify" >&2
+                # No git (the flake check runs this script against the store
+                # source snapshot, which has no .git): fall back to the newest
+                # release heading in the CHANGELOG so the doc-sync checks stay
+                # meaningful there.
+                heading="$(grep -m1 -E '^## \[?v?[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md || true)"
+                rel="$(printf '%s' "$heading" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1 || true)"
+                if [ -n "$rel" ]; then
+                  latest="v$rel"
+                fi
+              fi
+              if [ -z "$latest" ]; then
+                echo "docs-drift-check: could not determine the latest release (no git tag, no CHANGELOG release heading)" >&2
                 exit 1
               fi
-              ver="${latest#v}"
-              ver_re="${ver//./\\.}"
+              ver="''${latest#v}"
+              ver_re="''${ver//./\\.}"
 
-              grep -q "> \*\*Stability:\*\* ${latest} alpha" README.md \
-                || drift "README stability line is not '${latest} alpha' (CONTRIBUTING checklist item 1)"
+              grep -q "> \*\*Stability:\*\* ''${latest} alpha" README.md \
+                || drift "README stability line does not read ''${latest} alpha (CONTRIBUTING checklist item 1)"
 
-              grep -q "${latest} released" AGENTS.md \
-                || drift "AGENTS.md status line does not name the latest tag ${latest} (checklist item 3)"
+              grep -q "''${latest} released" AGENTS.md \
+                || drift "AGENTS.md status line does not name the latest tag ''${latest} (checklist item 3)"
 
-              grep -q "^\[Unreleased\]: .*/compare/${latest}\.\.\.HEAD" CHANGELOG.md \
-                || drift "CHANGELOG [Unreleased] compare base is not ${latest} (checklist item 5)"
+              grep -q "^\[Unreleased\]: .*/compare/''${latest}\.\.\.HEAD" CHANGELOG.md \
+                || drift "CHANGELOG [Unreleased] compare base is not ''${latest} (checklist item 5)"
 
-              grep -Eq "^\[(v)?${ver_re}\]: " CHANGELOG.md \
-                || drift "CHANGELOG compare-link definition missing for ${latest}"
+              grep -Eq "^\[(v)?''${ver_re}\]: " CHANGELOG.md \
+                || drift "CHANGELOG compare-link definition missing for ''${latest}"
 
-              adr_max="$(ls docs/adr | grep -oE '[0-9]+' | sort -n | tail -n1)"
+              adr_max="$(printf '%s\n' docs/adr/* | grep -oE '[0-9]+' | sort -n | tail -n1)"
               if [ -n "$adr_max" ]; then
-                grep -qE "ADR-001\.\.0?${adr_max}" FEATURES.md \
-                  || drift "FEATURES.md ADR range does not cover ADR-00${adr_max}"
+                grep -qE "ADR-001\.\.0?''${adr_max}" FEATURES.md \
+                  || drift "FEATURES.md ADR range does not cover ADR-00''${adr_max}"
               fi
 
               if [ "$fail" -eq 0 ]; then
-                echo "docs-drift-check: OK - README/AGENTS/CHANGELOG/FEATURES in sync with ${latest}"
+                echo "docs-drift-check: OK - README/AGENTS/CHANGELOG/FEATURES in sync with ''${latest}"
               fi
               exit "$fail"
             '';

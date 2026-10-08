@@ -116,12 +116,21 @@ func WithTimeout(d time.Duration) Option {
 // no goroutines): reads fetch, handlers fetch, liveness does not.
 // Prober is safe for concurrent use.
 type Prober struct {
-	remotes []Remote
-	client  *http.Client
+	// states holds one entry per remote; index i is the single pairing key
+	// for fetch results, latch reads, and merge — no cross-slice length
+	// invariant exists.
+	states []remoteState
+	client *http.Client
 	timeout time.Duration
-	// startup records, per remote, whether at least one fetch has ever
-	// succeeded. One-way latches, like the root probe's startup latch.
-	startup []atomic.Bool
+}
+
+// remoteState pairs one remote with its one-way startup latch so both
+// per-remote axes live in the same slice.
+type remoteState struct {
+	remote Remote
+	// latched records whether at least one fetch has ever succeeded for
+	// this remote. One-way, like the root probe's startup latch.
+	latched atomic.Bool
 }
 
 // New creates a [Prober] over the given remotes. Construction validates
@@ -150,11 +159,15 @@ func New(remotes []Remote, opts ...Option) (*Prober, error) {
 		return nil, err
 	}
 
+	states := make([]remoteState, len(remotes))
+	for i, remote := range remotes {
+		states[i] = remoteState{remote: remote}
+	}
+
 	return &Prober{
-		remotes: remotes,
+		states:  states,
 		client:  cfg.client,
 		timeout: cfg.timeout,
-		startup: make([]atomic.Bool, len(remotes)),
 	}, nil
 }
 
@@ -236,11 +249,13 @@ func (p *Prober) CachedResponse() health.Response {
 // the request's context so a disconnected caller cancels its fetches.
 func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 	//nolint:makezero // pre-sized slice: parallel goroutines write results[i] by index
-	results := make([]fetchResult, len(p.remotes))
+	results := make([]fetchResult, len(p.states))
 
 	var wg sync.WaitGroup
 
-	for i, remote := range p.remotes {
+	for i := range p.states {
+		remote := p.states[i].remote
+
 		wg.Go(func() {
 			results[i] = p.fetch(ctx, remote)
 		})
@@ -260,11 +275,12 @@ func (p *Prober) merge(results []fetchResult) health.Response {
 
 	var maxLatency int64
 
-	for i, remote := range p.remotes {
+	for i := range p.states {
+		state := &p.states[i]
 		result := results[i]
 
 		if !result.ok {
-			checks[remote.Name+"/reachable"] = health.Check{
+			checks[state.remote.Name+"/reachable"] = health.Check{
 				Status: health.StatusFail,
 				Error:  "fetch: " + result.errMsg,
 			}
@@ -273,9 +289,7 @@ func (p *Prober) merge(results []fetchResult) health.Response {
 			continue
 		}
 
-		if !p.startup[i].Load() {
-			p.startup[i].Store(true)
-		}
+		state.latched.Store(true)
 
 		if result.resp.ShuttingDown {
 			shuttingDown = true
@@ -288,7 +302,7 @@ func (p *Prober) merge(results []fetchResult) health.Response {
 		status = worst(status, result.resp.Status)
 
 		for name, check := range result.resp.Checks {
-			checks[remote.Name+"/"+name] = check
+			checks[state.remote.Name+"/"+name] = check
 		}
 	}
 
@@ -396,8 +410,8 @@ func (p *Prober) RefreshInterval() time.Duration {
 // [health.Probe]'s startup latch: a remote that flaps after latching
 // does not re-block startup.
 func (p *Prober) StartupComplete() bool {
-	for i := range p.startup {
-		if !p.startup[i].Load() {
+	for i := range p.states {
+		if !p.states[i].latched.Load() {
 			return false
 		}
 	}
@@ -457,9 +471,9 @@ func (p *Prober) StartupHandler() http.HandlerFunc {
 
 		checks := make(map[string]health.Check)
 
-		for i, remote := range p.remotes {
-			if !p.startup[i].Load() {
-				checks[remote.Name] = health.Check{
+		for i := range p.states {
+			if !p.states[i].latched.Load() {
+				checks[p.states[i].remote.Name] = health.Check{
 					Status: health.StatusFail,
 					Error:  "no successful fetch yet",
 				}

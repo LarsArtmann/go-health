@@ -25,14 +25,14 @@
 | - | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1 | **makezero understanding**       | The _fix_ is verified, the _semantic model_ is not: I never determined why the pre-refactor inline `startup: make([]atomic.Bool, len(remotes))` never tripped `makezero: always` while the local-variable form did. Green ≠ understood; the rule's actual contract is unrecorded. |
 | 2 | **19:42 report §g questions**    | Re-asked (and expanded by one) — still unanswered; **push is gated on Q1**.                                                                                                                                                                                                       |
-| 3 | **AGENTS.md memory maintenance** | Docs-table row added for the new doc, but this session's learnings are NOT recorded: BuildFlow coverage, the makezero gotcha, the daemon-vs-buildflow interplay. Memory mandate says "immediate, no threshold" — I under-delivered this session.                                  |
-| 4 | **BuildFlow adoption state**     | `.buildflow.yml` now exists (user's 20:37–20:40 run) but AGENTS.md doesn't mention BuildFlow coverage at all, and the ownership boundary (buildflow auto-configure vs the repo's curated `.golangci.yml`) is undecided — today's regression shows the two can drift.              |
+| 3 | ~~**AGENTS.md memory maintenance**~~ done — this sweep: BuildFlow gotcha + golangci-LSP gotcha recorded in AGENTS; docs table moved to docs/INDEX.md (headroom) | Docs-table row added for the new doc, but this session's learnings are NOT recorded: BuildFlow coverage, the makezero gotcha, the daemon-vs-buildflow interplay. Memory mandate says "immediate, no threshold" — I under-delivered this session.                                  |
+| 4 | ~~**BuildFlow adoption state**~~ partially — BuildFlow coverage now recorded in AGENTS (this sweep); the ownership boundary stays the owner's §g3 call | `.buildflow.yml` now exists (user's 20:37–20:40 run) but AGENTS.md doesn't mention BuildFlow coverage at all, and the ownership boundary (buildflow auto-configure vs the repo's curated `.golangci.yml`) is undecided — today's regression shows the two can drift.              |
 
 ## c) NOT STARTED
 
-- **Push** — 10 gates-green commits waiting on Q1 (push authority is the owner's).
-- **v0.5.1 release** — Shutdown-hang fix sits in CHANGELOG `[Unreleased]`; vehicle decision open (Q2).
-- **All remaining TODO_LIST rows** (verified open after today's sync): dashboard suite vs v0.5.0; upstream filings (G2); 6-consumer suite rerun; CV bump (G3); ServiceName inventory (R6); rename staging (R7); mergeResponses port prep (R11); version-skew CI (R14); FEATURES bench re-verify; status-report archive sweep; plus the BLOCKED/owner rows (coverage threshold, auditlog recorder, 2 announcement publishes, do#318 comment).
+~~- **Push** — 10 gates-green commits waiting on Q1 (push authority is the owner's).~~ still open — 1 commit ahead now (origin caught up via push/fetch); push stays the owner's call
+~~- **v0.5.1 release** — Shutdown-hang fix sits in CHANGELOG `[Unreleased]`; vehicle decision open (Q2).~~ still open — owner question (§g2); the fix sits in CHANGELOG [Unreleased]
+~~- **All remaining TODO_LIST rows** (verified open after today's sync): dashboard suite vs v0.5.0; upstream filings (G2); 6-consumer suite rerun; CV bump (G3); ServiceName inventory (R6); rename staging (R7); mergeResponses port prep (R11); version-skew CI (R14); FEATURES bench re-verify; status-report archive sweep; plus the BLOCKED/owner rows (coverage threshold, auditlog recorder, 2 announcement publishes, do#318 comment).~~ partially — the archive row closed (this sweep executed it); the rest live in the rebuilt TODO_LIST
 
 ## d) TOTALLY FUCKED UP
 
@@ -50,7 +50,7 @@ Nothing destructive: no data loss, no broken gates, tree clean, tests/race/fuzz 
 2. **Close the "why" loop** — a fix that passes without explaining why the old state also passed is incomplete. Record the makezero contract or it bites again.
 3. **Commit smaller/faster in daemon-contested windows** — or make pausing the daemon part of the execution-session ritual (see §g).
 4. **Memory mandate enforcement** — BuildFlow coverage, the makezero gotcha, and the LSP-liar status belong in AGENTS.md now, not in a status report.
-5. **Write down the CHANGELOG policy** — today's implicit call ("tooling/doc completions don't get changelog entries") will be re-litigated every session until it's written down.
+~~5. **Write down the CHANGELOG policy** — today's implicit call ("tooling/doc completions don't get changelog entries") will be re-litigated every session until it's written down.~~ done — CONTRIBUTING CHANGELOG-policy paragraph (this sweep)
 6. **Max-3 question discipline** — consolidate before presenting.
 7. **Fix or silence the stale golangci LSP** — config-level, one-time cost, permanent payoff.
 
@@ -63,9 +63,9 @@ Tags: [TODO-L] already in TODO_LIST · [SESS] this session generated it · [OWNE
 | 1  | Push the 10 gates-green commits                                                                       | Q1      | Tree clean, everything verified             |
 | 2  | Decide vehicle + cut v0.5.1 (Shutdown-hang fix)                                                       | Q2      | CHANGELOG `[Unreleased]` already carries it |
 | 3  | go-health-dashboard full suite vs released v0.5.0                                                     | TODO-L  | The one deep consumer; High, 40min          |
-| 4  | Nail makezero `always` semantics; record in AGENTS Gotchas + config comment                           | SESS    | Understanding debt from (d2)                |
-| 5  | Record BuildFlow coverage + lint-config ownership boundary in AGENTS.md                               | SESS    | Split-brain risk made real today            |
-| 6  | AGENTS.md memory sweep: LSP-stale addendum, daemon/buildflow interplay                                | SESS    | Memory mandate under-delivered              |
+| 4  | ~~Nail makezero `always` semantics; record in AGENTS Gotchas + config comment~~ still open — TODO_LIST Hardening row; AGENTS records the open question, not a settled contract | SESS    | Understanding debt from (d2)                |
+| 5  | ~~Record BuildFlow coverage + lint-config ownership boundary in AGENTS.md~~ done — AGENTS BuildFlow gotcha records coverage + the seam regression (this sweep) | SESS    | Split-brain risk made real today            |
+| 6  | ~~AGENTS.md memory sweep: LSP-stale addendum, daemon/buildflow interplay~~ done — AGENTS memory sweep done (BuildFlow + LSP gotchas; docs/INDEX.md move) (this sweep) | SESS    | Memory mandate under-delivered              |
 | 7  | File go-appkit/health + cqrs-htmx/health upstream issues from drafts                                  | TODO-L  | G2 owner authority; drafts ready            |
 | 8  | Consumer suites vs v0.5.0: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier     | TODO-L  | 45min, Medium                               |
 | 9  | Bump CV to go-health v0.5.x + `go 1.27` floor                                                         | TODO-L  | Double-stale consumer (G3)                  |
@@ -73,20 +73,20 @@ Tags: [TODO-L] already in TODO_LIST · [SESS] this session generated it · [OWNE
 | 11 | Finalize rename staging: `SanitizeResponse`→`CoerceValidUTF8`, `Since`→`StatusSince`                  | TODO-L  | R7                                          |
 | 12 | mergeResponses port prep: primitive sketch + corpus fixture                                           | TODO-L  | R11                                         |
 | 13 | Version-skew CI script: fleet pins vs latest tag                                                      | TODO-L  | R14                                         |
-| 14 | Decide/normalize `tools/doanalyzerv2/go.mod` `go 1.27.1` vs repo floor `1.27`                         | SESS    | Committed as chore noise today              |
-| 15 | De-drift servicename-design.md title/body ("v0.5 candidate" vs v0.6 status line)                      | SESS    | Small split brain                           |
-| 16 | FEATURES benchmark rows re-verify (`-count=3`), label single-run rows                                 | TODO-L  | Numbers never re-run                        |
-| 17 | Archive 7 resolved status reports + decide the 3 2026-09-04 anchors                                   | TODO-L  | 2026-10-04 audit                            |
-| 18 | Write down the CHANGELOG policy (what gets an entry)                                                  | SESS    | Stop re-deciding                            |
-| 19 | Fix or disable the stale golangci LSP integration                                                     | SESS    | 3 standing false warnings                   |
+| 14 | ~~Decide/normalize `tools/doanalyzerv2/go.mod` `go 1.27.1` vs repo floor `1.27`~~ still open — owner question (20:59 §g1); TODO_LIST Blocked row | SESS    | Committed as chore noise today              |
+| 15 | ~~De-drift servicename-design.md title/body ("v0.5 candidate" vs v0.6 status line)~~ done — title now reads "v0.6 candidate" (this sweep); the status line already carried the re-venue | SESS    | Small split brain                           |
+| 16 | ~~FEATURES benchmark rows re-verify (`-count=3`), label single-run rows~~ still open — TODO_LIST Hardening row | TODO-L  | Numbers never re-run                        |
+| 17 | ~~Archive 7 resolved status reports + decide the 3 2026-09-04 anchors~~ done — this sweep: 11 reports annotated inline (strikethrough + verdicts) and archived; docs/status/ keeps the newest two | TODO-L  | 2026-10-04 audit                            |
+| 18 | ~~Write down the CHANGELOG policy (what gets an entry)~~ done — CONTRIBUTING CHANGELOG-policy paragraph now covers docs-only AND internal-only changes (this sweep) | SESS    | Stop re-deciding                            |
+| 19 | ~~Fix or disable the stale golangci LSP integration~~ still open — TODO_LIST Hardening row; discipline note added to AGENTS | SESS    | 3 standing false warnings                   |
 | 20 | Publish the v0.5.0 announcement draft                                                                 | OWNER   | Draft ready since today 19:0x               |
 | 21 | Publish the v0.1.1/v0.1.2 announcement                                                                | OWNER   | Draft ready since 2026-09-04                |
 | 22 | Post samber/do#318 duration comment                                                                   | OWNER   | Draft + checklist ready                     |
-| 23 | Update TODO_LIST header provenance note (drift-gate mention is now rowless)                           | SESS    | Cosmetic truthfulness                       |
-| 24 | Cross-link federation-validation-semantics.md from federation-design.md + AGENTS federation paragraph | SESS    | Discoverability                             |
-| 25 | Verify detailed-checks-cookbook states that `ErrUnknownCriticalService` covers `NewChecks` batches    | SESS    | Doc completeness, unverified                |
-| 26 | ANNOTATE the 19:42 report §g inline once questions are answered                                       | SESS    | docs-health ANNOTATE mode                   |
-| 27 | ROADMAP Next-minor candidates sync after the Q2 decision                                              | SESS    | Vehicle label consistency                   |
+| 23 | ~~Update TODO_LIST header provenance note (drift-gate mention is now rowless)~~ done — TODO_LIST header rewritten; the drift-gate mention now reflects the shipped gate (this sweep) | SESS    | Cosmetic truthfulness                       |
+| 24 | ~~Cross-link federation-validation-semantics.md from federation-design.md + AGENTS federation paragraph~~ done — federation-design.md non-goal + AGENTS federation paragraph now link the semantics doc (this sweep) | SESS    | Discoverability                             |
+| 25 | ~~Verify detailed-checks-cookbook states that `ErrUnknownCriticalService` covers `NewChecks` batches~~ done — verified batch-based (probe.go:537 validateCriticalNames reads the initial batch); sentence added to the cookbook (this sweep) | SESS    | Doc completeness, unverified                |
+| 26 | ~~ANNOTATE the 19:42 report §g inline once questions are answered~~ done — the 19:42 report annotated + archived by this sweep (§g verdicts inline) | SESS    | docs-health ANNOTATE mode                   |
+| 27 | ~~ROADMAP Next-minor candidates sync after the Q2 decision~~ still open — gated on the §g2 vehicle decision | SESS    | Vehicle label consistency                   |
 | 28 | Watch next CI run for the 4-target fuzz-long workflow                                                 | SESS    | Locally verified only                       |
 | 29 | Run `.#ci-emulation` once before push (go-free PATH confidence)                                       | SESS    | Optional extra gate                         |
 | 30 | Coverage-threshold CI job                                                                             | BLOCKED | G3 follow-up policy call                    |

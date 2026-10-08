@@ -1,6 +1,6 @@
 module doanalyzerv2-runner
 
-go 1.27
+go 1.27.1
 
 require github.com/larsartmann/go-design-smells v0.0.0
 

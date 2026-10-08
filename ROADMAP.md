@@ -31,7 +31,20 @@ composition concern (see [prometheus-exposition-design.md](docs/prometheus-expos
 
 Raw ideas:
 
-- OpenTelemetry spans on Evaluate/checks (same seam: hook + trace context)
+- OpenTelemetry spans on Evaluate/checks (same seam: hook + trace context).
+  The 2026-09-15 SystemNix integration assessment sharpened this into the
+  top verified gap (`docs/status/archived/2026-09-15_08-55_*`): OTEL spike
+  in a separate example module verified against a real OTLP collector
+  (`localhost:4318`), a non-blocking hook adapter (channel + drain goroutine —
+  `WithEvaluationHook` must not block, but an OTLP exporter is a network
+  client), and hook-stream vs served-response divergence (the shutdown
+  overlay appears in HTTP/cache reads but not in the hook stream)
+- Integration recipes from the same assessment (SystemNix consumes go-health
+  via Gatus over `cv.nix`): `docs/gatus-integration.md` (the proven cv
+  pattern incl. readiness + JSON-body assertion), a node_exporter
+  textfile-collector snippet next to the Prometheus example, and one
+  `docs/integrations.md` index so Prometheus/Gatus/OTEL/textfile do not
+  fragment into orphan files
 - `Response.TotalLatencyMs` as `float64` for sub-millisecond precision
 - `Probe.Snapshot()`-style accessor for structured-logging consumers
   (only with a concrete consumer need)
@@ -151,6 +164,8 @@ Raw ideas, none scheduled:
 
 - Promote `erraudit` / `doanalyzerv2` from local gates to CI steps if either
   tool ever becomes public
+- README install note: `GOTOOLCHAIN=auto` for hosts trailing the Go 1.27
+  floor (a real consumer hit this during a release verification)
 - Dependency automation: extend Dependabot/Renovate to flake inputs + pinned
   action SHAs (subsumes Go 1.27.x patch tracking; auto-merge rules are a
   separate policy decision)

@@ -7,17 +7,18 @@
 > Lifecycle: a completed TODO is deleted (it now lives in CHANGELOG). Done
 > items never stay here, and there is no "Previously Completed" section.
 >
-> Re-verified 2026-10-08 (docs-health audit) against the v0.5.0 tag
+> Re-verified 2026-10-08 (second docs-health audit) against the v0.5.0 tag
 > (released 2026-10-05). The former release train shipped as **v0.5.0**
 > (not v0.4.2) and its cut/tag row was deleted; the fresh-user sim passed
-> against the released tag the same day (proxy resolve, no replace, batteries
->
-> - critical-name validation + VersionHandler exercised). The "v0.5 window"
->   staging section is now the v0.6 window — none of its five items shipped in
->   v0.5.0. Newly harvested from the two 2026-10-04 reports: the drift-alarm
->   gate, the archive sweep, and the FEATURES benchmark re-verify. Owner gates:
->   G1 (release timing) is moot; G2 (upstream filing authority) and G3 (CV bump
->   authority) stand.
+> against the released tag the same day (proxy resolve, no replace,
+> batteries + critical-name validation + VersionHandler exercised). The
+> "v0.5 window" staging section is now the v0.6 window — none of its five
+> items shipped in v0.5.0. The drift-alarm gate (`.#docs-check`) shipped
+> 2026-10-08 and now mechanizes the README/AGENTS/CHANGELOG/FEATURES sync
+> this header used to narrate. Owner gates: G2 (upstream filing authority)
+> and G3 (CV bump authority) stand; branch protection is ON (verified via
+> `gh api …/branches/master` 2026-10-08), so the old G3 branch-protection
+> asks are closed.
 
 ## Status legend
 
@@ -55,7 +56,10 @@
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------- | ------ | --------------------------------------------------------------------- |
 | Version-skew CI script: fleet `go.mod` pins vs latest tag, fail-on-drift                                                                                                 | TODO   | Med     | 45min  | plan R14 (CV class of skew caught by machine)                         |
 | Verify FEATURES benchmark rows against a fresh `-count=3` run; label single-run rows                                                                                     | TODO   | Low-Med | 45min  | 2026-10-04 audit §c5: table structure verified, numbers never re-run  |
-| Archive resolved status reports: 2026-09-15_08-55 (route §f → ROADMAP Theme 2 first), 2026-09-18_09-46, the four 2026-09-22 reports; decide the three 2026-09-04 anchors | TODO   | Low     | 2h     | 2026-10-04 audit §b2/§c1; annotation tooling + manifest pattern ready |
+| Nail `makezero: always` semantics (why the pre-refactor pre-sized slice passed lint) and record the contract in AGENTS + `.golangci.yml` comment                          | TODO   | Low-Med | 30min  | 2026-10-08 20:58 §b1/§f4 — fix shipped (`b2b9ed0`), understanding not |
+| Panicking `WithEvaluationHook` callback is unrecovered on the refresh-loop path (probe.go:661-663): decide recover-vs-document per docs/panic-recovery-design.md + pin with a test | TODO   | Med     | 45min  | Verified unrecovered 2026-10-08 (docs-health audit); flagged 2026-09-15 §e6 |
+| Fix or disable the stale golangci LSP integration (3 standing false warnings; discipline note now in AGENTS Gotchas)                                                      | TODO   | Low     | 30min  | 2026-10-08 20:58 §f19; AGENTS Gotcha of record                        |
+| Restore `buildflow --fix --build-mode=full` to exit 0 (toolchain-skew follow-ups, binary rebuild) and re-review the `.buildflow.yml` budgets once green                    | TODO   | Med     | 1h     | 2026-10-08 20:59 §b1–§b4/§e7; gate last verified red                  |
 
 ## Owner Actions (artifacts ready, publishing is yours)
 
@@ -75,3 +79,4 @@
 | Task                                                                       | Status  | Impact | Effort | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | -------------------------------------------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | samber-do-auditlog: implement `DetailedHealthRecorder` (first implementor) | BLOCKED | Medium | 1h     | Owner decision required (verified 2026-09-22): the row's premise was false — auditlog times builds + shutdowns, NOT health checks. Implementing the interface requires importing go-health (`health.CheckDetail` return type), reversing the deliberate post-extraction "dependency-free both ways" decoupling (ADR-004), and it would silently switch go-health consumers from do's pooled batch to a hand-rolled fan-out. The pattern is proven: go-health-dashboard's `timedScreenshotRecorder` implements the interface via `do.HealthCheckNamedWithContext` (`di_lifecycle.go:217`). |
+| Normalize `tools/doanalyzerv2` go directive (1.27.1 dep floor vs repo `1.27` + go-version-auto-configure warning)                          | BLOCKED | Low    | 30min  | Owner call: branching-flow's own floor forces ≥1.27.1 for replace-path tooling; accept patch-pin + budget the warning, or lower branching-flow (2026-10-08 20:59 §g1). The revert to 1.27.1 cleared the govalid/license step failures.                                                                                                                                                                                                                                                                                                                                                     |

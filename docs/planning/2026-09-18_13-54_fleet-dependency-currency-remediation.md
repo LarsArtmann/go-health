@@ -1,6 +1,8 @@
 # Fleet Dependency-Currency & Hazard Remediation — Pareto Plan
 
-**Date**: 2026-09-18 13:54 · **Scope**: larsartmann Go fleet (httputil + go-etag consumers) · **Source evidence**: [go-etag deep dive](../research/2026-09-18_go-etag-deep-dive.html) · [httputil deep dive](../research/2026-09-18_httputil-deep-dive.html)
+**Date**: 2026-09-18 13:54 · **Status**: EXECUTED 2026-09-22 (~100% of the defined result) — evidence and leftovers in the [execution record](2026-09-22_fleet-remediation-execution-record.md) and its [status report](../status/archived/2026-09-22_19-51_fleet-remediation-execution-status.md) · **Scope**: larsartmann Go fleet (httputil + go-etag consumers) · **Source evidence**: [go-etag deep dive](../research/2026-09-18_go-etag-deep-dive.html) · [httputil deep dive](../research/2026-09-18_httputil-deep-dive.html)
+
+> Plan correction (recorded 2026-10-08): M65/C16's named target "cqrs-htmx/dashboardui" is a component library, not a server — the session substituted **crush-daily** as the second Metrics adopter (blog was the first).
 
 ## Context
 

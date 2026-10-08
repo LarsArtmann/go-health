@@ -1,6 +1,6 @@
 # Pareto Master Execution Plan — go-health
 
-> Created: 2026-09-04 00:02 CEST · Source: TODO_LIST.md (26 verified rows) + status report
+> Created: 2026-09-04 00:02 CEST · **Status: SUPERSEDED** by [pareto-master-plan-v2](2026-09-04_19-34_pareto-master-plan-v2-contract-ship-and-verification.md) (EXECUTED the same day; evidence in `docs/status/archived/2026-09-04_21-31_*`). Kept for history; do not execute from this file. · Source: TODO_LIST.md (26 verified rows) + status report
 > `2026-09-03_23-53` new items + ROADMAP.md (6 themes, 31 raw ideas).
 > Scope: **every** open TODO, broken down twice: 30–100 min tasks (Tier A), ≤12 min
 > micro-tasks (Tier B). Sorted by importance / impact / effort / customer-value.

@@ -75,7 +75,7 @@ session's output, and one of my regressions was fixed by that session, not by me
    (`nix build . && nix run .#reinstall`).
 5. **Doc consistency for the module rename:** `main.go` doc comment still says "Command
    doanalyzerv2-runner"; CONTRIBUTING.md / run.sh not audited for old-path references.
-6. **CHANGELOG/TODO_LIST/FEATURES:** no entries written for this session's changes
+~~6. **CHANGELOG/TODO_LIST/FEATURES:** no entries written for this session's changes~~ resolved by policy — CONTRIBUTING now states docs-only AND internal-only changes stay out of the CHANGELOG (this sweep); FEATURES fuzz row corrected
    (module path fix, federation state-slice refactor, suppression configs, link fixes).
 7. **govulncheck [tools/doanalyzerv2]** ("go mod tidy needed" in run 1): I tidied, but
    re-verification is pending (step was among "15 skipped (blocked by failures)" in run 2).
@@ -152,14 +152,14 @@ session's output, and one of my regressions was fixed by that session, not by me
 15. Run `nix run .#fuzz` (short) to exercise the refactored FuzzBatteries under fuzzing.
 
 **Consistency & docs (P1):**
-16. Update CHANGELOG `[Unreleased]`: module-path fix, federation state-slice refactor, suppression configs, link fixes.
-17. Update TODO_LIST.md: new decisions accepted (budgets), open questions (patch-pin tension, InstanceID strong type).
+~~16. Update CHANGELOG `[Unreleased]`: module-path fix, federation state-slice refactor, suppression configs, link fixes.~~ resolved by policy — all four named changes are internal/tooling; no CHANGELOG entry by the written-down rule (CONTRIBUTING, this sweep)
+~~17. Update TODO_LIST.md: new decisions accepted (budgets), open questions (patch-pin tension, InstanceID strong type).~~ done — TODO_LIST rebuilt by this sweep (new Hardening rows, Blocked toolchain row)
 18. Fix `main.go` doc comment ("Command doanalyzerv2-runner" → align with new module path).
 19. Audit CONTRIBUTING.md, run.sh, docs/ for stale `doanalyzerv2-runner` module-path references.
-20. AGENTS.md breathing room: move the Project Documentation table to docs/INDEX.md (≤210 lines).
+~~20. AGENTS.md breathing room: move the Project Documentation table to docs/INDEX.md (≤210 lines).~~ done — the docs table moved to docs/INDEX.md; AGENTS.md now ~189 lines (this sweep)
 21. Cross-link docs/consumer-verification.md from FEATURES.md adoption sections.
-22. Verify the two design docs the concurrent session added are in the AGENTS.md docs table (they may already have done it).
-23. Re-run standalone `go-structure-linter .` (it also caps AGENTS.md length) after any further AGENTS.md edits.
+~~22. Verify the two design docs the concurrent session added are in the AGENTS.md docs table (they may already have done it).~~ done — both federation docs are registered (docs/INDEX.md rows, this sweep's move preserved them)
+~~23. Re-run standalone `go-structure-linter .` (it also caps AGENTS.md length) after any further AGENTS.md edits.~~ done — the go-structure-linter AGENTS length cap is satisfied by headroom (220 → ~189); a standalone re-run stays open (needs the branching-flow checkout)
 24. Run dprint/markdownlint over the new config files + edited markdown (formatting pass).
 25. Verify `feature_request.md`'s fixed relative link renders on github.com (blob/master path).
 
@@ -210,3 +210,11 @@ session's output, and one of my regressions was fixed by that session, not by me
 ---
 
 _Prepared with AI assistance (GLM-5.3-Flash via [Crush](https://github.com/charmbracelet/crush)); findings verified against tool output captured in this session; concurrent-session commits (`b2b9ed0`, `7fe2b22`) attributed, not claimed._
+
+## Completion note (2026-10-08 docs-health sweep)
+
+Only the items THIS docs sweep resolved are struck inline; the gate-restoration
+P0 list (§f1–15) and the owner questions (§g) remain the live handoff — this
+report stays open on purpose. Docs-side follow-ups landed: TODO_LIST rebuilt,
+CHANGELOG policy written down (CONTRIBUTING), AGENTS.md docs table moved to
+docs/INDEX.md.

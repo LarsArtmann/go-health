@@ -114,7 +114,10 @@ or lists the API surface — these are the spots a docs sync historically missed
 6. `docs/openapi.yaml` (wire shape) and the golden-file tests
 
 Docs-only sessions do not get CHANGELOG entries: the CHANGELOG records the
-library, not its documentation.
+library, not its documentation. The same holds for internal-only changes —
+tooling, private analyzers, test helpers, and refactors with no behavior or
+API change — so the policy does not get re-litigated per session: an entry
+exists for a consumer of the library, and nothing else.
 
 ## Status Reports
 

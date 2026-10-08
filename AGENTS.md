@@ -49,44 +49,26 @@ export_test.go   — ResetStartupLatchForTest (test builds only; public latch st
 ```
 
 Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
-`health.Response`: `Source{Name, Probe}`, `New(sources...) (*Aggregate, error)` (rejects empty,
-duplicate, slash-containing, or nil-probe sources — see docs/aggregate-source-name-design.md),
-`CachedResponse` (merge-on-read: N lock-free loads, worst-of status,
-`"source/check"` namespacing, shutdown overlay, max latency), `RefreshInterval` (slowest source),
-`StartupComplete` (AND of latches), the three kubelet handlers (liveness 200, readiness 503 on
-fail, startup 503 until all latches), a standalone `Healthz()` single-endpoint handler (503 while
-any source is unlatched/failing/draining; wired manually — `DefaultRoutes` already claims /healthz
-for liveness; see docs/aggregate-healthz-design.md), `RegisterRoutes`.
+`health.Response`: `Source{Name, Probe}`, `New(sources...)` (rejects empty, duplicate,
+slash-containing, or nil-probe sources — docs/aggregate-source-name-design.md), merge-on-read
+`CachedResponse` (N lock-free loads, worst-of status, `"source/check"` namespacing, shutdown
+overlay), `StartupComplete` (AND of latches), the three kubelet handlers, and a standalone
+`Healthz()` single-endpoint handler (docs/aggregate-healthz-design.md).
 
 Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N
-remote go-health instances over HTTP into one `health.Response`. `Remote{Name, URL}`, `New(remotes,
-opts...)` (same source-name contract as aggregate + absolute http(s) URL validation;
-`WithClient`, `WithTimeout` — default 5s per fetch), `CachedResponse` (merge-on-read: one parallel
-HTTP fetch per remote per read; worst-of via `Status.Rank`; `"name/check"` namespacing;
-shutting-down overlay; max latency; per-remote one-way startup latches moved by successful
-fetches), `RefreshInterval` (always 0 — live fetch, no cadence of its own), the three kubelet
-handlers (liveness fetch-free 200, readiness 503 on merged fail, startup fetches and reports
-unlatched remotes), `RegisterRoutes`. An unreachable/non-200/undecodable/status-invalid remote
-contributes one synthetic `name/reachable` FAIL check (cause in `Error`) — never a silent freeze,
-never a status override. Wire input is untrusted: documents missing a status or carrying a
-non-pass/warn/fail check status are refused whole (an unknown status would render healthy
-downstream). `Check.Since`/`DurationNanos` survive the wire verbatim. Scalars (Version, Uptime,
-InstanceID, Timestamp) do not survive the merge (aggregate's rule). Fetches cap bodies at 1 MiB
-and carry `Accept: application/json`, so a go-health-dashboard route (content-negotiated JSON) is
-a valid remote. The `Prober` type satisfies the go-health-dashboard's consumer-side `Prober`
-interface structurally (asserted in `federation_test.go`; the dashboard cannot be imported —
-the dependency points the other way). Design: docs/federation-design.md.
+remote go-health instances over HTTP into one `health.Response` — same source-name contract as
+aggregate, merge-on-read with one parallel fetch per remote, worst-of status, per-remote startup
+latches, and one synthetic `name/reachable` FAIL check per unreachable/undecodable remote (never a
+silent freeze, never a status override). Wire input is untrusted (invalid documents refused whole),
+`Check.Since`/`DurationNanos` survive verbatim, scalars do not. Full semantics (fetch caps,
+dashboard-`Prober` structural assertion, API surface): docs/federation-design.md.
 
-Sub-package `checks` (source: `checks/checks.go`) is the batteries package:
-zero-dependency, stdlib-only `func(ctx) error` check constructors —
-`Disk(path, minFreeBytes)` (wraps `ErrDiskLow`), `Memory(maxAllocBytes)`
-(`ErrMemoryHigh`), `HTTP(url, timeout)` (`ErrHTTPCheckFailed`), `Database(db,
-pingTimeout)` (`ErrDatabaseUnreachable`). Each composes with `NewChecks`,
-`NewWithHealthCheck`, or any recorder path. Resource checks are
-warn-by-default: criticality stays with the caller; thresholds are arguments,
-not constants (CV 85%/97.3% and fir 1 GB proved they are policy). Ownership
-decision + constraints: docs/batteries-ownership-decision.md; tests use an
-in-process `sql.Register` fake driver — no driver dependency, ever.
+Sub-package `checks` (source: `checks/checks.go`) is the batteries package: zero-dependency,
+stdlib-only `func(ctx) error` constructors — `Disk`, `Memory`, `HTTP`, `Database`, each with a
+documented sentinel error — composing with `NewChecks`, `NewWithHealthCheck`, or any recorder
+path. Resource checks are warn-by-default: criticality stays with the caller; thresholds are
+arguments, not constants. Ownership decision + constraints:
+docs/batteries-ownership-decision.md; tests use an in-process `sql.Register` fake driver.
 
 ### Key Design Decisions
 
@@ -123,15 +105,11 @@ This package was extracted from [`samber-do-auditlog`](https://github.com/larsar
 
 Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md).
 
-**doanalyzerv2:** the private `branching-flow/pkg/doanalyzerv2` AST analyzer
-(persisted in-repo as the `tools/doanalyzerv2` replace-module runner,
-sidestepping the nix-sandbox `go install` block) reports 0 findings for
-DO-1..DO-6 across all source files. Invoke with
-`(cd tools/doanalyzerv2 && go run . ..)`; it requires the go-design-smells
-checkout at `/home/lars/projects/branching-flow` (the replace path in
-`tools/doanalyzerv2/go.mod`).
+**doanalyzerv2:** the private AST analyzer (in-repo runner `tools/doanalyzerv2`; invoke
+`(cd tools/doanalyzerv2 && go run . ..)`) reports 0 DO-1..DO-6 findings. It needs the
+go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod replace path).
 
-**Consumer verification:** `samber-do-auditlog` does NOT import go-health (post-extraction, dependency-free both ways); the most closely verified consumer is [`go-health-dashboard`](https://github.com/larsartmann/go-health-dashboard), which requires a released tag directly (no replace directive; bumped to v0.1.3 at release time 2026-09-04, full timeline below). Verified at the v0.1.3 release (2026-09-04): dashboard build green and all go-health-related tests (aggregate, integration, dashboard) green against released v0.1.3 with source names `api`/`web` (contract-compatible); its pre-existing CSP/Datastar test failures are unchanged from v0.1.2 and unrelated to go-health. At the v0.2.0 release (2026-09-16): dashboard verified compatible with the unreleased metadata fields pre-tag (build green 2026-09-16); v0.2.0 is additive, so no dashboard bump was required at release time. Verified 2026-09-22: the dashboard has fully adopted the v0.2.0 metadata — it renders `since` ("since 14:02:05 UTC (17m)") and `duration_ns` adaptively per check, exports both via its trend JSON, collapses healthy groups, and pins the rendering with a golden test + a `DetailedHealthRecorder` screenshot fixture (`timedScreenshotRecorder`). Bumped to released v0.4.0 on 2026-09-22 (from a 2026-09-18 v0.2.x pseudo-version); the full dashboard suite is green against the release, including the browser-backed screenshot tests. Wider consumer inventory re-verified 2026-10-02 via local checkouts + `go.mod` requires: **15 direct consumers** (go-health-dashboard v0.4.1, CV, CV/result, Zlota44, dnsblockd, library-policy, file-and-image-renamer, DiscordSync, KeyHolderAI, nsfw-classifier, webphone, projects-management-automation, cqrs-htmx, go-appkit, go-taskqueue v0.4.1 — internal/webui/health.go) and **16 indirect** via the two bridges (14 through cqrs-htmx v4.7.0–v4.13.0, 2 through go-appkit/health v0.5.1/v0.7.0). Four implementation patterns across the fleet: (A) injector + `WithCriticalServices` (KeyHolderAI di.go:442, CV, DiscordSync); (B) `NewWithHealthCheck` check-func map (dnsblockd, library-policy, fir); (C) recorder bridge — often over an EMPTY injector + `WithHealthRecorder` (cqrs-htmx/health NewProbe, Zlota44, projects-management-automation); (D) framework bridge (go-appkit/health `NewProbe` + doadapter). Empty-injector+recorder probes are why critical-name validation must be batch-based, never `ListProvidedServices()`-based (see below). Consumers building against go-health need Go 1.27+ (`encoding/json/v2` is stable there; go.mod's `go 1.27` directive excludes older toolchains outright). Any public API change must be coordinated with the dashboard consumer and the go-appkit bridge modules (both pin released go-health tags). Do NOT add a go-health dependency to samber-do-auditlog to implement `DetailedHealthRecorder` without an owner decision — it reverses this deliberate decoupling (tracked in go-health TODO_LIST.md, Blocked section).
+**Consumer verification:** fleet compatibility inventory (15 direct + 16 indirect consumers, four implementation patterns), the per-release dashboard verification timeline, and the samber-do-auditlog reverse-dependency prohibition live in [docs/consumer-verification.md](docs/consumer-verification.md).
 
 ### Data Flow
 
@@ -172,28 +150,20 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 - **Three-state classify** — `classify` returns `pass`/`warn`/`fail` (off results are excluded — docs/configured-off-design.md). The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
 - **Config validation** — `Probe.Validate()` checks `timeout > 0` and `refreshInterval >= 0`. `Start()` calls `Validate()` and returns an error on invalid config — callers should check the error from `Start()`.
 - **No GOEXPERIMENT needed since the go 1.27 floor** — `handlers.go` (and
-  `aggregate/aggregate.go`) import `encoding/json/v2`, which is stable stdlib
-  on go1.27. Verified 2026-09-22 on go1.27.1: build + vet + full test suite
-  green with `GOEXPERIMENT` unset; the flake no longer exports the experiment
-  in any app or the devShell. History for archaeology: while go.mod sat at
-  1.26 the experiment was mandatory (`build constraints exclude all Go files
-  in encoding/json/v2` without it), and one AGENTS.md revision wrongly
-  claimed it was unnecessary — that claim was an artifact of the host shell
-  leaking `GOEXPERIMENT=jsonv2` into every nix invocation. Lesson that
-  survives the migration: environment variables from the host shell leak
-  into nix run/develop invocations; gates must set or unset what they depend
-  on explicitly. Set `GOWORK=off` to avoid workspace interference.
+  `aggregate/aggregate.go`) import `encoding/json/v2`, stable stdlib on go1.27
+  (verified 2026-09-22: build + vet + full suite green with `GOEXPERIMENT`
+  unset; the flake exports no experiment anywhere). A 1.26-era AGENTS.md
+  revision once wrongly claimed otherwise — the host shell leaked
+  `GOEXPERIMENT=jsonv2` into every nix invocation. Enduring lesson: host env
+  vars leak into nix run/develop; gates must set or unset what they depend on
+  explicitly. Set `GOWORK=off` to avoid workspace interference.
 - **Tools that shell out to `go` need `goPkg` in their flake app** —
   `golangci-lint`, `govulncheck`, and `gosec` load packages by invoking a `go`
-  binary from PATH. Their apps originally declared only the tool, so CI (no Go
-  on PATH) fell back to the GOROOT the binary was compiled with — an older Go
-  that cannot satisfy go.mod's `go 1.27` directive (then it also hard-failed
-  on `GOEXPERIMENT=jsonv2`, "unknown GOEXPERIMENT jsonv2").
-  First CI run caught it; the fix puts `goPkg` in every such app's
-  `runtimeInputs` (verified by running the gates with the host Go removed
-  from PATH). Rule of thumb: any new flake app that indirectly runs `go` must
-  list `goPkg` — the same leak class as the host-shell-env gotcha above, one
-  layer down.
+  binary from PATH; on CI (no Go on PATH) they fall back to the GOROOT they
+  were compiled with, which cannot satisfy go.mod's `go 1.27` directive (the
+  first CI run caught it). Fix: `goPkg` in every such app's `runtimeInputs`.
+  Rule of thumb: any new flake app that indirectly runs `go` must list
+  `goPkg` — the same host-shell-env leak class, one layer down.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
 - **`encoding/json/v2` cannot marshal `time.Duration` AT ALL** — no default representation exists (go.dev/issue/71631, undecided upstream) and no struct-tag format is accepted (verified empirically on go1.26.7: `int`, `ns`, `nanoseconds`, … all rejected); the only escape is the per-call `json.FormatDurationAsNano` option, which every re-marshaling consumer would have to know to pass. That is why `Check.DurationNanos` is a plain `int64` while the in-process seam `CheckDetail.Duration` stays `time.Duration`, converted once in `buildChecks`. Pinned by `TestCheck_JSONOmitZero`. Related v2 trap: scalar `omitempty` (bool/int) is not honored — only strings and `omitzero` omit; see `TestReadinessResponse_JSONOmitEmpty`.
 - **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.
@@ -225,12 +195,8 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 | [docs/middleware-design.md](docs/middleware-design.md)                                           | Why handlers stay plain `http.HandlerFunc`; middleware composes outside the guard                                                                                                                                                 |
 | [docs/prometheus-exposition-design.md](docs/prometheus-exposition-design.md)                     | Metrics via `WithEvaluationHook` composition, never `client_golang`                                                                                                                                                               |
 | [docs/openapi-design.md](docs/openapi-design.md) + [docs/openapi.yaml](docs/openapi.yaml)        | Static OpenAPI 3.1 spec over runtime generation                                                                                                                                                                                   |
-| [docs/classification-2.0-design.md](docs/classification-2.0-design.md)                           | Rejected: weights, circuit-breaker, MaxConcurrent, per-service caching                                                                                                                                                            |
-| [docs/multi-tenant-design.md](docs/multi-tenant-design.md)                                       | Rejected: child scopes, `WithProbeName`, runtime criticality toggles                                                                                                                                                              |
-| [docs/starting-status-design.md](docs/starting-status-design.md)                                 | Rejected: fourth Status value, Status input validation                                                                                                                                                                            |
+| [docs/classification-2.0-design.md](docs/classification-2.0-design.md) et al.                   | **Rejected proposals** (with rationale + revisit triggers): [classification-2.0](docs/classification-2.0-design.md) (weights, circuit-breaker, MaxConcurrent), [multi-tenant](docs/multi-tenant-design.md) (child scopes, `WithProbeName`), [starting-status](docs/starting-status-design.md) (fourth Status value), [content-negotiation](docs/content-negotiation-design.md) (HTML rendering), [etag-rejection](docs/etag-rejection-design.md) (304s), [setup-convenience](docs/setup-convenience-design.md) (`Setup`/`MustNew`), [automation-design-notes](docs/automation-design-notes.md) (wiring skill, critical-name AST analyzer)                                        |
 | [docs/configured-off-design.md](docs/configured-off-design.md)                                   | Accepted: check-level `off` status via the `Off()` sentinel — intentional absence as a visible row; distinguishes the starting-status rejection; federation rollout order                                                         |
-| [docs/content-negotiation-design.md](docs/content-negotiation-design.md)                         | Why content negotiation / HTML rendering is rejected; composition pattern instead                                                                                                                                                 |
-| [docs/etag-rejection-design.md](docs/etag-rejection-design.md)                                   | Rejected: ETag/`If-None-Match` on health endpoints; status-truth freshness beats 304 savings                                                                                                                                      |
 | [docs/migration-plugin-to-recorder.md](docs/migration-plugin-to-recorder.md)                     | `WithPlugin` → `WithHealthRecorder` migration for pre-extraction consumers                                                                                                                                                        |
 | [docs/deprecation-policy.md](docs/deprecation-policy.md)                                         | Deprecation checklist, symbol lifetime, SA1019 stance                                                                                                                                                                             |
 | [SECURITY.md](SECURITY.md)                                                                       | Vulnerability disclosure path, in/out of scope, response targets                                                                                                                                                                  |
@@ -247,8 +213,6 @@ checkout at `/home/lars/projects/branching-flow` (the replace path in
 | [docs/vocabulary-reconciliation.md](docs/vocabulary-reconciliation.md)                           | Health-source lexicon; checks-vs-services resolution                                                                                                                                                                              |
 | [docs/synthetic-check-overlay.md](docs/synthetic-check-overlay.md)                               | dnsblockd-style response overlays: rules (clone before write, own your Since)                                                                                                                                                     |
 | [docs/probe-threat-model.md](docs/probe-threat-model.md)                                         | Unauthenticated-probe threat model + consumer checklist                                                                                                                                                                           |
-| [docs/setup-convenience-design.md](docs/setup-convenience-design.md)                             | Rejected: `Setup`/`MustNew` convenience constructors                                                                                                                                                                              |
-| [docs/automation-design-notes.md](docs/automation-design-notes.md)                               | Rejected: wiring skill, critical-name AST analyzer (revisit triggers)                                                                                                                                                             |
 | [docs/status/](docs/status/)                                                                     | Historical session reports (point-in-time snapshots); fully-resolved reports move to `docs/status/archived/`                                                                                                                      |
 
 **Critical-name validation (2026-10-02):** `Start()` fails with `ErrUnknownCriticalService` when a `WithCriticalServices` name never appears in the initial evaluation batch — closing the DiscordSync 2026-08-16 bug class (typo'd names silently blocked the startup latch and downgraded fail→warn, previously caught only by that repo's private guard test). Validation is batch-based by design, NOT `ListProvidedServices()`-based; decision + fleet compat scan: docs/start-validation-design.md.

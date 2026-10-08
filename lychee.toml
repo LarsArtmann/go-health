@@ -1,0 +1,13 @@
+# lychee link-check configuration.
+#
+# Decision (2026-10-08, resolve the buildflow preflight warning): EXCLUDE the
+# private LarsArtmann namespace rather than authenticate with GITHUB_TOKEN.
+# Rationale: go-health's markdown legitimately references private fleet repos
+# (branching-flow, samber-do-auditlog, go-health-dashboard); authenticated
+# checks would make CI depend on a token secret for links that are expected
+# to stay private, and unauthenticated checks 404 on exactly those. Excluding
+# the namespace keeps the check honest for everything public.
+#
+# If the fleet later standardizes on GITHUB_TOKEN, replace this exclude with
+# the authenticated flow (see buildflow preflight docs/agents-md hint).
+exclude = ['(?i)https://github\.com/larsartmann/.*']

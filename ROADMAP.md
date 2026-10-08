@@ -213,8 +213,10 @@ Things we are deliberately NOT pursuing and why:
   diagnostics page (the paperless-ngx `/api/status/` comparison, 2026-10-02).
   Scalars do not survive aggregate/federation merges by design. Formalized
   as ADR-007; composition point is go-health-dashboard.
-- **Breaking renames outside a v0.5 window:** `SanitizeResponse` →
+- **Breaking renames outside a minor window:** `SanitizeResponse` →
   `CoerceValidUTF8`, `Check.Since` → `StatusSince`, typed service identity
   (`ServiceName`), and the Probe/Prober/Source/Remote vocabulary
   reconciliation are designed (see TODO_LIST / planning plan
-  2026-10-02_16-11) but ship only in a v0.5 major window.
+  2026-10-02_16-11) but ship only in a dedicated breaking-change window
+  (originally staged as v0.5; v0.5.0 shipped without them, so the vehicle
+  is now v0.6 — see the TODO_LIST v0.6 staging section).

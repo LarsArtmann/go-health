@@ -113,6 +113,9 @@ or lists the API surface — these are the spots a docs sync historically missed
 5. CHANGELOG `[Unreleased]` and the compare links at the bottom
 6. `docs/openapi.yaml` (wire shape) and the golden-file tests
 
+Docs-only sessions do not get CHANGELOG entries: the CHANGELOG records the
+library, not its documentation.
+
 ## Status Reports
 
 Significant sessions may add a point-in-time snapshot to `docs/status/`, named

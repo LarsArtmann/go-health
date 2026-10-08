@@ -73,66 +73,66 @@ All 17 plan tasks reached their defined done-state. Per-task:
 
 **Correctness of shipped artifacts**
 
-1. Fix `HitRatio()` → `NotModified/Generated`; update the test expectation (1/2 not 1/3); release `etagmetrics/v0.1.1`.
-2. Fix broken godoc link in `etagmetrics/doc.go` (`[etag.Config]` → `[etag.ETagConfig]`); fold into the same release.
-3. Check CI green on the `v1.3.0` + `etagmetrics/v0.1.0` tag commits (plan gate 4 — the v1.1.0 lesson); fix forward if red.
-4. Runtime-verify blog `/metrics` (run server, curl, assert `blog_http_request_duration_seconds` present).
-5. Runtime-verify crush-daily `/metrics` shows the new histogram alongside the bridge's output.
-6. Add dedicated tests for blog + crush-daily metrics middleware wiring (recorder invoked, path normalisation).
-7. Security-review both new `/metrics` endpoints (exposure, auth, network policy) — public blog especially.
+~~1. Fix `HitRatio()` → `NotModified/Generated`; update the test expectation (1/2 not 1/3); release `etagmetrics/v0.1.1`.~~ cross-repo (etagmetrics) — v0.1.1 state unknown from this repo
+~~2. Fix broken godoc link in `etagmetrics/doc.go` (`[etag.Config]` → `[etag.ETagConfig]`); fold into the same release.~~ cross-repo (etagmetrics)
+~~3. Check CI green on the `v1.3.0` + `etagmetrics/v0.1.0` tag commits (plan gate 4 — the v1.1.0 lesson); fix forward if red.~~ cross-repo (httputil/etagmetrics) — CI state lives there
+~~4. Runtime-verify blog `/metrics` (run server, curl, assert `blog_http_request_duration_seconds` present).~~ cross-repo (blog)
+~~5. Runtime-verify crush-daily `/metrics` shows the new histogram alongside the bridge's output.~~ cross-repo (crush-daily)
+~~6. Add dedicated tests for blog + crush-daily metrics middleware wiring (recorder invoked, path normalisation).~~ cross-repo (blog, crush-daily)
+~~7. Security-review both new `/metrics` endpoints (exposure, auth, network policy) — public blog especially.~~ cross-repo (blog)
 
 **Fleet hygiene from this session's discoveries**
-8. Push (or get a push decision for) the ~20 consumer repos with local commits; then check each repo's CI.
-9. auto-deduplicate: repair the unfinished refactor — decide the `Duplicate` API shape, fix adapters/services, get the build green.
-10. auto-deduplicate: after repair, re-apply the httputil bump + gates + commit.
-11. games/SEC: resolve the `GET /docs` route collision; get tests/integration to 65/65.
-12. crush-daily: fix the 3 env-dependent CLI dispatch tests (stub/mock the `crush projects` exec).
-13. GmbH: fix the 4 pre-existing 201-vs-200 `test/api` contract failures.
-14. accountability-system: implement (or delete) the 57 undefined BDD steps.
-15. accountability-system: burn down the 97 standing lint findings; fix the hook's host-toolchain mismatch (go 1.26.5 + GOTOOLCHAIN=local).
-16. accountability-system: resolve go-structure-linter criticals (root `main.go`, `src/` directory).
-17. standard-bug-tracking-schema: fix the 8 pre-existing cache/etag/tracker test failures.
-18. RedditParse: fix the 2 pre-existing test failures.
-19. plugmarket/server: fix the pre-existing `TestServer` failure.
-20. Sweep vendorHash staleness across ALL bumped flake repos (only KeyCountdown/bank-sync/overview confirmed repaired).
-21. overview: pin the flake's `httputil` input to the v1.3.0 tag instead of floating `master`.
-22. go-localsync/provider/github: evaluate go-etag v0.4.0 adoption (hooks are additive).
-23. KeyCountdown: fix malformed module path `keycountdown` (gomod-check error) + mixed direct/indirect requires.
-24. KeyCountdown: reconcile `.github/dependabot.yml` entries with detected ecosystems (8 findings).
-25. GmbH husky hook: add `-r` to the xargs CRLF check (false-positives on empty staged diffs).
-26. GmbH husky hook: make the Mermaid step skip cleanly when Chrome is absent instead of failing.
+~~8. Push (or get a push decision for) the ~20 consumer repos with local commits; then check each repo's CI.~~ cross-repo/owner — per-repo push decisions
+~~9. auto-deduplicate: repair the unfinished refactor — decide the `Duplicate` API shape, fix adapters/services, get the build green.~~ cross-repo (auto-deduplicate)
+~~10. auto-deduplicate: after repair, re-apply the httputil bump + gates + commit.~~ cross-repo (auto-deduplicate)
+~~11. games/SEC: resolve the `GET /docs` route collision; get tests/integration to 65/65.~~ cross-repo (games/SEC)
+~~12. crush-daily: fix the 3 env-dependent CLI dispatch tests (stub/mock the `crush projects` exec).~~ cross-repo (crush-daily)
+~~13. GmbH: fix the 4 pre-existing 201-vs-200 `test/api` contract failures.~~ cross-repo (GmbH)
+~~14. accountability-system: implement (or delete) the 57 undefined BDD steps.~~ cross-repo (accountability-system)
+~~15. accountability-system: burn down the 97 standing lint findings; fix the hook's host-toolchain mismatch (go 1.26.5 + GOTOOLCHAIN=local).~~ cross-repo (accountability-system)
+~~16. accountability-system: resolve go-structure-linter criticals (root `main.go`, `src/` directory).~~ cross-repo (accountability-system)
+~~17. standard-bug-tracking-schema: fix the 8 pre-existing cache/etag/tracker test failures.~~ cross-repo (standard-bug-tracking-schema)
+~~18. RedditParse: fix the 2 pre-existing test failures.~~ cross-repo (RedditParse)
+~~19. plugmarket/server: fix the pre-existing `TestServer` failure.~~ cross-repo (plugmarket/server)
+~~20. Sweep vendorHash staleness across ALL bumped flake repos (only KeyCountdown/bank-sync/overview confirmed repaired).~~ cross-repo — vendorHash sweep never run here
+~~21. overview: pin the flake's `httputil` input to the v1.3.0 tag instead of floating `master`.~~ cross-repo (overview)
+~~22. go-localsync/provider/github: evaluate go-etag v0.4.0 adoption (hooks are additive).~~ cross-repo (go-localsync)
+~~23. KeyCountdown: fix malformed module path `keycountdown` (gomod-check error) + mixed direct/indirect requires.~~ cross-repo (KeyCountdown)
+~~24. KeyCountdown: reconcile `.github/dependabot.yml` entries with detected ecosystems (8 findings).~~ cross-repo (KeyCountdown)
+~~25. GmbH husky hook: add `-r` to the xargs CRLF check (false-positives on empty staged diffs).~~ cross-repo (GmbH)
+~~26. GmbH husky hook: make the Mermaid step skip cleanly when Chrome is absent instead of failing.~~ cross-repo (GmbH)
 
 **Library follow-through (httputil/go-etag)**
-27. etagmetrics: add `Example` function (testableexamples linter) + sub-module README or explicit doc.go-only decision.
-28. etagmetrics: Prometheus recorder example in `docs/integrations/` (mirrors prometheus-metrics.md pattern).
-29. etagmetrics: first consumer — wire etag hook counters into blog (pairs with its new metrics stack).
-30. etagmetrics: fuzz the normalisation helpers once they graduate into the library (see 31).
-31. Consider promoting `normaliseMetricsPath`/`isNumericSegment`/`isDateSegment` (currently duplicated blog + crush-daily) into httputil — three copies now exist including DiscordSync's; that's a nascent split brain.
-32. httputil v1.3.0 adoption sweep: decide which of the 41 v1.2.0 modules bump to v1.3.0 now (additive) — batch or leave to drift guards.
-33. Backfill `BenchmarkETagMetricsHookOverhead` numbers into `docs/benchmarks.md` from a full-suite run (current numbers are 100x smoke runs).
+~~27. etagmetrics: add `Example` function (testableexamples linter) + sub-module README or explicit doc.go-only decision.~~ cross-repo (etagmetrics)
+~~28. etagmetrics: Prometheus recorder example in `docs/integrations/` (mirrors prometheus-metrics.md pattern).~~ cross-repo (etagmetrics)
+~~29. etagmetrics: first consumer — wire etag hook counters into blog (pairs with its new metrics stack).~~ cross-repo (etagmetrics)
+~~30. etagmetrics: fuzz the normalisation helpers once they graduate into the library (see 31).~~ cross-repo (etagmetrics)
+~~31. Consider promoting `normaliseMetricsPath`/`isNumericSegment`/`isDateSegment` (currently duplicated blog + crush-daily) into httputil — three copies now exist including DiscordSync's; that's a nascent split brain.~~ cross-repo (httputil) — nascent split brain flagged there
+~~32. httputil v1.3.0 adoption sweep: decide which of the 41 v1.2.0 modules bump to v1.3.0 now (additive) — batch or leave to drift guards.~~ cross-repo (httputil)
+~~33. Backfill `BenchmarkETagMetricsHookOverhead` numbers into `docs/benchmarks.md` from a full-suite run (current numbers are 100x smoke runs).~~ cross-repo (httputil)
 
 **Documentation/memory**
-34. Harvest the four follow-ups + tasks 1–33 into go-health `TODO_LIST.md` (docs-health HARVEST mode).
-35. Update httputil AGENTS.md (etagmetrics sub-module, v1.3.0, overflow-contract test).
-36. Update SEC AGENTS.md (hermetic-resolution pattern; /docs collision decision pending).
-37. Record the C16 target substitution (dashboardui → crush-daily) in the plan document.
-38. go-health AGENTS.md: add the execution record + compression review to the docs table (blocked by parallel session's dirty state — coordinate).
+~~34. Harvest the four follow-ups + tasks 1–33 into go-health `TODO_LIST.md` (docs-health HARVEST mode).~~ done — go-health rows routed through the 2026-09-22 21:01 + later TODO_LIST sweeps
+~~35. Update httputil AGENTS.md (etagmetrics sub-module, v1.3.0, overflow-contract test).~~ cross-repo (httputil)
+~~36. Update SEC AGENTS.md (hermetic-resolution pattern; /docs collision decision pending).~~ cross-repo (games/SEC)
+~~37. Record the C16 target substitution (dashboardui → crush-daily) in the plan document.~~ open (minor) — substitution still unrecorded in the plan file
+~~38. go-health AGENTS.md: add the execution record + compression review to the docs table (blocked by parallel session's dirty state — coordinate).~~ superseded — AGENTS.md rebuilt since (docs table now docs/INDEX.md); the execution record lives in docs/planning/
 
 **Tooling/process**
-39. Rebuild + reinstall the stale BuildFlow binary (built at `42fd89b`, repo HEAD ahead) — doctor warns on every run.
-40. Add go-licenses/vulnix/tsc to repo devShells where BuildFlow falls back to `nix run nixpkgs#...` (recurring warnings).
-41. Write a tiny go.mod-parsing sweep tool to replace the fragile grep-based fleet verification (eliminates format false positives).
-42. Make the baseline-worktree technique a documented fleet recipe (it saved every "pre-existing or mine" judgment this session).
-43. Consider a fleet-wide `GOWORK` inventory (which repos have workspaces, which are committed) to pre-empt the workspace-mode failures hit five times.
+~~39. Rebuild + reinstall the stale BuildFlow binary (built at `42fd89b`, repo HEAD ahead) — doctor warns on every run.~~ cross-repo (BuildFlow) — partially done 2026-10-08 20:59 (§a: dprint+lychee added; rebuild still pending)
+~~40. Add go-licenses/vulnix/tsc to repo devShells where BuildFlow falls back to `nix run nixpkgs#...` (recurring warnings).~~ cross-repo (BuildFlow)
+~~41. Write a tiny go.mod-parsing sweep tool to replace the fragile grep-based fleet verification (eliminates format false positives).~~ cross-repo (tooling)
+~~42. Make the baseline-worktree technique a documented fleet recipe (it saved every "pre-existing or mine" judgment this session).~~ cross-repo (tooling)
+~~43. Consider a fleet-wide `GOWORK` inventory (which repos have workspaces, which are committed) to pre-empt the workspace-mode failures hit five times.~~ cross-repo (tooling)
 
 **Larger / ROADMAP fuel**
-44. accountability-system architecture: `cmd/` layout + root main.go migration (its criticals).
-45. go-cqrs-lite catalog docserver: make the `/docs` prefix configurable so hosts can avoid collisions (upstream fix for the SEC class of conflict).
-46. go-github-kit: decide whether v0.4.0 (plan's original target) is still wanted beyond v0.3.1 (25+ queued commits → check what remains unreleased).
-47. Fleet: adopt `AbsentEncodingFirstConfigured` nowhere (re-affirmed) — but add a doc line to httputil's compression README pointing at the fleet decision record.
-48. Standup-Killer: verify its flake/CI post-bump (go.work change + kit v0.3.1).
-49. etagmetrics: benchmark numbers vs `OnETagGenerated`-only counting alternative (Admission: HitRatio fix may change which counters matter).
-50. Schedule the next fleet currency sweep cadence (the audits found 9+11 laggards accumulated in weeks — drift guards only cover some repos).
+~~44. accountability-system architecture: `cmd/` layout + root main.go migration (its criticals).~~ cross-repo (accountability-system)
+~~45. go-cqrs-lite catalog docserver: make the `/docs` prefix configurable so hosts can avoid collisions (upstream fix for the SEC class of conflict).~~ cross-repo (go-cqrs-lite)
+~~46. go-github-kit: decide whether v0.4.0 (plan's original target) is still wanted beyond v0.3.1 (25+ queued commits → check what remains unreleased).~~ cross-repo (go-github-kit)
+~~47. Fleet: adopt `AbsentEncodingFirstConfigured` nowhere (re-affirmed) — but add a doc line to httputil's compression README pointing at the fleet decision record.~~ cross-repo (httputil docs)
+~~48. Standup-Killer: verify its flake/CI post-bump (go.work change + kit v0.3.1).~~ cross-repo (Standup-Killer)
+~~49. etagmetrics: benchmark numbers vs `OnETagGenerated`-only counting alternative (Admission: HitRatio fix may change which counters matter).~~ cross-repo (etagmetrics)
+~~50. Schedule the next fleet currency sweep cadence (the audits found 9+11 laggards accumulated in weeks — drift guards only cover some repos).~~ cross-repo (fleet) — cadence still undecided
 
 ## g) THREE QUESTIONS I CANNOT ANSWER MYSELF
 

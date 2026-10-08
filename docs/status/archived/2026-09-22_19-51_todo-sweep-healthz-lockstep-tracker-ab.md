@@ -74,7 +74,7 @@ baseline rows; treat cross-baseline comparisons with suspicion.
 
 ## b) PARTIALLY DONE
 
-1. **Benchmark task row (FEATURES.md delta + re-baseline)** — measurement DONE, write-up NOT:
+~~1. **Benchmark task row (FEATURES.md delta + re-baseline)** — measurement DONE, write-up NOT:~~ done — §h: FEATURES got the TrackerDelta row + re-baselines + CPU model the same evening
    - `BenchmarkEvaluate_TrackerDelta` (go1.27.1, 32 threads): `tracker=false` **892 ns/op ·
      1154 B · 5 allocs** vs `tracker=true` **1149 ns/op · 1682 B · 7 allocs** → Since-stamping
      marginal cost ≈ **257 ns/op (+29%), +528 B, +2 allocs** on the steady-state warm path. The
@@ -86,35 +86,35 @@ baseline rows; treat cross-baseline comparisons with suspicion.
    - **NOT done**: FEATURES.md "Performance" table not yet updated (no delta row, no re-baseline
      note), only the Evaluate/tracker family re-ran — liveness/readiness/startup/guard/aggregate
      rows not re-measured, TODO row not harvested, CHANGELOG has no entry for the seam+benchmark.
-2. **Gates verification** — aggregate `-race` green after Healthz; targeted lint green
+~~2. **Gates verification** — aggregate `-race` green after Healthz; targeted lint green~~ done — §h: full gates green on the final tree (21:01 report §a20)
    (0 issues); `nix flake check` green (includes the new lockstep check). BUT the full gate
    sweep has not re-run on the final tree (the earlier background `.#gates` run started mid-edit
    and died at lint on a `wsl_v5` finding I then fixed), and root `-race` hasn't re-run since the
    tracker seam landed.
-3. **AGENTS.md staleness sweep** — two gotchas fixed (see a8); the header line still says
+~~3. **AGENTS.md staleness sweep** — two gotchas fixed (see a8); the header line still says~~ done — §h: header updated; GOEXPERIMENT dropped entirely (v0.4.0)
    "**Go**: 1.26 · **Status**: v0.2.0 (alpha), federation unreleased (v0.3.0 vehicle)" and the
    GOEXPERIMENT gotcha still says "The flake keeps go_1_26 pinned" — both falsified by go.mod
    1.27.1 + flake `go_1_27` and the 2026-09-19 v0.3.0 release. Noticed, not yet fixed.
 
 ## c) NOT STARTED (still open in TODO_LIST.md or surfaced this session)
 
-- Prose review: `middleware_example_test.go` / `prometheus_example_test.go` wire examples (Low).
-- ADR: unify latency units (`total_latency_ms` vs `duration_ns`) in v0.3 (Low).
-- Detailed-checks cookbook (Low).
-- File samber/do upstream: richer batch results / per-service timing (Medium; requires
+~~- Prose review: `middleware_example_test.go` / `prometheus_example_test.go` wire examples (Low).~~ partially — Prometheus example sorted (§h); the middleware example prose was never reviewed
+~~- ADR: unify latency units (`total_latency_ms` vs `duration_ns`) in v0.3 (Low).~~ done — ADR-006 (§h, shipped v0.4.0)
+~~- Detailed-checks cookbook (Low).~~ done — cookbook shipped (§h, v0.4.0)
+~~- File samber/do upstream: richer batch results / per-service timing (Medium; requires~~ done — #318 draft verified, gates passed (§h); posting owner-gated
   verify-before-filing + github-voice).
-- samber-do-auditlog: implement `DetailedHealthRecorder` (Medium; other repo).
-- All four go-health-dashboard tasks (High/Medium; other repo): `since` rendering, status-change
+~~- samber-do-auditlog: implement `DetailedHealthRecorder` (Medium; other repo).~~ open — TODO_LIST Blocked row (premise corrected in §h)
+~~- All four go-health-dashboard tasks (High/Medium; other repo): `since` rendering, status-change~~ done — verified already implemented (§h; 21:01 §a15)
   timeline, `duration_ns` adaptive, "stable for Xh" collapse; plus the integration test pinned
   _after_ adoption.
-- Owner-blocked (untouched by design): branch protection, coverage-threshold CI, announcement
+~~- Owner-blocked (untouched by design): branch protection, coverage-threshold CI, announcement~~ split — announcement still owner-open (TODO_LIST); branch protection DONE (ENABLED, gh api 2026-10-08); coverage still owner-open
   publishing.
 - New gaps surfaced this session (not yet rows):
-  - `Aggregate.Healthz()` parity for **federation** (`Prober` has no `Healthz()` — same
+  ~~- `Aggregate.Healthz()` parity for **federation** (`Prober` has no `Healthz()` — same~~ open — → ROADMAP Theme 7 (`federation.Prober.Healthz()` parity)
     single-endpoint gap the aggregate just closed).
-  - openapi.yaml `info.version` still `0.2.0`; spec says nothing about the root/aggregate
+  ~~- openapi.yaml `info.version` still `0.2.0`; spec says nothing about the root/aggregate~~ open (minor) — spec version current (0.5.0); the Healthz-mount sentence was never added
     single-endpoint `Healthz()` mount (acceptable — it's a wiring choice — but worth a sentence).
-  - Release-vehicle decision: CHANGELOG `[Unreleased]` (Healthz + lockstep check + benchmarks)
+  ~~- Release-vehicle decision: CHANGELOG `[Unreleased]` (Healthz + lockstep check + benchmarks)~~ done — shipped v0.4.0 (21:32 report)
     needs a v0.4.0 (or patch) decision; the TODO note's "v0.3.0 candidate" phrasing is obsolete
     since v0.3.0 shipped 2026-09-19.
 
@@ -162,58 +162,58 @@ baseline rows; treat cross-baseline comparisons with suspicion.
 
 ## f) NEXT (ranked, ~30 items)
 
-1. Update FEATURES.md "Performance": add `BenchmarkEvaluate_TrackerDelta` row (892→1149 ns,
+~~1. Update FEATURES.md "Performance": add `BenchmarkEvaluate_TrackerDelta` row (892→1149 ns,~~ done — §h
    +257 ns/+29%, +528 B, +2 allocs), re-baseline the Evaluate/TrackerStamp rows to go1.27.1
    numbers, add CPU model to the baseline note, flag hardware-comparability caveat.
-2. Re-run the full `nix run .#gates` sweep on the final tree (test-race, vet, lint, vulncheck,
+~~2. Re-run the full `nix run .#gates` sweep on the final tree (test-race, vet, lint, vulncheck,~~ done — §h final gates green (21:01 §a20)
    security, fuzz, flake check) — one clean pass.
-3. Root package `-race` run after the tracker seam (gates covers it, but confirm explicitly).
-4. CHANGELOG `[Unreleased]`: entry for the tracker A/B seam + delta benchmark.
-5. Harvest the `BenchmarkEvaluate` TODO row once 1–2 land.
-6. Fix AGENTS.md header: Go 1.27, status v0.3.0 (released 2026-09-19), federation released.
-7. Fix AGENTS.md GOEXPERIMENT gotcha: flake now `go_1_27`; json/v2 stable under 1.27 (verify
+~~3. Root package `-race` run after the tracker seam (gates covers it, but confirm explicitly).~~ done — §h race-clean (21:01 §a20)
+~~4. CHANGELOG `[Unreleased]`: entry for the tracker A/B seam + delta benchmark.~~ done — recorded in CHANGELOG v0.4.0 (the tracker benchmark)
+~~5. Harvest the `BenchmarkEvaluate` TODO row once 1–2 land.~~ done — row harvested; benchmark recorded in CHANGELOG v0.4.0
+~~6. Fix AGENTS.md header: Go 1.27, status v0.3.0 (released 2026-09-19), federation released.~~ done — §h
+~~7. Fix AGENTS.md GOEXPERIMENT gotcha: flake now `go_1_27`; json/v2 stable under 1.27 (verify~~ done — §h GOEXPERIMENT dropped (v0.4.0)
    whether `GOEXPERIMENT=jsonv2` export is still needed at all in the flake and simplify if not).
-8. Verify fuzz run 35756511889 completed green; then delete/annotate nothing further (row already
+~~8. Verify fuzz run 35756511889 completed green; then delete/annotate nothing further (row already~~ done — run 35756511889 success (21:01 §a2)
    harvested).
-9. Release-vehicle decision for `[Unreleased]` (Healthz, lockstep check, benchmark seam) — owner;
+~~9. Release-vehicle decision for `[Unreleased]` (Healthz, lockstep check, benchmark seam) — owner;~~ done — shipped v0.4.0 (21:32)
    likely v0.4.0 given additive API.
-10. Federation `Prober.Healthz()` parity (design note first, mirror aggregate's decision).
-11. openapi.yaml: bump `info.version`, add one sentence documenting the mountable single-endpoint
+~~10. Federation `Prober.Healthz()` parity (design note first, mirror aggregate's decision).~~ open — → ROADMAP Theme 7 (federation parity)
+~~11. openapi.yaml: bump `info.version`, add one sentence documenting the mountable single-endpoint~~ open (minor) — spec version current; the mount sentence was never added
     `Healthz()` (root + aggregate).
-12. Prose review of `middleware_example_test.go` / `prometheus_example_test.go` (open TODO row).
-13. ADR: latency-unit unification (`total_latency_ms` vs `duration_ns`) — open TODO row.
-14. Detailed-checks cookbook (open TODO row).
-15. samber/do upstream feature request: per-service timing in batch results — verify current do
+~~12. Prose review of `middleware_example_test.go` / `prometheus_example_test.go` (open TODO row).~~ partially — Prometheus fixed (§h); middleware prose never reviewed
+~~13. ADR: latency-unit unification (`total_latency_ms` vs `duration_ns`) — open TODO row.~~ done — ADR-006 (§h)
+~~14. Detailed-checks cookbook (open TODO row).~~ done — cookbook shipped (§h)
+~~15. samber/do upstream feature request: per-service timing in batch results — verify current do~~ done — #318 draft verified (§h); posting owner-gated
     source first (verify-before-filing), draft in Lars's voice, ask before filing.
-16. samber-do-auditlog: implement `DetailedHealthRecorder` (sibling repo session).
-17. Dashboard: render "failing since HH:MM (Nm)" (High, sibling repo).
-18. Dashboard: status-changes timeline from `since` (High).
-19. Dashboard: adaptive `duration_ns` rendering.
-20. Dashboard: "stable for Xh" collapse summaries.
-21. Dashboard: integration test pinning `since`/`duration_ns` (after adoption).
-22. Branch protection on master (owner decision G3; ready-to-run command in TODO_LIST).
-23. Coverage-threshold CI job (owner policy call).
-24. Publish v0.1.1/v0.1.2 announcement (owner; draft ready).
-25. `Aggregate.SourceStatuses()` / per-source visibility (deferred beyond v0.3.0 per CHANGELOG).
-26. `errors.Join` aggregate construction errors (deferred item, verified spike exists).
-27. ROADMAP Theme 7 mark: aggregate/federation single-endpoint question — update once federation
+~~16. samber-do-auditlog: implement `DetailedHealthRecorder` (sibling repo session).~~ open — TODO_LIST Blocked row
+~~17. Dashboard: render "failing since HH:MM (Nm)" (High, sibling repo).~~ done — dashboard already implemented (§h; 21:01 §a15)
+~~18. Dashboard: status-changes timeline from `since` (High).~~ done — dashboard already implemented (§h; 21:01 §a15)
+~~19. Dashboard: adaptive `duration_ns` rendering.~~ done — dashboard already implemented (§h; 21:01 §a15)
+~~20. Dashboard: "stable for Xh" collapse summaries.~~ done — dashboard already implemented (§h; 21:01 §a15)
+~~21. Dashboard: integration test pinning `since`/`duration_ns` (after adoption).~~ done — dashboard golden + screenshot pinning (21:01 §a15)
+~~22. Branch protection on master (owner decision G3; ready-to-run command in TODO_LIST).~~ done — branch protection ENABLED (gh api .protection, 2026-10-08)
+~~23. Coverage-threshold CI job (owner policy call).~~ still open — TODO_LIST Blocked row
+~~24. Publish v0.1.1/v0.1.2 announcement (owner; draft ready).~~ still open — TODO_LIST Owner Actions row
+~~25. `Aggregate.SourceStatuses()` / per-source visibility (deferred beyond v0.3.0 per CHANGELOG).~~ open — → ROADMAP Theme 7
+~~26. `errors.Join` aggregate construction errors (deferred item, verified spike exists).~~ open — → ROADMAP Theme 7
+~~27. ROADMAP Theme 7 mark: aggregate/federation single-endpoint question — update once federation~~ superseded — aggregate Healthz shipped v0.4.0; federation parity stays Theme 7
     Healthz is decided.
-28. Add CPU model + commit hash to FEATURES baseline note format (tiny, do with item 1).
-29. Consider `nix run .#openapi-lockstep` in BuildFlow? No — project-specific check, correctly
+~~28. Add CPU model + commit hash to FEATURES baseline note format (tiny, do with item 1).~~ done — §h (CPU model in FEATURES); the commit-hash want is superseded by the `.#docs-check` drift gate
+~~29. Consider `nix run .#openapi-lockstep` in BuildFlow? No — project-specific check, correctly~~ NOT-DO — the documented decision stands (flake-owned; recorded in §f29 itself)
     flake-owned (documented decision; revisit only if more LarsArtmann repos adopt OpenAPI
     lockstep).
-30. Post-release AGENTS.md staleness grep as a habit: `rg -n "1\.26|v0\.2\.0|unreleased" AGENTS.md`
+~~30. Post-release AGENTS.md staleness grep as a habit: `rg -n "1\.26|v0\.2\.0|unreleased" AGENTS.md`~~ done — practiced (§h AGENTS sweep; the post-release `rg` habit)
     after every release session.
 
 ## g) QUESTIONS FOR THE OWNER (cannot self-answer)
 
-1. **Release vehicle**: shall `Aggregate.Healthz()` + the lockstep check + benchmark seam ship as
+~~1. **Release vehicle**: shall `Aggregate.Healthz()` + the lockstep check + benchmark seam ship as~~ done — shipped v0.4.0 (21:32)
    **v0.4.0** now, or stay in `[Unreleased]` until `SourceStatuses()` / `errors.Join` batch up?
    (Affects whether I run the go-release flow this week.)
-2. **samber/do upstream**: file the per-service-timing feature request on samber/do now (after
+~~2. **samber/do upstream**: file the per-service-timing feature request on samber/do now (after~~ done by action — draft-only (docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md)
    source verification, drafted in your voice), or draft-only for your review? Filing externally
    under your name is yours to trigger.
-3. **Dashboard scope**: pull `go-health-dashboard` into the next session(s) for the two High
+~~3. **Dashboard scope**: pull `go-health-dashboard` into the next session(s) for the two High~~ moot — the dashboard rows were already done (§h)
    rows (`since` rendering, status-change timeline), or keep sessions go-health-local until the
    v0.4.0 metadata fields are actually tagged?
 
@@ -278,3 +278,10 @@ Q3 moot → dashboard rows were already done. Q1 (v0.4.0 release vehicle)
 remains the one open owner decision; branch protection (G3), coverage
 threshold, and the v0.1.1/v0.1.2 announcement publishing remain owner
 actions.
+
+## Completion (2026-10-08 docs-health sweep)
+
+Every §b/§c/§f/§g item resolved inline (strikethrough + verdict); §a/§d/§e/§h
+stay as the session's historical record (§h is itself the same-evening
+resolution record). Surviving open work lives in TODO_LIST.md / ROADMAP.md.
+Archived `git mv` per the archive rule — see docs/status/archived/README.md.

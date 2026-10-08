@@ -49,12 +49,12 @@ tests, and lints clean.
 
 | # | Item                          | Works now                                                                | Remaining                                                                                                                                                                                                                                      | Effort |
 | - | ----------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 1 | **TODO_LIST hygiene**         | Curator note at top records the session and lists resolved rows.         | Resolved rows were **not removed**; the new `Aggregate.Healthz()` task was **not added as a row**. Needs `docs-health` HARVEST/ANNOTATE.                                                                                                       | S      |
-| 2 | **Benchmark methodology**     | Baselines recorded in FEATURES.                                          | New rows are **single-run**, not the existing row's "median of 3" methodology, and are not labeled as single-run.                                                                                                                              | S      |
-| 3 | **Markdown formatting**       | Edits render fine.                                                       | Repo has `dprint.json` with a **markdown plugin**; I hand-formatted tables and never ran dprint/treefmt on them. If a hook/CI enforces dprint, my tables will be reformatted. CI's `treefmt` does _not_ include dprint, so this is unverified. | S      |
-| 4 | **Plan HTML accuracy**        | Report renders; SVG inlined; structure valid.                            | Stat card says "7 shipped"; the true count is ~11 (11 includes the lint fix and doc updates). Also the seed copy was briefly committed as an unmodified template before the build overwrote it.                                                | S      |
-| 5 | **Verification breadth**      | Direct `go` tool commands + short fuzz.                                  | Never ran `nix run .#gates`, `nix flake check`, `nix run .#fuzz-long`, or race with `-count=N`; those are the repo's canonical gates.                                                                                                          | S      |
-| 6 | **Healthz property coverage** | Property file asserts handler mirroring for the three existing handlers. | Cannot extend to `Healthz` until it is implemented.                                                                                                                                                                                            | S      |
+| 1 | ~~**TODO_LIST hygiene**~~ done — repeated sweeps (2026-09-22 19:51, 2026-10-04, this 2026-10-08 sweep) | Curator note at top records the session and lists resolved rows.         | Resolved rows were **not removed**; the new `Aggregate.Healthz()` task was **not added as a row**. Needs `docs-health` HARVEST/ANNOTATE.                                                                                                       | S      |
+| 2 | ~~**Benchmark methodology**~~ done — FEATURES carries methodology notes; fresh `-count=3` re-verify is a TODO_LIST row | Baselines recorded in FEATURES.                                          | New rows are **single-run**, not the existing row's "median of 3" methodology, and are not labeled as single-run.                                                                                                                              | S      |
+| 3 | ~~**Markdown formatting**~~ partially — dprint in devShell since 2026-10-08; tables stay hand-formatted; CI has no markdown formatter | Edits render fine.                                                       | Repo has `dprint.json` with a **markdown plugin**; I hand-formatted tables and never ran dprint/treefmt on them. If a hook/CI enforces dprint, my tables will be reformatted. CI's `treefmt` does _not_ include dprint, so this is unverified. | S      |
+| 4 | ~~**Plan HTML accuracy**~~ NOT-DO — cosmetic, historical artifact | Report renders; SVG inlined; structure valid.                            | Stat card says "7 shipped"; the true count is ~11 (11 includes the lint fix and doc updates). Also the seed copy was briefly committed as an unmodified template before the build overwrote it.                                                | S      |
+| 5 | ~~**Verification breadth**~~ done — full `.#gates` sweeps are standard practice in every later session | Direct `go` tool commands + short fuzz.                                  | Never ran `nix run .#gates`, `nix flake check`, `nix run .#fuzz-long`, or race with `-count=N`; those are the repo's canonical gates.                                                                                                          | S      |
+| 6 | ~~**Healthz property coverage**~~ done — `Aggregate.Healthz()` shipped v0.4.0; property test extended (`TestAggregateHandlers_MirrorMergedStatus`) | Property file asserts handler mirroring for the three existing handlers. | Cannot extend to `Healthz` until it is implemented.                                                                                                                                                                                            | S      |
 
 ---
 
@@ -62,13 +62,13 @@ tests, and lints clean.
 
 | # | Item                                                                                                                                                                                                                    | Why not started                                                                 | Still wanted?             |
 | - | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------- |
-| 1 | Implement `Aggregate.Healthz()`                                                                                                                                                                                         | Design note written; implementation pre-empts owner's release-vehicle decision. | Yes (1% tier).            |
-| 2 | Implement `Aggregate.SourceStatuses()`                                                                                                                                                                                  | Design note exists; deferred to v0.3.0 by owner.                                | Yes.                      |
-| 3 | `errors.Join` in `aggregate.New`                                                                                                                                                                                        | Design note + verified spike exist; deferred to v0.3.0.                         | Yes.                      |
-| 4 | `WithTransitionHook` (alerting on status transitions) + design note                                                                                                                                                     | Not scoped; needs a design note first.                                          | Proposed by this session. |
-| 5 | OpenAPI ↔ golden-fixture lockstep CI check                                                                                                                                                                              | Sized but not built.                                                            | Yes.                      |
-| 6 | `healthtest` consumer helper package                                                                                                                                                                                    | Needs design note + owner decision.                                             | Proposed.                 |
-| 7 | Remaining TODO_LIST/ROADMAP long tail (latency-unit ADR, `AwaitReady` cache-aware poll, cookbook, fuzz-corpus seeding, non-linux CI, auditlog `DetailedHealthRecorder`, dashboard rendering, samber/do upstream issue). | Deprioritized behind the 1%/4% tiers.                                           | Yes.                      |
+| 1 | ~~Implement `Aggregate.Healthz()`~~ done — shipped v0.4.0 | Design note written; implementation pre-empts owner's release-vehicle decision. | Yes (1% tier).            |
+| 2 | ~~Implement `Aggregate.SourceStatuses()`~~ open — → ROADMAP Theme 7 | Design note exists; deferred to v0.3.0 by owner.                                | Yes.                      |
+| 3 | ~~`errors.Join` in `aggregate.New`~~ open — → ROADMAP Theme 7 | Design note + verified spike exist; deferred to v0.3.0.                         | Yes.                      |
+| 4 | ~~`WithTransitionHook` (alerting on status transitions) + design note~~ open — → ROADMAP raw ideas (design note first) | Not scoped; needs a design note first.                                          | Proposed by this session. |
+| 5 | ~~OpenAPI ↔ golden-fixture lockstep CI check~~ done — shipped v0.4.0 (`nix run .#openapi-lockstep`) | Sized but not built.                                                            | Yes.                      |
+| 6 | ~~`healthtest` consumer helper package~~ open — → ROADMAP raw ideas | Needs design note + owner decision.                                             | Proposed.                 |
+| 7 | ~~Remaining TODO_LIST/ROADMAP long tail (latency-unit ADR, `AwaitReady` cache-aware poll, cookbook, fuzz-corpus seeding, non-linux CI, auditlog `DetailedHealthRecorder`, dashboard rendering, samber/do upstream issue).~~ routed — distributed across TODO_LIST/ROADMAP through 2026-10-08 | Deprioritized behind the 1%/4% tiers.                                           | Yes.                      |
 
 Note: the `federation` package (item not mine) was NOT STARTED at my session's start and is now **shipped by the other session** (`d07952a`, `6c8eaff`).
 
@@ -109,51 +109,51 @@ Ranked by impact. Effort: S ≤30 min, M 30 min–2 h, L >2 h. Categories: Feat 
 
 | #  | Task                                                                                            | Impact   | Effort | Cat      |
 | -- | ----------------------------------------------------------------------------------------------- | -------- | ------ | -------- |
-| 1  | Implement `Aggregate.Healthz()` per `docs/aggregate-healthz-design.md`                          | Critical | S      | Feat     |
-| 2  | Implement `Aggregate.SourceStatuses()` per its design note                                      | Critical | S      | Feat     |
-| 3  | Apply `errors.Join` in `aggregate.New` (spike verified)                                         | High     | S      | Feat     |
-| 4  | Write + implement `WithTransitionHook` (alert on check state changes)                           | High     | M      | Feat     |
-| 5  | Add an OpenAPI ↔ golden-fixture lockstep check to CI                                            | High     | M      | Quality  |
-| 6  | Add a pre-commit gate (lint + test) so `master` cannot go red                                   | High     | S      | Process  |
-| 7  | Adopt a git worktree per agent session; document single-writer rule                             | High     | S      | Process  |
-| 8  | Consolidate `sevRank` test helper onto `health.Status.Rank()`                                   | Medium   | S      | Cleanup  |
-| 9  | Re-run new benchmarks with `-count=3`; record medians                                           | Medium   | S      | Quality  |
-| 10 | HARVEST this report into `TODO_LIST.md` (or ANNOTATE + delete resolved rows)                    | High     | S      | Docs     |
-| 11 | Run `nix run .#gates` end-to-end on the merged tree                                             | High     | S      | Quality  |
-| 12 | Run dprint/treefmt over edited markdown; decide CI role for dprint                              | Medium   | S      | Cleanup  |
-| 13 | Fix plan HTML stat-card count (7 → 11)                                                          | Low      | S      | Docs     |
-| 14 | Label new FEATURES benchmark rows as single-run if medians aren't taken                         | Low      | S      | Docs     |
-| 15 | Extend property tests to `Healthz` once implemented                                             | Medium   | S      | Quality  |
-| 16 | Add `SourceStatuses` property test (matches merged per-source roll-up)                          | Medium   | S      | Quality  |
-| 17 | Add `errors.Join` multi-error construction tests                                                | Medium   | S      | Quality  |
-| 18 | Write `WithTransitionHook` design note (severity mapping, overlapping batches, panic isolation) | High     | M      | Docs     |
-| 19 | Design + scaffold `healthtest` (fake batch, recording recorder, ready assertions)               | Medium   | M      | Feat     |
-| 20 | ADR: unify latency units (`total_latency_ms` vs `duration_ns`)                                  | Low      | S      | Docs     |
-| 21 | Make `AwaitReady` poll interval cache-aware                                                     | Low      | S      | Feat     |
-| 22 | Detailed-checks cookbook (self-timing + `NewWithDetailedCheck`)                                 | Low      | M      | Docs     |
-| 23 | Feed golden fixtures into the aggregate fuzz corpus                                             | Low      | S      | Quality  |
-| 24 | Resolve the `nolint_filter` "unknown linter erraudit" warning                                   | Low      | S      | Cleanup  |
-| 25 | Open the samber/do upstream issue for per-service batch timing                                  | Medium   | S      | Research |
-| 26 | Implement `DetailedHealthRecorder` in `samber-do-auditlog`                                      | Medium   | M      | Feat     |
-| 27 | Dashboard: render `since` as "failing since HH:MM"                                              | High     | L      | Feat     |
-| 28 | Dashboard: status-change timeline from `since`                                                  | High     | L      | Feat     |
-| 29 | Dashboard: adaptive `duration_ns` (µs/ms) rendering                                             | Medium   | M      | Feat     |
-| 30 | Add non-linux/amd64 CI job _or_ narrow the compatibility claim honestly                         | Medium   | M      | Process  |
-| 31 | Enable branch protection on `master` (ready-to-run command in TODO_LIST)                        | High     | S      | Process  |
-| 32 | Trigger the weekly `Fuzz (weekly long)` workflow once via dispatch                              | Medium   | S      | Process  |
-| 33 | Verify pkg.go.dev renders v0.2.0 (metadata fields, examples, aggregate)                         | Medium   | S      | Docs     |
-| 34 | Add federation to the README TOC and the "which probe" story                                    | Medium   | S      | Docs     |
-| 35 | Write a federation ADR (or promote `docs/federation-design.md`)                                 | Medium   | M      | Docs     |
-| 36 | Review `federation` for SSRF / timeout / response-size limits                                   | High     | M      | Bug      |
-| 37 | Add federation ↔ aggregate integration test (remote responses merged locally)                   | Medium   | M      | Quality  |
-| 38 | Extend OpenAPI to cover federation endpoints                                                    | Medium   | M      | Docs     |
-| 39 | Reduce doc split-brain: one canonical v0.3 planning doc, others link                            | Medium   | S      | Docs     |
-| 40 | Add `-count=N` race-suite stress in CI if flakiness stays zero                                  | Low      | S      | Quality  |
-| 41 | Benchmark the throttled live path under contention                                              | Low      | S      | Quality  |
-| 42 | Fuzz the throttle-window boundary under concurrency with a fake clock                           | Low      | M      | Quality  |
-| 43 | Write the ETag rejection rationale if not already covered by the other session                  | Low      | S      | Docs     |
-| 44 | Add a `CHANGELOG` "Unreleased" convention note for multi-session edits                          | Low      | S      | Docs     |
-| 45 | Establish a rule: an API change waits for its design note (now visible with `Healthz`)          | Medium   | S      | Process  |
+| 1  | ~~Implement `Aggregate.Healthz()` per `docs/aggregate-healthz-design.md`~~ done — shipped v0.4.0 | Critical | S      | Feat     |
+| 2  | ~~Implement `Aggregate.SourceStatuses()` per its design note~~ open — → ROADMAP Theme 7 | Critical | S      | Feat     |
+| 3  | ~~Apply `errors.Join` in `aggregate.New` (spike verified)~~ open — → ROADMAP Theme 7 | High     | S      | Feat     |
+| 4  | ~~Write + implement `WithTransitionHook` (alert on check state changes)~~ open — → ROADMAP raw ideas | High     | M      | Feat     |
+| 5  | ~~Add an OpenAPI ↔ golden-fixture lockstep check to CI~~ done — shipped v0.4.0 | High     | M      | Quality  |
+| 6  | ~~Add a pre-commit gate (lint + test) so `master` cannot go red~~ open — no pre-commit hook exists; the ungated-commit class recurred (2026-10-08 20:59 §d1) | High     | S      | Process  |
+| 7  | ~~Adopt a git worktree per agent session; document single-writer rule~~ partially — ad-hoc practice; never codified | High     | S      | Process  |
+| 8  | ~~Consolidate `sevRank` test helper onto `health.Status.Rank()`~~ done — sevRank deleted; tests call `Status.Rank()` (2026-10-08 docs-health sweep) | Medium   | S      | Cleanup  |
+| 9  | ~~Re-run new benchmarks with `-count=3`; record medians~~ open — TODO_LIST Hardening row (FEATURES bench re-verify) | Medium   | S      | Quality  |
+| 10 | ~~HARVEST this report into `TODO_LIST.md` (or ANNOTATE + delete resolved rows)~~ done — this 2026-10-08 sweep is the closure | High     | S      | Docs     |
+| 11 | ~~Run `nix run .#gates` end-to-end on the merged tree~~ done — standard practice since (every later session runs `.#gates`) | High     | S      | Quality  |
+| 12 | ~~Run dprint/treefmt over edited markdown; decide CI role for dprint~~ partially — dprint in devShell (2026-10-08); CI role undecided | Medium   | S      | Cleanup  |
+| 13 | ~~Fix plan HTML stat-card count (7 → 11)~~ NOT-DO — cosmetic, historical artifact | Low      | S      | Docs     |
+| 14 | ~~Label new FEATURES benchmark rows as single-run if medians aren't taken~~ done — FEATURES methodology notes | Low      | S      | Docs     |
+| 15 | ~~Extend property tests to `Healthz` once implemented~~ done — shipped v0.4.0 | Medium   | S      | Quality  |
+| 16 | ~~Add `SourceStatuses` property test (matches merged per-source roll-up)~~ open — → ROADMAP Theme 7 | Medium   | S      | Quality  |
+| 17 | ~~Add `errors.Join` multi-error construction tests~~ open — → ROADMAP Theme 7 | Medium   | S      | Quality  |
+| 18 | ~~Write `WithTransitionHook` design note (severity mapping, overlapping batches, panic isolation)~~ open — → ROADMAP raw ideas | High     | M      | Docs     |
+| 19 | ~~Design + scaffold `healthtest` (fake batch, recording recorder, ready assertions)~~ open — → ROADMAP raw ideas | Medium   | M      | Feat     |
+| 20 | ~~ADR: unify latency units (`total_latency_ms` vs `duration_ns`)~~ done — ADR-006 shipped v0.4.0 | Low      | S      | Docs     |
+| 21 | ~~Make `AwaitReady` poll interval cache-aware~~ open — → ROADMAP Theme 1 | Low      | S      | Feat     |
+| 22 | ~~Detailed-checks cookbook (self-timing + `NewWithDetailedCheck`)~~ done — docs/detailed-checks-cookbook.md shipped v0.4.0 | Low      | M      | Docs     |
+| 23 | ~~Feed golden fixtures into the aggregate fuzz corpus~~ open — → ROADMAP Theme 6 | Low      | S      | Quality  |
+| 24 | ~~Resolve the `nolint_filter` "unknown linter erraudit" warning~~ done — accept + document (2026-09-22 19:51 §a7; AGENTS Gotcha) | Low      | S      | Cleanup  |
+| 25 | ~~Open the samber/do upstream issue for per-service batch timing~~ done — #318 draft verified + ready (2026-09-22 21:01 §a14); posting owner-gated (TODO_LIST) | Medium   | S      | Research |
+| 26 | ~~Implement `DetailedHealthRecorder` in `samber-do-auditlog`~~ open — TODO_LIST Blocked row (premise corrected 2026-09-22 21:01 §d1) | Medium   | M      | Feat     |
+| 27 | ~~Dashboard: render `since` as "failing since HH:MM"~~ done — dashboard already implemented it (verified 2026-09-22 21:01 §a15) | High     | L      | Feat     |
+| 28 | ~~Dashboard: status-change timeline from `since`~~ done — dashboard already implemented it (verified 2026-09-22 21:01 §a15) | High     | L      | Feat     |
+| 29 | ~~Dashboard: adaptive `duration_ns` (µs/ms) rendering~~ done — dashboard already implemented it (verified 2026-09-22 21:01 §a15) | Medium   | M      | Feat     |
+| 30 | ~~Add non-linux/amd64 CI job _or_ narrow the compatibility claim honestly~~ done — claim narrowed honestly (README Compatibility: linux/amd64-only) | Medium   | M      | Process  |
+| 31 | ~~Enable branch protection on `master` (ready-to-run command in TODO_LIST)~~ done — branch protection ENABLED (gh api .protection, 2026-10-08) | High     | S      | Process  |
+| 32 | ~~Trigger the weekly `Fuzz (weekly long)` workflow once via dispatch~~ done — run 35756511889 success (2026-09-22 21:01 §a2); weekly schedule green | Medium   | S      | Process  |
+| 33 | ~~Verify pkg.go.dev renders v0.2.0 (metadata fields, examples, aggregate)~~ superseded — later releases verified end-to-end (v0.4.0, v0.5.0) | Medium   | S      | Docs     |
+| 34 | ~~Add federation to the README TOC and the "which probe" story~~ done — README federation section + TOC entry (2026-10-04 audit §a3) | Medium   | S      | Docs     |
+| 35 | ~~Write a federation ADR (or promote `docs/federation-design.md`)~~ NOT-DO — the design doc was promoted instead (docs/federation-design.md); no ADR in the series | Medium   | M      | Docs     |
+| 36 | ~~Review `federation` for SSRF / timeout / response-size limits~~ partially — threat model (docs/probe-threat-model.md) + 1 MiB cap + fetch timeout shipped v0.3.0; no dedicated SSRF audit | High     | M      | Bug      |
+| 37 | ~~Add federation ↔ aggregate integration test (remote responses merged locally)~~ open (minor) — not carried | Medium   | M      | Quality  |
+| 38 | ~~Extend OpenAPI to cover federation endpoints~~ open — → ROADMAP raw ideas | Medium   | M      | Docs     |
+| 39 | ~~Reduce doc split-brain: one canonical v0.3 planning doc, others link~~ done — planning docs consolidated; ROADMAP is the raw-idea hub | Medium   | S      | Docs     |
+| 40 | ~~Add `-count=N` race-suite stress in CI if flakiness stays zero~~ open — → ROADMAP Theme 6 | Low      | S      | Quality  |
+| 41 | ~~Benchmark the throttled live path under contention~~ open — → ROADMAP Theme 6 | Low      | S      | Quality  |
+| 42 | ~~Fuzz the throttle-window boundary under concurrency with a fake clock~~ open — → ROADMAP Theme 6 | Low      | M      | Quality  |
+| 43 | ~~Write the ETag rejection rationale if not already covered by the other session~~ done — docs/etag-rejection-design.md | Low      | S      | Docs     |
+| 44 | ~~Add a `CHANGELOG` "Unreleased" convention note for multi-session edits~~ NOT-DO — superseded by the CONTRIBUTING CHANGELOG-policy paragraph (2026-10-08) | Low      | S      | Docs     |
+| 45 | ~~Establish a rule: an API change waits for its design note (now visible with `Healthz`)~~ done — practiced: every shipped API since carries its design doc | Medium   | S      | Process  |
 
 > Items 1–12 are the true near-term set; the rest are ROADMAP fuel and need HARVEST routing rigor.
 
@@ -161,20 +161,20 @@ Ranked by impact. Effort: S ≤30 min, M 30 min–2 h, L >2 h. Categories: Feat 
 
 ## g) Top questions I cannot answer myself
 
-1. **Is the parallel agent session intentional, and which output is authoritative?**
+~~1. **Is the parallel agent session intentional, and which output is authoritative?**~~ answered by history — the federation session was real and both outputs shipped (v0.3.0); single-writer discipline still uncoded
    I observed another session committing `Status.Rank` and shipping a `federation` package
    into the same working tree while I edited it, including mixed commits. I cannot tell
    whether this is a deliberate multi-model comparison or an accident, nor whether I
    should keep editing, coordinate, or stand down. This blocks any further repo mutation
    on my side.
 
-2. **Where do the aggregate additions land in the release line?**
+~~2. **Where do the aggregate additions land in the release line?**~~ answered by history — aggregate additions shipped in v0.4.0, one minor after federation's v0.3.0
    `federation` was just committed as a v0.3.0 feature. The design notes I found
    (`errors.Join`, `SourceStatuses`, and my new `Healthz` note) all say "v0.3.0 candidate".
    If v0.3.0 is now the federation release, do the aggregate additions ship in it too,
    or move to v0.4? This decides whether I implement items 1–3 immediately.
 
-3. **When another session commits a lint-breaking change to `master`, should I fix it or
+~~3. **When another session commits a lint-breaking change to `master`, should I fix it or~~ answered by practice — repair-then-attribute became the norm (2026-10-08 20:59 §a11 attributes the concurrent session's fix); boundary still uncoded
    only report it?**
    I fixed `Status.Rank` (a one-line, behavior-preserving case) because `master` was red,
    which conflicts with the explicit "never touch changes you didn't author" rule. I need
@@ -230,3 +230,10 @@ BenchmarkTransitionTrackerStamp/checks=1/8/64 ~142 ns / ~507 ns / ~4.3 µs
 
 _Report is a point-in-time snapshot. Bring it current later with `docs-health` ANNOTATE;
 harvest section (f) with `docs-health` HARVEST._
+
+## Completion (2026-10-08 docs-health sweep)
+
+Every §b/§c/§f/§g item resolved inline (strikethrough + verdict); §a/§d/§e
+stay as the session's historical record. Surviving open work lives in
+TODO_LIST.md / ROADMAP.md. Archived `git mv` per the archive rule — see
+docs/status/archived/README.md.

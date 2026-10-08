@@ -15,6 +15,8 @@ import (
 // emptiness and keeps the aggregate startup latch open. The loud failure must
 // surface at the source's Start — never as a silent pass inside the merge.
 func TestSourceCriticalValidationComposesIntoAggregate(t *testing.T) {
+	t.Parallel()
+
 	healthy := health.NewChecks(map[string]health.CheckFunc{
 		"ok": func(context.Context) error { return nil },
 	})
@@ -26,11 +28,13 @@ func TestSourceCriticalValidationComposesIntoAggregate(t *testing.T) {
 	if !errors.Is(err, health.ErrUnknownCriticalService) {
 		t.Fatalf("misconfigured source Start() = %v, want ErrUnknownCriticalService", err)
 	}
+
 	misconfigured.Shutdown()
 
 	if err := healthy.Start(context.Background()); err != nil {
 		t.Fatalf("healthy source Start() = %v", err)
 	}
+
 	t.Cleanup(healthy.Shutdown)
 
 	agg, err := aggregate.New(
@@ -45,6 +49,7 @@ func TestSourceCriticalValidationComposesIntoAggregate(t *testing.T) {
 	if _, ok := resp.Checks["healthy/ok"]; !ok {
 		t.Fatalf("aggregate response missing healthy/ok, got %v", resp.Checks)
 	}
+
 	if len(resp.Checks) != 1 {
 		t.Fatalf(
 			"aggregate checks = %v, want only healthy/ok (a never-started source contributes emptiness)",

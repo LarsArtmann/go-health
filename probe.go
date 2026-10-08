@@ -509,13 +509,16 @@ func (p *Probe) Start(ctx context.Context) error {
 		// no-op on a probe that never ran.
 		if p.refreshInterval > 0 {
 			p.mu.Lock()
+
 			if p.cancel != nil {
 				p.cancel()
 				p.cancel = nil
 				p.wg.Done()
 			}
+
 			p.mu.Unlock()
 		}
+
 		return err
 	}
 

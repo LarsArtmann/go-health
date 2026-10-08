@@ -38,37 +38,52 @@ func FuzzBatteries(f *testing.F) {
 		if err != nil || code < 100 || code > 599 {
 			code = http.StatusOK
 		}
+
 		w.WriteHeader(code)
 	}))
 	f.Cleanup(srv.Close)
 
-	f.Fuzz(func(t *testing.T, path string, minFree uint64, maxAlloc uint64, httpPath string, status int, dsn string) {
-		ctx := t.Context()
+	f.Fuzz(
+		func(t *testing.T, path string, minFree uint64, maxAlloc uint64, httpPath string, status int, dsn string) {
+			ctx := t.Context()
 
-		if diskErr := checks.Disk(path, minFree)(ctx); diskErr != nil {
-			isDiskLow := errors.Is(diskErr, checks.ErrDiskLow)
-			isStatfs := strings.Contains(diskErr.Error(), "statfs")
-			if !isDiskLow && !isStatfs {
-				t.Fatalf("Disk(%q, %d): unexpected error surface: %v", path, minFree, diskErr)
+			if diskErr := checks.Disk(path, minFree)(ctx); diskErr != nil {
+				isDiskLow := errors.Is(diskErr, checks.ErrDiskLow)
+				isStatfs := strings.Contains(diskErr.Error(), "statfs")
+
+				if !isDiskLow && !isStatfs {
+					t.Fatalf("Disk(%q, %d): unexpected error surface: %v", path, minFree, diskErr)
+				}
 			}
-		}
 
-		if memErr := checks.Memory(maxAlloc)(ctx); memErr != nil && !errors.Is(memErr, checks.ErrMemoryHigh) {
-			t.Fatalf("Memory(%d): unexpected error surface: %v", maxAlloc, memErr)
-		}
-
-		url := srv.URL + httpPath + "?status=" + strconv.Itoa(status)
-		if httpErr := checks.HTTP(url, 250*time.Millisecond)(ctx); httpErr != nil && !errors.Is(httpErr, checks.ErrHTTPCheckFailed) {
-			t.Fatalf("HTTP(%q): unexpected error surface: %v", httpPath, httpErr)
-		}
-
-		db := openDB(t, dsn)
-		if dbErr := checks.Database(db, 250*time.Millisecond)(ctx); dsn == "fail" {
-			if !errors.Is(dbErr, checks.ErrDatabaseUnreachable) {
-				t.Fatalf("Database(%q): want ErrDatabaseUnreachable, got %v", dsn, dbErr)
+			if memErr := checks.Memory(
+				maxAlloc,
+			)(
+				ctx,
+			); memErr != nil &&
+				!errors.Is(memErr, checks.ErrMemoryHigh) {
+				t.Fatalf("Memory(%d): unexpected error surface: %v", maxAlloc, memErr)
 			}
-		} else if dbErr != nil {
-			t.Fatalf("Database(%q): unexpected error surface: %v", dsn, dbErr)
-		}
-	})
+
+			url := srv.URL + httpPath + "?status=" + strconv.Itoa(status)
+			if httpErr := checks.HTTP(
+				url,
+				250*time.Millisecond,
+			)(
+				ctx,
+			); httpErr != nil &&
+				!errors.Is(httpErr, checks.ErrHTTPCheckFailed) {
+				t.Fatalf("HTTP(%q): unexpected error surface: %v", httpPath, httpErr)
+			}
+
+			db := openDB(t, dsn)
+			if dbErr := checks.Database(db, 250*time.Millisecond)(ctx); dsn == "fail" {
+				if !errors.Is(dbErr, checks.ErrDatabaseUnreachable) {
+					t.Fatalf("Database(%q): want ErrDatabaseUnreachable, got %v", dsn, dbErr)
+				}
+			} else if dbErr != nil {
+				t.Fatalf("Database(%q): unexpected error surface: %v", dsn, dbErr)
+			}
+		},
+	)
 }

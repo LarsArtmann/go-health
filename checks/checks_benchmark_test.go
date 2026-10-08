@@ -16,6 +16,7 @@ func BenchmarkDisk(b *testing.B) {
 	check := checks.Disk(b.TempDir(), 1<<20)
 
 	b.ReportAllocs()
+
 	for b.Loop() {
 		if err := check(b.Context()); err != nil {
 			b.Fatalf("Disk: %v", err)
@@ -27,6 +28,7 @@ func BenchmarkMemory(b *testing.B) {
 	check := checks.Memory(1 << 40)
 
 	b.ReportAllocs()
+
 	for b.Loop() {
 		if err := check(b.Context()); err != nil {
 			b.Fatalf("Memory: %v", err)
@@ -43,6 +45,7 @@ func BenchmarkHTTP(b *testing.B) {
 	check := checks.HTTP(srv.URL, time.Second)
 
 	b.ReportAllocs()
+
 	for b.Loop() {
 		if err := check(b.Context()); err != nil {
 			b.Fatalf("HTTP: %v", err)
@@ -55,6 +58,7 @@ func BenchmarkDatabase(b *testing.B) {
 	check := checks.Database(db, time.Second)
 
 	b.ReportAllocs()
+
 	for b.Loop() {
 		if err := check(b.Context()); err != nil {
 			b.Fatalf("Database: %v", err)

@@ -32,7 +32,7 @@ Stamped where `serviceHealthCheck` already invokes the check — same shape as `
 
 ---
 
-<sub>Prepared with AI assistance (GLM-5.3-Flash via [Crush](https://github.com/coder/crush)); every claim was verified against the samber/do v2.1.0 source and master before commenting.</sub>
+<sub>Prepared with AI assistance (GLM-5.3-Flash via [Crush](https://github.com/charmbracelet/crush)); every claim was verified against the samber/do v2.1.0 source and master before commenting.</sub>
 
 ---
 

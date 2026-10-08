@@ -26,5 +26,5 @@ that break these need strong justification.
 
 **Checklist**
 
-- [ ] I checked [ROADMAP.md](../blob/master/ROADMAP.md) for existing plans
+- [ ] I checked [ROADMAP.md](../../blob/master/ROADMAP.md) for existing plans
 - [ ] I checked existing issues for duplicates

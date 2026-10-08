@@ -1,6 +1,7 @@
 package checks_test
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -76,13 +77,24 @@ func assertDiskSurface(t *testing.T, path string, minFree uint64, ctx context.Co
 func assertMemorySurface(t *testing.T, maxAlloc uint64, ctx context.Context) {
 	t.Helper()
 
-	if memErr := checks.Memory(maxAlloc)(ctx); memErr != nil && !errors.Is(memErr, checks.ErrMemoryHigh) {
+	if memErr := checks.Memory(
+		maxAlloc,
+	)(
+		ctx,
+	); memErr != nil &&
+		!errors.Is(memErr, checks.ErrMemoryHigh) {
 		t.Fatalf("Memory(%d): unexpected error surface: %v", maxAlloc, memErr)
 	}
 }
 
 // assertHTTPSurface pins HTTP's contract: nil or exactly ErrHTTPCheckFailed.
-func assertHTTPSurface(t *testing.T, baseURL string, status int, httpPath string, ctx context.Context) {
+func assertHTTPSurface(
+	t *testing.T,
+	baseURL string,
+	status int,
+	httpPath string,
+	ctx context.Context,
+) {
 	t.Helper()
 
 	url := baseURL + "?status=" + strconv.Itoa(status)
@@ -102,6 +114,7 @@ func assertDatabaseSurface(t *testing.T, dsn string, ctx context.Context) {
 
 	db := openDB(t, dsn)
 	dbErr := checks.Database(db, 250*time.Millisecond)(ctx)
+
 	switch {
 	case dsn == "fail":
 		if !errors.Is(dbErr, checks.ErrDatabaseUnreachable) {

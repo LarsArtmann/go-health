@@ -177,19 +177,21 @@
             };
           };
 
-          checks.format = config.treefmt.build.check self;
+          checks = {
+            format = config.treefmt.build.check self;
 
-          checks.openapi-lockstep = pkgs.runCommand "openapi-lockstep" { } ''
-            cd ${self}
-            ${lib.getExe openapiLockstep}
-            touch $out
-          '';
+            openapi-lockstep = pkgs.runCommand "openapi-lockstep" { } ''
+              cd ${self}
+              ${lib.getExe openapiLockstep}
+              touch $out
+            '';
 
-          checks.docs-drift-check = pkgs.runCommand "docs-drift-check" { } ''
-            cd ${self}
-            ${lib.getExe docsDriftCheck}
-            touch $out
-          '';
+            docs-drift-check = pkgs.runCommand "docs-drift-check" { } ''
+              cd ${self}
+              ${lib.getExe docsDriftCheck}
+              touch $out
+            '';
+          };
 
           devShells.default = pkgs.mkShell {
             packages = [
@@ -201,6 +203,11 @@
               pkgs.gotools
               pkgs.govulncheck
               pkgs.gosec
+              # BuildFlow runs these via `nix run nixpkgs#<tool>` when they
+              # are missing from the devShell (without project deps). Having
+              # them here keeps every quality tool project-pinned.
+              pkgs.dprint
+              pkgs.lychee
               pkgs.trash-cli
             ];
 

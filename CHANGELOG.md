@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `checks.Disk` no longer trips gosec G115: the `stat.Bsize` int64→uint64 conversion is guarded before the free-bytes multiplication. Pre-existing since the battery shipped in v0.5.0; caught by the `.#security` gate during the configured-off work.
+- A probe whose `Start()` fails critical-name validation no longer wedges the lifecycle: the refresh loop armed before the initial evaluation is now disarmed on the failure path. Since v0.5.0, such a probe blocked forever in `Shutdown()` (a WaitGroup counter nothing would release) and every retry-`Start` silently no-oped. Pinned by a lifecycle regression test and a new aggregate-composition integration test (a misconfigured source fails its own `Start` loudly; the aggregate keeps reporting it as never-started).
 
 ## [0.5.0] - 2026-10-05
 

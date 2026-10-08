@@ -30,25 +30,25 @@ All 17 plan tasks reached their defined done-state. Per-task:
 
 ## b) PARTIALLY DONE
 
-1. **auto-deduplicate (C06 target)** — currency goal NOT achieved for this repo. The repo was pre-broken by an unfinished refactor; I restored the stripped `v2 "encoding/json/v2"` imports (17 files), fixed watcher's import to `go-filewatcher/v2`, removed a wrong import in charm_logger (`36b6cb7`) — but the adapters/services still reference a moved `Duplicate` API. Its httputil pin state is moot (tidy dropped the dependency). Repair needs product intent.
-2. **etagmetrics correctness** — functional and released, but ships two defects (see d: HitRatio formula; broken godoc link). Tests green against the intended semantics; the semantics themselves need a v0.1.1.
-3. **games/SEC** — buildable and bumped, but tests/integration remains 51/65 red on the pre-existing `GET /docs` route collision (SEC's landing vs go-cqrs-lite docserver). Documented, not fixed — needs a product decision.
-4. **plugmarket/server + RedditParse** — bumps committed; each carries verified pre-existing test failures (TestServer; TestRegisterLLMClients + TestService_AnalyzeBatch_ContextCancellation).
-5. **C16 endpoint verification** — "verify endpoints" was done by build+suite-green only; I never ran either server and curled `/metrics`. No dedicated tests for the new wiring in blog/crush-daily.
-6. **Commit-message quality** — the auto-commit daemon won the race in ~10 repos; meaningful changes sit under `chore: auto-commit N changed file(s) (heuristic)` messages. I amended where the daemon committed before me (nsfw-classifier, GmbH, SEC's head commit) but could not rewrite mid-history without rebase. My own `d7d5b8cf` message title says "…; upgrade httputil to v1.2.0" while that commit only made resolution hermetic — the title overclaimed; the bump landed in `070f96f3`.
-7. **Push state** — everything except the httputil release tags is local-only. ~20 consumer repos are ahead of origin by 1–4 commits. Deliberate (plan authorized push only for releases), but the work is invisible to CI until pushed.
-8. **Baseline hygiene in auto-deduplicate** — my corrective commits were made on top of daemon-committed intermediate states; the history tells the story in the right order but the intermediate commit `0a74adb` contains a wrong import (watcher) that only `36b6cb7` fixes.
+~~1. **auto-deduplicate (C06 target)** — currency goal NOT achieved for this repo. The repo was pre-broken by an unfinished refactor; I restored the stripped `v2 "encoding/json/v2"` imports (17 files), fixed watcher's import to `go-filewatcher/v2`, removed a wrong import in charm_logger (`36b6cb7`) — but the adapters/services still reference a moved `Duplicate` API. Its httputil pin state is moot (tidy dropped the dependency). Repair needs product intent.~~ cross-repo (auto-deduplicate) — repair still needed there
+~~2. **etagmetrics correctness** — functional and released, but ships two defects (see d: HitRatio formula; broken godoc link). Tests green against the intended semantics; the semantics themselves need a v0.1.1.~~ cross-repo (etagmetrics) — v0.1.1 state unknown from this repo
+~~3. **games/SEC** — buildable and bumped, but tests/integration remains 51/65 red on the pre-existing `GET /docs` route collision (SEC's landing vs go-cqrs-lite docserver). Documented, not fixed — needs a product decision.~~ cross-repo (games/SEC)
+~~4. **plugmarket/server + RedditParse** — bumps committed; each carries verified pre-existing test failures (TestServer; TestRegisterLLMClients + TestService_AnalyzeBatch_ContextCancellation).~~ cross-repo (plugmarket/server, RedditParse)
+~~5. **C16 endpoint verification** — "verify endpoints" was done by build+suite-green only; I never ran either server and curled `/metrics`. No dedicated tests for the new wiring in blog/crush-daily.~~ cross-repo (blog, crush-daily) — endpoint runtime checks never ran
+~~6. **Commit-message quality** — the auto-commit daemon won the race in ~10 repos; meaningful changes sit under `chore: auto-commit N changed file(s) (heuristic)` messages. I amended where the daemon committed before me (nsfw-classifier, GmbH, SEC's head commit) but could not rewrite mid-history without rebase. My own `d7d5b8cf` message title says "…; upgrade httputil to v1.2.0" while that commit only made resolution hermetic — the title overclaimed; the bump landed in `070f96f3`.~~ accepted — daemon-race reality; amended where possible at the time
+~~7. **Push state** — everything except the httputil release tags is local-only. ~20 consumer repos are ahead of origin by 1–4 commits. Deliberate (plan authorized push only for releases), but the work is invisible to CI until pushed.~~ cross-repo/owner — push decisions live with each repo's owner flow
+~~8. **Baseline hygiene in auto-deduplicate** — my corrective commits were made on top of daemon-committed intermediate states; the history tells the story in the right order but the intermediate commit `0a74adb` contains a wrong import (watcher) that only `36b6cb7` fixes.~~ cross-repo (auto-deduplicate)
 
 ## c) NOT STARTED
 
-1. **CI verification** — zero checks of CI on any touched repo; explicitly including the plan's own gate "tag commit CI-green before publishing" for httputil v1.3.0/etagmetrics v0.1.0 (I verified the proxy, not CI — the v1.1.0 lesson was about exactly this).
-2. **vendorHash staleness audit** across every bumped repo with a flake (I repaired KeyCountdown, bank-sync (hook auto-fix), overview (via css rebuild chain) — no sweep for the rest: crush-daily, webphone, GmbH, Zlota44 (vendor is gitignored, hash?), blog, storbi, games/SEC…).
-3. **AGENTS.md updates** in touched repos (httputil: etagmetrics sub-module + release notes; SEC: hermetic-resolution pattern; auto-deduplicate: blocked-state record). go-health's AGENTS.md was dirty from the parallel federation session, so I deliberately did not touch it.
-4. **TODO_LIST harvest** — the four documented follow-ups (SEC /docs collision, auto-deduplicate refactor, crush-daily CLI tests, accountability BDD/lint debt) live in the execution record, not in TODO_LIST.md.
-5. **Lint/quality gates** beyond build+test on the touched repos (plan's gates were build+test; golangci-lint not run in most).
-6. **etagmetrics polish**: `Example` function (testableexamples), sub-module README decision, integration-docs example (Prometheus recorder), possible fuzz for path normalisation helpers in consumers.
-7. **etagmetrics adoption**: released but **zero consumers wired yet** (blog/crush-daily adopt `Metrics`, not the etag hooks) — currently a well-tested but unwired library (ghost-system adjacent; integration is the point of C14→C16).
-8. **Plan-doc correction**: C16/M65's named target "cqrs-htmx/dashboardui" is a component library, not a server; I substituted crush-daily but did not record the substitution in the plan file.
+~~1. **CI verification** — zero checks of CI on any touched repo; explicitly including the plan's own gate "tag commit CI-green before publishing" for httputil v1.3.0/etagmetrics v0.1.0 (I verified the proxy, not CI — the v1.1.0 lesson was about exactly this).~~ cross-repo — CI checks never run from this repo
+~~2. **vendorHash staleness audit** across every bumped repo with a flake (I repaired KeyCountdown, bank-sync (hook auto-fix), overview (via css rebuild chain) — no sweep for the rest: crush-daily, webphone, GmbH, Zlota44 (vendor is gitignored, hash?), blog, storbi, games/SEC…).~~ cross-repo — vendorHash audit never swept
+~~3. **AGENTS.md updates** in touched repos (httputil: etagmetrics sub-module + release notes; SEC: hermetic-resolution pattern; auto-deduplicate: blocked-state record). go-health's AGENTS.md was dirty from the parallel federation session, so I deliberately did not touch it.~~ partially — go-health AGENTS.md rebuilt since; the other repos are unknown
+~~4. **TODO_LIST harvest** — the four documented follow-ups (SEC /docs collision, auto-deduplicate refactor, crush-daily CLI tests, accountability BDD/lint debt) live in the execution record, not in TODO_LIST.md.~~ done — the go-health-relevant rows routed through later TODO_LIST sweeps (2026-09-22 21:01 → 2026-10-08)
+~~5. **Lint/quality gates** beyond build+test on the touched repos (plan's gates were build+test; golangci-lint not run in most).~~ cross-repo — lint gates beyond build+test never run
+~~6. **etagmetrics polish**: `Example` function (testableexamples), sub-module README decision, integration-docs example (Prometheus recorder), possible fuzz for path normalisation helpers in consumers.~~ cross-repo (etagmetrics)
+~~7. **etagmetrics adoption**: released but **zero consumers wired yet** (blog/crush-daily adopt `Metrics`, not the etag hooks) — currently a well-tested but unwired library (ghost-system adjacent; integration is the point of C14→C16).~~ cross-repo (etagmetrics)
+~~8. **Plan-doc correction**: C16/M65's named target "cqrs-htmx/dashboardui" is a component library, not a server; I substituted crush-daily but did not record the substitution in the plan file.~~ open (minor) — substitution still unrecorded in the plan file
 
 ## d) TOTALLY FUCKED UP
 
@@ -136,10 +136,18 @@ All 17 plan tasks reached their defined done-state. Per-task:
 
 ## g) THREE QUESTIONS I CANNOT ANSWER MYSELF
 
-1. **Push policy for the ~20 consumer repos**: the releases (httputil v1.3.0, etagmetrics/v0.1.0) are pushed because the plan authorized it, but every consumer-repo commit from this session sits local-only. Should I push all of them (and let their CIs run), only specific ones, or leave pushing to you?
-2. **auto-deduplicate's intended API**: the broken adapters reference `duplicate.TypeCode`, `duplicate.CodeDuplicate`, `file.Path.Value` — a surface that no longer exists anywhere. Should the repair re-home those symbols (i.e., the refactor was over-eager and they should be restored), or should the adapters be rewritten against the current `domain/types.Duplicate` shape? I cannot infer the intended end-state from the repo.
-3. **games/SEC `/docs` ownership**: SEC's own landing page and go-cqrs-lite catalog's docserver both claim `GET /docs`. Which should win — SEC keeps `/docs` and the docserver moves to a prefix (which one?), or the docserver keeps `/docs` and SEC's landing moves?
+~~1. **Push policy for the ~20 consumer repos**: the releases (httputil v1.3.0, etagmetrics/v0.1.0) are pushed because the plan authorized it, but every consumer-repo commit from this session sits local-only. Should I push all of them (and let their CIs run), only specific ones, or leave pushing to you?~~ owner question — push policy has stayed per-repo owner territory
+~~2. **auto-deduplicate's intended API**: the broken adapters reference `duplicate.TypeCode`, `duplicate.CodeDuplicate`, `file.Path.Value` — a surface that no longer exists anywhere. Should the repair re-home those symbols (i.e., the refactor was over-eager and they should be restored), or should the adapters be rewritten against the current `domain/types.Duplicate` shape? I cannot infer the intended end-state from the repo.~~ cross-repo (auto-deduplicate) — API intent unknowable here
+~~3. **games/SEC `/docs` ownership**: SEC's own landing page and go-cqrs-lite catalog's docserver both claim `GET /docs`. Which should win — SEC keeps `/docs` and the docserver moves to a prefix (which one?), or the docserver keeps `/docs` and SEC's landing moves?~~ cross-repo (games/SEC vs go-cqrs-lite) — route ownership undecided
 
 ---
 
 _Point-in-time snapshot — 2026-09-22 19:51 CEST. Waiting for instructions._
+
+## Completion (2026-10-08 docs-health sweep)
+
+§b/§c/§f/§g resolved inline. This session's work is almost entirely
+CROSS-REPO (httputil, etagmetrics, and ~15 consumer repos): those items are
+marked `cross-repo (<repo>)` — their live state belongs to each repo's own
+backlog, not go-health's TODO_LIST. §a/§d/§e stay as the historical record.
+Archived `git mv` per the archive rule — see docs/status/archived/README.md.

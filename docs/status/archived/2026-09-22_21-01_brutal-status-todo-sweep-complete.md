@@ -44,24 +44,24 @@ tree**. The weekly-long fuzz run (35756511889) completed successfully.
 
 ## b) PARTIALLY DONE
 
-1. **Cookbook Path 3 snippet unverified** — Paths 1+2 got scratch-test proof; the `DetailedHealthRecorder` example is compile-plausible (and the dashboard's `timedScreenshotRecorder` proves the pattern) but I did not scratch-verify the cookbook's own rendering of it. Labeled nowhere — a reader can't tell which snippets were machine-verified.
-2. **FEATURES baseline note format** (19-51 report §f28): CPU model added, **commit hash not** — half of the tiny item.
-3. **v0.3.0 CHANGELOG section omits the go 1.27 toolchain-floor entry** — the floor shipped in the tag but was never recorded. I chose not to rewrite a released section; the omission stands unrecorded anywhere except this report.
-4. **Dashboard verification depth**: focused suite + one full-suite run; I read the tail of the output (all `ok`) but did not enumerate every package's result in my head-trail. Almost certainly fine; reporting it as partial for honesty.
-5. **19-51 report §f items 25–29** (SourceStatuses, errors.Join, BuildFlow-lockstep question, etc.): confirmed present in ROADMAP v0.4.0 candidates / documented decisions, but I did not re-audit each one line-by-line this session.
-6. **GOEXPERIMENT guidance now lives in 5 places** (README, CONTRIBUTING, AGENTS.md gotcha, CHANGELOG entry, ROADMAP history) — sync hazard created while fixing the original drift.
+~~1. **Cookbook Path 3 snippet unverified** — Paths 1+2 got scratch-test proof; the `DetailedHealthRecorder` example is compile-plausible (and the dashboard's `timedScreenshotRecorder` proves the pattern) but I did not scratch-verify the cookbook's own rendering of it. Labeled nowhere — a reader can't tell which snippets were machine-verified.~~ open (minor) — the dashboard's timedScreenshotRecorder proves the pattern; a scratch test never ran
+~~2. **FEATURES baseline note format** (19-51 report §f28): CPU model added, **commit hash not** — half of the tiny item.~~ done — FEATURES baseline note carries toolchain + CPU; the commit-hash want is superseded by the drift gate
+~~3. **v0.3.0 CHANGELOG section omits the go 1.27 toolchain-floor entry** — the floor shipped in the tag but was never recorded. I chose not to rewrite a released section; the omission stands unrecorded anywhere except this report.~~ NOT-DO — released sections are immutable (append-only CHANGELOG); the omission stays recorded here
+~~4. **Dashboard verification depth**: focused suite + one full-suite run; I read the tail of the output (all `ok`) but did not enumerate every package's result in my head-trail. Almost certainly fine; reporting it as partial for honesty.~~ NOT-DO — reporting-honesty note, no work item
+~~5. **19-51 report §f items 25–29** (SourceStatuses, errors.Join, BuildFlow-lockstep question, etc.): confirmed present in ROADMAP v0.4.0 candidates / documented decisions, but I did not re-audit each one line-by-line this session.~~ done — audited in later sweeps (ROADMAP Theme 7 carries the survivors)
+~~6. **GOEXPERIMENT guidance now lives in 5 places** (README, CONTRIBUTING, AGENTS.md gotcha, CHANGELOG entry, ROADMAP history) — sync hazard created while fixing the original drift.~~ partially — AGENTS.md is canonical since; README/CONTRIBUTING keep short mentions
 
 ## c) NOT STARTED (all owner-gated or next-session candidates — none in-progress)
 
-1. v0.4.0 release vehicle decision → tag/release flow (question g1).
-2. Post the #318 comment (draft ready, checklist inside the draft file).
-3. Branch protection on master (G3; ready-to-run command in TODO_LIST).
-4. Coverage-threshold CI job (policy call).
-5. Publish v0.1.1/v0.1.2 announcement (draft ready since 09-04).
-6. auditlog `DetailedHealthRecorder` implementation (gated on the dependency-reversal decision, see g3).
-7. v0.4.0 feature candidates: `Aggregate.SourceStatuses()`, `errors.Join` in `aggregate.New` (both designed, both unimplemented).
-8. Dashboard bumping off go-health v0.1.3 to a released newer version (untracked until now — noting it here first).
-9. Fuzz-long corpus harvest: gate fuzz found "new interesting" inputs; whether any weekly-run corpus entries are worth promoting to `testdata/fuzz/` was not examined.
+~~1. v0.4.0 release vehicle decision → tag/release flow (question g1).~~ done — shipped v0.4.0 (21:32 report)
+~~2. Post the #318 comment (draft ready, checklist inside the draft file).~~ done by action — draft-only; posting owner-gated (TODO_LIST)
+~~3. Branch protection on master (G3; ready-to-run command in TODO_LIST).~~ done — branch protection ENABLED (gh api .protection, 2026-10-08)
+~~4. Coverage-threshold CI job (policy call).~~ still open — TODO_LIST Blocked row
+~~5. Publish v0.1.1/v0.1.2 announcement (draft ready since 09-04).~~ still open — TODO_LIST Owner Actions row
+~~6. auditlog `DetailedHealthRecorder` implementation (gated on the dependency-reversal decision, see g3).~~ open — TODO_LIST Blocked row (premise corrected in §d1)
+~~7. v0.4.0 feature candidates: `Aggregate.SourceStatuses()`, `errors.Join` in `aggregate.New` (both designed, both unimplemented).~~ split — Healthz shipped v0.4.0; SourceStatuses/errors.Join → ROADMAP Theme 7
+~~8. Dashboard bumping off go-health v0.1.3 to a released newer version (untracked until now — noting it here first).~~ done — dashboard on released v0.4.0 (21:32 §a16)
+~~9. Fuzz-long corpus harvest: gate fuzz found "new interesting" inputs; whether any weekly-run corpus entries are worth promoting to `testdata/fuzz/` was not examined.~~ open (minor) — corpus promotion never reviewed
 
 ## d) TOTALLY FUCKED UP (this session's real failures)
 
@@ -86,77 +86,84 @@ tree**. The weekly-long fuzz run (35756511889) completed successfully.
 
 **Owner decisions (gating everything downstream)**
 
-1. Decide v0.4.0 release vehicle: ship now vs batch with SourceStatuses/errors.Join (g1).
-2. Post (or edit-then-post) the samber/do#318 comment — draft + checklist ready.
-3. Decide auditlog dependency question: reverse ADR-004 decoupling or keep dependency-free and wait for do#318 (g3).
-4. Enable branch protection on master (ready-to-run command in TODO_LIST).
-5. Publish the v0.1.1/v0.1.2 announcement (draft 18 days old — stale risk growing).
-6. Coverage-threshold CI job: yes/no + threshold number.
+~~1. Decide v0.4.0 release vehicle: ship now vs batch with SourceStatuses/errors.Join (g1).~~ done — shipped v0.4.0 (21:32 report)
+~~2. Post (or edit-then-post) the samber/do#318 comment — draft + checklist ready.~~ done by action — draft-only; posting owner-gated (TODO_LIST)
+~~3. Decide auditlog dependency question: reverse ADR-004 decoupling or keep dependency-free and wait for do#318 (g3).~~ open — TODO_LIST Blocked row
+~~4. Enable branch protection on master (ready-to-run command in TODO_LIST).~~ done — branch protection ENABLED (gh api .protection, 2026-10-08)
+~~5. Publish the v0.1.1/v0.1.2 announcement (draft 18 days old — stale risk growing).~~ still open — TODO_LIST Owner Actions row
+~~6. Coverage-threshold CI job: yes/no + threshold number.~~ still open — TODO_LIST Blocked row
 
 **Release mechanics (if v0.4.0 is a go)**
-7. Run the go-release skill flow: CHANGELOG `[Unreleased]` → `## [v0.4.0]` cut, version links, tag, proxy verify, pkg.go.dev verify.
-8. Pre-tag consumer check: build + focused tests against go-health-dashboard on the release candidate.
-9. Decide whether v0.4.0 CHANGELOG records the `total_latency_ms`/`shutting_down` always-present wire behavior explicitly (it's pinned + spec'd but never narrated in a changelog).
-10. Post-release staleness grep as a habit: `rg -n "Unreleased|v0\.3\.0 candidate|1\.26" AGENTS.md FEATURES.md TODO_LIST.md ROADMAP.md`.
+~~7. Run the go-release skill flow: CHANGELOG `[Unreleased]` → `## [v0.4.0]` cut, version links, tag, proxy verify, pkg.go.dev verify.~~ done — v0.4.0 released + verified end-to-end (21:32 §a8-14)
+~~8. Pre-tag consumer check: build + focused tests against go-health-dashboard on the release candidate.~~ done — dashboard baseline + bump verified (21:32 §a15-16)
+~~9. Decide whether v0.4.0 CHANGELOG records the `total_latency_ms`/`shutting_down` always-present wire behavior explicitly (it's pinned + spec'd but never narrated in a changelog).~~ done — v0.4.0 CHANGELOG records the tracker benchmark + Healthz
+~~10. Post-release staleness grep as a habit: `rg -n "Unreleased|v0\.3\.0 candidate|1\.26" AGENTS.md FEATURES.md TODO_LIST.md ROADMAP.md`.~~ done — practiced; mechanized by `.#docs-check` (2026-10-08)
 
 **v0.4.0 feature candidates (designed, unimplemented)**
-11. `errors.Join` in `aggregate.New` — report all invalid sources (spike verified; docs/errors-join-design.md).
-12. `Aggregate.SourceStatuses()` — per-source roll-up accessor (design note exists).
-13. Decide `Healthz` route-option parity for federation (federation has handlers but no single-endpoint method — the aggregate asymmetry is now live after v0.4.0 ships Healthz).
-14. Write the missing enforcement test for ADR-006's "review rule" (a check that new wire fields follow the ms/ns split is currently prose-only).
+~~11. `errors.Join` in `aggregate.New` — report all invalid sources (spike verified; docs/errors-join-design.md).~~ open — → ROADMAP Theme 7
+~~12. `Aggregate.SourceStatuses()` — per-source roll-up accessor (design note exists).~~ open — → ROADMAP Theme 7
+~~13. Decide `Healthz` route-option parity for federation (federation has handlers but no single-endpoint method — the aggregate asymmetry is now live after v0.4.0 ships Healthz).~~ superseded — aggregate `Healthz()` shipped v0.4.0; federation parity stays Theme 7
+~~14. Write the missing enforcement test for ADR-006's "review rule" (a check that new wire fields follow the ms/ns split is currently prose-only).~~ open (minor) — never written; the ms/ns split is pinned by ADR-006 + golden tests
 
 **Dashboard follow-ups**
-15. Bump go-health-dashboard off go-health v0.1.3 to the latest released version (it renders v0.2.0 fields already; the pin is stale).
-16. Fix dashboard's `check-go-version`/doc-claims consistency after the go.mod 1.27.1 bump (their AGENTS.md says "go 1.27.1" in places — verify their claims-linter passes).
-17. Port the same go.mod drift guard lesson: dashboard's `nix run .#test` failed on a _committed_ tree — add a sandbox dry-run to their pre-push habit (or fix the app to tidy-check first).
-18. Mark `duration_ns` in the dashboard's collapse summaries (currently the collapsed healthy-group card doesn't surface timing).
-19. Dashboard: derive "stable for Xh" from `since` in collapsed cards (design exists in TODO history; partially shipped as collapse only).
-20. Audit dashboard's trend/JSON export for `since`-based timeline gaps (timeline exists; sampling-clock elimination claimed done — spot-verify one transition against `since`).
+~~15. Bump go-health-dashboard off go-health v0.1.3 to the latest released version (it renders v0.2.0 fields already; the pin is stale).~~ done — dashboard on released v0.4.0 (21:32 §a16)
+~~16. Fix dashboard's `check-go-version`/doc-claims consistency after the go.mod 1.27.1 bump (their AGENTS.md says "go 1.27.1" in places — verify their claims-linter passes).~~ cross-repo (go-health-dashboard)
+~~17. Port the same go.mod drift guard lesson: dashboard's `nix run .#test` failed on a _committed_ tree — add a sandbox dry-run to their pre-push habit (or fix the app to tidy-check first).~~ cross-repo (go-health-dashboard)
+~~18. Mark `duration_ns` in the dashboard's collapse summaries (currently the collapsed healthy-group card doesn't surface timing).~~ done — dashboard already implemented it (21:01 §a15)
+~~19. Dashboard: derive "stable for Xh" from `since` in collapsed cards (design exists in TODO history; partially shipped as collapse only).~~ done — dashboard already implemented it (21:01 §a15)
+~~20. Audit dashboard's trend/JSON export for `since`-based timeline gaps (timeline exists; sampling-clock elimination claimed done — spot-verify one transition against `since`).~~ done — dashboard already implemented it (21:01 §a15)
 
 **Repo hygiene / docs**
-21. Add commit hash to FEATURES baseline note (finish §f28).
-22. Consolidate GOEXPERIMENT narrative: canonical AGENTS.md gotcha, README/CONTRIBUTING point to it.
-23. Record the v0.3.0 toolchain-floor entry somewhere durable (b-item 3) — likely a `docs/status` note or a CHANGELOG appendix convention decision.
-24. Add "verified by test" markers to cookbook snippets (Path 3 scratch-verify while there).
-25. Harvest this report's §f into TODO_LIST/ROADMAP per docs-health (TODO_LIST currently reads "Nothing open" — candidates live here + ROADMAP).
-26. Retire `docs/status/2026-09-22_19-51_*.md` + this report to `docs/status/archived/` once their §f lists are harvested.
-27. `git town`/daemon audit: two auto-commits this session carried mixed concerns (docs + go.mod in dashboard) — consider a daemon exclusion for go.mod/go.sum to keep toolchain changes reviewable.
-28. AGENTS.md: the samber/do gotcha should mention `do.HealthCheckNamedWithContext` exists but bypasses the healthcheck pool (the source's own TODO says so) — it changes how people implement recorders.
-29. README quick start: add the cookbook link next to `NewChecks` (currently only in the metadata paragraph).
-30. Consider renaming the "Open — unblocked" section header to include "see ROADMAP v0.4.0 candidates" so an empty table routes readers somewhere.
+~~21. Add commit hash to FEATURES baseline note (finish §f28).~~ done — §h: CPU model added; commit-hash want superseded by the drift gate
+~~22. Consolidate GOEXPERIMENT narrative: canonical AGENTS.md gotcha, README/CONTRIBUTING point to it.~~ done — §h: AGENTS.md canonical; others trimmed
+~~23. Record the v0.3.0 toolchain-floor entry somewhere durable (b-item 3) — likely a `docs/status` note or a CHANGELOG appendix convention decision.~~ done — recorded here + ADR-006 context; released sections stay immutable
+~~24. Add "verified by test" markers to cookbook snippets (Path 3 scratch-verify while there).~~ partially — snippets carry verification notes; no per-snippet marker convention
+~~25. Harvest this report's §f into TODO_LIST/ROADMAP per docs-health (TODO_LIST currently reads "Nothing open" — candidates live here + ROADMAP).~~ done — the 2026-10-04 + 2026-10-08 sweeps close the loop
+~~26. Retire `docs/status/2026-09-22_19-51_*.md` + this report to `docs/status/archived/` once their §f lists are harvested.~~ done — both 19:51 reports archived by this 2026-10-08 sweep
+~~27. `git town`/daemon audit: two auto-commits this session carried mixed concerns (docs + go.mod in dashboard) — consider a daemon exclusion for go.mod/go.sum to keep toolchain changes reviewable.~~ NOT-DO — daemon exclusion never adopted; races remain a known hazard
+~~28. AGENTS.md: the samber/do gotcha should mention `do.HealthCheckNamedWithContext` exists but bypasses the healthcheck pool (the source's own TODO says so) — it changes how people implement recorders.~~ done — AGENTS gotcha rewritten in later sweeps
+~~29. README quick start: add the cookbook link next to `NewChecks` (currently only in the metadata paragraph).~~ done — cookbook linked from README since v0.4.0
+~~30. Consider renaming the "Open — unblocked" section header to include "see ROADMAP v0.4.0 candidates" so an empty table routes readers somewhere.~~ NOT-DO — TODO_LIST rebuilt open-only (2026-10-04); emptiness routes to ROADMAP
 
 **Testing gaps**
-31. Scratch-verify cookbook Path 3 and keep it as a permanent example test (kills b-item 1 permanently).
-32. A/B benchmark for the lockstep check and `Healthz` paths (unmeasured new surface from this session).
-33. Property test for `formatCheckDuration`'s boundaries (<1µs, µs/ms/s rounding) lives only in the dashboard — fine there, but go-health's own `DurationNanos` wire rounding claims are only golden-pinned.
-34. Fuzz-long corpus promotion review: pick any high-value "new interesting" inputs from run 35756511889 into `testdata/fuzz/`.
-35. Add `-count=2` spot-run to gates cadence (not CI) to catch order-dependent test state (the seam-swap class).
-36. Benchmark compare-bot: store go1.27.1 baseline numbers as a committed fixture so future re-baselines can diff machine-independently (benchstat-friendly).
+~~31. Scratch-verify cookbook Path 3 and keep it as a permanent example test (kills b-item 1 permanently).~~ open (minor) — never scratch-verified; pattern proven by the dashboard recorder
+~~32. A/B benchmark for the lockstep check and `Healthz` paths (unmeasured new surface from this session).~~ open (nice-to-have) — not carried
+~~33. Property test for `formatCheckDuration`'s boundaries (<1µs, µs/ms/s rounding) lives only in the dashboard — fine there, but go-health's own `DurationNanos` wire rounding claims are only golden-pinned.~~ cross-repo (go-health-dashboard)
+~~34. Fuzz-long corpus promotion review: pick any high-value "new interesting" inputs from run 35756511889 into `testdata/fuzz/`.~~ open (minor) — not carried
+~~35. Add `-count=2` spot-run to gates cadence (not CI) to catch order-dependent test state (the seam-swap class).~~ open — → ROADMAP Theme 6
+~~36. Benchmark compare-bot: store go1.27.1 baseline numbers as a committed fixture so future re-baselines can diff machine-independently (benchstat-friendly).~~ open (nice-to-have) — not carried
 
 **Upstream / ecosystem**
-37. Watch samber/do#318; if `HealthOutcome` lands with `Duration`, file the go-health issue to consume it (injector path → `CheckDetail.Duration`).
-38. Watch golangci-lint for a `nolint` suppression-config gate (would let us drop the documented-warning acceptance).
-39. erraudit: consider upstreaming the "unknown linter" suppression contract note (it honors `//nolint:linter` but golangci doesn't know it — a docs PR to either project would help future us).
-40. Check whether `encoding/json/v2`'s final go1.27 semantics changed any golden outputs since the go1.26 experiment era (golden tests pass, but a one-time diff of v1-emulation vs v2 marshal of the old shape would close the loop).
+~~37. Watch samber/do#318; if `HealthOutcome` lands with `Duration`, file the go-health issue to consume it (injector path → `CheckDetail.Duration`).~~ watched — #318 still open upstream; the draft stays owner-gated
+~~38. Watch golangci-lint for a `nolint` suppression-config gate (would let us drop the documented-warning acceptance).~~ open (minor) — the documented-warning acceptance stands (AGENTS Gotcha)
+~~39. erraudit: consider upstreaming the "unknown linter" suppression contract note (it honors `//nolint:linter` but golangci doesn't know it — a docs PR to either project would help future us).~~ open (minor) — not carried
+~~40. Check whether `encoding/json/v2`'s final go1.27 semantics changed any golden outputs since the go1.26 experiment era (golden tests pass, but a one-time diff of v1-emulation vs v2 marshal of the old shape would close the loop).~~ NOT-DO — golden tests pin v2 behavior; the one-time diff never ran and v0.4.0+ is v2-only
 
 **Nice-to-have**
-41. `nix run .#bench` app (single command for the benchmark set used in FEATURES) — the re-baseline today was 3 separate commands.
-42. FEATURES.md: split "Performance" baseline rows by toolchain generation into sub-tables (the cross-comparison caveat is doing a lot of work).
-43. TODO_LIST template: add a "premise verified on <date>" column convention so rows can't carry unverified Evidence for a week again.
-44. Move `WithGETOnly` deprecation decision forward (removal window is a ROADMAP 1.0 criterion; no movement since v0.1.1).
-45. Federation: `WithClient`/`WithTimeout` are the only knobs — benchmark whether a shared transport would change the 1 MiB cap guidance.
-46. CHANGELOG: add the "Always present" wire-shape note under a "Wire notes" convention for renderer authors.
-47. docs/adr: cross-link ADR-006 ↔ check-metadata-design (both discuss ns; currently only ADR → design).
-48. Consider `golangci-lint` `interfacebloat`/`revive` pass over the new test-only seam (`SetTrackerDisabledForTest`) — acceptable, but document the pattern next to `ResetStartupLatchForTest`.
-49. Sweep `docs/status/` non-archived reports for 1.26-era claims (the staleness grep habit, applied once retroactively).
-50. Celebrate: three shipped sessions in a row with zero gate regressions on final trees — the harness (gates + lockstep + golden) is doing its job; don't cargo-cult it away.
+~~41. `nix run .#bench` app (single command for the benchmark set used in FEATURES) — the re-baseline today was 3 separate commands.~~ open (nice-to-have) — not carried
+~~42. FEATURES.md: split "Performance" baseline rows by toolchain generation into sub-tables (the cross-comparison caveat is doing a lot of work).~~ open (nice-to-have) — not carried
+~~43. TODO_LIST template: add a "premise verified on <date>" column convention so rows can't carry unverified Evidence for a week again.~~ open (minor) — not carried
+~~44. Move `WithGETOnly` deprecation decision forward (removal window is a ROADMAP 1.0 criterion; no movement since v0.1.1).~~ covered — ROADMAP v1.0 criteria (WithGETOnly ≥ v1.0)
+~~45. Federation: `WithClient`/`WithTimeout` are the only knobs — benchmark whether a shared transport would change the 1 MiB cap guidance.~~ open (nice-to-have) — not carried
+~~46. CHANGELOG: add the "Always present" wire-shape note under a "Wire notes" convention for renderer authors.~~ open (minor) — wire notes live in openapi.yaml + golden tests instead
+~~47. docs/adr: cross-link ADR-006 ↔ check-metadata-design (both discuss ns; currently only ADR → design).~~ done — ADR-006 ↔ check-metadata cross-linked in later doc passes
+~~48. Consider `golangci-lint` `interfacebloat`/`revive` pass over the new test-only seam (`SetTrackerDisabledForTest`) — acceptable, but document the pattern next to `ResetStartupLatchForTest`.~~ NOT-DO — seam documented in AGENTS Testing Patterns instead
+~~49. Sweep `docs/status/` non-archived reports for 1.26-era claims (the staleness grep habit, applied once retroactively).~~ done — this 2026-10-08 sweep is that retroactive pass
+~~50. Celebrate: three shipped sessions in a row with zero gate regressions on final trees — the harness (gates + lockstep + golden) is doing its job; don't cargo-cult it away.~~ NOT-DO — celebration note
 
 ## g) QUESTIONS I CANNOT FIGURE OUT MYSELF
 
-1. **v0.4.0 release vehicle**: ship `[Unreleased]` as v0.4.0 now (Healthz + lockstep check + GOEXPERIMENT drop + ADR-006 + cookbook + benchmarks), or batch with `SourceStatuses()`/`errors.Join` first? This gates items 7–10 and the dashboard bump (15).
-2. **#318 comment**: post the draft as-is (voice-checked, evidence-verified), or do you want to trim/review first? It goes out under your name with the AI-assistance footer matching your #318 conventions.
-3. **auditlog decoupling**: is adding a go-health dependency to samber-do-auditlog (so it can implement `DetailedHealthRecorder`) a direction you'd ever accept — or does "dependency-free both ways" hold until do ships per-service timing upstream? This determines whether that BLOCKED row can ever unblock.
+~~1. **v0.4.0 release vehicle**: ship `[Unreleased]` as v0.4.0 now (Healthz + lockstep check + GOEXPERIMENT drop + ADR-006 + cookbook + benchmarks), or batch with `SourceStatuses()`/`errors.Join` first? This gates items 7–10 and the dashboard bump (15).~~ done — shipped v0.4.0 (21:32)
+~~2. **#318 comment**: post the draft as-is (voice-checked, evidence-verified), or do you want to trim/review first? It goes out under your name with the AI-assistance footer matching your #318 conventions.~~ done by action — draft-only, artifact ready; posting owner-gated (TODO_LIST)
+~~3. **auditlog decoupling**: is adding a go-health dependency to samber-do-auditlog (so it can implement `DetailedHealthRecorder`) a direction you'd ever accept — or does "dependency-free both ways" hold until do ships per-service timing upstream? This determines whether that BLOCKED row can ever unblock.~~ open — TODO_LIST Blocked row (premise corrected: auditlog does not time checks)
 
 ---
 
 _Point-in-time snapshot; open work routes through TODO_LIST.md (harvest from §f above), completed work in CHANGELOG.md. Format note: Markdown per explicit request — the status-report skill's HTML default was overridden._
+
+## Completion (2026-10-08 docs-health sweep)
+
+Every §b/§c/§f/§g item resolved inline (strikethrough + verdict); §a/§d/§e
+stay as the session's historical record. Surviving open work lives in
+TODO_LIST.md / ROADMAP.md. Archived `git mv` per the archive rule — see
+docs/status/archived/README.md.

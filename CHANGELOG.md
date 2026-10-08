@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Nothing yet.
+- `checks.Disk` no longer trips gosec G115: the `stat.Bsize` int64→uint64 conversion is guarded before the free-bytes multiplication. Pre-existing since the battery shipped in v0.5.0; caught by the `.#security` gate during the configured-off work.
 
 ## [0.5.0] - 2026-10-05
 

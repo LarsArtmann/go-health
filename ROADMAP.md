@@ -98,12 +98,13 @@ Raw ideas (quality polish, none scheduled):
 
 How the v0.x line matures.
 
-#### v0.5 candidates (feature-driven, unscheduled)
+#### Next-minor candidates (feature-driven, unscheduled)
 
 Scoped 2026-09-04 from the open idea inventory and carried forward; v0.3.0
 (federation + `NewChecks`), v0.4.0 (aggregate `Healthz()` + OpenAPI lockstep),
-and v0.4.1 shipped ahead of them, so both remain open. All are additive; each
-carries a written design:
+v0.4.1, and v0.5.0 (checks batteries + critical-name validation +
+`VersionHandler`) shipped ahead of them, so all three remain open. All are
+additive; each carries a written design:
 
 - `errors.Join` in `aggregate.New` — report all invalid sources instead of
   the first ([docs/errors-join-design.md](docs/errors-join-design.md), spike verified)

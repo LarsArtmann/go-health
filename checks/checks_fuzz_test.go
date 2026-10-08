@@ -47,43 +47,67 @@ func FuzzBatteries(f *testing.F) {
 		func(t *testing.T, path string, minFree uint64, maxAlloc uint64, httpPath string, status int, dsn string) {
 			ctx := t.Context()
 
-			if diskErr := checks.Disk(path, minFree)(ctx); diskErr != nil {
-				isDiskLow := errors.Is(diskErr, checks.ErrDiskLow)
-				isStatfs := strings.Contains(diskErr.Error(), "statfs")
-
-				if !isDiskLow && !isStatfs {
-					t.Fatalf("Disk(%q, %d): unexpected error surface: %v", path, minFree, diskErr)
-				}
-			}
-
-			if memErr := checks.Memory(
-				maxAlloc,
-			)(
-				ctx,
-			); memErr != nil &&
-				!errors.Is(memErr, checks.ErrMemoryHigh) {
-				t.Fatalf("Memory(%d): unexpected error surface: %v", maxAlloc, memErr)
-			}
-
-			url := srv.URL + httpPath + "?status=" + strconv.Itoa(status)
-			if httpErr := checks.HTTP(
-				url,
-				250*time.Millisecond,
-			)(
-				ctx,
-			); httpErr != nil &&
-				!errors.Is(httpErr, checks.ErrHTTPCheckFailed) {
-				t.Fatalf("HTTP(%q): unexpected error surface: %v", httpPath, httpErr)
-			}
-
-			db := openDB(t, dsn)
-			if dbErr := checks.Database(db, 250*time.Millisecond)(ctx); dsn == "fail" {
-				if !errors.Is(dbErr, checks.ErrDatabaseUnreachable) {
-					t.Fatalf("Database(%q): want ErrDatabaseUnreachable, got %v", dsn, dbErr)
-				}
-			} else if dbErr != nil {
-				t.Fatalf("Database(%q): unexpected error surface: %v", dsn, dbErr)
-			}
+			assertDiskSurface(t, path, minFree, ctx)
+			assertMemorySurface(t, maxAlloc, ctx)
+			assertHTTPSurface(t, srv.URL+httpPath, status, httpPath, ctx)
+			assertDatabaseSurface(t, dsn, ctx)
 		},
 	)
+}
+
+// assertDiskSurface pins Disk's contract: nil, ErrDiskLow, or the statfs
+// passthrough for inaccessible paths — never any other error.
+func assertDiskSurface(t *testing.T, path string, minFree uint64, ctx context.Context) {
+	t.Helper()
+
+	diskErr := checks.Disk(path, minFree)(ctx)
+	if diskErr == nil {
+		return
+	}
+
+	if errors.Is(diskErr, checks.ErrDiskLow) || strings.Contains(diskErr.Error(), "statfs") {
+		return
+	}
+
+	t.Fatalf("Disk(%q, %d): unexpected error surface: %v", path, minFree, diskErr)
+}
+
+// assertMemorySurface pins Memory's contract: nil or exactly ErrMemoryHigh.
+func assertMemorySurface(t *testing.T, maxAlloc uint64, ctx context.Context) {
+	t.Helper()
+
+	if memErr := checks.Memory(maxAlloc)(ctx); memErr != nil && !errors.Is(memErr, checks.ErrMemoryHigh) {
+		t.Fatalf("Memory(%d): unexpected error surface: %v", maxAlloc, memErr)
+	}
+}
+
+// assertHTTPSurface pins HTTP's contract: nil or exactly ErrHTTPCheckFailed.
+func assertHTTPSurface(t *testing.T, baseURL string, status int, httpPath string, ctx context.Context) {
+	t.Helper()
+
+	url := baseURL + "?status=" + strconv.Itoa(status)
+	if httpErr := checks.HTTP(
+		url,
+		250*time.Millisecond,
+	)(ctx); httpErr != nil &&
+		!errors.Is(httpErr, checks.ErrHTTPCheckFailed) {
+		t.Fatalf("HTTP(%q): unexpected error surface: %v", httpPath, httpErr)
+	}
+}
+
+// assertDatabaseSurface pins Database's contract: the "fail" DSN must yield
+// ErrDatabaseUnreachable; every other DSN returns nil — never another error.
+func assertDatabaseSurface(t *testing.T, dsn string, ctx context.Context) {
+	t.Helper()
+
+	db := openDB(t, dsn)
+	dbErr := checks.Database(db, 250*time.Millisecond)(ctx)
+	switch {
+	case dsn == "fail":
+		if !errors.Is(dbErr, checks.ErrDatabaseUnreachable) {
+			t.Fatalf("Database(%q): want ErrDatabaseUnreachable, got %v", dsn, dbErr)
+		}
+	case dbErr != nil:
+		t.Fatalf("Database(%q): unexpected error surface: %v", dsn, dbErr)
+	}
 }

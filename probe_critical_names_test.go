@@ -242,3 +242,39 @@ func TestStart_FailedStartLeavesNoBackgroundLoop(t *testing.T) {
 }
 
 var errConnectionRefused = errors.New("connection refused")
+
+// TestStart_CriticalValidationFailure_DisarmsLifecycle pins the failed-Start
+// cleanup: the refresh loop is armed before the initial evaluation (its lock
+// section doubles as the Start-idempotence marker), so a validation failure
+// must disarm it. Without the disarm, Shutdown blocks forever on a WaitGroup
+// counter nothing will release and every retry-Start silently no-ops on a
+// probe that never ran.
+func TestStart_CriticalValidationFailure_DisarmsLifecycle(t *testing.T) {
+	t.Parallel()
+
+	probe := newCriticalNamesProbe(t,
+		func(context.Context) map[string]error { return map[string]error{"ok": nil} },
+		[]string{"ghost"})
+
+	if err := probe.Start(t.Context()); !errors.Is(err, health.ErrUnknownCriticalService) {
+		t.Fatalf("first Start = %v, want ErrUnknownCriticalService", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		probe.Shutdown()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Shutdown did not return after a failed Start (WaitGroup left armed)")
+	}
+
+	if err := probe.Start(t.Context()); !errors.Is(err, health.ErrUnknownCriticalService) {
+		t.Fatalf(
+			"retry Start = %v, want ErrUnknownCriticalService (must re-validate, not silently no-op)",
+			err,
+		)
+	}
+}

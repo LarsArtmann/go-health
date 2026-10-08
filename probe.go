@@ -502,6 +502,20 @@ func (p *Probe) Start(ctx context.Context) error {
 	cancelEval()
 
 	if err := p.validateCriticalNames(resp); err != nil {
+		// The loop was armed before the initial evaluation (the same lock
+		// section doubles as the Start-idempotence marker). Disarm it, or a
+		// failed Start leaves a WaitGroup counter that Shutdown would wait
+		// on forever and a cancel that makes every retry-Start silently
+		// no-op on a probe that never ran.
+		if p.refreshInterval > 0 {
+			p.mu.Lock()
+			if p.cancel != nil {
+				p.cancel()
+				p.cancel = nil
+				p.wg.Done()
+			}
+			p.mu.Unlock()
+		}
 		return err
 	}
 

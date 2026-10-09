@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `Shutdown()` no longer blocks for the `WithShutdownGracePeriod` window on a probe whose lifecycle never started (`Start` not called, or failed critical-name validation): with nothing to drain, the window was dead time — up to the full grace duration between a failed `Start` and the retry. Probes whose `Start` succeeded still honor the window in every mode, including live mode (`WithRefreshInterval(0)`), where the block is the caller's drain window even though no refresh loop exists. Pinned by `TestShutdown_GraceWindowSkippedWhenLifecycleNeverStarted` (never-started, failed-Start, and live-mode-honors-window cases).
+
 ## [v0.5.1] - 2026-10-09
 
 ### Added

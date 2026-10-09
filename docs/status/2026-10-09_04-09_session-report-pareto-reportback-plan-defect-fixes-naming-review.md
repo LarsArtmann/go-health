@@ -108,7 +108,7 @@ local ahead 2.
 
 ## f) UP TO 50 THINGS TO GET DONE NEXT
 
-*Immediate session follow-ups (no approval needed except where marked):*
+_Immediate session follow-ups (no approval needed except where marked):_
 
 1. Owner ruling g1 (this report) → push `eb74fe1`+`660f046` (naming review) if approved.
 2. Owner ruling g2 (this report) → fix C1–C3 + H1–H4 in the plan now, or batch into the post-approval revision.
@@ -119,7 +119,7 @@ local ahead 2.
 7. Confirm who/what pushed `01d6954` (fold into g1 evidence).
 8. Batch M/L naming style passes into the next plan revision (M1–M9, L2–L3).
 
-*Pareto plan execution upon approval — 1% tier (51% of the result):*
+_Pareto plan execution upon approval — 1% tier (51% of the result):_
 
 9. A01 remote lineage + branch-protection ruleset verification (B001–B003).
 10. A02 full local gate bar on the exact tree (B004–B006).
@@ -129,7 +129,7 @@ local ahead 2.
 14. A06 v0.5.1 release train (B017–B023, gated g3).
 15. A07 BuildFlow full-mode gate to exit 0 (B024–B028).
 
-*4% tier (→64%):*
+_4% tier (→64%):_
 
 16. A08 BuildFlow budget re-review (B029–B031).
 17. A09 go-health-dashboard full suite vs released tag (B032–B035).
@@ -141,7 +141,7 @@ local ahead 2.
 23. A15 v0.5.0 announcement publish (B054, owner).
 24. A16 v0.1.1/v0.1.2 announcement publish (B055, owner).
 
-*20% tier (→80%):*
+_20% tier (→80%):_
 
 25. A17 makezero `always` contract pinned (B056–B058).
 26. A18 stale golangci LSP fixed or disabled (B059–B060).
@@ -152,7 +152,7 @@ local ahead 2.
 31. A23 mergeResponses primitive sketch + corpus fixture (B075–B078).
 32. A24 OpenAPI Healthz sentence + federation coverage (B079–B082).
 
-*Tail (→100%):*
+_Tail (→100%):_
 
 33. A25 `errors.Join` in aggregate.New (B083–B084).
 34. A26 `Aggregate.SourceStatuses()` (B085–B086).
@@ -166,12 +166,12 @@ local ahead 2.
 42. A34 docs hygiene batch + link sweep (B100–B101).
 43. A35 owner-blocked parking + polish batch (B102–B111).
 
-*Calendar:*
+_Calendar:_
 
 44. Watch fuzz-long 4-target run 2026-10-12 + corpus verify (B112).
 45. Post-answer docs-health re-audit after g1–g3 land (B113).
 
-*Standing hygiene:*
+_Standing hygiene:_
 
 46. Keep master's ahead-count visible in every report until 0.
 47. Doanalyzerv2 floor stays BLOCKED until samber-linter release or BuildFlow rebuild (per TODO_LIST evidence).
@@ -192,5 +192,5 @@ local ahead 2.
 
 ---
 
-*All counts in this report derived from the filesystem this session (grep/git), per the plan's own DoD.
-Nothing outside this session's work was re-researched.*
+_All counts in this report derived from the filesystem this session (grep/git), per the plan's own DoD.
+Nothing outside this session's work was re-researched._

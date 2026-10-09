@@ -8,12 +8,12 @@
 
 ## Headline
 
-| Metric | Start of session | End of session |
-| --- | --- | --- |
-| BuildFlow full run | ✗ exit 69, 5 steps failed | ✓ exit 0, 0 steps failed |
-| Gating findings | go-auto-upgrade OVER budget (7 > 6) | 7 findings, within budget 8 |
+| Metric              | Start of session                                                            | End of session                                                           |
+| ------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| BuildFlow full run  | ✗ exit 69, 5 steps failed                                                   | ✓ exit 0, 0 steps failed                                                 |
+| Gating findings     | go-auto-upgrade OVER budget (7 > 6)                                         | 7 findings, within budget 8                                              |
 | Non-gating warnings | go-version-auto-configure (1), AGENTS.md size (221 > 220), binary freshness | go-version-auto-configure (1, documented), binary freshness (unresolved) |
-| Test suite | test-race blocked upstream in the DAG (never ran) | green, incl. one fixed load-flake |
+| Test suite          | test-race blocked upstream in the DAG (never ran)                           | green, incl. one fixed load-flake                                        |
 
 ---
 
@@ -73,9 +73,10 @@
 
 ## f) UP TO 50 THINGS TO GET DONE NEXT
 
-*(brainstorm, sorted roughly by impact; most items beyond ~15 are ROADMAP fuel, not commitments)*
+_(brainstorm, sorted roughly by impact; most items beyond ~15 are ROADMAP fuel, not commitments)_
 
 **Root-fix cascade (highest impact, blocked on #1):**
+
 1. Release samber-linter v0.4.1 with major.minor-only `go` directive (local checkout already complies).
 2. `go get github.com/larsartmann/samber-linter@v0.4.1` in branching-flow; confirm its directive re-lowers to `go 1.27`.
 3. Re-lower `tools/doanalyzerv2/go.mod` to `go 1.27`; confirm tidy keeps it.
@@ -147,4 +148,4 @@
 
 ---
 
-*Point-in-time snapshot 2026-10-09 02:15 CEST. Section (f) is HARVEST-ready for docs-health on instruction.*
+_Point-in-time snapshot 2026-10-09 02:15 CEST. Section (f) is HARVEST-ready for docs-health on instruction._

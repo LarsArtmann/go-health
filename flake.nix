@@ -40,7 +40,21 @@
           # same as go-cqrs-lite/cqrs-htmx) and GOTOOLCHAIN=local (sandbox
           # forbids toolchain downloads) cannot satisfy it under go_1_26,
           # so the toolchain is nixpkgs' go_1_27.
-          goPkg = pkgs.go_1_27;
+          #
+          # Patch-level pin to 1.27.2 (2026-10-09): nixpkgs' go_1_27 was
+          # still 1.27.1 while the vuln DB shipped eight stdlib advisories
+          # (GO-2026-6603..6617, net/http, http2, textproto, crypto/tls —
+          # reachable via federation's HTTP client) fixed only in 1.27.2,
+          # which turned the Security gate and every CI run red. The
+          # overrideAttrs bump rebuilds the same nixpkgs derivation against
+          # the 1.27.2 source; drop it when nixpkgs' go_1_27 ships ≥1.27.2.
+          goPkg = pkgs.go_1_27.overrideAttrs (old: rec {
+            version = "1.27.2";
+            src = pkgs.fetchurl {
+              url = "https://go.dev/dl/go${version}.src.tar.gz";
+              hash = "sha256-A0ldorpkiU1A9cSZLklFT6eLUGkGBP+Stq//UIG3bmI=";
+            };
+          });
 
           # encoding/json/v2 is stable on go1.27: no GOEXPERIMENT is needed
           # anywhere (verified 2026-09-22: build + vet + full suite green

@@ -48,7 +48,7 @@
           # which turned the Security gate and every CI run red. The
           # overrideAttrs bump rebuilds the same nixpkgs derivation against
           # the 1.27.2 source; drop it when nixpkgs' go_1_27 ships ≥1.27.2.
-          goPkg = pkgs.go_1_27.overrideAttrs (old: rec {
+          goPkg = pkgs.go_1_27.overrideAttrs (_old: rec {
             version = "1.27.2";
             src = pkgs.fetchurl {
               url = "https://go.dev/dl/go${version}.src.tar.gz";

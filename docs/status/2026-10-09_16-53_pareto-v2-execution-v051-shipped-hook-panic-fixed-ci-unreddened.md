@@ -15,7 +15,7 @@
 
 ### Code: the hook-panic hole closed (A04+A05, rode the release)
 
-- **Design note** (panic-recovery-design.md addendum): the hook is an *observation* surface — it runs after evidence collection completes — so fail-closed (the batch-surface rule) would assert unhealthiness the probe knows to be false. Decision: **recover + non-critical `evaluation-hook` warn row** (new sentinel `ErrPanicDuringEvaluationHook`) + **defensive Checks clone** so a hook can never corrupt the served/cached response. The "recovered panics never warn" rule is scope-amended to the data-collection surface.
+- **Design note** (panic-recovery-design.md addendum): the hook is an _observation_ surface — it runs after evidence collection completes — so fail-closed (the batch-surface rule) would assert unhealthiness the probe knows to be false. Decision: **recover + non-critical `evaluation-hook` warn row** (new sentinel `ErrPanicDuringEvaluationHook`) + **defensive Checks clone** so a hook can never corrupt the served/cached response. The "recovered panics never warn" rule is scope-amended to the data-collection surface.
 - **Implementation** (probe.go): `invokeEvaluationHook` with the clone, recover, synthetic row, `Rank`-based roll-up raise (fail never lowered). **Five tests** green incl. loop-survival under a permanently panicking hook and mutation-isolation; race clean; CHANGELOG/AGENTS/doc.go synced.
 
 ### CI un-reddened: two supply-chain fires the gates caught (A02)
@@ -50,7 +50,7 @@
 - **A06** — release shipped, but **pkg.go.dev render + `@latest` flip + CI-green-on-tag verification not done** (B021 second half, B008 completion).
 - **A07 BuildFlow** — B024 green (govalid-generate exit 0, skew cleared); the BuildFlow rebuild (B026) was dispatched to a background shell **and never collected**; B025 full run, B027 content verification, B028 AGENTS update not done.
 - **A19** — script + table + red-path done; **CI workflow file not written** (deliberately sequenced after the consumer trains so its first run is green).
-- **A32** — the grace × failed-Start **fix is written but UNVERIFIED**: `probe.go` carries an uncommitted edit (skip the grace sleep when no loop is armed — peek under `p.mu` before sleeping, re-arm-during-drain semantics preserved) with **no test, no build, no CHANGELOG yet**. The daemon has not committed it at report time (` M probe.go`).
+- **A32** — the grace × failed-Start **fix is written but UNVERIFIED**: `probe.go` carries an uncommitted edit (skip the grace sleep when no loop is armed — peek under `p.mu` before sleeping, re-arm-during-drain semantics preserved) with **no test, no build, no CHANGELOG yet**. The daemon has not committed it at report time (`M probe.go`).
 - **Background jobs never collected:** CI verdicts on `4476cd0` (Security/Test were in_progress at last look) and on the release commit; the BuildFlow nix build. Three dispatches, zero reads.
 
 ---
@@ -65,7 +65,7 @@ A08 (budget re-review), A09 (dashboard suite vs v0.5.1), A10 (consumer train —
 
 1. **An unverified code edit is sitting in the tree** (A32). The status demand interrupted mid-task — but the "test immediately after each modification" rule doesn't care about interruptions. First action on resume: build+test+lint it or revert it. No exceptions.
 2. **Three background jobs dispatched, zero collected.** The CI watch on 4476cd0, the CI watch on the release commit, and the BuildFlow rebuild all finished (or failed) unseen. Dispatching and forgetting is the exact "documented nearby ≠ executed" anti-pattern the 00:30 sweep confessed.
-3. **Verify-before-claiming miss:** I wrote "zero false literals" into servicename-design.md *before* reading the scanner's dry-run output — which contained a false positive (go-appkit `opts ...health.Option` spread). Caught and corrected minutes later, but the claim was typed first. The rule is: output first, prose second.
+3. **Verify-before-claiming miss:** I wrote "zero false literals" into servicename-design.md _before_ reading the scanner's dry-run output — which contained a false positive (go-appkit `opts ...health.Option` spread). Caught and corrected minutes later, but the claim was typed first. The rule is: output first, prose second.
 4. **Wrong first implementation of fleet-skew:** raw.githubusercontent fetches (10 false "no pin" WARNs — private repos 404). I even briefly treated the garbage table's exit 0 as a pass. Second implementation (gh api, live default-branch resolution) is the one that works. Private-by-default must be the fleet tooling assumption from now on.
 5. **Release-commit message inaccuracy:** the daemon raced my `git add` and captured CHANGELOG.md into its own commit; my "Release v0.5.1" commit stat shows only README/AGENTS while its message claims the CHANGELOG cut. The tagged tree is correct (verified via `git show v0.5.1:CHANGELOG.md`) — but the message lies about its own contents. Add files immediately after editing, or `git add` in the same breath.
 6. **wsl_v5 whack-a-mole (3 lint rounds):** I invented a closure idiom instead of matching `recoverHealthChecks`' assignment shape from the start; the surviving `_ = invoked()` is a wart future readers will puzzle over.

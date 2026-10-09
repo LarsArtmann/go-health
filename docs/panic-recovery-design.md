@@ -99,7 +99,7 @@ panicking hook unwinds whatever frame called `Evaluate` —
 The fail-closed rule above binds surfaces where a panic interrupts **evidence
 collection**: services after the panic point were never checked, so the result
 map is incomplete and must not be laundered into a 200. The hook runs **after**
-the response is fully built and classified. A hook panic means the *observer*
+the response is fully built and classified. A hook panic means the _observer_
 (metrics/alerting) failed, not the health evaluation: every service was
 checked and graded before the hook ran. Fail-closed here would assert
 unhealthiness the probe knows to be false — readiness 503, traffic drained,
@@ -121,7 +121,7 @@ stay 200).
    broke. The "recovered panics never map to warn" rule is about interrupted
    evidence; here the evidence is complete.
 3. **Recover + non-critical synthetic row (warn).** The panic is recovered on
-   every path and made *visible* instead of fatal or invisible: the response
+   every path and made _visible_ instead of fatal or invisible: the response
    gains a synthetic `"evaluation-hook"` check graded `warn` whose error
    wraps the new sentinel `ErrPanicDuringEvaluationHook`, and the roll-up is
    raised to `warn` at minimum (never lowered: `fail` stays `fail`).

@@ -772,7 +772,11 @@ func TestShutdown_GraceWindowSkippedWhenLifecycleNeverStarted(t *testing.T) {
 		<-done
 
 		if elapsed := time.Since(startedAt); elapsed < window {
-			t.Fatalf("live-mode Shutdown blocked for %v; want at least the %v window", elapsed, window)
+			t.Fatalf(
+				"live-mode Shutdown blocked for %v; want at least the %v window",
+				elapsed,
+				window,
+			)
 		}
 	})
 }

@@ -76,7 +76,7 @@ therefore applies uniformly to **all** construction paths.
 | webphone (app.go:216, server.go:311) | mixed                     | `sqlite`, `blob-dir`                                              | yes                       |
 
 No call site found where a critical name legitimately never appears in a
-batch. Environment-conditional sets (CV) toggle _which_ names are passed, not
+batch. Environment-conditional sets toggle _which_ names are passed, not
 whether they are registered — the guard is safe.
 
 **Escape hatch:** none shipped in v0.4.x. A consumer genuinely blocked by

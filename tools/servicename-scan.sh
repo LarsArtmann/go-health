@@ -16,18 +16,18 @@ for repo in "$@"; do
 	rg -n --type go -g '!*_test.go' -g '!vendor' \
 		-e 'WithCriticalServices\(' -e 'health\.NewChecks\(' -e 'NewWithHealthCheck\(' \
 		"$repo" 2>/dev/null |
-	while IFS= read -r line; do
-		file=${line%%:*}
-		rest=${line#*:}
-		lineno=${rest%%:*}
-		text=${rest#*:}
-		breaks=""
-		case "$text" in
+		while IFS= read -r line; do
+			file=${line%%:*}
+			rest=${line#*:}
+			lineno=${rest%%:*}
+			text=${rest#*:}
+			breaks=""
+			case "$text" in
 			*"...)"*) breaks="SPREAD([]string -> []ServiceName)" ;;
 			*GetType\[*) breaks="TYPED-GETTER(wrap in ServiceName(...))" ;;
-		esac
-		if [ -n "$breaks" ]; then
-			printf '%s\t%s:%s\t%s\t%s\n' "$name" "${file#"$repo"/}" "$lineno" "$breaks" "$text"
-		fi
-	done
+			esac
+			if [ -n "$breaks" ]; then
+				printf '%s\t%s:%s\t%s\t%s\n' "$name" "${file#"$repo"/}" "$lineno" "$breaks" "$text"
+			fi
+		done
 done

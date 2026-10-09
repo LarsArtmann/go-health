@@ -64,7 +64,7 @@ What CI actually tests on every push — not what merely compiles:
 
 | Dimension | Tested                                                 |
 | --------- | ------------------------------------------------------ |
-| Go        | 1.27.x — CI runs go 1.27.1 (Nix-pinned) on linux/amd64 |
+| Go        | 1.27.x — CI runs go 1.27.2 (Nix-pinned) on linux/amd64 |
 | OS/arch   | linux/amd64 — the only configuration CI tests          |
 | samber/do | v2.1.0 (the pinned `go.mod` dependency)                |
 | Aggregate | same module version, tested in the same suite          |
@@ -79,8 +79,12 @@ so those jobs would assert nothing.
 Building requires Go 1.27+: the library imports `encoding/json/v2`, which is
 stable stdlib there (go.mod's `go 1.27` directive excludes older toolchains).
 No `GOEXPERIMENT` is needed anywhere — the flake sets up the toolchain, and
-bare `go` commands just work on a 1.27+ host. Verified against go1.27.1:
+bare `go` commands just work on a 1.27+ host. Verified against go1.27.2:
 the library builds and the full test suite passes with `GOEXPERIMENT` unset.
+CI pins 1.27.2 because the October 2026 stdlib advisories (GO-2026-6603
+through -6617, net/http and crypto/tls) are fixed only there. On an older
+local toolchain, `GOTOOLCHAIN=auto` (the default) downloads what go.mod
+demands — nothing to configure; a hermetic pin lives in the Nix flake.
 
 Older Go toolchains are unsupported. Other samber/do v2.x versions are
 expected to work but are not covered by CI — if you bump it, run the test

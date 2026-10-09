@@ -145,7 +145,11 @@ func WithCriticalServices(names ...string) Option {
 // [Probe.Evaluate] with the fully classified response. Use it to feed metrics
 // or alerting without polling. The hook must be fast and must not block: it
 // runs on the evaluation path (background loop and live requests). The hook
-// receives the response by value and must not retain or mutate its Checks map.
+// receives a copy of the response with its own Checks map, so it can neither
+// corrupt the served response nor rely on aliasing it. A hook that panics is
+// recovered: the evaluation proceeds and the response carries a synthetic
+// non-critical "evaluation-hook" check (warn), wrapping
+// [ErrPanicDuringEvaluationHook]. See docs/panic-recovery-design.md.
 func WithEvaluationHook(fn func(Response)) Option {
 	return func(c *config) { c.evalHook = fn }
 }
@@ -433,6 +437,15 @@ var ErrUnknownCriticalService = errors.New("health: unknown critical service")
 // a recovered panic rolls the response up to fail, never to warn.
 var ErrPanicDuringHealthCheck = errors.New("health: panic during health check")
 
+// ErrPanicDuringEvaluationHook is wrapped into the synthetic
+// "evaluation-hook" check error when a WithEvaluationHook callback panics and
+// the panic is recovered. Match with errors.Is to detect observer failure
+// specifically. Unlike a batch panic, a hook panic never fails the roll-up:
+// the evaluation completed before the hook ran, so the response is degraded
+// to warn at most (a visible "evaluation-hook" row), never to fail. See
+// docs/panic-recovery-design.md, "the evaluation-hook surface".
+var ErrPanicDuringEvaluationHook = errors.New("health: panic during evaluation hook")
+
 // Validate checks that the Probe configuration is internally consistent.
 // Returns nil when the configuration is safe to use.
 //
@@ -659,10 +672,43 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 	resp.Timestamp = p.now()
 
 	if p.evalHook != nil {
-		p.evalHook(resp)
+		if hookErr := invokeEvaluationHook(p.evalHook, resp); hookErr != nil {
+			resp.Checks["evaluation-hook"] = Check{
+				Status: StatusWarn,
+				Error:  hookErr.Error(),
+			}
+			if resp.Status.Rank() > StatusWarn.Rank() {
+				resp.Status = StatusWarn
+			}
+		}
 	}
 
 	return resp
+}
+
+// invokeEvaluationHook calls fn with a defensive copy of resp: the struct by
+// value and a fresh clone of the Checks map, so a misbehaving hook can
+// neither corrupt the response the probe serves and caches nor observe later
+// mutations of it. A panicking hook is recovered and reported as an error
+// wrapping [ErrPanicDuringEvaluationHook]; the caller degrades the response,
+// never the process. See docs/panic-recovery-design.md.
+func invokeEvaluationHook(fn func(Response), resp Response) (hookErr error) {
+	hookView := resp
+	hookView.Checks = make(map[string]Check, len(resp.Checks))
+	for name, check := range resp.Checks {
+		hookView.Checks[name] = check
+	}
+
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				hookErr = fmt.Errorf("%w: %v", ErrPanicDuringEvaluationHook, r)
+			}
+		}()
+		fn(hookView)
+	}()
+
+	return hookErr
 }
 
 // runHealthChecks invokes the health-check function resolved at construction

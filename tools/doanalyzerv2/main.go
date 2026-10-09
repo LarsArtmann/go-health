@@ -1,4 +1,4 @@
-// Command doanalyzerv2-runner runs the private go-design-smells doanalyzerv2
+// Command doanalyzerv2 runs the private go-design-smells doanalyzerv2
 // AST analyzer against a target directory (default: the go-health repo root)
 // and reports samber/do v2 anti-pattern findings (DO-1..DO-6) as
 // file:line diagnostics. Exit code 1 means findings, 0 means clean.
@@ -61,6 +61,6 @@ func main() {
 }
 
 func fatalf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "doanalyzerv2-runner: "+format+"\n", args...)
+	fmt.Fprintf(os.Stderr, "doanalyzerv2: "+format+"\n", args...)
 	os.Exit(2)
 }

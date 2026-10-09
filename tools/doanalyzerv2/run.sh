@@ -17,7 +17,7 @@ readonly module=github.com/larsartmann/go-design-smells
 root="${GO_HEALTH_BRANCHING_FLOW:-/home/lars/projects/branching-flow}"
 
 if [ ! -f "$root/go.mod" ]; then
-	echo "doanalyzerv2-runner: analyzer checkout not found at $root" >&2
+	echo "doanalyzerv2: analyzer checkout not found at $root" >&2
 	echo "  the analyzer lives in the private repo $module," >&2
 	echo "  which the nix sandbox cannot fetch. Fix either way:" >&2
 	echo "    git clone git@github.com:LarsArtmann/go-design-smells.git $root" >&2

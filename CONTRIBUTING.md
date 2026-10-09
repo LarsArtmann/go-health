@@ -126,6 +126,17 @@ Significant sessions may add a point-in-time snapshot to `docs/status/`, named
 Resolve their numbered items inline (strikethrough + commit hash) once the work
 ships elsewhere, and archive fully-resolved reports under `docs/status/archived/`.
 
+**Completion notes (convention since 2026-10-08):** when a later session resolves
+a report's open items or answers its owner questions, append a dated
+`## Completion note` section at the end of that report (see the 20:58/20:59
+2026-10-08 reports for the shape) instead of editing history in place. Questions
+that stay unanswered are re-asked in the newest report, with a pointer back.
+
+**Keep-window policy:** a report stays in `docs/status/` (not archived) while any
+of its items remain open; archive it only when every numbered item and question is
+resolved or explicitly handed to another document (TODO_LIST, ROADMAP, a design
+doc). Archiving is a claim that nothing living points at the report anymore.
+
 ## Code Conventions
 
 - **Packages** — root package `health` holds the probe SDK; `health/aggregate` merges multiple in-process probes into one health surface.

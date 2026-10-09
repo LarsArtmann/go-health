@@ -39,7 +39,7 @@ logged below as forgotten items, not yet fixed.
 - **B102**: `export_test.go` with `ResetStartupLatchForTest` (test builds
   only) + `TestStartupLatch_ResetForTest_ReEvaluatesAndRelatches` pinning
   latch → reset → 503 → re-latch. Public latch stays one-way.
-- **B103**: [docs/starting-status-design.md](../../docs/starting-status-design.md)
+- **B103**: [docs/starting-status-design.md](../../starting-status-design.md)
   — "starting" Status **rejected** (kubelet never reads the body; two strings
   for one machine state; latch regression would lie against `uptime`);
   Status input validation **none by design** (no injection boundary exists).
@@ -54,23 +54,23 @@ logged below as forgotten items, not yet fixed.
   `prometheus_example_test.go` — ~40-line stdlib exposition writer
   (`health_up` + `health_check` gauges, `instance`/`service` labels) +
   `ExampleWithEvaluationHook_metrics` passing;
-  [docs/prometheus-exposition-design.md](../../docs/prometheus-exposition-design.md)
+  [docs/prometheus-exposition-design.md](../../prometheus-exposition-design.md)
   — decision: composition via `WithEvaluationHook`, never `client_golang`.
-- **OpenAPI**: [docs/openapi-design.md](../../docs/openapi-design.md)
+- **OpenAPI**: [docs/openapi-design.md](../../openapi-design.md)
   (static spec over runtime generation, rationale) +
-  [docs/openapi.yaml](../../docs/openapi.yaml) — OpenAPI 3.1 for all three
+  [docs/openapi.yaml](../../openapi.yaml) — OpenAPI 3.1 for all three
   probes with status-code semantics and the field-presence rules that OpenAPI
   cannot express.
 
 ### P37 / P38 / P39 — design notes with verified evidence
 
-- [docs/classification-2.0-design.md](../../docs/classification-2.0-design.md):
+- [docs/classification-2.0-design.md](../../classification-2.0-design.md):
   weights (rejected — binary at every consumer boundary), circuit-breaker
   (rejected in core — dependency-wrapper seam), `WithMaxConcurrentChecks`
   (rejected — do owns the batch; recorder is the escape hatch), per-service
   caching + per-service latency (blocked by do owning the batch — the P28
   finding folded in).
-- [docs/multi-tenant-design.md](../../docs/multi-tenant-design.md):
+- [docs/multi-tenant-design.md](../../multi-tenant-design.md):
   child-scope (N probes + aggregate already solve it, verified against
   `aggregate.go`), `WithProbeName` (redundant — aggregate namespacing +
   InstanceID), `WithCriticalService` toggle (rejected — classifier
@@ -78,7 +78,7 @@ logged below as forgotten items, not yet fixed.
 - **Middleware spike (verified)**:
   `middleware_example_test.go` (`ExampleProbe_ReadinessHandler_middleware`:
   200/401/200) +
-  [docs/middleware-design.md](../../docs/middleware-design.md) — no library
+  [docs/middleware-design.md](../../middleware-design.md) — no library
   concept needed; handlers are plain `http.HandlerFunc`; liveness stays
   unwrapped (kubelet can't send credentials).
 

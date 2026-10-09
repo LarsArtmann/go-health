@@ -103,3 +103,21 @@ _(31 solid items — stopping before padding; everything beyond this is ROADMAP 
 ---
 
 **THEN WAIT FOR INSTRUCTIONS.**
+
+---
+
+## Completion note (2026-10-09 Pareto-v2 execution)
+
+- **§b1 (makezero semantic model): settled** — 2026-10-09 the contract was pinned
+  empirically (probe programs, a historical-tree worktree repro, analyzer source):
+  `always: true` flags every identifier-bound two-arg `make` with a non-literal-zero
+  length regardless of usage; makes inside composite literals are invisible. Recorded
+  in AGENTS.md and as a comment at the `makezero:` block in `.golangci.yml`.
+- **§g1 (push): resolved** — master pushed 2026-10-09 under the owner's blanket
+  directive; v0.5.1 tagged on `23db7fe` and released (proxy + pkg.go.dev verified).
+- **§g2 (release vehicle): resolved** — v0.5.1 was cut as a fast patch carrying this
+  report's Shutdown-hang fix (failed-Start disarm), plus hook-panic recovery and
+  `health.Off`. Follow-up in `[Unreleased]`: the grace window no longer blocks on a
+  never-started probe.
+- **§g3 (BuildFlow ownership boundary): still the owner's call** — re-asked as
+  question 3 in the 2026-10-09 16:53 status report §g.

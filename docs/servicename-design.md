@@ -49,8 +49,8 @@ which is exactly the critical-name footgun class (now guarded at runtime by
 **Blast-radius reduction (the load-bearing finding):** untyped string
 literals and untyped `const` names survive the `...ServiceName` change
 untouched (assignability). Only **typed-string values** and **`...string`
-spreads** break. The fleet's breakage set is therefore five sites in five
-repos, not "every call site" — the v0.5-window migration estimate above was
+spreads** break. The fleet's breakage set is therefore six sites in six
+repos (library-policy included, swept 2026-10-09), not "every call site" — the v0.5-window migration estimate above was
 pessimistic; the real v0.6 work is one collection-type change per affected
 repo.
 
@@ -68,14 +68,15 @@ repo.
 | cqrs-htmx (bridge) | v0.5.0 | `gohealth.New(do.New(), all...)` (health/probe.go:46) | pass-through options; doc literals only | unaffected (forwards options) |
 | go-taskqueue | v0.5.0 | none — implements dashboard `Prober` over `health.Response` types (internal/webui/health.go) | n/a (types-only consumer) | no |
 | go-health-dashboard | v0.5.0 | `health.New` in tests/example; prod wiring via aggregate/federation | literals in tests ("postgres", "redis") | no (untyped literals) |
-| PMA, doadapter | v0.4.x | **no local checkout** — not inventoried | — | scan on next contact |
+| projects-management-automation ("PMA") | v0.4.x | **no local checkout** — recorder bridge (consumer-verification pattern C) | — | scan on next contact |
+| library-policy | v0.5.0 | `health.NewWithHealthCheck` (cmd/library-policy/internal/httpapi/health.go:36) | `critical...` spread of `[]string` (:38) | **YES — spread** |
 | typespec-eventsourcing | — | `NewChecks` in tests only (adoption-matrix) | — | no (test literals) |
 | go-daemon, project-discovery-daemon | — | **NOT consumers**: `WithShutdownGracePeriod` there is go-daemon's own `ServerOption` (socket.go:128), no go-health import | — | adoption-matrix row over-counts; correct on next matrix pass |
 
 ### Migration mechanics (updated by the inventory)
 
-1. Five-site break set: nsfw-classifier (typed getter), fir/DiscordSync/CV
-   (`[]string` spreads). Fix per repo: change the collection to
+1. Six-site break set: nsfw-classifier (typed getter), fir/DiscordSync/CV/
+   library-policy (`[]string` spreads). Fix per repo: change the collection to
    `[]health.ServiceName` (or generate via `ServiceName(typetostring...)`).
 2. Two const-decl verifications (Zlota44 `checkSQLite`, dnsblockd
    `healthService*`): untyped `const` → no change; `var`/typed → wrap.
@@ -87,7 +88,7 @@ repo.
 `tools/servicename-scan.sh` flags (a) `WithCriticalServices`/`NewChecks`/
 `NewWithHealthCheck` call sites, (b) `...)` spreads, (c) typed-string
 getters inside those calls, across a fleet checkout. Dry-run output
-2026-10-09 over the 13 local repos: five candidates = the four true breaks
+2026-10-09 over the 14 local repos: six candidates = the five true breaks
 above plus one known false-positive class (go-appkit `health/probe.go:78`
 spreads `opts ...health.Option` — option forwarding, not a string
 collection; triage rule: a spread breaks only when it spreads a

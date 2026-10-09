@@ -1,0 +1,20 @@
+# Fleet manifest for tools/fleet-skew.sh: one `repo go.mod-path` pair per
+# line (paths relative to the repo's default branch). The 15 direct go-health
+# consumers per docs/consumer-verification.md (2026-10-02 re-verify); CV pins
+# in its root module only (nested modules checked 2026-10-09); PMA and
+# doadapter aliases resolve to projects-management-automation (the 15th
+# consumer is library-policy, listed separately).
+LarsArtmann/go-health-dashboard go.mod
+LarsArtmann/CV go.mod
+LarsArtmann/Zlota44 go.mod
+LarsArtmann/dnsblockd go.mod
+LarsArtmann/library-policy go.mod
+LarsArtmann/file-and-image-renamer go.mod
+LarsArtmann/DiscordSync go.mod
+LarsArtmann/KeyHolderAI go.mod
+LarsArtmann/nsfw-classifier go.mod
+LarsArtmann/webphone go.mod
+LarsArtmann/projects-management-automation go.mod
+LarsArtmann/cqrs-htmx health/go.mod
+LarsArtmann/go-appkit health/go.mod
+LarsArtmann/go-taskqueue go.mod

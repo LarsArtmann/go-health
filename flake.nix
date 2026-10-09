@@ -295,7 +295,17 @@
               mkApp "security" "Run gosec security scan"
                 [
                   pkgs.gosec
-                  goPkg
+                  # gosec 2.29.0's embedded x/tools cannot decode the export
+                  # data (v5) that go 1.27.2 emits ("cannot decode ... export
+                  # data version 5 is greater than maximum supported version
+                  # 4"), so it exits 1 on 39 import errors with zero
+                  # findings. gosec master fixed this only on 2026-10-09
+                  # (securego/gosec#1772, unreleased). Until a gosec ≥ that
+                  # commit lands in nixpkgs, gosec runs under the patch-prior
+                  # toolchain: static analysis over the same source, export
+                  # data it can read. Drop this pin — use goPkg — when gosec
+                  # catches up.
+                  pkgs.go_1_27
                 ]
                 ''
                   gosec ./...

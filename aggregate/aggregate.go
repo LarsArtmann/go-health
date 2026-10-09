@@ -72,6 +72,7 @@ func New(sources ...Source) (*Aggregate, error) {
 
 	seen := make(map[string]struct{}, len(sources))
 	maxInterval := time.Duration(0)
+
 	var problems []error
 
 	for _, src := range sources {

@@ -40,6 +40,7 @@ go.mod require + call-site qualifier):
 3. **Abbreviations expanded to real repo names:** "fir" → file-and-image-renamer (verified
    consumer at v0.5.1, `pkg/injector/providers.go:135`), "PMA" → projects-management-automation.
    The 10-02 matrix's "fir"/"PMA" were ungrepable shorthand.
+
 - A dated "2026-10-09 re-verification" section records method + findings, so the 10-02 survey
   provenance stays intact and the delta is auditable.
 

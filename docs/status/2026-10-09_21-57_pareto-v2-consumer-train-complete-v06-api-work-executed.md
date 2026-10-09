@@ -237,6 +237,7 @@ go-taskqueue, fir (verify-only).
 ## f) NEXT (up to 50, priority order)
 
 **Finish this train (unblocked now):**
+
 1. Apply the three adoption-matrix corrections (WithGETOnly test-only,
    go-daemon not-a-consumer, PMA naming).
 2. B102: refresh owner-blocked evidence cells in TODO_LIST (doanalyzerv2
@@ -254,55 +255,56 @@ go-taskqueue, fir (verify-only).
 
 **Blocked on owner answers (§g — re-asked below):**
 9. Push the 8 green consumer bumps (dashboard, KeyHolderAI, DiscordSync,
-   dnsblockd, webphone, go-taskqueue, Zlota44, CV) + crush-config ad1bcba.
+dnsblockd, webphone, go-taskqueue, Zlota44, CV) + crush-config ad1bcba.
 10. A19 fleet-skew workflow + green run (needs the pushes first).
 11. samber/do#318 comment + v0.5.1 announcements (staged drafts exist).
 12. v0.6.0 vs v0.5.2 decision for cutting [Unreleased] (now: grace fix +
-    SourceStatuses + errors.Join + test hardening).
+SourceStatuses + errors.Join + test hardening).
 
 **v0.6 window (design exists, implementation next):**
 13. Implement `internal/merge` primitive per the re-grounded A23 sketch;
-    port aggregate, then federation; collapse duplicated fuzz properties.
+port aggregate, then federation; collapse duplicated fuzz properties.
 14. Implement `federation.Prober.Healthz()` per A27 note (+ unit table +
-    property extension).
+property extension).
 15. AwaitReady cache-aware poll IF a concrete consumer need appears (A30
-    rule otherwise stands).
+rule otherwise stands).
 16. GOEXPERIMENT=jsonv2 line in CV devshell: now a documented no-op on
-    1.27 — schedule removal (one-line + comment update).
+1.27 — schedule removal (one-line + comment update).
 17. Sweep the go-sse/ssetest/prometheus transitive bumps in CV for any
-    behavior notes worth a CHANGELOG line in CV.
+behavior notes worth a CHANGELOG line in CV.
 18. Commit interesting fuzz corpus entries to testdata seeds after
-    fuzz-long (B112 fires 2026-10-12).
+fuzz-long (B112 fires 2026-10-12).
 19. Federation `SourceStatuses` parity IF a second fold-site consumer
-    appears (per merge-design note).
+appears (per merge-design note).
 20. Re-verify docs/adoption-matrix.md at the v0.6 release (standing §e5).
 
 **Quality debt / hygiene:**
 21. Triage buildflow nix-hash-fix miss in CV (see §e4).
 22. CV adoption-policy wording-pin failure (§e5) — owner or CV session.
 23. Investigate the one Disk B/op outlier from the A20 run (48 vs 32 B —
-    probably a stat buffer; pin or explain).
+probably a stat buffer; pin or explain).
 24. Consider disabling the golangci LSP integration (§e7) — owner call.
 25. erraudit standalone tool stays a documented local-only gate (CI cannot
-    fetch private repo) — revisit if erraudit is ever published.
+fetch private repo) — revisit if erraudit is ever published.
 26. gosec unpin + go override drop (flake.nix comments track it).
 27. Watch: daemon commit cadence vs. authored-history desire (§e1).
 
 **Standing watch items (no action now):**
 28. fuzz-long weekly CI (2026-10-12).
 29. BuildFlow upstream full-mode env/tool_paths fan-out bug (evidence in
-    AGENTS.md:181) — separate session in the BuildFlow repo.
+AGENTS.md:181) — separate session in the BuildFlow repo.
 30. samber/do v2.1.x releases (lazy-service gotcha stays).
 31. pkg.go.dev re-render after the eventual v0.6 tag.
 32. Zlota44 unpushed (ahead 3) — rides with §g1.
 33. crush-config lessons commit ad1bcba unpushed — rides with §g1.
 34. CV go1.27.2 toolchain download via GOTOOLCHAIN (first `go work sync`) —
-    normalizes on next devshell entry; no action.
+normalizes on next devshell entry; no action.
 
 (34 items — the remaining plan tail is either done this session or gated
 above.)
 
 ## g) QUESTIONS (3 — cannot figure out myself; all three are the standing
+
 §g set, still unanswered and each gating real work)
 
 1. **Consumer pushes (gates items 9–10):** may I push the 8 green, bumped,

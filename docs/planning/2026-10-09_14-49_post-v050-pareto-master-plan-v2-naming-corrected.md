@@ -277,43 +277,43 @@ third-party publishing stays owner-held. G3 executed (CV bumped, committed,
 `nix build` + `nix flake check` green). G4 executed (v0.5.1 released
 2026-10-09). G5 decided and shipped (hook-panic recover+fail-closed, v0.5.1).
 
-| #    | Verdict                | Evidence / note                                                                                                   |
-| ---- | ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| A01  | DONE                   | Remote lineage + branch protection verified at CONFIG level (TODO_LIST header, 16:53 report)                       |
-| A02  | DONE                   | Gates + ci-emulation on the exact tree (16:53 report); re-run closes this scorecard                                |
-| A03  | DONE                   | Master pushed (origin/master == HEAD verified 22:5x); CI green through v0.5.1                                     |
-| A04  | DONE                   | docs/panic-recovery-design.md (fail-closed decision)                                                              |
-| A05  | DONE                   | Hook-panic recovery shipped in v0.5.1 (TODO_LIST header)                                                          |
-| A06  | DONE                   | v0.5.1 released 2026-10-09: tag, proxy, GitHub Release, doc sync (16:53 report)                                   |
-| A07  | PARTIAL (ceiling)      | Full mode 95% (70/74); four stragglers are a BuildFlow upstream fan-out env bug — TODO_LIST row + AGENTS.md:182     |
-| A08  | PENDING (behind A07)   | Budget re-review executes when A07's upstream fix lands; TODO_LIST row retained                                    |
-| A09  | DONE                   | Dashboard suite green on v0.5.1 → dashboard v0.10.2 (21:57 report §train)                                          |
-| A10  | DONE                   | 8 consumers green on v0.5.1, all committed local-unpushed (21:57 report §train)                                    |
-| A11  | DONE                   | CV v0.5.1 + go 1.27 floor; `nix build` + `nix flake check` green (22:5x)                                           |
-| A12  | DONE                   | go-appkit#25 filed + verified OPEN (16:53 report)                                                                  |
-| A13  | DONE                   | cqrs-htmx#31 filed + verified OPEN (16:53 report)                                                                  |
-| A14  | OWNER-STAGED           | samber/do#318 comment draft citation-current; posting is the owner act (TODO_LIST Owner Actions)                    |
-| A15  | OWNER-STAGED           | v0.5.x announcement channels checklist ready (docs/announcements/)                                                 |
-| A16  | OWNER-STAGED           | v0.1.1/v0.1.2 announcement draft ready since 09-04 (docs/announcements/)                                           |
-| A17  | DONE                   | makezero always-contract settled; AGENTS.md:180 + `.golangci.yml` comment                                          |
-| A18  | DONE (documented)      | Stale-panel discipline recorded (AGENTS Gotcha); permanent disable/fix stays an owner TODO row                     |
-| A19  | BLOCKED (owner ①)      | Workflow drafts after consumer pushes; running it now would observe stale pins and go red (TODO_LIST row)          |
-| A20  | DONE                   | Full bench suite `-count=3`; FEATURES rows re-dated 2026-10-09 (21:57 report §A20)                                 |
-| A21  | DONE                   | ServiceName inventory + `tools/servicename-scan.sh` (TODO_LIST staging note)                                       |
-| A22  | DONE                   | Staged-rename decision table (docs/naming-integrity.md)                                                            |
-| A23  | DONE                   | Merge sketch re-grounded: `internal/merge` placement (docs/merge-unification-design.md)                             |
-| A24  | DONE                   | OpenAPI Healthz-mount + federation coverage; lockstep gate green (16:53 report)                                    |
-| A25  | DONE                   | `errors.Join` in `aggregate.New` + join test (21:57 report §A25)                                                    |
-| A26  | DONE                   | `Aggregate.SourceStatuses()` + combination tests (21:57 report §A26)                                               |
-| A27  | DONE                   | federation `Healthz()` design note ACCEPTED, v0.6-gated (docs/federation-healthz-design.md)                        |
-| A28  | DONE                   | Golden fuzz seeds + race-stress ×3 CI step (21:57 report §A28)                                                     |
-| A29  | DONE                   | Contention bench + throttle-boundary fuzz + mode fuzz (21:57 report §A29)                                          |
-| A30  | DONE                   | AwaitReady poll design note, demand-gated (docs/awaitready-poll-design.md)                                        |
-| A31  | DONE                   | checks coverage 98.2% → 100.0% (21:57 report §A31)                                                                 |
-| A32  | DONE                   | Grace-window dead-time fix pinned by `TestShutdown_GraceWindowSkippedWhenLifecycleNeverStarted` (`[Unreleased]`)   |
-| A33  | DONE                   | Federation composition test (21:57 report §A33)                                                                   |
-| A34  | DONE                   | Docs hygiene batch + link sweep (16:53/21:57 reports)                                                              |
-| A35  | DONE (parked rows)     | Owner-blocked deep items rest with refreshed evidence in TODO_LIST Blocked sections (doanalyzerv2 flap re-confirmed) |
+| #   | Verdict              | Evidence / note                                                                                                      |
+| --- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| A01 | DONE                 | Remote lineage + branch protection verified at CONFIG level (TODO_LIST header, 16:53 report)                         |
+| A02 | DONE                 | Gates + ci-emulation on the exact tree (16:53 report); re-run closes this scorecard                                  |
+| A03 | DONE                 | Master pushed (origin/master == HEAD verified 22:5x); CI green through v0.5.1                                        |
+| A04 | DONE                 | docs/panic-recovery-design.md (fail-closed decision)                                                                 |
+| A05 | DONE                 | Hook-panic recovery shipped in v0.5.1 (TODO_LIST header)                                                             |
+| A06 | DONE                 | v0.5.1 released 2026-10-09: tag, proxy, GitHub Release, doc sync (16:53 report)                                      |
+| A07 | PARTIAL (ceiling)    | Full mode 95% (70/74); four stragglers are a BuildFlow upstream fan-out env bug — TODO_LIST row + AGENTS.md:182      |
+| A08 | PENDING (behind A07) | Budget re-review executes when A07's upstream fix lands; TODO_LIST row retained                                      |
+| A09 | DONE                 | Dashboard suite green on v0.5.1 → dashboard v0.10.2 (21:57 report §train)                                            |
+| A10 | DONE                 | 8 consumers green on v0.5.1, all committed local-unpushed (21:57 report §train)                                      |
+| A11 | DONE                 | CV v0.5.1 + go 1.27 floor; `nix build` + `nix flake check` green (22:5x)                                             |
+| A12 | DONE                 | go-appkit#25 filed + verified OPEN (16:53 report)                                                                    |
+| A13 | DONE                 | cqrs-htmx#31 filed + verified OPEN (16:53 report)                                                                    |
+| A14 | OWNER-STAGED         | samber/do#318 comment draft citation-current; posting is the owner act (TODO_LIST Owner Actions)                     |
+| A15 | OWNER-STAGED         | v0.5.x announcement channels checklist ready (docs/announcements/)                                                   |
+| A16 | OWNER-STAGED         | v0.1.1/v0.1.2 announcement draft ready since 09-04 (docs/announcements/)                                             |
+| A17 | DONE                 | makezero always-contract settled; AGENTS.md:180 + `.golangci.yml` comment                                            |
+| A18 | DONE (documented)    | Stale-panel discipline recorded (AGENTS Gotcha); permanent disable/fix stays an owner TODO row                       |
+| A19 | BLOCKED (owner ①)    | Workflow drafts after consumer pushes; running it now would observe stale pins and go red (TODO_LIST row)            |
+| A20 | DONE                 | Full bench suite `-count=3`; FEATURES rows re-dated 2026-10-09 (21:57 report §A20)                                   |
+| A21 | DONE                 | ServiceName inventory + `tools/servicename-scan.sh` (TODO_LIST staging note)                                         |
+| A22 | DONE                 | Staged-rename decision table (docs/naming-integrity.md)                                                              |
+| A23 | DONE                 | Merge sketch re-grounded: `internal/merge` placement (docs/merge-unification-design.md)                              |
+| A24 | DONE                 | OpenAPI Healthz-mount + federation coverage; lockstep gate green (16:53 report)                                      |
+| A25 | DONE                 | `errors.Join` in `aggregate.New` + join test (21:57 report §A25)                                                     |
+| A26 | DONE                 | `Aggregate.SourceStatuses()` + combination tests (21:57 report §A26)                                                 |
+| A27 | DONE                 | federation `Healthz()` design note ACCEPTED, v0.6-gated (docs/federation-healthz-design.md)                          |
+| A28 | DONE                 | Golden fuzz seeds + race-stress ×3 CI step (21:57 report §A28)                                                       |
+| A29 | DONE                 | Contention bench + throttle-boundary fuzz + mode fuzz (21:57 report §A29)                                            |
+| A30 | DONE                 | AwaitReady poll design note, demand-gated (docs/awaitready-poll-design.md)                                           |
+| A31 | DONE                 | checks coverage 98.2% → 100.0% (21:57 report §A31)                                                                   |
+| A32 | DONE                 | Grace-window dead-time fix pinned by `TestShutdown_GraceWindowSkippedWhenLifecycleNeverStarted` (`[Unreleased]`)     |
+| A33 | DONE                 | Federation composition test (21:57 report §A33)                                                                      |
+| A34 | DONE                 | Docs hygiene batch + link sweep (16:53/21:57 reports)                                                                |
+| A35 | DONE (parked rows)   | Owner-blocked deep items rest with refreshed evidence in TODO_LIST Blocked sections (doanalyzerv2 flap re-confirmed) |
 
 **Track B:** executed 1:1 inside their A-parents (verification artifacts in
 the 16:53/21:57 reports). Residuals: B102 evidence refresh done in this

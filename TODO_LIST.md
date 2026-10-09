@@ -40,7 +40,7 @@
 | ----------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------- |
 | File go-appkit/health + cqrs-htmx/health upstream issues from drafts                                                    | TODO   | High   | 40min  | Drafts ready in `docs/announcements/2026-10-02_*.md`; filing is owner (G2)                    |
 | Run consumer test suites against the v0.5.0 tag: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier | TODO   | Medium | 45min  | 2026-10-03 train: all 8 direct apps BUILD-OK against then-unreleased master; rerun on the tag |
-| Bump CV to go-health v0.5.x + `go 1.27` floor (currently v0.1.3 + `go 1.26.7`; double-stale vs v0.5.0)                  | TODO   | Medium | 45min  | 2026-10-03 version-skew table: every other consumer pins v0.4.1 (G3)                          |
+| Bump CV to go-health v0.5.x + `go 1.27` floor (currently v0.1.3 + `go 1.26.7`; double-stale vs v0.5.0)                  | TODO   | Medium | 45min  | CV = [github.com/LarsArtmann/CV](https://github.com/LarsArtmann/CV) (enterprise CV/resume generator). 2026-10-03 version-skew table: every other consumer pins v0.4.1 (G3) |
 
 ## v0.6 window — staging (20%)
 

@@ -75,3 +75,99 @@ and for panics in the batch machinery itself.
 
 Recovered panics now produce 503 with the `"health-check"` entry graded
 `fail` (previously 200 warn / entry `warn`). JSON wire format unchanged.
+
+---
+
+## Addendum 2026-10-09: the evaluation-hook surface
+
+> Decided: 2026-10-09 (Pareto plan v2 A04/A05) · Status: DECIDED
+
+### Problem
+
+`Probe.Evaluate` invokes the `WithEvaluationHook` callback after
+classification. That call is a third panic surface, and it was unrecovered: a
+panicking hook unwinds whatever frame called `Evaluate` —
+
+- the background refresh loop: goroutine death, **process crash** (the TODO
+  row, flagged 2026-09-15 §e6, verified unrecovered 2026-10-08);
+- throttled live evaluations and direct `Evaluate` callers: `net/http`
+  recovers per-connection, but the handler contract (JSON body, status code)
+  is broken and the panic leaks into the host's error log.
+
+### Why this surface differs from the batch surface
+
+The fail-closed rule above binds surfaces where a panic interrupts **evidence
+collection**: services after the panic point were never checked, so the result
+map is incomplete and must not be laundered into a 200. The hook runs **after**
+the response is fully built and classified. A hook panic means the *observer*
+(metrics/alerting) failed, not the health evaluation: every service was
+checked and graded before the hook ran. Fail-closed here would assert
+unhealthiness the probe knows to be false — readiness 503, traffic drained,
+for a metrics bug — and at fleet scale (shared hook) it re-couples
+availability to a non-essential subsystem, the exact coupling this library
+refuses elsewhere (liveness never checks dependencies; non-critical failures
+stay 200).
+
+### Options
+
+1. **Document the contract (no recover).** "Hooks must not panic", parity
+   with injector-path services. Rejected: the refresh-loop path is
+   process-fatal — the hole this decision exists to close — and it treats a
+   one-line callback mistake as a crash-the-process offense while recorder
+   panics (the analogous consumer-supplied callback) are already recovered.
+   Asymmetric and harsh.
+2. **Recover + fail-closed** (synthesized fail row, `classify` parity).
+   Rejected: it reports a healthy instance as failing because an observer
+   broke. The "recovered panics never map to warn" rule is about interrupted
+   evidence; here the evidence is complete.
+3. **Recover + non-critical synthetic row (warn).** The panic is recovered on
+   every path and made *visible* instead of fatal or invisible: the response
+   gains a synthetic `"evaluation-hook"` check graded `warn` whose error
+   wraps the new sentinel `ErrPanicDuringEvaluationHook`, and the roll-up is
+   raised to `warn` at minimum (never lowered: `fail` stays `fail`).
+   Readiness stays 200 — degraded-but-serving, which is exactly what
+   happened: the services serve, the observability pipeline does not.
+
+### Decision: option 3, plus a defensive clone
+
+Mechanics:
+
+1. When a hook is configured, `Evaluate` calls it with a shallow copy of the
+   response whose `Checks` map is a fresh clone. This is not paranoia about
+   the happy path — the option contract already forbids retaining or mutating
+   the map — it is boundary defense: a recovered hook leaves map integrity
+   unverifiable (a hook can mutate and then panic), and a misbehaving hook
+   must not corrupt the served or cached response even without panicking.
+   Cost: one map copy per evaluation, only for hook-configured probes.
+2. The hook call uses the same small-free-function recover pattern as
+   `recoverHealthChecks`. On panic, `Evaluate` appends the synthetic
+   `"evaluation-hook"` row (`StatusWarn`, error wrapping the sentinel plus
+   the panic value) to the pristine response and raises the roll-up via
+   `Rank`: `fail` stays `fail`, `pass`/`warn` become `warn`.
+3. The synthetic row never carries `Since` or `DurationNanos` (synthetic rows
+   never do — same as liveness's empty set and Healthz's startup entry), is
+   never in the critical set, and never affects the startup latch.
+4. `errors.Is(err, ErrPanicDuringEvaluationHook)` lets consumers alert on
+   observer failure specifically.
+
+### Consequences
+
+- Process-stable on all three paths (refresh loop, throttled live, direct
+  `Evaluate`).
+- The background cache stores the warn-marked response: dashboards and
+  aggregate/federation consumers see the degraded row and propagate worst-of
+  (warn) naturally — no merge changes needed.
+- Self-healing: a fixed hook drops the row on the next evaluation; the
+  transition tracker is not involved (no `Since` to carry).
+- Wire format: additive row on the panic path only; frozen fields unchanged.
+- Scope amendment to the rule above: "a recovered panic never maps to `warn`"
+  binds the data-collection surface (`runHealthChecks`). The observation
+  surface (hook) maps to `warn` by design: complete evidence, failed
+  observer.
+
+### Behavioral change (hook surface)
+
+A panicking evaluation hook previously crashed the process (refresh-loop
+path) or broke the handler contract (live path). It now yields a 200-warn
+response carrying a visible `"evaluation-hook"` row on every affected
+surface.

@@ -1,8 +1,8 @@
 # `AwaitReady` cache-aware poll interval — mini design note
 
-|            |                                                                       |
-| ---------- | --------------------------------------------------------------------- |
-| **Date**   | 2026-10-09                                                            |
+|            |                                                                                                 |
+| ---------- | ----------------------------------------------------------------------------------------------- |
+| **Date**   | 2026-10-09                                                                                      |
 | **Status** | SKETCHED — demand-gated; implement only when a concrete consumer need appears (ROADMAP Theme 1) |
 
 ## Problem

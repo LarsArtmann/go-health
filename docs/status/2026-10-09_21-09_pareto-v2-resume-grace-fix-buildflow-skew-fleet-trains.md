@@ -15,7 +15,7 @@
 
 ### The three lost background jobs — all collected
 
-- **Job 102 (CI on `4476cd0`):** Security/Vet+Lint/Flake/OpenAPI success; Test(race) *cancelled* (superseded by the release push) — acceptable.
+- **Job 102 (CI on `4476cd0`):** Security/Vet+Lint/Flake/OpenAPI success; Test(race) _cancelled_ (superseded by the release push) — acceptable.
 - **CI on the release commit `23db7fe`:** **all five checks success** → **B008 complete: CI green on the v0.5.1 tag.**
 - **Job 107 (BuildFlow build):** completed — but from a `-dirty` source tree (the dirty bits were daemon-committed afterwards).
 
@@ -40,20 +40,20 @@
 
 ### Doc/tooling tail — eleven items closed
 
-| Item | Result |
-| --- | --- |
-| B114 | "(CV)" → "conditional sets" in start-validation-design.md |
-| B109 | README compat table 1.27.1→1.27.2 + GOTOOLCHAIN=auto note + GO-2026-6603..6617 rationale |
-| B107 | feature_request.md blob verified on github.com (content matches local, frontmatter valid) |
-| B111 | Completion note backfilled on the 20:58 report (b1 settled, g1/g2 resolved, g3 re-asked) |
-| B110 | CONTRIBUTING: completion-note convention + keep-window policy written |
-| B100 | lychee sweep: 7 breaks, ALL one archived report whose links were never rebased on the move to `archived/`; fixed → **0 errors** (2 redirects left cosmetic) |
-| B101 | Trashed stale `coverage/coverage.out`, `reports/coverage.out`, `result` symlink; kept PMA-tracked `.config/metadata.yaml` |
-| B103 | dprint check clean over session-edited markdown; CI role stays with treefmt |
+| Item | Result                                                                                                                                                        |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B114 | "(CV)" → "conditional sets" in start-validation-design.md                                                                                                     |
+| B109 | README compat table 1.27.1→1.27.2 + GOTOOLCHAIN=auto note + GO-2026-6603..6617 rationale                                                                      |
+| B107 | feature_request.md blob verified on github.com (content matches local, frontmatter valid)                                                                     |
+| B111 | Completion note backfilled on the 20:58 report (b1 settled, g1/g2 resolved, g3 re-asked)                                                                      |
+| B110 | CONTRIBUTING: completion-note convention + keep-window policy written                                                                                         |
+| B100 | lychee sweep: 7 breaks, ALL one archived report whose links were never rebased on the move to `archived/`; fixed → **0 errors** (2 redirects left cosmetic)   |
+| B101 | Trashed stale `coverage/coverage.out`, `reports/coverage.out`, `result` symlink; kept PMA-tracked `.config/metadata.yaml`                                     |
+| B103 | dprint check clean over session-edited markdown; CI role stays with treefmt                                                                                   |
 | B104 | lessons.md reconciled — no duplicates; ONE new cross-project lesson (dispatch-requires-collection) committed at the crush-config source (`ad1bcba`, unpushed) |
-| B105 | Process-metrics thread: **RETIRED** (no living trace; the 13:13 series' own annotations retired it) |
-| B106 | go-structure-linter: 0 findings |
-| B108 | `doanalyzerv2-runner` → `doanalyzerv2` rename in main.go + run.sh; build+vet green |
+| B105 | Process-metrics thread: **RETIRED** (no living trace; the 13:13 series' own annotations retired it)                                                           |
+| B106 | go-structure-linter: 0 findings                                                                                                                               |
+| B108 | `doanalyzerv2-runner` → `doanalyzerv2` rename in main.go + run.sh; build+vet green                                                                            |
 
 ### Fleet trains — four repos done, all green (NONE pushed — §g1)
 
@@ -105,40 +105,40 @@ A11 (CV → v0.5.1 + go 1.27 floor), A18 (golangci LSP fix-or-disable — note: 
 
 ## f) NEXT — up to 50, impact-sorted
 
-| # | Task | Note |
-| --- | --- | --- |
-| 1 | webphone: `go mod vendor` + build + suite + commit | finishing, 10 min |
-| 2 | go-taskqueue: build + suite + commit | finishing |
-| 3 | fir: inspect the 2 dirty files; confirm or complete the v0.5.1 bump | |
-| 4 | A11: CV v0.1.3→v0.5.1 + `go 1.27` floor + suite + flake verify | G3 |
-| 5 | B035: write the dashboard cross-repo handoff note | with pushes per §g1 |
-| 6 | Push consumer bumps once §g1 is answered (dashboard, KeyHolderAI, DiscordSync, dnsblockd, webphone, go-taskqueue, Zlota44, CV) | blocked on owner |
-| 7 | A19: `.github/workflows/fleet-skew.yml` (push-to-master + weekly + dispatch); green run vs v0.5.1 | needs pushed consumers for a green first run |
-| 8 | A18: fix-or-disable the golangci LSP integration; record decision | this session's panel lied for ~4 h straight |
-| 9 | A25: `errors.Join` in `aggregate.New` + multi-error tests + CHANGELOG | design doc exists |
-| 10 | A26: `SourceStatuses()` + property test + README/FEATURES rows | design doc exists |
-| 11 | A23: mergeResponses primitive sketch vs both merge sites + port plan | |
-| 12 | A20: benchmarks `-count=3` (root, aggregate, checks) → medians + spread → FEATURES | |
-| 13 | A27: federation `Healthz()` parity design note (503 conditions + latch) | no implementation |
-| 14 | A28: golden fixtures → aggregate fuzz seed corpus; `-count=N` race-stress CI step | |
-| 15 | A29: throttled live-path contention benchmark; throttle-window boundary fuzz (fake clock) | |
-| 16 | A30: AwaitReady cache-aware poll-interval mini note | |
-| 17 | A31: `go test -cover ./checks`; close top gaps; re-measure | |
-| 18 | A33: federation-adjacent ErrUnknownCriticalService composition test | mirror of aggregate one |
-| 19 | B102: BLOCKED rows' evidence refresh (doanalyzerv2 floor under 1.27.2; auditlog ADR-004; coverage threshold) | |
-| 20 | Final gates on go-health (test-race/vet/lint/vulncheck/security/fuzz/docs-check) on the final tree | docs-check should pass: [Unreleased] has content and compare base exists |
-| 21 | Push go-health master | G1 already ratified for this repo |
-| 22 | Stamp plan v2 EXECUTED with per-task annotations | |
-| 23 | v0.5.1 announcement checklist draft (sibling the 10-02 one) | publishing stays owner's (§g2) |
-| 24 | Adoption-matrix corrections: WithGETOnly test-only usage, go-daemon/project-discovery-daemon not-consumers row, PMA/doadapter naming | |
-| 25 | TODO_LIST refresh from this report | |
-| 26 | BuildFlow upstream task: full-mode fan-out env/resolution bug (4 steps, single-step-green divergence) — investigate in the BuildFlow repo | separate session; evidence in AGENTS gotcha |
-| 27 | Triage `buildflow --failed-only` exit-69 "no tools matched" | BuildFlow repo |
-| 28 | B112: watch the 2026-10-12 fuzz-long 4-target run + corpus artifacts | calendar |
-| 29 | gosec unpin watch (needs gosec ≥ #1772 in nixpkgs) | flake comment tracks |
-| 30 | go override drop watch (nixpkgs go_1_27 ≥ 1.27.2) | flake comment tracks |
-| 31 | B113: post-answer docs-health re-audit once §g is answered | |
-| 32 | Next status report after the tail completes | |
+| #  | Task                                                                                                                                      | Note                                                                     |
+| -- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1  | webphone: `go mod vendor` + build + suite + commit                                                                                        | finishing, 10 min                                                        |
+| 2  | go-taskqueue: build + suite + commit                                                                                                      | finishing                                                                |
+| 3  | fir: inspect the 2 dirty files; confirm or complete the v0.5.1 bump                                                                       |                                                                          |
+| 4  | A11: CV v0.1.3→v0.5.1 + `go 1.27` floor + suite + flake verify                                                                            | G3                                                                       |
+| 5  | B035: write the dashboard cross-repo handoff note                                                                                         | with pushes per §g1                                                      |
+| 6  | Push consumer bumps once §g1 is answered (dashboard, KeyHolderAI, DiscordSync, dnsblockd, webphone, go-taskqueue, Zlota44, CV)            | blocked on owner                                                         |
+| 7  | A19: `.github/workflows/fleet-skew.yml` (push-to-master + weekly + dispatch); green run vs v0.5.1                                         | needs pushed consumers for a green first run                             |
+| 8  | A18: fix-or-disable the golangci LSP integration; record decision                                                                         | this session's panel lied for ~4 h straight                              |
+| 9  | A25: `errors.Join` in `aggregate.New` + multi-error tests + CHANGELOG                                                                     | design doc exists                                                        |
+| 10 | A26: `SourceStatuses()` + property test + README/FEATURES rows                                                                            | design doc exists                                                        |
+| 11 | A23: mergeResponses primitive sketch vs both merge sites + port plan                                                                      |                                                                          |
+| 12 | A20: benchmarks `-count=3` (root, aggregate, checks) → medians + spread → FEATURES                                                        |                                                                          |
+| 13 | A27: federation `Healthz()` parity design note (503 conditions + latch)                                                                   | no implementation                                                        |
+| 14 | A28: golden fixtures → aggregate fuzz seed corpus; `-count=N` race-stress CI step                                                         |                                                                          |
+| 15 | A29: throttled live-path contention benchmark; throttle-window boundary fuzz (fake clock)                                                 |                                                                          |
+| 16 | A30: AwaitReady cache-aware poll-interval mini note                                                                                       |                                                                          |
+| 17 | A31: `go test -cover ./checks`; close top gaps; re-measure                                                                                |                                                                          |
+| 18 | A33: federation-adjacent ErrUnknownCriticalService composition test                                                                       | mirror of aggregate one                                                  |
+| 19 | B102: BLOCKED rows' evidence refresh (doanalyzerv2 floor under 1.27.2; auditlog ADR-004; coverage threshold)                              |                                                                          |
+| 20 | Final gates on go-health (test-race/vet/lint/vulncheck/security/fuzz/docs-check) on the final tree                                        | docs-check should pass: [Unreleased] has content and compare base exists |
+| 21 | Push go-health master                                                                                                                     | G1 already ratified for this repo                                        |
+| 22 | Stamp plan v2 EXECUTED with per-task annotations                                                                                          |                                                                          |
+| 23 | v0.5.1 announcement checklist draft (sibling the 10-02 one)                                                                               | publishing stays owner's (§g2)                                           |
+| 24 | Adoption-matrix corrections: WithGETOnly test-only usage, go-daemon/project-discovery-daemon not-consumers row, PMA/doadapter naming      |                                                                          |
+| 25 | TODO_LIST refresh from this report                                                                                                        |                                                                          |
+| 26 | BuildFlow upstream task: full-mode fan-out env/resolution bug (4 steps, single-step-green divergence) — investigate in the BuildFlow repo | separate session; evidence in AGENTS gotcha                              |
+| 27 | Triage `buildflow --failed-only` exit-69 "no tools matched"                                                                               | BuildFlow repo                                                           |
+| 28 | B112: watch the 2026-10-12 fuzz-long 4-target run + corpus artifacts                                                                      | calendar                                                                 |
+| 29 | gosec unpin watch (needs gosec ≥ #1772 in nixpkgs)                                                                                        | flake comment tracks                                                     |
+| 30 | go override drop watch (nixpkgs go_1_27 ≥ 1.27.2)                                                                                         | flake comment tracks                                                     |
+| 31 | B113: post-answer docs-health re-audit once §g is answered                                                                                |                                                                          |
+| 32 | Next status report after the tail completes                                                                                               |                                                                          |
 
 ---
 

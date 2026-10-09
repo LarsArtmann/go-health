@@ -1,9 +1,9 @@
 # Federation `Healthz` parity — design note
 
-|            |                                                                                                     |
-| ---------- | --------------------------------------------------------------------------------------------------- |
-| **Date**   | 2026-10-09                                                                                          |
-| **Status** | ACCEPTED (design) — implementation stays in the v0.6 window; do NOT implement opportunistically     |
+|            |                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Date**   | 2026-10-09                                                                                                                |
+| **Status** | ACCEPTED (design) — implementation stays in the v0.6 window; do NOT implement opportunistically                           |
 | **Inputs** | `aggregate.Aggregate.Healthz()` (docs/aggregate-healthz-design.md), `federation` merge + latch semantics, ROADMAP Theme 7 |
 
 ## Problem

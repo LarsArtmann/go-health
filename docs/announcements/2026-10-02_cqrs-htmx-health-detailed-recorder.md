@@ -1,6 +1,6 @@
 # Upstream issue draft — cqrs-htmx/health: detailed recorder variant
 
-**Repo:** LarsArtmann/cqrs-htmx (module `health`) · **Type:** feature · **Filing:** owner call
+**Repo:** LarsArtmann/cqrs-htmx (module `health`) · **Type:** feature · **Filed:** 2026-10-09 as [cqrs-htmx#31](https://github.com/LarsArtmann/cqrs-htmx/issues/31) (voice-checked 0 FAIL/0 WARN; re-verified against v0.5.0 + live `health/probe.go:37,44,55,75` before filing; filed body preserved in [2026-10-09_cqrs-htmx-issue-body.md](2026-10-09_cqrs-htmx-issue-body.md))
 
 ## Title
 

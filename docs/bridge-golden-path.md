@@ -35,7 +35,8 @@ A bridge should, in order of importance:
 - **Criticality:** fully opt-driven (`WithCriticalServices`), names are the
   map keys — contract 1 satisfied.
 - **Metadata gaps:** zero `duration_ns` (plain batch fn). `since` works.
-  **Gap G-A1:** no `DetailedHealthRecorder`/detailed variant.
+  **Gap G-A1:** no `DetailedHealthRecorder`/detailed variant — filed
+  upstream 2026-10-09 as [go-appkit#25](https://github.com/LarsArtmann/go-appkit/issues/25).
 - **Documented trap:** `WithHealthRecorder` silently dropped on this path
   (upstream go-health contract; the bridge redirects users to the injector
   path for recording).
@@ -58,7 +59,8 @@ A bridge should, in order of importance:
   (draining/catching-up) → transient error → warn. Honest and
   readiness-friendly.
 - **Metadata gaps:** plain `map[string]error` recorder → zero
-  `duration_ns`. **Gap G-C1:** no `DetailedHealthRecorder` variant;
+  `duration_ns`. **Gap G-C1:** no `DetailedHealthRecorder` variant — filed
+  upstream 2026-10-09 as [cqrs-htmx#31](https://github.com/LarsArtmann/cqrs-htmx/issues/31);
   projection status entries plausibly carry their own timing that could
   fill it.
 - **Version skew:** v4.7.0–v4.13.0 spread across 14 consumers; bridge-level

@@ -1,6 +1,6 @@
 # Upstream issue draft — go-appkit/health: detailed probe variant
 
-**Repo:** LarsArtmann/go-appkit (module `health`) · **Type:** feature · **Filing:** owner call
+**Repo:** LarsArtmann/go-appkit (module `health`) · **Type:** feature · **Filed:** 2026-10-09 as [go-appkit#25](https://github.com/LarsArtmann/go-appkit/issues/25) (voice-checked 0 FAIL/0 WARN; re-verified against v0.5.0 + live `health/probe.go:52,78` before filing; filed body preserved in [2026-10-09_go-appkit-issue-body.md](2026-10-09_go-appkit-issue-body.md))
 
 ## Title
 

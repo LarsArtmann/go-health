@@ -20,8 +20,8 @@
 | ---- | --------------- | ----- | -------------------- |
 | **1%** | **51%** | A01–A07 | The trust core: know what is actually on the remote (A01), prove the local bar before claiming anything (A02), ship the Shutdown-hang + gosec fixes to consumers (A06), close the real memory-safety-adjacent design hole in the hook seam (A04/A05), and make the newest quality gate (BuildFlow) tell the truth again (A07). Everything else inherits its credibility from this tier. |
 | **4%** | **64%** | + A09–A16 | Proof + comms: the one deep consumer runs the released tag (A09), the fleet's six suites run it (A10), the double-stale consumer catches up (A11), and the two upstream filings plus three owner publications turn shipped work into adoption and reputation. |
-| **20%** | **80%** | + A17–A24 | The standing-drift killers and v0.6 staging: makezero contract (A17), the lying LSP (A18), machine-checked fleet skew (A19), honest benchmark rows (A20), and the three v0.6 staging artifacts (A21–A23) + OpenAPI completeness (A24). Each removes a recurring per-session tax. |
-| **Tail → 100%** | remaining 20% | A25–A44 + owner-blocked set | ROADMAP Theme 6/7 features, test-depth items, hygiene, docs polish, and the four owner-blocked rows. Real but deferrable without eroding trust. |
+| **20%** | **80%** | + A08, A17–A24 | The standing-drift killers and v0.6 staging: makezero contract (A17), the lying LSP (A18), machine-checked fleet skew (A19), honest benchmark rows (A20), and the three v0.6 staging artifacts (A21–A23) + OpenAPI completeness (A24). Each removes a recurring per-session tax. |
+| **Tail → 100%** | remaining 20% | A25–A35 + owner-blocked set | ROADMAP Theme 6/7 features, test-depth items, hygiene, docs polish, and the four owner-blocked rows. Real but deferrable without eroding trust. |
 
 ---
 

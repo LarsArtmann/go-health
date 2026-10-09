@@ -607,15 +607,29 @@ func (p *Probe) refreshCache(ctx context.Context) {
 //   - Liveness continues to return 200 (the process is still alive).
 //   - Readiness returns 503 so load balancers drain traffic.
 //   - Startup returns its latched value (200 if it had previously passed).
+//
+// With [WithShutdownGracePeriod], the grace window exists to keep a running
+// refresh loop serving fresh 503s while load balancers drain — so it is
+// skipped when no loop is armed (never started, or a Start that failed
+// validation): there is nothing to keep fresh, and blocking for the window
+// would be dead time on a probe that never served.
 func (p *Probe) Shutdown() {
 	p.shuttingDown.Store(true)
 
 	// Grace window: with WithShutdownGracePeriod, keep the refresh loop
 	// running so cached readiness responses stay fresh 503s while load
 	// balancers drain. The draining flag is already set, so the loop only
-	// observes; it cannot resurrect readiness.
-	if grace := p.shutdownGrace; grace > 0 {
-		time.Sleep(grace)
+	// observes; it cannot resurrect readiness. Peek under the lock whether
+	// a loop is armed at all: after a failed (or never-called) Start the
+	// window would sleep for nothing.
+	p.mu.Lock()
+	armed := p.cancel != nil
+	p.mu.Unlock()
+
+	if armed {
+		if grace := p.shutdownGrace; grace > 0 {
+			time.Sleep(grace)
+		}
 	}
 
 	// Add (in Start) and Wait are serialized under p.mu on purpose: the

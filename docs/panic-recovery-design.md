@@ -147,8 +147,9 @@ Mechanics:
 3. The synthetic row never carries `Since` or `DurationNanos` (synthetic rows
    never do — same as liveness's empty set and Healthz's startup entry), is
    never in the critical set, and never affects the startup latch.
-4. `errors.Is(err, ErrPanicDuringEvaluationHook)` lets consumers alert on
-   observer failure specifically.
+4. The sentinel is matchable with `errors.Is` at internal sites and tests;
+   externally the row's `Error` text carries the sentinel message plus the
+   panic value, so dashboards can alert on the row by name or text.
 
 ### Consequences
 

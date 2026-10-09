@@ -119,6 +119,9 @@
 // [WithEvaluationHook] registers a synchronous callback invoked with every
 // classified response — the seam for metrics and alerting. Prometheus
 // exposition and OpenTelemetry compose on top without new dependencies.
+// The hook receives a defensive copy (its own Checks map), and a panicking
+// hook is recovered: the response degrades to a visible non-critical
+// "evaluation-hook" warn row instead of crashing the refresh loop.
 //
 // # Live Evaluation and Throttling
 //

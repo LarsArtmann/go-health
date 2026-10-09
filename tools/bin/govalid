@@ -5,5 +5,5 @@
 # module graph (requires go 1.27.1 — see AGENTS.md "Go-directive patch
 # floors" gotcha). GOTOOLCHAIN=auto lets that go self-switch. Drop this
 # wrapper when the graph no longer requires a newer patch than BuildFlow's go.
-export GOTOOLCHAIN="${GOTOOLCHAIN:-auto}"
+export GOTOOLCHAIN=auto
 exec /run/current-system/sw/bin/govalid "$@"

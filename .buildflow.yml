@@ -12,20 +12,18 @@ env:
   GOTOOLCHAIN: auto
 
 # Generator steps resolve their `go`/`govalid` from this directory first
-# (cmdrun LookPath preference). The BuildFlow closure's go is 1.27.0 and the
-# binary drops the config env for some full-mode spawns (re-verified
-# 2026-10-09 against the rebuilt 1b99ae2: license-check still spawned a
-# local-pinned go; the other seven steps needed a shell GOTOOLCHAIN=auto
-# export to pass — see AGENTS.md "Go-directive patch floors" gotcha), so
-# neither can load the tools/doanalyzerv2 graph (requires go 1.27.1). The
-# wrappers pin the system go 1.27.1 / force auto-switching themselves.
-# Drop the wrappers and this block once the graph no longer requires a
-# newer patch than BuildFlow's toolchain AND full-mode env propagation is
-# verified.
+# (cmdrun LookPath preference) — honored in single-step mode, but NOT in
+# full-mode fan-out (verified 2026-10-09 against rebuilt 1b99ae2: a
+# tools/bin/go-licenses wrapper was never reached; license-check still
+# spawned a go-licenses running go 1.27.0). The full-mode gaps need
+# `GOTOOLCHAIN=auto` exported in the launching shell (7 of 8 originally
+# skew-red steps pass with it) and license-check/govalid-generate remain
+# BuildFlow upstream tasks. Drop the wrappers and this block once the graph
+# no longer requires a newer patch than BuildFlow's toolchain AND full-mode
+# spawn env/resolution is fixed upstream.
 tool_paths:
   go-generate: tools/bin
   govalid-generate: tools/bin
-  license-check: tools/bin
 
 # Render-level per-tool warning ceilings (summary collapse; never gates —
 # the findings gate still fails on unfixable errors). Set 2026-10-08 with
@@ -44,11 +42,17 @@ warnings_budget:
   # Test-code duplication (63 findings, all *_test.go): table-driven fixtures
   # and per-test setup blocks are intentional similarity, not copy-paste debt.
   art-dupl: 80
-  # Design-signal advisories, accepted as documented decisions:
+  # Design-signal advisories, accepted as documented decisions
+  # (re-verified 2026-10-09 post-v0.5.1: 9 findings, every one in a
+  # documented class — sampling recorded in the Pareto status trail):
   #   - Probe/config field sharing (10 fields) and federation config/Prober
   #     sharing (2) are the functional-options idiom: options write to a
   #     construction-only config that Probe consumes (AGENTS.md Key Design
   #     Decisions); the analyzer's mixin suggestion would invert it.
+  #   - probe.go's "Struct has 21 fields (threshold: 15)" is the same
+  #     single-package design decision seen from the size axis: Probe is
+  #     deliberately the one orchestrator (flat public library layout,
+  #     .go-structure-linter excludes).
   #   - The two remaining federation slice-index warnings are the pre-sized
   #     parallel-fetch buffer (results[i] written by index under wg.Go, read
   #     after wg.Wait) — safe by construction, same documented pattern as the

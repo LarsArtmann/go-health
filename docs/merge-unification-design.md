@@ -1,6 +1,6 @@
 # Design: unified merge for `aggregate` and `federation`
 
-**Date:** 2026-10-02 · **Status:** DESIGN ONLY — re-venued 2026-10-08 to the v0.6 window (v0.5.0 shipped without it; body retains its original v0.5 framing). No code changes now. See TODO_LIST "v0.6 window — staging".
+**Date:** 2026-10-02 · **Status:** DESIGN — implementation-ready sketch (2026-10-09 re-grounding below); v0.6 window vehicle. No code changes yet. See TODO_LIST "v0.6 window — staging".
 
 ## Problem (P9)
 
@@ -25,28 +25,49 @@ twice and can silently diverge (the classic split brain).
    `<source>/reachable` FAIL check — never silent, never a status override
    (federation's wire rule).
 
-## Proposed core API (internal, unexported)
+## Proposed core API
+
+**Placement (resolved 2026-10-09):** an `internal/merge` subpackage. The
+original "unexported in the root package" option cannot work:
+`aggregate` and `federation` are separate packages and cannot import
+unexported root symbols — only an `internal/` package (or an exported root
+API, rejected as premature surface) is importable by both while staying
+closed to consumers. The flat-library linter excludes already cover
+subpackage roots (`aggregate/`, `federation/`, `checks/`); `internal/merge`
+joins them.
 
 ```go
-// internal merge primitive used by both packages
-type mergeSource struct {
-    Name      string
-    Response  health.Response
-    Reachable bool          // federation: fetch failed → synthetic check
-    Draining  bool
-    Started   bool          // startup latch
+// internal/merge — the shared worst-of fold for both merge-on-read packages.
+//
+// A Source is one already-fetched (or cache-loaded) contribution. Callers
+// own acquisition: aggregate loads atomics, federation performs parallel
+// HTTP fetches. The primitive is pure — no locks, no goroutines, no state.
+type Source struct {
+	Name     string
+	Response health.Response // final per-source view; TotalLatencyMs as served
+	FetchErr string          // non-empty → synthetic "<name>/reachable" FAIL check; Response otherwise ignored
 }
 
-func mergeResponses(sources []mergeSource) health.Response
+func Responses(sources []Source) health.Response
 ```
 
-- `aggregate` maps its sources' cached loads onto `mergeSource` (always
-  Reachable, Draining from probe state, Started from latch).
-- `federation` maps fetch outcomes onto it (fetch error → Reachable=false
-  with the cause carried as the synthetic check error).
-- Property tests currently duplicated across both packages
+- `aggregate.CachedResponse` maps its atomic loads onto `merge.Source`
+  (FetchErr always empty) and returns `merge.Responses(...)`.
+- `federation.(*Prober).merge` maps fetch outcomes (fetch error → FetchErr
+  carrying the cause) — but keeps the per-remote latch advancement
+  (`state.latched.Store(true)` on successful fetch) federation-side,
+  before calling the primitive. Latches are stateful outputs of a
+  successful fetch, not merge inputs; `Started` is therefore absent from
+  `merge.Source` (correcting the original sketch, which modeled it as an
+  input).
+- Property/fuzz suites duplicated across both packages
   (`FuzzAggregateMergeInvariants`, federation fuzz) collapse onto one suite
-  over `mergeResponses`, plus thin per-package tests for the mapping.
+  over `merge.Responses`, plus thin per-package tests for the mapping.
+- `Aggregate.SourceStatuses` (added post-v0.5.1) reuses the same worst-of
+  and shutdown-overlay rules per source but does not namespace checks or
+  drop scalars; it stays aggregate-side. If federation later grows the
+  same accessor, fold both onto a per-source variant of the primitive
+  rather than re-implementing the overlay a third time.
 
 ## Migration plan
 

@@ -19,7 +19,9 @@ the shutdown-grace, AsShutdowner, and aggregate examples landed right after
 (sit in `[Unreleased]`). Remaining raw ideas:
 
 - `AwaitReady` with a cache-aware poll interval (respect the source's
-  refresh interval instead of a fixed 50ms poll)
+  refresh interval instead of a fixed 50ms poll) — rule sketched in
+  [docs/awaitready-poll-design.md](docs/awaitready-poll-design.md);
+  implementation stays demand-gated
 - ~~Aggregate `Healthz` parity~~ shipped in v0.4.0 (`Aggregate.Healthz()`,
   docs/aggregate-healthz-design.md)
 
@@ -119,12 +121,16 @@ v0.4.1, and v0.5.0 (checks batteries + critical-name validation +
 `VersionHandler`) shipped ahead of them, so all three remain open. All are
 additive; each carries a written design:
 
-- `errors.Join` in `aggregate.New` — report all invalid sources instead of
-  the first ([docs/errors-join-design.md](docs/errors-join-design.md), spike verified)
-- `Aggregate.SourceStatuses()` — per-source roll-up accessor
+- ~~`errors.Join` in `aggregate.New`~~ — implemented (unreleased; v0.6
+  vehicle): reports every invalid source at once
+  ([docs/errors-join-design.md](docs/errors-join-design.md))
+- ~~`Aggregate.SourceStatuses()`~~ — implemented (unreleased; v0.6
+  vehicle): per-source roll-up accessor
   ([docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md))
 - `federation.Prober.Healthz()` — the single-endpoint parity the aggregate
-  gained in v0.4.0; the federation `Prober` still lacks it (design note first)
+  gained in v0.4.0; the federation `Prober` still lacks it (design accepted:
+  [docs/federation-healthz-design.md](docs/federation-healthz-design.md);
+  implementation stays in this window)
 
 #### v1.0 criteria draft
 

@@ -7,18 +7,14 @@
 > Lifecycle: a completed TODO is deleted (it now lives in CHANGELOG). Done
 > items never stay here, and there is no "Previously Completed" section.
 >
-> Re-verified 2026-10-08 (second docs-health audit) against the v0.5.0 tag
-> (released 2026-10-05). The former release train shipped as **v0.5.0**
-> (not v0.4.2) and its cut/tag row was deleted; the fresh-user sim passed
-> against the released tag the same day (proxy resolve, no replace,
-> batteries + critical-name validation + VersionHandler exercised). The
-> "v0.5 window" staging section is now the v0.6 window — none of its five
-> items shipped in v0.5.0. The drift-alarm gate (`.#docs-check`) shipped
-> 2026-10-08 and now mechanizes the README/AGENTS/CHANGELOG/FEATURES sync
-> this header used to narrate. Owner gates: G2 (upstream filing authority)
-> and G3 (CV bump authority) stand; branch protection is ON (verified via
-> `gh api …/branches/master` 2026-10-08), so the old G3 branch-protection
-> asks are closed.
+> Re-verified 2026-10-09 against the released **v0.5.1** tag (cut
+> 2026-10-09: configured-off checks, hook-panic recovery, Disk G115
+> guard, failed-Start disarm fix; proxy hash-matched, GitHub Release
+> Latest). The drift-alarm gate (`.#docs-check`) mechanizes the
+> README/AGENTS/CHANGELOG/FEATURES sync this header used to narrate.
+> Branch protection verified at CONFIG level 2026-10-09 (5 named checks +
+> linear history + admin bypass). The v0.6 staging window (ServiceName,
+> renames, merge unification) is unaffected by v0.5.1.
 
 ## Status legend
 

@@ -1,6 +1,12 @@
 # errors.Join for aggregate.New — design note
 
-> Decided: 2026-09-04 · Status: DEFERRED to v0.3.0 (spike verified) · Resolves: open idea "better construction errors"
+> Decided: 2026-09-04 · Status: IMPLEMENTED (unreleased; v0.6.0 vehicle) · Resolves: open idea "better construction errors"
+
+**Implementation note (2026-10-09):** shipped as designed below — `New`
+collects one wrapped `ErrInvalidSource` per problem and returns
+`errors.Join(problems...)`. `ErrNoSources` still returns early (there is
+nothing to validate). The deferral condition ("belongs in a minor release
+with a changelog callout") is satisfied by the v0.6.0 window.
 
 ## Problem
 

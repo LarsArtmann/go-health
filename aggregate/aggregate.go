@@ -61,6 +61,10 @@ type Aggregate struct {
 // New creates an [Aggregate] over the given sources. Construction validates
 // the invariants that reads would otherwise have to enforce silently: at
 // least one source, and unique non-empty slash-free names with non-nil probes.
+//
+// Every invalid source is reported, not just the first: the returned error
+// joins one wrapped [ErrInvalidSource] per problem, so [errors.Is] matching
+// is unchanged while the message lists each offending source on its own line.
 func New(sources ...Source) (*Aggregate, error) {
 	if len(sources) == 0 {
 		return nil, ErrNoSources
@@ -68,23 +72,28 @@ func New(sources ...Source) (*Aggregate, error) {
 
 	seen := make(map[string]struct{}, len(sources))
 	maxInterval := time.Duration(0)
+	var problems []error
 
 	for _, src := range sources {
 		switch {
 		case src.Probe == nil:
-			return nil, fmt.Errorf("%w: source %q has a nil Probe", ErrInvalidSource, src.Name)
+			problems = append(problems, fmt.Errorf("%w: source %q has a nil Probe", ErrInvalidSource, src.Name))
+			continue
 		case src.Name == "":
-			return nil, fmt.Errorf("%w: source name must not be empty", ErrInvalidSource)
+			problems = append(problems, fmt.Errorf("%w: source name must not be empty", ErrInvalidSource))
+			continue
 		case strings.Contains(src.Name, "/"):
-			return nil, fmt.Errorf(
+			problems = append(problems, fmt.Errorf(
 				"%w: source name %q must not contain '/' (names become \"name/check\" key prefixes)",
 				ErrInvalidSource,
 				src.Name,
-			)
+			))
+			continue
 		}
 
 		if _, dup := seen[src.Name]; dup {
-			return nil, fmt.Errorf("%w: duplicate source name %q", ErrInvalidSource, src.Name)
+			problems = append(problems, fmt.Errorf("%w: duplicate source name %q", ErrInvalidSource, src.Name))
+			continue
 		}
 
 		seen[src.Name] = struct{}{}
@@ -92,6 +101,10 @@ func New(sources ...Source) (*Aggregate, error) {
 		if d := src.Probe.RefreshInterval(); d > maxInterval {
 			maxInterval = d
 		}
+	}
+
+	if len(problems) > 0 {
+		return nil, errors.Join(problems...)
 	}
 
 	return &Aggregate{sources: sources, refreshInterval: maxInterval}, nil

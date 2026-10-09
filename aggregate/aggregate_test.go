@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -151,6 +152,50 @@ func TestNew_RejectsInvalidSources(t *testing.T) {
 				t.Fatalf("aggregate.New error = %v, want %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+// TestNew_JoinsAllInvalidSources pins the errors.Join behavior: construction
+// reports every invalid source at once (one line per problem) instead of
+// stopping at the first, while errors.Is against the sentinel keeps matching
+// through the joined tree. See docs/errors-join-design.md.
+func TestNew_JoinsAllInvalidSources(t *testing.T) {
+	t.Parallel()
+
+	healthy := newStartedProbe(t, false, false)
+
+	_, err := aggregate.New(
+		aggregate.Source{Name: "nil-probe", Probe: nil},
+		aggregate.Source{Name: "", Probe: healthy},
+		aggregate.Source{Name: "slash/name", Probe: healthy},
+		aggregate.Source{Name: "api", Probe: healthy},
+		aggregate.Source{Name: "api", Probe: healthy},
+		aggregate.Source{Name: "ok", Probe: healthy},
+	)
+	if err == nil {
+		t.Fatal("aggregate.New unexpectedly succeeded")
+	}
+
+	if !errors.Is(err, aggregate.ErrInvalidSource) {
+		t.Fatalf("joined error does not match %v via errors.Is: %v", aggregate.ErrInvalidSource, err)
+	}
+	if errors.Is(err, aggregate.ErrNoSources) {
+		t.Fatalf("joined error unexpectedly matches %v: %v", aggregate.ErrNoSources, err)
+	}
+
+	for _, want := range []string{
+		`source "nil-probe" has a nil Probe`,
+		"source name must not be empty",
+		`source name "slash/name" must not contain '/'`,
+		`duplicate source name "api"`,
+	} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("joined error message missing %q;\ngot:\n%s", want, err.Error())
+		}
+	}
+
+	if got := strings.Count(err.Error(), "\n"); got != 3 {
+		t.Errorf("joined error line count = %d, want 4 lines (3 newlines):\n%s", got, err.Error())
 	}
 }
 

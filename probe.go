@@ -74,6 +74,12 @@ type Probe struct {
 	shuttingDown  atomic.Bool
 	startupPassed atomic.Bool
 
+	// lifecycleStarted records that a Start call completed successfully, in
+	// any mode (cached or live). Shutdown consults it to decide whether the
+	// WithShutdownGracePeriod window is honored: a probe that never started
+	// has no lifecycle to drain, so the window would be dead time.
+	lifecycleStarted atomic.Bool
+
 	bootTime time.Time
 	version  string
 
@@ -168,9 +174,10 @@ func WithLiveThrottle(d time.Duration) Option {
 // WithShutdownGracePeriod makes [Probe.Shutdown] two-phase automatically:
 // after marking the probe as draining (readiness 503) it keeps the refresh
 // loop running for d so dashboards and load balancers observe fresh 503s,
-// then stops the loop. Shutdown blocks for the grace window. Zero (default)
-// stops the loop immediately; [Probe.MarkShuttingDown] remains the manual
-// two-phase path.
+// then stops the loop. Shutdown blocks for the grace window whenever the
+// probe's lifecycle started successfully (cached or live mode). Zero
+// (default) stops the loop immediately; [Probe.MarkShuttingDown] remains the
+// manual two-phase path.
 func WithShutdownGracePeriod(d time.Duration) Option {
 	return func(c *config) { c.shutdownGrace = d }
 }
@@ -537,6 +544,7 @@ func (p *Probe) Start(ctx context.Context) error {
 	}
 
 	p.latest.Store(&resp)
+	p.lifecycleStarted.Store(true)
 
 	if p.refreshInterval > 0 {
 		go p.refreshLoop(runCtx)
@@ -608,25 +616,23 @@ func (p *Probe) refreshCache(ctx context.Context) {
 //   - Readiness returns 503 so load balancers drain traffic.
 //   - Startup returns its latched value (200 if it had previously passed).
 //
-// With [WithShutdownGracePeriod], the grace window exists to keep a running
-// refresh loop serving fresh 503s while load balancers drain — so it is
-// skipped when no loop is armed (never started, or a Start that failed
-// validation): there is nothing to keep fresh, and blocking for the window
-// would be dead time on a probe that never served.
+// With [WithShutdownGracePeriod], the grace window keeps a running refresh
+// loop serving fresh 503s while load balancers drain. It is honored whenever
+// the probe's lifecycle started successfully (cached or live mode alike: even
+// without a loop, the block is the caller's drain window before teardown) and
+// skipped when it never did (Start not called, or failed validation): there
+// is no lifecycle to drain, and blocking for the window would be dead time.
 func (p *Probe) Shutdown() {
 	p.shuttingDown.Store(true)
 
 	// Grace window: with WithShutdownGracePeriod, keep the refresh loop
 	// running so cached readiness responses stay fresh 503s while load
 	// balancers drain. The draining flag is already set, so the loop only
-	// observes; it cannot resurrect readiness. Peek under the lock whether
-	// a loop is armed at all: after a failed (or never-called) Start the
-	// window would sleep for nothing.
-	p.mu.Lock()
-	armed := p.cancel != nil
-	p.mu.Unlock()
-
-	if armed {
+	// observes; it cannot resurrect readiness. Checking lifecycleStarted
+	// (not the armed cancel) also honors the window in live mode, where a
+	// successfully started probe has no loop but still needs its drain
+	// time; only never-started and failed-Start probes skip it.
+	if p.lifecycleStarted.Load() {
 		if grace := p.shutdownGrace; grace > 0 {
 			time.Sleep(grace)
 		}

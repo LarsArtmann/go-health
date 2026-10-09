@@ -699,13 +699,20 @@ func invokeEvaluationHook(fn func(Response), resp Response) (hookErr error) {
 	hookView.Checks = make(map[string]Check, len(resp.Checks))
 	maps.Copy(hookView.Checks, resp.Checks)
 
+	invoked := func() bool {
+		fn(hookView)
+
+		return true
+	}
+
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
 				hookErr = fmt.Errorf("%w: %v", ErrPanicDuringEvaluationHook, r)
 			}
 		}()
-		fn(hookView)
+
+		_ = invoked()
 	}()
 
 	return hookErr

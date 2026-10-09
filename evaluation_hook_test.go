@@ -78,7 +78,10 @@ func TestWithEvaluationHook_PanicNeverLowersFail(t *testing.T) {
 	resp := probe.Evaluate(context.Background())
 
 	if resp.Status != health.StatusFail {
-		t.Errorf("Status: want fail (critical failure must not degrade to warn), got %q", resp.Status)
+		t.Errorf(
+			"Status: want fail (critical failure must not degrade to warn), got %q",
+			resp.Status,
+		)
 	}
 
 	if _, ok := resp.Checks["evaluation-hook"]; !ok {
@@ -90,6 +93,7 @@ func TestWithEvaluationHook_HookSeesPreDegradationResponse(t *testing.T) {
 	t.Parallel()
 
 	var sawRow atomic.Bool
+
 	var sawStatus atomic.Value
 
 	probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
@@ -107,7 +111,9 @@ func TestWithEvaluationHook_HookSeesPreDegradationResponse(t *testing.T) {
 	got := probe.Evaluate(context.Background())
 
 	if sawRow.Load() {
-		t.Error("hook must not see its own synthetic row (it observes the evaluation, not the degradation)")
+		t.Error(
+			"hook must not see its own synthetic row (it observes the evaluation, not the degradation)",
+		)
 	}
 
 	if s := sawStatus.Load(); s != health.StatusPass {
@@ -127,7 +133,10 @@ func TestWithEvaluationHook_CannotMutateServedResponse(t *testing.T) {
 	},
 		health.WithCriticalServices("svc"),
 		health.WithEvaluationHook(func(resp health.Response) {
-			resp.Checks["injected"] = health.Check{Status: health.StatusFail, Error: "hook wrote into the map"}
+			resp.Checks["injected"] = health.Check{
+				Status: health.StatusFail,
+				Error:  "hook wrote into the map",
+			}
 			resp.Checks["svc"] = health.Check{Status: health.StatusFail}
 			resp.Status = health.StatusFail
 		}),
@@ -164,12 +173,12 @@ func TestWithEvaluationHook_PanicOnRefreshLoop_DoesNotKillLoop(t *testing.T) {
 		}),
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	if err := probe.Start(ctx); err != nil {
 		t.Fatalf("Start: %v", err)
 	}
+
 	t.Cleanup(probe.Shutdown)
 
 	deadline := time.Now().Add(5 * time.Second)
@@ -177,6 +186,7 @@ func TestWithEvaluationHook_PanicOnRefreshLoop_DoesNotKillLoop(t *testing.T) {
 		if hookCalls.Load() >= 3 {
 			break
 		}
+
 		time.Sleep(2 * time.Millisecond)
 	}
 

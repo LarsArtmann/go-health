@@ -41,3 +41,72 @@ which is exactly the critical-name footgun class (now guarded at runtime by
 
 - Renaming check names on the wire (frozen since v0.1.3).
 - Forcing typetostring conventions into the library.
+
+---
+
+## Fleet inventory (A21, 2026-10-09 — all local checkouts, source-verified)
+
+**Blast-radius reduction (the load-bearing finding):** untyped string
+literals and untyped `const` names survive the `...ServiceName` change
+untouched (assignability). Only **typed-string values** and **`...string`
+spreads** break. The fleet's breakage set is therefore five sites in five
+repos, not "every call site" — the v0.5-window migration estimate above was
+pessimistic; the real v0.6 work is one collection-type change per affected
+repo.
+
+| Repo | Pin | Constructor (prod, non-test) | Critical names form | Breaks under `ServiceName`? |
+| ---- | --- | ---------------------------- | ------------------- | --------------------------- |
+| webphone | v0.5.0 | `health.New` (app.go:262) + `health.NewChecks` (server.go:385) | literals `"sqlite"`, `"blob-dir"` (documented as contract) | no (untyped literals) |
+| Zlota44 | v0.4.1 | `health.New` (health.go:102) | `checkSQLite` const (health.go:105) | no if untyped const (verify decl) |
+| dnsblockd | v0.4.1 | `health.NewChecks` (health.go:53) | consts `healthServiceDatabase`, `healthServiceDNS` (:59) | no if untyped consts (verify decls) |
+| nsfw-classifier | v0.5.0 | `health.New` (app.go:363) | `typetostring.GetType[...]()` typed string (:360) | **YES — typed getter** |
+| file-and-image-renamer | v0.5.0 | `gohealth.New` (providers.go:131) | `critical...` spread of `[]string` (:133) | **YES — spread** |
+| KeyHolderAI | v0.4.1 | `health.New` (di.go:466) | multi-line names (di.go:469) — verify literal vs typed | verify |
+| DiscordSync | v0.4.1 | `health.New` (health_dashboard.go:82) | `criticalHealthServiceNames()...` spread of `[]string` (:95) | **YES — spread** |
+| CV | v0.1.3 | `health.New` (health_probe.go:61) | `critical...` spread (:58) | **YES — spread** |
+| go-appkit (bridge) | v0.5.0 | `health.NewWithHealthCheck` (health/probe.go:78) | pass-through `opts ...health.Option` — consumer-facing | only if bridge signature changes (it forwards options; unaffected) |
+| cqrs-htmx (bridge) | v0.5.0 | `gohealth.New(do.New(), all...)` (health/probe.go:46) | pass-through options; doc literals only | unaffected (forwards options) |
+| go-taskqueue | v0.5.0 | none — implements dashboard `Prober` over `health.Response` types (internal/webui/health.go) | n/a (types-only consumer) | no |
+| go-health-dashboard | v0.5.0 | `health.New` in tests/example; prod wiring via aggregate/federation | literals in tests ("postgres", "redis") | no (untyped literals) |
+| PMA, doadapter | v0.4.x | **no local checkout** — not inventoried | — | scan on next contact |
+| typespec-eventsourcing | — | `NewChecks` in tests only (adoption-matrix) | — | no (test literals) |
+| go-daemon, project-discovery-daemon | — | **NOT consumers**: `WithShutdownGracePeriod` there is go-daemon's own `ServerOption` (socket.go:128), no go-health import | — | adoption-matrix row over-counts; correct on next matrix pass |
+
+### Migration mechanics (updated by the inventory)
+
+1. Five-site break set: nsfw-classifier (typed getter), fir/DiscordSync/CV
+   (`[]string` spreads). Fix per repo: change the collection to
+   `[]health.ServiceName` (or generate via `ServiceName(typetostring...)`).
+2. Two const-decl verifications (Zlota44 `checkSQLite`, dnsblockd
+   `healthService*`): untyped `const` → no change; `var`/typed → wrap.
+3. The scanner below finds every breaking shape mechanically; per-repo test
+   commands are the verification plan.
+
+### Scanner (staging artifact — detects, never rewrites)
+
+`tools/servicename-scan.sh` flags (a) `WithCriticalServices`/`NewChecks`/
+`NewWithHealthCheck` call sites, (b) `...)` spreads, (c) typed-string
+getters inside those calls, across a fleet checkout. Dry-run output
+2026-10-09 over the 13 local repos: five candidates = the four true breaks
+above plus one known false-positive class (go-appkit `health/probe.go:78`
+spreads `opts ...health.Option` — option forwarding, not a string
+collection; triage rule: a spread breaks only when it spreads a
+`[]string`). Rewrite at v0.6 window-open is human-reviewed per the
+table; a blind sed would also touch the untyped literals that survive —
+deliberately not attempted.
+
+### Verification plan (per-repo, post-rewrite at v0.6 window)
+
+| Repo | Command | Gate |
+| ---- | ------- | ---- |
+| webphone | `nix run .#test` (flake) or `go test ./...` | suite green |
+| Zlota44 | `go test ./...` | suite green |
+| dnsblockd | `go test ./...` + dashboard overlay test | suite green |
+| nsfw-classifier | `go test ./...` | suite green |
+| fir | `go test ./...` | suite green |
+| KeyHolderAI | `go test ./...` | suite green |
+| DiscordSync | `go test ./...` + private critical-name guard test | suite green incl. guard |
+| CV | `go test ./...` | suite green |
+| go-appkit | `cd health && go test ./...` | module green |
+| cqrs-htmx | `cd health && go test ./...` | module green |
+| go-health-dashboard | `nix run .#test` incl. browser/screenshot suite | full green |

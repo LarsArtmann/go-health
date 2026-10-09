@@ -1,20 +1,31 @@
 # Draft: comment on samber/do#318 — per-service duration on `HealthOutcome`
 
 - **Target**: https://github.com/samber/do/issues/318 (own issue, open)
-- **Action**: post comment (owner call — not filed this session)
+- **Action**: post comment (owner call — not filed; third-party repo)
 - **Verified against**: samber/do v2.1.0 (module cache) + `master` scope.go
-  (identical, 2026-09-22); go-health v0.3.0 behavior (scratch test, this repo)
+  (identical, 2026-09-22; **line numbers re-verified against master
+  2026-10-09** — see B052 note below); go-health v0.3.0 behavior (scratch
+  test, this repo)
 - **Prior-art search**: `duration OR timing OR elapsed` and `health check`
   across samber/do issues+PRs — no timing proposal exists (#318 is states-only;
-  #195 is hooks; #317 is transient-nil).
+  #195 is hooks; #317 is transient-nil). Re-checked 2026-10-09: #318 still
+  has 0 comments, no evolution.
+- **B052 re-verification (2026-10-09, master)**: `HealthCheckWithContext`
+  still `scope.go:307`; the batch machinery was refactored —
+  `serviceHealthCheck`/`raceWithTimeout` (old `scope.go:735/:752`) now live
+  in `queueServiceHealthcheck` (`root_scope.go:213`, per-service timeout at
+  `:228-241`, pool path `:245`); shutdown per-service timing now stamped at
+  `scope.go:496` into the `:434` map (report `:517`); `service_lazy.go`
+  `buildTime` `:110` + getter `:241` unchanged. Post body below already uses
+  these current numbers.
 
 ---
 
 The same "thrown away at the boundary" argument covers per-service timing, not just states.
 
-`HealthCheckWithContext` returns `map[string]error` (v2.1.0 `scope.go:307`; identical on `master`). The wall-clock of each check exists right up until it doesn't: `serviceHealthCheck` (`scope.go:735`) invokes the actual check inside `raceWithTimeout` (`scope.go:752`), and that duration is discarded — the caller-facing channel carries only `error` (`root_scope.go:208-230`).
+`HealthCheckWithContext` returns `map[string]error` (v2.1.0 `scope.go:307`; identical on `master`, re-verified 2026-10-09). The wall-clock of each check exists right up until it doesn't: `queueServiceHealthcheck` (`root_scope.go:213` on `master`; v2.1.0 called this `serviceHealthCheck`/`raceWithTimeout`) invokes the actual check under a per-service timeout (`root_scope.go:228-241`, pool path `:245`), and that duration is discarded — the caller-facing channel carries only `error`.
 
-do already ships this exact pattern one batch over: shutdown collects per-service durations into `ShutdownReport.ServiceShutdownTime map[ServiceDescription]time.Duration` (`scope.go:434`, stamped at `scope.go:371-378` with `time.Now`/`time.Since` around each service). Lazy services even keep `buildTime` (`service_lazy.go:110`, getter at `:241`). Health checks are the one batch that measures everything and reports nothing.
+do already ships this exact pattern one batch over: shutdown collects per-service durations into `ShutdownReport.ServiceShutdownTime map[ServiceDescription]time.Duration` (field map `scope.go:434`, stamped at `scope.go:496` with `time.Now`/`time.Since` around each service, report at `:517`). Lazy services even keep `buildTime` (`service_lazy.go:110`, getter at `:241`). Health checks are the one batch that measures everything and reports nothing.
 
 Why not measure outside do: my [go-health](https://github.com/LarsArtmann/go-health) health documents carry per-check `duration_ns`, but the samber/do injector path can never populate it — `map[string]error` has no timing channel, while go-health's own batch executors (`NewChecks`, `NewWithDetailedCheck`) do. Wrapping services in external timers means re-registering them (identity changes), and a batch-level stopwatch can't attribute time per service when checks run concurrently under `HealthCheckParallelism`.
 

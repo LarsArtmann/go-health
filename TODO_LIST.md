@@ -32,14 +32,13 @@
 
 | Task                                                   | Status | Impact | Effort | Evidence                                                                                      |
 | ------------------------------------------------------ | ------ | ------ | ------ | --------------------------------------------------------------------------------------------- |
-| go-health-dashboard full suite against released v0.5.0 | TODO   | High   | 40min  | The one deep aggregate+federation consumer; no verification recorded since the 2026-10-05 tag |
+| go-health-dashboard full suite against released v0.5.x | TODO   | High   | 40min  | The one deep aggregate+federation consumer; no verification recorded since the 2026-10-05 tag |
 
 ## Fleet proof & leverage — the 4%
 
-| Task                                                                                                                    | Status | Impact | Effort | Evidence                                                                                      |
-| ----------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------- |
-| File go-appkit/health + cqrs-htmx/health upstream issues from drafts                                                    | TODO   | High   | 40min  | Drafts ready in `docs/announcements/2026-10-02_*.md`; filing is owner (G2)                    |
-| Run consumer test suites against the v0.5.0 tag: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier | TODO   | Medium | 45min  | 2026-10-03 train: all 8 direct apps BUILD-OK against then-unreleased master; rerun on the tag |
+| Task                                                    | Status | Impact | Effort | Evidence                                                                                     |
+| ------------------------------------------------------- | ------ | ------ | ------ | -------------------------------------------------------------------------------------------- |
+| Run consumer test suites against the latest tag: fir, KeyHolderAI, DiscordSync, go-taskqueue, webphone, nsfw-classifier | TODO   | Medium | 45min  | Pins 2026-10-09: fir/go-taskqueue/webphone/nsfw-classifier on v0.5.0; KeyHolderAI/DiscordSync on v0.4.1; rerun on v0.5.1 |
 | Bump CV to go-health v0.5.x + `go 1.27` floor (currently v0.1.3 + `go 1.26.7`; double-stale vs v0.5.0)                  | TODO   | Medium | 45min  | CV = [github.com/LarsArtmann/CV](https://github.com/LarsArtmann/CV) (enterprise CV/resume generator). 2026-10-03 version-skew table: every other consumer pins v0.4.1 (G3) |
 
 ## v0.6 window — staging (20%)
@@ -66,7 +65,7 @@
 | Task                                                                | Status | Impact | Effort | Evidence                                                                                                                                                                        |
 | ------------------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Publish the v0.1.1/v0.1.2 announcement                              | TODO   | Low    | 15min  | Draft + channels checklist ready in `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`.                                                                                           |
-| Post samber/do#318 comment: per-service duration on `HealthOutcome` | TODO   | Medium | 5min   | Draft + verification notes + checklist ready in `docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md` (gates passed, voice-checked; filing is an owner call). |
+| Post samber/do#318 comment: per-service duration on `HealthOutcome` | TODO   | Medium | 5min   | Draft + verification notes + checklist ready in `docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md` (gates passed, voice-checked). **2026-10-09: citations re-verified against samber/do master** (batch machinery moved to `queueServiceHealthcheck`, root_scope.go:213); #318 still has 0 comments. Posting is the owner act (third-party repo). |
 
 ## High Impact (owner decisions — blocked)
 

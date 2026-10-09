@@ -26,7 +26,7 @@ only in-process (`CheckDetail.Duration`).
 | ---------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `SanitizeResponse`                 | `CoerceValidUTF8`                           | The current name is a euphemism: the function does one thing (replaces invalid UTF-8) and does not sanitize in any security sense. |
 | `Check.Since` (JSON `since`)       | Go field `StatusSince` (JSON stays `since`) | "Since when has the check been in its current status" — the JSON key is honest, the Go name is vague. Wire untouched.              |
-| `WithGETOnly`                      | **remove** (deprecated since v0.1.1)        | One verified consumer (KeyHolderAI legacy path, adoption matrix); nudge first, then drop.                                          |
+| `WithGETOnly`                      | **remove** (deprecated since v0.1.1)        | No production consumer: KeyHolderAI usage is tests only (adoption matrix 2026-10-09); drop after the deprecation-policy cycle.      |
 | `WithCriticalServices(...string)`  | `(...ServiceName)`                          | docs/servicename-design.md.                                                                                                        |
 | `Probe`/`Prober`/`Source`/`Remote` | one "health source" lexicon                 | docs/vocabulary-reconciliation.md.                                                                                                 |
 

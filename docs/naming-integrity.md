@@ -34,3 +34,27 @@ Process per rename: deprecation-policy.md checklist (doc note + SA1019
 deprecation marker one minor release before removal where possible), fleet
 call sites pre-enumerated from the adoption matrix, CHANGELOG entry with
 mechanical migration snippet.
+
+---
+
+## v0.6 staged-rename decision table (A22, 2026-10-09 — consumer impact source-verified)
+
+Principle that splits the table: **alias where Go allows it, break only
+where Go forces it.** A pure name change can ship as new-name-canonical +
+old-name-deprecated-alias (SA1019, one-minor grace per deprecation-policy);
+a signature change cannot be aliased (`...string` and `...ServiceName`
+cannot share a literal call site), so it takes the clean cut.
+
+| Rename | Breaks (verified) | Loudness | Alias vs clean cut | v0.6 mechanics |
+| ------ | ----------------- | -------- | ------------------ | ------------- |
+| `WithCriticalServices` → `WithCriticalChecks` | 8 constructor repos (webphone, Zlota44, dnsblockd, nsfw-classifier, fir, KeyHolderAI, DiscordSync, CV) + 2 bridges forwarding options | compile error, mechanical | **alias + deprecate**: `WithCriticalChecks` canonical, `WithCriticalServices` thin deprecated wrapper (same body), remove no earlier than v0.7 | compose with the ServiceName cut: alias keeps `...string`? — no: alias takes the NEW `...ServiceName` too; untyped literals still compile at both names, so the alias quiets only name drift, not type drift |
+| `WithCriticalServices(...string)` → `(...ServiceName)` | 4 sites (nsfw-classifier typed getter; fir/DiscordSync/CV spreads) + 2 const-decl verifications | compile error at typed/spread sites only; literals survive | **clean cut, no shim** (impossible to alias a signature; naming-integrity ruling stands) | per A21 inventory: one collection-type change per repo; scanner `tools/servicename-scan.sh` |
+| `SanitizeResponse` → `CoerceValidUTF8` | dashboard only (`dashboard.go`, 1 prod + 1 test file) | compile error, 1-line | **alias + deprecate** (trivial wrapper) | quietest possible: single consumer notified via go-appkit#25-era bridge notes |
+| `Check.Since` → `StatusSince` (Go only, JSON `since` frozen) | dashboard only (`status.go:311,391` prod + 3 test files' literals) | compile error at named-literal sites | **clean cut** — a field cannot be aliased in Go; wire untouched so dashboards/payloads see no change | pair with the doc pass in check-metadata-design.md |
+| `WithGETOnly` removal | KeyHolderAI test file only (`health_probe_http_test.go`) — no prod usage anywhere (lighter than the adoption-matrix "legacy path" read) | test compile error | **remove at v0.6** after one nudge to KeyHolderAI (deprecation live since v0.1.1) | delete + CHANGELOG migration line: replace with `WithAllowedMethods(http.MethodGet)` |
+| `Probe`/`Prober`/`Source`/`Remote` lexicon | dashboard (aggregate+federation deep), bridges, docs fleet-wide | widest blast of the set | **defer past v0.6**: highest coupling, lowest lie-factor of the set (names are consistent within their packages); revisit only with vocabulary-reconciliation.md enforcement tooling | keep as vocabulary doc, not a rename row |
+
+Order at window-open: ServiceName cut (A21, unblocks the alias decision) →
+WithCriticalChecks alias → SanitizeResponse alias → StatusSince →
+WithGETOnly removal → lexicon (deferred). Each rides its own minor-tagged
+CHANGELOG entry with the mechanical migration snippet.

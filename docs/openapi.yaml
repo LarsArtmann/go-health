@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: go-health probe endpoints
-  version: 0.5.0
+  version: 0.5.1
   description: |
     Kubernetes-style health probes exposed by the go-health Probe.
     Field-presence rules are documented per property; they are enforced by
@@ -17,6 +17,15 @@ info:
     source's batch, and any shutting-down source forces `shutting_down: true`
     with overall `fail`. Aggregate liveness remains dependency-blind and its
     startup latches only once every source has.
+
+    The `health/federation` sub-package likewise serves the same three paths
+    over a merged body (it pulls N remote go-health instances over HTTP and
+    merges on read): same `source/check` namespacing and merge rules as
+    aggregate, plus one synthetic `<name>/reachable` check graded `fail`
+    with the fetch/decode error for every unreachable or undecodable remote —
+    an unreachable remote is never a silent freeze and never a status
+    override. Wire input is untrusted: invalid documents are refused whole.
+    See docs/federation-design.md.
   license:
     name: MIT
     identifier: MIT
@@ -78,6 +87,38 @@ paths:
               schema: { $ref: "#/components/schemas/HealthResponse" }
         "503":
           description: Boot still in progress (latch unset).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+  /healthz-combined:
+    get:
+      summary: Combined traffic gate (mountable Healthz)
+      description: |
+        One endpoint answering "should traffic be routed here?" — the
+        mountable handler returned by health.Probe.Healthz() and
+        aggregate.Aggregate.Healthz(). The path shown is documentation-only:
+        the host mounts it wherever the load balancer expects (DefaultRoutes
+        already claims /healthz for liveness).
+
+        503 while the startup latch is unset (the body then carries one
+        synthetic failing "startup" check), when the readiness roll-up is
+        fail, or while shutting down; 200 with the full response body
+        otherwise (warn stays 200). Reads the same cached/live readiness
+        path as /readyz. The aggregate variant fails when any source fails,
+        any source is draining, or not every source has latched.
+      operationId: healthzCombined
+      responses:
+        "200":
+          description: Traffic should flow (roll-up pass or warn).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+        "503":
+          description: Booting (startup latch unset), a critical failure, or
+            shutting down. The synthetic "startup" check appears only on the
+            unlatched-boot variant of this 503.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/HealthResponse" }

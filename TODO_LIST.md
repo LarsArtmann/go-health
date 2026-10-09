@@ -43,11 +43,15 @@
 
 ## v0.6 window — staging (20%)
 
-| Task                                                                                                                      | Status | Impact | Effort | Evidence                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------ |
-| ServiceName call-site inventory: fleet list → mechanical rewrite script + verification diff                               | TODO   | High   | 60min  | docs/servicename-design.md (re-venued to the v0.6 window, 2026-10-08); plan R6 |
-| Finalize rename staging: `SanitizeResponse`→`CoerceValidUTF8`, `Since`→`StatusSince`, `WithCriticalChecks` decision table | TODO   | Med    | 40min  | docs/naming-integrity.md; plan R7                                              |
+| Task                                                      | Status | Impact | Effort | Evidence                                                                       |
+| --------------------------------------------------------- | ------ | ------ | ------ | ------------------------------------------------------------------------------ |
 | `mergeResponses` port prep: extract primitive sketch + corpus fixture; port both property suites when the window opens    | TODO   | Med    | 50min  | docs/merge-unification-design.md; plan R11                                     |
+
+_Staging completed 2026-10-09 and deleted per lifecycle: ServiceName call-site
+inventory + scanner + verification plan (A21 → docs/servicename-design.md
+§"Fleet inventory", `tools/servicename-scan.sh`); rename decision table
+(A22 → docs/naming-integrity.md §"v0.6 staged-rename decision table"). Both
+execute only at v0.6 window-open._
 
 ## Hardening — the tail (100%)
 

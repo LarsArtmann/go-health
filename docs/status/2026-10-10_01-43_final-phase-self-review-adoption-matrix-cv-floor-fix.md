@@ -19,7 +19,7 @@ go-health HEAD: green (`37987766928`, 6m6s).
    `tools/doanalyzerv2/go.mod` directive flapped `1.27.1`→`1.27`→`1.27.1` (benign toolchain
    churn — and fresh evidence for the "not a local lever" TODO row).
 2. **A11 closed as scoped** — CV `nix flake check`: all 7 checks passed (treefmt, golden
-   help output, mermaid gate, go-modules FOD, …). Note: this closes what A11 *defined*; see
+   help output, mermaid gate, go-modules FOD, …). Note: this closes what A11 _defined_; see
    d)1 for what the definition missed.
 3. **Adoption-matrix corrections, every claim source-verified before writing:**
    - `WithGETOnly` in KeyHolderAI is **tests only** (`cmd/keyholderai/health_probe_http_test.go`;
@@ -43,7 +43,7 @@ go-health HEAD: green (`37987766928`, 6m6s).
 6. **Gates + push + CI** — `nix fmt` 0 changes; `nix run .#gates` ALL GREEN; closing report
    committed (`2c6757c`), pushed; remote CI verified green.
 7. **nix-hash-fix triage (CV)** — root cause found: BuildFlow's repair targets the file that
-   textually *mentions* `vendorHash` (the refresh app's script in `apps.nix`) instead of the
+   textually _mentions_ `vendorHash` (the refresh app's script in `apps.nix`) instead of the
    definition sites in `nix/packages.nix`, so the fix no-ops. Documented in CV's canonical
    `docs/agents/nix-deployment.md` with the working path (`nix run .#refresh-vendor-hash`)
    and the upstream fix (match assignments, not mentions).
@@ -96,8 +96,8 @@ go-health HEAD: green (`37987766928`, 6m6s).
    table's `old_string` from memory instead of copying the freshest view (the Status column
    separator was 7 dashes, I typed 6). Caught by post-edit verification; one retry burned.
 3. **"fir" repo confusion** — hunted for a directory named `fir` (does not exist), then used
-   an ambiguous grep fallback (`|| echo "no require"`) that fires for *missing files* as well
-   as *no match* — nearly mis-concluded the consumer didn't exist. Resolved to
+   an ambiguous grep fallback (`|| echo "no require"`) that fires for _missing files_ as well
+   as _no match_ — nearly mis-concluded the consumer didn't exist. Resolved to
    file-and-image-renamer only via usage evidence (`pkg/injector/providers.go:135`).
 4. **Sloppy placeholder in a permanent doc** — the planning-doc scorecard says "22:5x" and
    "(22:5x)" where a real timestamp belonged.
@@ -135,6 +135,7 @@ go-health HEAD: green (`37987766928`, 6m6s).
 ## f) Next up to 50 (grouped by gate; ★ = unblocked now)
 
 **Owner answers first (everything below cascades from these):**
+
 1. ① Authorize consumer pushes (8 repos + crush-config) — then push and…
 2. …draft + land A19 `fleet-skew.yml` (push-to-master + weekly + dispatch) and verify a green run.
 3. ② Authorize publishing: post samber/do#318 comment (draft citation-current).

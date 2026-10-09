@@ -139,7 +139,7 @@ go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod re
 - Each test creates its own `do.Injector` — no shared state.
 - `mockRecorder` type replaces the old auditlog integration tests.
 - Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `StartupHandler_Contention`, `CachedResponse_ParallelReads`, `Evaluate`, `GuardOverhead`.
-- Fuzz targets: `FuzzResponseMarshalDeterministic` + `FuzzHandlerInput` (root), `FuzzAggregateMergeInvariants` (aggregate), `FuzzBatteries` (checks — pins the sentinel-or-nil error surface of the four batteries over untrusted inputs); run via `nix run .#fuzz`.
+- Fuzz targets: `FuzzResponseMarshalDeterministic` + `FuzzHandlerInput` + `FuzzThrottleWindowBoundary` (root; the throttle fuzz drives the window rule on a fake clock), `FuzzAggregateMergeInvariants` (aggregate; source freshness modes — live/cache/throttled — derived from name parity so the corpus signature stays valid), `FuzzBatteries` (checks — pins the sentinel-or-nil error surface of the four batteries over untrusted inputs); run via `nix run .#fuzz`.
 - **Seam-swap tests must not be parallel** — tests swapping a package-global
   seam (`marshalResponse` in both packages) mutate shared state, so they omit
   `t.Parallel()` (marked `//nolint:paralleltest`). A parallel seam test

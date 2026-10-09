@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Test-surface hardening (no library behavior change): `FuzzThrottleWindowBoundary` drives the `WithLiveThrottle` window rule on a fake clock for arbitrary advances (including a backward clock); the aggregate merge fuzz now covers sources in live, cache-mode (background refresh loop), and throttled-live freshness modes — modes derived from name parity so the accumulated corpus stays loadable; both marshal/handler fuzz corpora carry golden-fixture seeds mirroring `testdata/readiness_response.golden`; `BenchmarkReadinessHandler_LiveEvalContention` records the throttled live path under full parallel load (baseline in FEATURES.md); CI gains a race-stress step (`-count=3`).
 - `aggregate.(*Aggregate).SourceStatuses()` — per-source roll-up visibility: one `map[string]health.Status` entry per source name, one atomic cache load per source, no evaluation, no wire impact. A shutting-down source reports `fail` for itself; the merged status stays the worst of these values. Answers the dashboard question "is source api healthy overall?" without refolding `source/check` keys. Design: docs/aggregate-per-source-visibility-design.md; pinned by a 27-combination worst-of property test.
 
 ### Changed

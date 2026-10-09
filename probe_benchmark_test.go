@@ -55,6 +55,46 @@ func BenchmarkStartupHandler_Contention(b *testing.B) {
 	})
 }
 
+// BenchmarkReadinessHandler_LiveEvalContention measures the throttled live
+// readiness path under full parallel load: every request serializes on
+// throttleMu, but within the 1s window all but the first serve the stored
+// result, so the batch itself runs at most once per window. This is the
+// flood-coalescing guarantee of [health.WithLiveThrottle] under contention —
+// the cost a request flood pays (mutex + cached marshal) instead of a
+// dependency flood. Recorded baseline in FEATURES.md "Performance".
+func BenchmarkReadinessHandler_LiveEvalContention(b *testing.B) {
+	injector := do.New()
+
+	provideHealthy(injector, "db")
+	do.MustInvokeNamed[*healthyService](injector, "db")
+
+	b.Cleanup(func() { injector.Shutdown() })
+
+	probe := health.New(injector,
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0), // live mode: no background cache
+		health.WithLiveThrottle(time.Second),
+	)
+
+	handler := probe.ReadinessHandler()
+
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/readyz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		w := httptest.NewRecorder()
+
+		for pb.Next() {
+			w.Body.Reset()
+			handler(w, r)
+		}
+	})
+}
+
 // BenchmarkCachedResponse_ParallelReads measures lock-free cache reads under
 // full contention: the upper bound every other read path should stay near.
 func BenchmarkCachedResponse_ParallelReads(b *testing.B) {

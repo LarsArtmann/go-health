@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -108,6 +109,23 @@ func TestHTTP_FailsOnUnreachable(t *testing.T) {
 
 	if err := check(t.Context()); !errors.Is(err, checks.ErrHTTPCheckFailed) {
 		t.Fatalf("want ErrHTTPCheckFailed, got %v", err)
+	}
+}
+
+func TestHTTP_FailsOnMalformedURL(t *testing.T) {
+	t.Parallel()
+
+	// A control character makes request construction itself fail before any
+	// dial: the only branch where NewRequestWithContext returns an error.
+	check := checks.HTTP("http://127.0.0.1:1/\x00bad", time.Second)
+
+	err := check(t.Context())
+	if !errors.Is(err, checks.ErrHTTPCheckFailed) {
+		t.Fatalf("want ErrHTTPCheckFailed, got %v", err)
+	}
+
+	if !strings.Contains(err.Error(), "127.0.0.1") {
+		t.Errorf("error should name the checked URL, got: %v", err)
 	}
 }
 

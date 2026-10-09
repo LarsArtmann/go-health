@@ -38,6 +38,12 @@ jobs:
       - name: Run tests with race detector
         run: nix run .#test-race
 
+      # Race-stress: repeat the race suite to surface order-dependent flakes.
+      # Added 2026-10-09 only after a local -count=3 run was flake-free; if it
+      # ever trips intermittently, triage the flake — do not delete the step.
+      - name: Race stress (3x)
+        run: nix run .#test-race -- -count=3
+
       - name: Short fuzz run
         run: nix run .#fuzz
 

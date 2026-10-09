@@ -180,13 +180,13 @@ func FuzzThrottleWindowBoundary(f *testing.F) {
 			handler(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
 
 			if rec.Code != http.StatusOK {
-			t.Fatalf("readiness status: want 200, got %d", rec.Code)
+				t.Fatalf("readiness status: want 200, got %d", rec.Code)
 			}
 
 			var body health.Response
-		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
-			t.Fatalf("decode body: %v", err)
-		}
+			if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+				t.Fatalf("decode body: %v", err)
+			}
 
 			nowNs := clock.Now().UnixNano()
 			if nowNs-lastEvalNs >= int64(window) {

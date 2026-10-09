@@ -177,7 +177,11 @@ func TestNew_JoinsAllInvalidSources(t *testing.T) {
 	}
 
 	if !errors.Is(err, aggregate.ErrInvalidSource) {
-		t.Fatalf("joined error does not match %v via errors.Is: %v", aggregate.ErrInvalidSource, err)
+		t.Fatalf(
+			"joined error does not match %v via errors.Is: %v",
+			aggregate.ErrInvalidSource,
+			err,
+		)
 	}
 
 	if errors.Is(err, aggregate.ErrNoSources) {
@@ -235,9 +239,18 @@ func TestSourceStatuses_WorstOfMatchesMergedRollup(t *testing.T) {
 					t.Parallel()
 
 					agg, err := aggregate.New(
-						aggregate.Source{Name: "one", Probe: newStartedProbe(t, s1.critical, s1.unhealthy)},
-						aggregate.Source{Name: "two", Probe: newStartedProbe(t, s2.critical, s2.unhealthy)},
-						aggregate.Source{Name: "three", Probe: newStartedProbe(t, s3.critical, s3.unhealthy)},
+						aggregate.Source{
+							Name:  "one",
+							Probe: newStartedProbe(t, s1.critical, s1.unhealthy),
+						},
+						aggregate.Source{
+							Name:  "two",
+							Probe: newStartedProbe(t, s2.critical, s2.unhealthy),
+						},
+						aggregate.Source{
+							Name:  "three",
+							Probe: newStartedProbe(t, s3.critical, s3.unhealthy),
+						},
 					)
 					if err != nil {
 						t.Fatalf("aggregate.New: %v", err)
@@ -245,7 +258,11 @@ func TestSourceStatuses_WorstOfMatchesMergedRollup(t *testing.T) {
 
 					got := agg.SourceStatuses()
 					if len(got) != 3 {
-						t.Fatalf("SourceStatuses entries = %d, want one per source: %v", len(got), got)
+						t.Fatalf(
+							"SourceStatuses entries = %d, want one per source: %v",
+							len(got),
+							got,
+						)
 					}
 
 					for _, src := range []struct {
@@ -257,13 +274,22 @@ func TestSourceStatuses_WorstOfMatchesMergedRollup(t *testing.T) {
 						{name: "three", want: s3.want},
 					} {
 						if got[src.name] != src.want {
-							t.Errorf("SourceStatuses[%q] = %v, want %v", src.name, got[src.name], src.want)
+							t.Errorf(
+								"SourceStatuses[%q] = %v, want %v",
+								src.name,
+								got[src.name],
+								src.want,
+							)
 						}
 					}
 
 					wantMerged := worstOf(worstOf(s1.want, s2.want), s3.want)
 					if merged := agg.CachedResponse().Status; merged != wantMerged {
-						t.Errorf("merged status = %v, want worst of per-source statuses (%v)", merged, wantMerged)
+						t.Errorf(
+							"merged status = %v, want worst of per-source statuses (%v)",
+							merged,
+							wantMerged,
+						)
 					}
 				})
 			}
@@ -296,7 +322,10 @@ func TestSourceStatuses_ShuttingDownSourceReportsFail(t *testing.T) {
 	}
 
 	if got["steady"] != health.StatusPass {
-		t.Errorf("SourceStatuses[steady] = %v, want pass (neighbor's shutdown must not leak)", got["steady"])
+		t.Errorf(
+			"SourceStatuses[steady] = %v, want pass (neighbor's shutdown must not leak)",
+			got["steady"],
+		)
 	}
 }
 

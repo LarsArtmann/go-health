@@ -75,28 +75,11 @@ func New(sources ...Source) (*Aggregate, error) {
 	var problems []error
 
 	for _, src := range sources {
-		switch {
-		case src.Probe == nil:
-			problems = append(problems, fmt.Errorf("%w: source %q has a nil Probe", ErrInvalidSource, src.Name))
-			continue
-		case src.Name == "":
-			problems = append(problems, fmt.Errorf("%w: source name must not be empty", ErrInvalidSource))
-			continue
-		case strings.Contains(src.Name, "/"):
-			problems = append(problems, fmt.Errorf(
-				"%w: source name %q must not contain '/' (names become \"name/check\" key prefixes)",
-				ErrInvalidSource,
-				src.Name,
-			))
+		if err := validateSource(src, seen); err != nil {
+			problems = append(problems, err)
+
 			continue
 		}
-
-		if _, dup := seen[src.Name]; dup {
-			problems = append(problems, fmt.Errorf("%w: duplicate source name %q", ErrInvalidSource, src.Name))
-			continue
-		}
-
-		seen[src.Name] = struct{}{}
 
 		if d := src.Probe.RefreshInterval(); d > maxInterval {
 			maxInterval = d
@@ -108,6 +91,33 @@ func New(sources ...Source) (*Aggregate, error) {
 	}
 
 	return &Aggregate{sources: sources, refreshInterval: maxInterval}, nil
+}
+
+// validateSource reports the first invariant src violates as a wrapped
+// [ErrInvalidSource], registering src's name as seen when it is valid.
+// Invalid sources are not registered, so a later source repeating an invalid
+// name fails on the same invariant instead of as a duplicate.
+func validateSource(src Source, seen map[string]struct{}) error {
+	switch {
+	case src.Probe == nil:
+		return fmt.Errorf("%w: source %q has a nil Probe", ErrInvalidSource, src.Name)
+	case src.Name == "":
+		return fmt.Errorf("%w: source name must not be empty", ErrInvalidSource)
+	case strings.Contains(src.Name, "/"):
+		return fmt.Errorf(
+			"%w: source name %q must not contain '/' (names become \"name/check\" key prefixes)",
+			ErrInvalidSource,
+			src.Name,
+		)
+	}
+
+	if _, dup := seen[src.Name]; dup {
+		return fmt.Errorf("%w: duplicate source name %q", ErrInvalidSource, src.Name)
+	}
+
+	seen[src.Name] = struct{}{}
+
+	return nil
 }
 
 // CachedResponse returns the merged health state of all sources. The overall
@@ -154,6 +164,30 @@ func (a *Aggregate) CachedResponse() health.Response {
 		Checks:         checks,
 		TotalLatencyMs: maxLatency,
 	}
+}
+
+// SourceStatuses folds each source's cached view to its own roll-up status:
+// one map entry per source name, one atomic load per source, no evaluation.
+// A source that is shutting down reports fail, mirroring its contribution to
+// the merged view. The merged [Aggregate.CachedResponse] status is the worst
+// of these values; this accessor answers the per-source question a dashboard
+// or CLI asks next ("is source api healthy overall?") without refolding the
+// namespaced check keys. See docs/aggregate-per-source-visibility-design.md.
+func (a *Aggregate) SourceStatuses() map[string]health.Status {
+	statuses := make(map[string]health.Status, len(a.sources))
+
+	for _, src := range a.sources {
+		resp := src.Probe.CachedResponse()
+
+		status := resp.Status
+		if resp.ShuttingDown {
+			status = health.StatusFail
+		}
+
+		statuses[src.Name] = status
+	}
+
+	return statuses
 }
 
 // RefreshInterval returns the slowest source's refresh interval: the merged

@@ -179,6 +179,7 @@ func TestNew_JoinsAllInvalidSources(t *testing.T) {
 	if !errors.Is(err, aggregate.ErrInvalidSource) {
 		t.Fatalf("joined error does not match %v via errors.Is: %v", aggregate.ErrInvalidSource, err)
 	}
+
 	if errors.Is(err, aggregate.ErrNoSources) {
 		t.Fatalf("joined error unexpectedly matches %v: %v", aggregate.ErrNoSources, err)
 	}

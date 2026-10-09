@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `aggregate.(*Aggregate).SourceStatuses()` — per-source roll-up visibility: one `map[string]health.Status` entry per source name, one atomic cache load per source, no evaluation, no wire impact. A shutting-down source reports `fail` for itself; the merged status stays the worst of these values. Answers the dashboard question "is source api healthy overall?" without refolding `source/check` keys. Design: docs/aggregate-per-source-visibility-design.md; pinned by a 27-combination worst-of property test.
+
 ### Changed
 
 - `aggregate.New` now reports every invalid source at once instead of failing on the first: the error joins one wrapped `ErrInvalidSource` per problem (one line each, multi-line message), so a misconfigured fleet costs one fix-run cycle instead of N. `errors.Is` against `ErrInvalidSource`/`ErrNoSources` is unchanged. Behavior change with a callout per docs/errors-join-design.md; pinned by `TestNew_JoinsAllInvalidSources`.

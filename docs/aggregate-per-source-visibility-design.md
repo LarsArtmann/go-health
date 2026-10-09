@@ -1,6 +1,12 @@
 # Per-Source Roll-up Visibility — design note
 
-> Decided: 2026-09-04 · Status: DEFERRED to v0.3.0 (additive accessor candidate) · Resolves: open idea "aggregate observability / per-source roll-up"
+> Decided: 2026-09-04 · Status: IMPLEMENTED (unreleased; v0.6.0 vehicle) · Resolves: open idea "aggregate observability / per-source roll-up"
+
+**Implementation note (2026-10-09):** shipped as option 3 exactly —
+`SourceStatuses()` folds each source's cached view (shutdown overlay applied
+per source: a draining source reports fail for itself) and is pinned by a
+combinatorial worst-of property test. Options 1 and 2 (label keys,
+pseudo-checks) remain rejected: both mutate the frozen wire format.
 
 ## Problem
 

@@ -164,6 +164,16 @@ linters:
         - anon
         - stdlib
         - generic
+    # Contract (pinned empirically 2026-10-09, golangci-lint 2.14 + analyzer
+    # source): `always: true` flags EVERY two-arg `x := make([]T, n)` bound to
+    # a plain identifier unless the length is the literal `0` — usage is
+    # irrelevant (no append needed; index writes do not exempt it). Makes
+    # inside composite literals (`field: make([]T, n)`) are INVISIBLE to the
+    # rule (the analyzer only visits assignment-statement RHS) — form, not
+    # usage, is why the old `startup: make([]atomic.Bool, len(remotes))` never
+    # tripped while the refactored `states := make(...)` did. Blessed forms:
+    # `make([]T, 0, n)` + append, or index-written pre-sizing with a rationale
+    # `//nolint:makezero` (see federation.go `results`).
     makezero:
       always: true
     mnd:

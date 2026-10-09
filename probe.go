@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"sort"
 	"strings"
@@ -694,10 +695,9 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 // never the process. See docs/panic-recovery-design.md.
 func invokeEvaluationHook(fn func(Response), resp Response) (hookErr error) {
 	hookView := resp
+
 	hookView.Checks = make(map[string]Check, len(resp.Checks))
-	for name, check := range resp.Checks {
-		hookView.Checks[name] = check
-	}
+	maps.Copy(hookView.Checks, resp.Checks)
 
 	func() {
 		defer func() {

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [v0.5.1] - 2026-10-09
+
 ### Added
 
 - `health.Off(detail)` / `StatusOff` — express an intentionally unconfigured dependency as a visible check row instead of a fake failure or a silent omission. Any executor channel (CheckFunc, `NewWithHealthCheck` batch, DetailedHealthRecorder, samber/do `HealthcheckerWithContext`) can return the sentinel; the check renders `"status":"off"` with the enable recipe in its `error` field. Off is visibility, never a verdict: readiness stays 200, the roll-up stays three-state (`Response.Status` never reports off), an all-off instance rolls up pass, the startup latch treats an off critical service as satisfied, and `Status.Rank()` ranks off pass-tier so aggregate/federation merges never warn on it. Federation accepts `off` as a known status (unknown statuses are still refused whole); consumers older than this release refuse off documents, so producers may emit off only after their federation path has bumped — rollout order in docs/configured-off-design.md.
@@ -369,7 +371,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.5.1...HEAD
+[v0.5.1]: https://github.com/larsartmann/go-health/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/larsartmann/go-health/compare/v0.4.1...v0.5.0
 [v0.4.1]: https://github.com/larsartmann/go-health/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/larsartmann/go-health/compare/v0.3.0...v0.4.0

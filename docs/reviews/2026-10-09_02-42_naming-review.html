@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Report Title</title>
+    <title>Naming Review — Post-v0.5.0 Pareto Master Plan (2026-10-09)</title>
     <style>
       /* =========================================================================
          BAUHAUS DARK — Dashboard template
@@ -828,9 +828,9 @@
   <body>
     <!-- Full-bleed top bar (optional — remove for quieter reports) -->
     <div class="top-bar">
-      <span>REPORT TYPE</span>
-      <span>YYYY-MM-DD</span>
-      <span>AUTHOR / TEAM</span>
+      <span>NAMING REVIEW</span>
+      <span>2026-10-09</span>
+      <span>GO-HEALTH &middot; PLAN-DOC AUDIT</span>
     </div>
 
     <div class="layout">
@@ -839,38 +839,41 @@
         <nav>
           <div class="label">Contents</div>
           <a href="#summary">Summary</a>
-          <a href="#findings">Findings</a>
-          <a href="#issues">Issue Cards</a>
-          <a href="#proposal">Proposal</a>
-          <a href="#plan">Plan</a>
+          <a href="#findings">Critical Findings</a>
+          <a href="#issues">High / Medium / Low</a>
+          <a href="#glossary">Naming Glossary</a>
+          <a href="#proposal">Before / After</a>
+          <a href="#plan">Fix Order</a>
         </nav>
       </aside>
 
       <main class="main">
         <!-- Hero -->
         <div class="hero">
-          <!-- Optional Bauhaus signature: geometric shape cluster. Remove for quieter hero. -->
           <div class="hero-shapes">
             <div class="circle"></div>
             <div class="square"></div>
             <div class="tri"></div>
           </div>
-          <div class="hero-badge">Report Type</div>
-          <h1>Report Title</h1>
+          <div class="hero-badge">Naming Review</div>
+          <h1>The Pareto Plan's Own Names, Audited</h1>
           <p class="hero-subtitle">
-            One-sentence description of what this report covers.
+            Identifier-level review of
+            <code>docs/planning/2026-10-09_02-16_post-v050-verification-and-consumer-proof-pareto-master-plan.md</code>
+            against the repo's canonical glossary (docs/DOMAIN_LANGUAGE.md, docs/naming-integrity.md,
+            docs/vocabulary-reconciliation.md) and the source tree. Report-only: nothing was renamed.
           </p>
         </div>
 
-        <!-- Inline TOC (alternative to sidebar; pick one) -->
         <nav class="toc">
           <h3>Contents</h3>
           <ul>
             <li><a href="#summary">Summary</a></li>
-            <li><a href="#findings">Findings</a></li>
-            <li><a href="#issues">Issue Cards</a></li>
-            <li><a href="#proposal">Proposal</a></li>
-            <li><a href="#plan">Plan</a></li>
+            <li><a href="#findings">Critical Findings</a></li>
+            <li><a href="#issues">High / Medium / Low</a></li>
+            <li><a href="#glossary">Naming Glossary</a></li>
+            <li><a href="#proposal">Before / After</a></li>
+            <li><a href="#plan">Fix Order</a></li>
           </ul>
         </nav>
 
@@ -878,68 +881,186 @@
         <h2 id="summary"><span class="num">00</span>Summary</h2>
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-value">42</div>
-            <div class="stat-label">Total Items</div>
+            <div class="stat-value">178</div>
+            <div class="stat-label">Names reviewed (148 task titles, 6 gate IDs, 24 cited identifiers)</div>
           </div>
           <div class="stat-card stat-bad">
-            <div class="stat-value">7</div>
-            <div class="stat-label">Critical</div>
+            <div class="stat-value">3</div>
+            <div class="stat-label">Critical — the name/claim lies</div>
           </div>
           <div class="stat-card stat-warn">
-            <div class="stat-value">12</div>
-            <div class="stat-label">Warnings</div>
+            <div class="stat-value">13</div>
+            <div class="stat-label">High + Medium — split-brain, vague, inconsistent</div>
           </div>
           <div class="stat-card stat-good">
-            <div class="stat-value">35</div>
-            <div class="stat-label">Resolved</div>
+            <div class="stat-value">5</div>
+            <div class="stat-label">Strengths worth keeping</div>
           </div>
         </div>
+        <p>
+          Scope note: this reviews the <strong>plan document's naming</strong>, not the codebase (the codebase's
+          naming integrity is tracked in docs/naming-integrity.md). No prior naming review exists in
+          docs/reviews/ (the two earlier reports cover process improvement and self-review), so there is no
+          cross-reference debt. Every count below was derived from the filesystem, per the plan's own
+          definition of done.
+        </p>
 
-        <!-- Findings as Cards -->
-        <h2 id="findings"><span class="num">01</span>Findings</h2>
-
-        <div class="card card-problem">
-          <h4>Critical Issue</h4>
-          <p>Description of the problem and its impact.</p>
-        </div>
-
-        <div class="card card-solution">
-          <h4>Recommended Fix</h4>
-          <p>Description of the solution with rationale.</p>
-        </div>
-
-        <!-- Issue Cards -->
-        <h2 id="issues"><span class="num">02</span>Issue Cards</h2>
+        <!-- Critical Findings -->
+        <h2 id="findings"><span class="num">01</span>Critical Findings (Honesty — Must Fix)</h2>
 
         <div class="issue issue-critical">
-          <span class="severity severity-critical">Blocking</span>
-          <h3>Critical finding title</h3>
-          <div class="where">path/to/file.go:42-58</div>
+          <span class="severity severity-critical">C1 &middot; Lying ID</span>
+          <h3><code>G3</code> names two different gates inside one document</h3>
+          <div class="where">plan line 9 (header) vs line 78 (B003)</div>
           <p>
-            Describe the problem and cite the code or behavior that proves it.
+            The header defines <code>G3</code> as <em>"G3 CV-bump authority"</em>, and A11/B043 use it that way.
+            But B003 says <em>"Compare against the G3 spec (5 required checks + linear history + admin
+            bypass)"</em> — that is the <strong>branch-protection ruleset</strong>, a different artifact
+            entirely. TODO_LIST carries the same disease from the other side (its G3 note = CV bump). An
+            executor of B003 would compare the wrong config against the wrong spec.
           </p>
           <div class="callout callout-solution">
             <strong>Fix</strong>
-            State the concrete recommended action.
+            B003: "the G3 spec" &rarr; "the branch-protection ruleset spec". Then collapse all gates into one
+            namespace (see H2).
+          </div>
+        </div>
+
+        <div class="issue issue-critical">
+          <span class="severity severity-critical">C2 &middot; False count</span>
+          <h3>"the four owner-blocked rows" — the filesystem says three</h3>
+          <div class="where">plan line 24 (tier table) vs TODO_LIST.md rows 75, 81, 82</div>
+          <p>
+            TODO_LIST has exactly <strong>3</strong> rows with BLOCKED status: the coverage-threshold job, the
+            samber-do-auditlog recorder decision, and the doanalyzerv2 go-directive floor. A35 and B102 also
+            name exactly those three. The tier table's "four" is a count from memory — violating the plan's own
+            DoD rule: <em>"every count derived from the filesystem, never from memory."</em>
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            "A25&ndash;A35 + the three BLOCKED rows (TODO_LIST 75/81/82)" — or recount and cite row numbers.
+          </div>
+        </div>
+
+        <div class="issue issue-critical">
+          <span class="severity severity-critical">C3 &middot; False contract</span>
+          <h3>"sorted by impact, then effort" describes an ordering the table does not have</h3>
+          <div class="where">plan line 28 (Tier A heading) vs rows A03/A08</div>
+          <p>
+            A03 is High impact at 10 minutes but sits third, behind a 30-minute and a 40-minute task; A08 is
+            Medium impact and sits between High-impact rows. The real order is <em>tier-grouped, then
+            dependency-chained</em> (A08 depends on A07). A stated sort order is a contract: an executor
+            trusting it would start the wrong task.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            Heading &rarr; "ordered by tier, then dependency chain" — or actually re-sort. The dependency
+            order is the useful one; keep it and fix the claim.
+          </div>
+        </div>
+
+        <!-- High / Medium / Low -->
+        <h2 id="issues"><span class="num">02</span>High, Medium, Low</h2>
+
+        <div class="issue issue-important">
+          <span class="severity severity-important">H1 &middot; Axis overload</span>
+          <h3>"Tier" means two unrelated axes: granularity AND impact</h3>
+          <div class="where">plan lines 5, 19&ndash;24, 30</div>
+          <p>
+            "Tier A"/"Tier B" divide tasks by <strong>size</strong> (30&ndash;100 min vs &le;12 min); the Tier
+            column's "1% / 4% / 20% / tail" divides by <strong>impact</strong>. The doc is forced into
+            ambiguous phrases like "a 20% Tier B row". Two axes, one word — the classic split brain, at the
+            document's own organizational level.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            Granularity axis &rarr; <strong>Track A / Track B</strong> (or "Deep tasks / Micro-tasks"); keep
+            the percentages as the one and only meaning of "tier".
           </div>
         </div>
 
         <div class="issue issue-important">
-          <span class="severity severity-important">Important</span>
-          <h3>Important finding title</h3>
-          <div class="where">path/to/another.go:12-19</div>
+          <span class="severity severity-important">H2 &middot; Double naming</span>
+          <h3>The push gate is named <code>G1</code> and <code>Q1</code> in the same sentence</h3>
+          <div class="where">plan line 9: "G1 push (Q1), release vehicle (Q2), hook-panic semantics (Q3), G2&hellip;, G3&hellip;"</div>
           <p>
-            Explain the risk and why a careful reviewer would hesitate before
-            shipping.
+            Owner-blocking decisions carry two overlapping ID namespaces: G-numbered (G1&ndash;G3) and
+            Q-numbered (Q1&ndash;Q3). G2/G3 have no Q aliases; Q2/Q3 have no G aliases; nothing maps them. A
+            reader must hold both schemes and the alias table in their head.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            One namespace, one table, defined once in the plan: e.g. G1 push, G2 upstream filings, G3 CV bump,
+            G4 release vehicle, G5 hook-panic semantics, G6 branch-protection spec.
+          </div>
+        </div>
+
+        <div class="issue issue-important">
+          <span class="severity severity-important">H3 &middot; Ghost identifier</span>
+          <h3><code>Withn</code> is not an identifier — it appears in no design doc and no source file</h3>
+          <div class="where">plan A22, B073; also TODO_LIST.md and docs/planning/2026-10-03_03-43_*.md</div>
+          <p>
+            The canonical name is <code>WithCriticalServices</code> (code + naming-integrity.md line 30 +
+            DOMAIN_LANGUAGE.md). <code>Withn</code> is an unpronounceable, un-greppable mangled abbreviation
+            that lives only in TODO_LIST and two plan documents. Whoever executes B073 ("Withn alias-vs-rename
+            decision row") must first reverse-engineer what token was meant.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            Cite <code>WithCriticalServices</code> and its actual rename question; scrub <code>Withn</code>
+            from TODO_LIST and both plan docs. Annotate, don't blanket-edit (docs-health ANNOTATE discipline).
+          </div>
+        </div>
+
+        <div class="issue issue-important">
+          <span class="severity severity-important">H4 &middot; Unexpanded + collision</span>
+          <h3><code>CV</code> is never expanded — and the repo already uses CV to mean something else</h3>
+          <div class="where">plan A11, B043&ndash;B045; collision at docs/start-validation-design.md:79</div>
+          <p>
+            "CV bump" presumes the reader knows which fleet repo CV is; TODO_LIST and consumer-verification.md
+            never expand it either. Meanwhile docs/start-validation-design.md uses "(CV)" for
+            <em>environment-conditional sets</em> — a second, unrelated CV. A newcomer greps "CV" and gets two
+            wrong answers.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Fix</strong>
+            Expand the repo name with a link at first use in the plan; rename the start-validation usage to
+            "conditional sets".
+          </div>
+        </div>
+
+        <div class="issue issue-important">
+          <span class="severity severity-important">M-class &middot; Nine medium items</span>
+          <h3>Clarity and consistency passes</h3>
+          <div class="where">various plan lines</div>
+          <p>
+            <strong>M1</strong> <code>tail</code> tier label: vague noun breaking the percentage scheme — keep
+            it, but define it once ("tail = remaining 20% &rarr; 100%"). &nbsp;<strong>M2</strong>
+            "staging" is noun-piled: A22's "Rename staging decision table" parses badly &rarr; "Staged-rename
+            decision table". &nbsp;<strong>M3</strong> "the v0.6 Staging <em>Deck</em>" (title): presentation
+            metaphor for a plan &rarr; "Staging Plan". &nbsp;<strong>M4</strong> A17 "Nail makezero
+            <code>always</code> semantics": cutesy verb &rarr; "Pin down". &nbsp;<strong>M5</strong> "port
+            prep" (A23, graph): abbreviation &rarr; "preparation". &nbsp;<strong>M6</strong> "comms" (tier
+            table, graph): abbreviation &rarr; "publications". &nbsp;<strong>M7</strong> "the lying LSP"
+            (20% tier row) vs "stale golangci LSP integration" (A18): synonym drift for one defect &rarr; match
+            A18. &nbsp;<strong>M8</strong> "release vehicle" (Q2) vs "v0.5.1 release train" (A06): one
+            decision, two metaphors &rarr; "the v0.5.1 release decision (Q4 after H2)". &nbsp;<strong>M9</strong>
+            header "~100 micro-tasks" vs 113 actual (section heading + rows) &rarr; "113".
           </p>
         </div>
 
         <div class="issue issue-nice">
-          <span class="severity severity-nice">Nice to have</span>
-          <h3>Polish suggestion</h3>
-          <div class="where">docs/ or config</div>
+          <span class="severity severity-nice">L-class &middot; Four low items</span>
+          <h3>Polish, note-only</h3>
+          <div class="where">various</div>
           <p>
-            Minor documentation gaps or future-proofing suggestions go here.
+            <strong>L1</strong> <code>fir</code> (A10, B036): fleet abbreviation for file-and-image-renamer;
+            established in consumer-verification.md, but expand at first use in a standalone document.
+            &nbsp;<strong>L2</strong> "Verschlimmbesser guards": owner-voice loanword, undefined in-doc — add a
+            one-line gloss ("guards against well-meant worsening"). &nbsp;<strong>L3</strong>
+            "standing-drift killers": metaphor, but consistent with the established "drift" domain term —
+            acceptable. &nbsp;<strong>L4</strong> Gate definitions are scattered (plan header, chat reports,
+            TODO_LIST header note) — one source of truth, same fix as H2.
           </p>
         </div>
 
@@ -949,85 +1070,207 @@
           <div class="strength">
             <div class="check">+</div>
             <div class="text">
-              <strong>Specific strength</strong>
-              <span>Explain why it matters and what it enables.</span>
+              <strong>Full-traceability ID scheme</strong>
+              <span>A01&ndash;A35 + B001&ndash;B113 with a Parent column on every micro-row. No orphan rows; every decomposition is checkable 1:1.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">+</div>
+            <div class="text">
+              <strong>Verb-first task titles throughout</strong>
+              <span>Verify, Push, File, Implement, Write, Record — command-query separation holds at the plan level; almost no vague "handle/process/manage" tasks.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">+</div>
+            <div class="text">
+              <strong>Cited identifiers match the code verbatim</strong>
+              <span>All 24 distinct backticked identifiers except Withn are real and correctly spelled: ErrUnknownCriticalService, NewWithDetailedCheck, mergeResponses, SourceStatuses(), WithShutdownGracePeriod, openapi-lockstep, docs-check&hellip;</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">+</div>
+            <div class="text">
+              <strong>Canonical domain language respected</strong>
+              <span>critical check, startup latch, roll-up, combined endpoint Healthz(), batteries via package paths — matches docs/DOMAIN_LANGUAGE.md, no mixed metaphors against the glossary.</span>
+            </div>
+          </div>
+          <div class="strength">
+            <div class="check">+</div>
+            <div class="text">
+              <strong>The gate pattern itself is right</strong>
+              <span>Naming owner-blocking decisions as referenced IDs (the owner pulls triggers) is exactly how a plan should defer authority. Only the namespace execution (H2) is flawed.</span>
             </div>
           </div>
         </div>
 
-        <!-- Table with Badges -->
-        <h2>Issue Table</h2>
+        <!-- Glossary -->
+        <h2 id="glossary"><span class="num">03</span>Naming Glossary — Split-Brains Found</h2>
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Severity</th>
-              <th>Issue</th>
-              <th>Status</th>
+              <th>Concept</th>
+              <th>Name(s) in the plan</th>
+              <th>Canonical elsewhere</th>
+              <th>Verdict</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1</td>
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>Missing error handling</td>
-              <td><span class="badge badge-fixed">Fixed</span></td>
+              <td>Push gate</td>
+              <td><code>G1</code> and <code>Q1</code></td>
+              <td>—</td>
+              <td><span class="badge badge-critical">Same gate, two names</span></td>
             </tr>
             <tr>
-              <td>2</td>
-              <td><span class="badge badge-high">High</span></td>
-              <td>Race condition</td>
-              <td><span class="badge badge-low">Open</span></td>
+              <td>"G3"</td>
+              <td>CV-bump authority (header, A11) / branch-protection spec (B003)</td>
+              <td>TODO_LIST: CV bump</td>
+              <td><span class="badge badge-critical">ID collision</span></td>
+            </tr>
+            <tr>
+              <td>Task size axis</td>
+              <td>Tier A / Tier B</td>
+              <td>—</td>
+              <td><span class="badge badge-high">Overloads "tier"</span></td>
+            </tr>
+            <tr>
+              <td>Critical-services option</td>
+              <td><code>Withn</code></td>
+              <td><code>WithCriticalServices</code> (code, 3 design docs)</td>
+              <td><span class="badge badge-high">Ghost token</span></td>
+            </tr>
+            <tr>
+              <td>Fleet repo "CV"</td>
+              <td>CV (never expanded)</td>
+              <td>consumer-verification.md fleet list</td>
+              <td><span class="badge badge-high">Unexpanded + collides with start-validation "CV"</span></td>
+            </tr>
+            <tr>
+              <td>golangci LSP defect</td>
+              <td>"the lying LSP" (summary row) / "stale" (A18)</td>
+              <td>A18's wording</td>
+              <td><span class="badge badge-medium">Synonym drift</span></td>
+            </tr>
+            <tr>
+              <td>v0.6 preparation</td>
+              <td>staging / Deck / window</td>
+              <td>—</td>
+              <td><span class="badge badge-medium">Metaphor pile</span></td>
+            </tr>
+            <tr>
+              <td>v0.5.1 decision</td>
+              <td>"release vehicle" (Q2) / "release train" (A06)</td>
+              <td>—</td>
+              <td><span class="badge badge-medium">Two metaphors, one decision</span></td>
             </tr>
           </tbody>
         </table>
 
-        <!-- Before/After Comparison -->
-        <h2 id="proposal">Before / After</h2>
+        <!-- Before/After -->
+        <h2 id="proposal"><span class="num">04</span>Before / After</h2>
         <div class="compare-header">
           <div class="compare-before">Before</div>
           <div class="compare-after">After</div>
         </div>
         <div class="compare-row">
           <div>
-            <pre><code><span class="tok-comment">// Old code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>(data <span class="tok-type">interface</span>{}) { }</code></pre>
+            <pre><code>| A22 | Rename staging decision table
+  (`SanitizeResponse`, `Since`, `Withn`) |
+
+| B073 | `Withn` alias-vs-rename
+  decision row |</code></pre>
           </div>
           <div>
-            <pre><code><span class="tok-comment">// New code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>[T <span class="tok-type">any</span>](data T) { }</code></pre>
+            <pre><code>| A22 | Staged-rename decision table
+  (`SanitizeResponse`, `Since`,
+   `WithCriticalServices`) |
+
+| B073 | `WithCriticalServices`
+  alias-vs-rename decision row |</code></pre>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div>
+            <pre><code>B003: "Compare against the G3 spec
+(5 required checks + linear history
++ admin bypass)"</code></pre>
+          </div>
+          <div>
+            <pre><code>B003: "Compare against the
+branch-protection ruleset spec
+(5 required checks + linear history
++ admin bypass)"</code></pre>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div>
+            <pre><code>Method line: "granularity levels:
+Tier A = 35 tasks &hellip;, Tier B =
+~100 micro-tasks"</code></pre>
+          </div>
+          <div>
+            <pre><code>Method line: "granularity levels:
+Track A = 35 deep tasks &hellip;,
+Track B = 113 micro-tasks"</code></pre>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div>
+            <pre><code>| A17 | Nail makezero `always`
+semantics; record the contract &hellip; |</code></pre>
+          </div>
+          <div>
+            <pre><code>| A17 | Pin down the makezero
+`always` contract; record it in
+AGENTS + `.golangci.yml` comment |</code></pre>
           </div>
         </div>
 
-        <!-- ASCII Diagram -->
-        <h2>Dependency Tree</h2>
-        <div class="dep-tree">
-          <span class="root">root</span> ├──
-          <span class="ok">wanted-dep</span> └──
-          <span class="unwanted">unwanted-dep</span>
-        </div>
-
-        <!-- Numbered Steps -->
-        <h2 id="plan"><span class="num">03</span>Migration Plan</h2>
+        <!-- Fix Order -->
+        <h2 id="plan"><span class="num">05</span>Fix Order (report-only — nothing executed)</h2>
         <div class="migration-step">
           <div class="migration-num">1</div>
           <div class="migration-content">
-            <h4>Add generic type parameter</h4>
-            <p>Update the function signature to accept a type parameter.</p>
+            <h4>Correct the three honesty defects (C1&ndash;C3) in the plan file</h4>
+            <p>~10 min, one file. B003 wording, the blocked-row count, the Tier A heading contract. These are factual errors in a PLANNED artifact — fix before any executor reads them.</p>
           </div>
         </div>
         <div class="migration-step">
           <div class="migration-num">2</div>
           <div class="migration-content">
-            <h4>Update all call sites</h4>
-            <p>Pass explicit types at each call site for type safety.</p>
+            <h4>Unify the gate namespace into one defined-once table (H2, L4)</h4>
+            <p>~15 min. One ID scheme (G or Q, not both), one table in the plan header, TODO_LIST's gate note pointed at it.</p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">3</div>
+          <div class="migration-content">
+            <h4>Split the axes: Tier A/B &rarr; Track A/B (H1)</h4>
+            <p>~10 min, word-boundary-safe replacements inside the plan only. Percentages remain the sole meaning of "tier".</p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">4</div>
+          <div class="migration-content">
+            <h4>Expand CV and fir once; scrub Withn (H3, H4, L1)</h4>
+            <p>~20 min across TODO_LIST + two plan docs. Living docs get annotations, not blanket rewrites (docs-health ANNOTATE discipline).</p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">5</div>
+          <div class="migration-content">
+            <h4>Fold the M/L style passes into the next plan revision (M1&ndash;M9, L2&ndash;L3)</h4>
+            <p>~20 min, batched with the next content edit of the plan so the file is not churned twice in one day.</p>
           </div>
         </div>
 
         <footer class="footer">
-          Generated YYYY-MM-DD &middot; All claims verified against source code
-          where noted
+          Generated 2026-10-09 02:42 CEST &middot; Every count in this report was derived from the filesystem
+          (plan rows, TODO_LIST rows, grep across docs/ and *.go) &middot; Review-only: no identifier was
+          renamed
         </footer>
+
       </main>
     </div>
 

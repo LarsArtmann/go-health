@@ -1,6 +1,6 @@
 # Release & v0.5-Window Pareto Plan — go-health
 
-**Date:** 2026-10-03 03:43 CEST
+**Date:** 2026-10-03 03:43 CEST · **Status:** EXECUTED — the release arm shipped as **v0.5.0** on 2026-10-05 (`d2d02f6`); the breaking v0.5-window arm (ServiceName/renames/merge primitive) was re-venued to the **v0.6 window** and now lives in TODO_LIST staging + [post-v0.5.0 master plan](2026-10-09_02-16_post-v050-verification-and-consumer-proof-pareto-master-plan.md) (stamp added 2026-10-09)
 **Author:** session planning run (Crush)
 **Status:** PLAN — awaiting approval. No task below has been executed.
 **Supersedes:** `docs/planning/2026-10-02_16-11_right-way-pareto-master-plan.md` (EXECUTED 2026-10-02; its §f left-offs seed this plan).

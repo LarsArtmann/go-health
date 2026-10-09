@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	health "github.com/larsartmann/go-health"
 	aggregate "github.com/larsartmann/go-health/aggregate"
@@ -34,6 +35,15 @@ type fuzzSourceSpec struct {
 	critical   bool
 	failing    bool
 	instanceID string
+	// refreshInterval > 0 arms a background refresh loop (cache mode); the
+	// interval is chosen far beyond an iteration's lifetime so the cached
+	// snapshot stays at the boot state and merge assertions stay exact.
+	refreshInterval time.Duration
+	// liveThrottle > 0 puts a live-mode source on the throttled handler path.
+	// The aggregate itself reads caches, never source handlers, so this pins
+	// construction coexistence: aggregate invariants must not depend on the
+	// source's freshness mode.
+	liveThrottle time.Duration
 }
 
 // newFuzzSource builds a started probe whose cached response has a controlled
@@ -51,8 +61,12 @@ func newFuzzSource(t *testing.T, spec fuzzSourceSpec) *health.Probe {
 	}
 
 	options := []health.Option{
-		health.WithRefreshInterval(0),
+		health.WithRefreshInterval(spec.refreshInterval),
 		health.WithInstanceID(spec.instanceID),
+	}
+
+	if spec.liveThrottle > 0 {
+		options = append(options, health.WithLiveThrottle(spec.liveThrottle))
 	}
 
 	if spec.critical {
@@ -60,6 +74,10 @@ func newFuzzSource(t *testing.T, spec fuzzSourceSpec) *health.Probe {
 	}
 
 	probe := health.NewWithHealthCheck(results, options...)
+
+	if spec.refreshInterval > 0 {
+		t.Cleanup(func() { probe.Shutdown() })
+	}
 
 	if err := probe.Start(context.Background()); err != nil {
 		t.Fatalf("probe.Start: %v", err)
@@ -87,6 +105,12 @@ func FuzzAggregateMergeInvariants(f *testing.F) {
 	f.Add("api", "db", "worker", "db", true, true, false, true, "")
 	f.Add("s1", "x/y", "s2", "x/y", false, true, true, false, "i-0abc")
 	f.Add("a", "", "b", "", false, false, false, false, "replica-7")
+	// Golden-fixture seed: mirrors testdata/readiness_response.golden
+	// (non-critical "cache" failing with "connection refused" over a passing
+	// "db", instance pod-7f9c) plus a cache-mode source name (even length) so
+	// the corpus always carries the shipped wire shape in both freshness
+	// modes.
+	f.Add("golden", "cache", "golden-alt", "db", false, true, false, false, "pod-7f9c")
 
 	f.Fuzz(func(
 		t *testing.T,
@@ -139,6 +163,21 @@ func buildFuzzSources(
 	if nameOne == "" || nameTwo == "" || nameOne == nameTwo ||
 		strings.Contains(nameOne, "/") || strings.Contains(nameTwo, "/") {
 		t.Skip("invalid or colliding source names are covered by unit tests")
+	}
+
+	// Freshness modes are derived from name parity, not explicit fuzz
+	// parameters, so the accumulated corpus signature in testdata/fuzz stays
+	// loadable: source one alternates live/cache mode (cache mode arms a
+	// background refresh loop whose interval far outlives the iteration, so
+	// the boot snapshot stays the merged input), source two alternates
+	// plain/throttled live mode. The pinned invariant: merge results and
+	// handler status codes never depend on the sources' freshness modes.
+	if len(nameOne)%2 == 0 {
+		specOne.refreshInterval = time.Hour
+	}
+
+	if len(nameTwo)%2 == 0 {
+		specTwo.liveThrottle = time.Millisecond
 	}
 
 	return newFuzzSource(t, specOne), newFuzzSource(t, specTwo)

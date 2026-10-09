@@ -5,6 +5,7 @@ import (
 	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -20,6 +21,10 @@ import (
 func FuzzResponseMarshalDeterministic(f *testing.F) {
 	f.Add("pass", "db", "", "", int64(0), int64(0))
 	f.Add("warn", "cache", "connection refused", "pod-1", int64(0), int64(0))
+	// Golden-fixture seed: mirrors testdata/readiness_response.golden
+	// (warn roll-up, non-critical "cache" failing with "connection refused",
+	// instance pod-7f9c) so the corpus always carries the shipped wire shape.
+	f.Add("warn", "cache", "connection refused", "pod-7f9c", int64(0), int64(0))
 	f.Add(
 		"fail",
 		"db",
@@ -115,6 +120,94 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 			}
 		},
 	)
+}
+
+// FuzzThrottleWindowBoundary fuzzes clock advances around the
+// [health.WithLiveThrottle] window on a fake clock. For any two advances
+// (positive, zero, or negative — a backward clock), the number of live
+// evaluation batches must exactly match the window rule — serve the stored
+// result while it is younger than the window, re-evaluate otherwise — and
+// every request must return 200 with a decodable body. Pins the boundary
+// itself (window-1 serves cache, window re-evaluates) and the backward-clock
+// case (negative freshness never re-evaluates) against arbitrary fuzz inputs.
+func FuzzThrottleWindowBoundary(f *testing.F) {
+	const window = time.Second
+
+	f.Add(int64(0), int64(0))
+	f.Add(int64(window-1), int64(1))
+	f.Add(int64(window), int64(window))
+	f.Add(int64(-1), int64(2*window))
+	f.Add(int64(window+1), int64(-1))
+
+	f.Fuzz(func(t *testing.T, advanceOneNs, advanceTwoNs int64) {
+		// Cap magnitude (keeping sign) so huge fuzz values cannot overflow
+		// time.Duration arithmetic.
+		const capNs = int64(time.Hour)
+
+		advanceOne := time.Duration(advanceOneNs % capNs)
+		advanceTwo := time.Duration(advanceTwoNs % capNs)
+
+		var batches atomic.Int64
+
+		epoch := time.Date(2026, 10, 9, 12, 0, 0, 0, time.UTC)
+		clock := newMutableClock(epoch)
+
+		probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+			batches.Add(1)
+
+			return map[string]error{"db": nil}
+		},
+			health.WithRefreshInterval(0),
+			health.WithLiveThrottle(window),
+			health.WithNowFunc(clock.Now),
+		)
+
+		if err := probe.Start(context.Background()); err != nil {
+			t.Fatalf("probe.Start: %v", err)
+		}
+
+		// Simulate the window rule: lastEvalNs tracks when the stored result
+		// was stamped; a request re-evaluates iff now-lastEval >= window.
+		lastEvalNs := clock.Now().UnixNano()
+
+		wantBatches := batches.Load() // Start's initial refresh already ran
+		handler := probe.ReadinessHandler()
+
+		request := func() {
+			t.Helper()
+
+			rec := httptest.NewRecorder()
+			handler(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
+			if rec.Code != http.StatusOK {
+			t.Fatalf("readiness status: want 200, got %d", rec.Code)
+			}
+
+			var body health.Response
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Fatalf("decode body: %v", err)
+		}
+
+			nowNs := clock.Now().UnixNano()
+			if nowNs-lastEvalNs >= int64(window) {
+				wantBatches++
+				lastEvalNs = nowNs
+			}
+		}
+
+		request()
+
+		clock.Advance(advanceOne)
+		request()
+
+		clock.Advance(advanceTwo)
+		request()
+
+		if got := batches.Load(); got != wantBatches {
+			t.Fatalf("evaluation batches: want %d by the window rule, got %d (advances %v, %v)",
+				wantBatches, got, advanceOne, advanceTwo)
+		}
+	})
 }
 
 // FuzzHandlerInput fuzzes HTTP method and request target against all three

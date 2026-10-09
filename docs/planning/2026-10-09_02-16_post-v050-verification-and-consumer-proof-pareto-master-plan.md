@@ -1,6 +1,8 @@
 # Post-v0.5.0 Pareto Master Plan — Verification, Consumer Proof, and the v0.6 Staging Deck
 
-**Created:** 2026-10-09 02:16 CEST · **Status:** PLANNED — awaiting owner approval per repo precedent (the 2026-09-04 19:34 and 2026-10-02 16:11 plans both executed only after an explicit "get it done")
+> **SUPERSEDED 2026-10-09 14:49** by [2026-10-09_14-49_post-v050-pareto-master-plan-v2-naming-corrected.md](2026-10-09_14-49_post-v050-pareto-master-plan-v2-naming-corrected.md) — same task universe, all A/B IDs preserved. v2 applies the naming review's corrections (gate-namespace unification Q1/Q2/Q3 → G1/G4/G5, the B003 "G3 spec" misnomer, the blocked-row count, Track/Tier axis split, CV/fir expansion, the `Withn` ghost token → `WithCriticalServices` → `WithCriticalChecks` dual citation) and adds B114. Read v2; this file stays for the record.
+
+**Created:** 2026-10-09 02:16 CEST · **Status:** SUPERSEDED (see above; the plan itself remains PLANNED — awaiting owner approval, tracked by v2)
 **Input universe:** every open TODO in the repo as of this plan's creation — TODO_LIST.md (18 rows), the live handoff reports (`docs/status/2026-10-08_20-58_*` §f/§g, `2026-10-08_20-59_*` §a–§g), and the sweep report (`docs/status/2026-10-09_00-30_*` §f). **No TODO is dropped; every one appears in both tiers below.**
 **Method:** Pareto tiers (1% → 51%, 4% → 64%, 20% → 80%, tail → 100%) × two granularity levels: Tier A = 35 tasks of 30–100 min, Tier B = ~100 micro-tasks of ≤12 min. Every Tier A row decomposes 1:1 into Tier B rows.
 

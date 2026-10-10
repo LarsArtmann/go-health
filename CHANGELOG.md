@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [v0.6.0] - 2026-10-11
+
+### Added
+
 - Test-surface hardening (no library behavior change): `FuzzThrottleWindowBoundary` drives the `WithLiveThrottle` window rule on a fake clock for arbitrary advances (including a backward clock); the aggregate merge fuzz now covers sources in live, cache-mode (background refresh loop), and throttled-live freshness modes — modes derived from name parity so the accumulated corpus stays loadable; both marshal/handler fuzz corpora carry golden-fixture seeds mirroring `testdata/readiness_response.golden`; `BenchmarkReadinessHandler_LiveEvalContention` records the throttled live path under full parallel load (baseline in FEATURES.md); CI gains a race-stress step (`-count=3`).
 - `aggregate.(*Aggregate).SourceStatuses()` — per-source roll-up visibility: one `map[string]health.Status` entry per source name, one atomic cache load per source, no evaluation, no wire impact. A shutting-down source reports `fail` for itself; the merged status stays the worst of these values. Answers the dashboard question "is source api healthy overall?" without refolding `source/check` keys. Design: docs/aggregate-per-source-visibility-design.md; pinned by a 27-combination worst-of property test.
 
@@ -384,7 +398,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.6.0...HEAD
+[v0.6.0]: https://github.com/larsartmann/go-health/compare/v0.5.1...v0.6.0
 [v0.5.1]: https://github.com/larsartmann/go-health/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/larsartmann/go-health/compare/v0.4.1...v0.5.0
 [v0.4.1]: https://github.com/larsartmann/go-health/compare/v0.4.0...v0.4.1

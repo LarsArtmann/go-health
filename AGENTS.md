@@ -160,13 +160,32 @@ go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod re
   `GOEXPERIMENT=jsonv2` into every nix invocation. Enduring lesson: host env
   vars leak into nix run/develop; gates must set or unset what they depend on
   explicitly. Set `GOWORK=off` to avoid workspace interference.
-- **Tools that shell out to `go` need `goPkg` in their flake app** —
+- **Tools that shell out to `go` need `goPkg` in their flake app — and the tool's own export-data reader must keep up with what that `go` emits** —
   `golangci-lint`, `govulncheck`, and `gosec` load packages by invoking a `go`
   binary from PATH; on CI (no Go on PATH) they fall back to the GOROOT they
   were compiled with, which cannot satisfy go.mod's `go 1.27` directive (the
   first CI run caught it). Fix: `goPkg` in every such app's `runtimeInputs`.
-  Rule of thumb: any new flake app that indirectly runs `go` must list
-  `goPkg` — the same host-shell-env leak class, one layer down.
+  Second layer (2026-10-11 incident): a tool built against an older toolchain
+  cannot decode the export-data format a newer `go` writes — gosec 2.29.0
+  (go1.26-era x/tools, decodes up to v4) exited 1 with zero real findings on
+  go 1.27.2's v5 data ("export data version 5 is greater than maximum
+  supported version 4"), making the gate VACUOUS-red, not clean (all four
+  packages skipped SSA). The v4/v5 boundary sits between 1.27.1 and 1.27.2,
+  and nixpkgs' silent go_1_27 1.27.1→1.27.2 move flipped the gate red with
+  zero code changes — including the v0.6.0 tag's CI run, permanently. Fix:
+  pin the tool's PATH `go` to the newest emitter it can read, HARDCODED via
+  overrideAttrs (`gosecGo` in the security app) — never a moving nixpkgs
+  symbol; drop the pin when nixpkgs ships the fixed tool (securego/gosec
+  #1772). Rule of thumb: any new flake app that indirectly runs `go` must
+  list `goPkg`, and the tool must decode that toolchain's output — the same
+  host-shell-env leak class, two layers down.
+- **Gate output tails lie; exit codes don't (2026-10-11)** — the v0.6.0 tag
+  was cut on a "green" sweep whose security gate had already failed: the log
+  tail showed gosec's `Issues: 0` summary and no exit-code check followed,
+  so the vacuous pass read as green (gates are fail-fast — a later gate's
+  output appearing is proof of nothing without `EXIT=$?`; piping through
+  `tail` also eats the exit status). Every gate invocation must end with an
+  explicit exit-code echo; `nix run .#gates` returning 0 is the only truth.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
 - **`encoding/json/v2` cannot marshal `time.Duration` AT ALL** — no default representation exists (go.dev/issue/71631, undecided upstream) and no struct-tag format is accepted (verified empirically on go1.26.7: `int`, `ns`, `nanoseconds`, … all rejected); the only escape is the per-call `json.FormatDurationAsNano` option, which every re-marshaling consumer would have to know to pass. That is why `Check.DurationNanos` is a plain `int64` while the in-process seam `CheckDetail.Duration` stays `time.Duration`, converted once in `buildChecks`. Pinned by `TestCheck_JSONOmitZero`. Related v2 trap: scalar `omitempty` (bool/int) is not honored — only strings and `omitzero` omit; see `TestReadinessResponse_JSONOmitEmpty`.
 - **erraudit enforcement flags are opt-in** — `--enforce-samber-oops` and `--enforce-go-error-family` flag stdlib constructors (`errors.New`, `fmt.Errorf`) as violations. These flags are for projects that have already adopted those libraries. This project deliberately uses stdlib errors, so the correct invocation is `erraudit ./... --type-aware` (reports 0 ERROR violations). Do not cargo-cult a library adoption to silence the linter — the sentinels are config-validation errors, not boundary errors needing classification.

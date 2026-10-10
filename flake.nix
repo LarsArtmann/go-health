@@ -41,20 +41,14 @@
           # forbids toolchain downloads) cannot satisfy it under go_1_26,
           # so the toolchain is nixpkgs' go_1_27.
           #
-          # Patch-level pin to 1.27.2 (2026-10-09): nixpkgs' go_1_27 was
-          # still 1.27.1 while the vuln DB shipped eight stdlib advisories
-          # (GO-2026-6603..6617, net/http, http2, textproto, crypto/tls —
-          # reachable via federation's HTTP client) fixed only in 1.27.2,
-          # which turned the Security gate and every CI run red. The
-          # overrideAttrs bump rebuilds the same nixpkgs derivation against
-          # the 1.27.2 source; drop it when nixpkgs' go_1_27 ships ≥1.27.2.
-          goPkg = pkgs.go_1_27.overrideAttrs (_old: rec {
-            version = "1.27.2";
-            src = pkgs.fetchurl {
-              url = "https://go.dev/dl/go${version}.src.tar.gz";
-              hash = "sha256-A0ldorpkiU1A9cSZLklFT6eLUGkGBP+Stq//UIG3bmI=";
-            };
-          });
+          # Patch pin DROPPED (2026-10-11): nixpkgs' go_1_27 now ships
+          # 1.27.2 natively, which carries the vuln-DB fixes
+          # (GO-2026-6603..6617) that forced the 2026-10-09 overrideAttrs
+          # source bump. goPkg stays the single toolchain seam for every
+          # app that shells out to `go` — if nixpkgs ever lags the
+          # toolchain the vuln DB requires again, re-introduce the bump
+          # HERE only, never per-app.
+          goPkg = pkgs.go_1_27;
 
           # encoding/json/v2 is stable on go1.27: no GOEXPERIMENT is needed
           # anywhere (verified 2026-09-22: build + vet + full suite green
@@ -292,20 +286,33 @@
                 '';
 
             security =
+              let
+                # gosec 2.29.0 embeds a go1.26-era x/tools: its typechecker
+                # decodes export data up to v4, while go 1.27.2 emits v5
+                # ("export data version 5 is greater than maximum supported
+                # version 4" — 39 import errors, zero real findings, exit
+                # 1). The v4/v5 boundary sits between 1.27.1 and 1.27.2, so
+                # gosec's `go list` must run under a HARDCODED 1.27.1 — not
+                # goPkg (1.27.2 emits v5) and not pkgs.go_1_27 either:
+                # nixpkgs silently moved that to 1.27.2 in the 2026-10-10
+                # lock bump, which is exactly what turned this gate (and
+                # the v0.6.0 tag's CI run) red with zero code changes.
+                # 1.27.1 satisfies go.mod's `go 1.27` floor; the repo uses
+                # no 1.27.2-only language or stdlib features. Drop the pin
+                # — use goPkg — when nixpkgs ships a gosec carrying
+                # securego/gosec#1772 (go1.27 export-data support).
+                gosecGo = pkgs.go_1_27.overrideAttrs (_old: rec {
+                  version = "1.27.1";
+                  src = pkgs.fetchurl {
+                    url = "https://go.dev/dl/go${version}.src.tar.gz";
+                    hash = "sha256-TkCKuuEm2Ra2FkYnGT8sVPDjyhMS1pO4bbRfhiqyOLE=";
+                  };
+                });
+              in
               mkApp "security" "Run gosec security scan"
                 [
                   pkgs.gosec
-                  # gosec 2.29.0's embedded x/tools cannot decode the export
-                  # data (v5) that go 1.27.2 emits ("cannot decode ... export
-                  # data version 5 is greater than maximum supported version
-                  # 4"), so it exits 1 on 39 import errors with zero
-                  # findings. gosec master fixed this only on 2026-10-09
-                  # (securego/gosec#1772, unreleased). Until a gosec ≥ that
-                  # commit lands in nixpkgs, gosec runs under the patch-prior
-                  # toolchain: static analysis over the same source, export
-                  # data it can read. Drop this pin — use goPkg — when gosec
-                  # catches up.
-                  pkgs.go_1_27
+                  gosecGo
                 ]
                 ''
                   gosec ./...

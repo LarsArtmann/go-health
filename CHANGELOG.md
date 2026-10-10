@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Nothing yet.
 
+## [v0.6.1] - 2026-10-11
+
+### Fixed
+
+- Security-gate tooling only — no library change, library content identical to v0.6.0. gosec 2.29.0 embeds a go1.26-era x/tools that cannot decode the export data (v5) that go 1.27.2 emits, so when nixpkgs silently moved its `go_1_27` package from 1.27.1 to 1.27.2, the gate exited 1 on 39 import errors with a vacuous zero-findings scan (all packages skipped typechecking). That broke master CI and the v0.6.0 tag's CI run (frozen at the tag, permanently red there — the same content verified fully green under the fixed gate). The gate now runs gosec's `go list` under a hardcoded go 1.27.1 (the v4/v5 export-data boundary sits between 1.27.1 and 1.27.2), and the `goPkg` overrideAttrs source bump is dropped per its own documented drop-condition (nixpkgs ships 1.27.2 natively, carrying the GO-2026-6603..6617 stdlib fixes). This release exists so consumers and the fleet have a tagged release whose CI is fully green.
+
 ## [v0.6.0] - 2026-10-11
 
 ### Added
@@ -398,7 +404,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.6.1...HEAD
+[v0.6.1]: https://github.com/larsartmann/go-health/compare/v0.6.0...v0.6.1
 [v0.6.0]: https://github.com/larsartmann/go-health/compare/v0.5.1...v0.6.0
 [v0.5.1]: https://github.com/larsartmann/go-health/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/larsartmann/go-health/compare/v0.4.1...v0.5.0

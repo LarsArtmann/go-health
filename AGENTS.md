@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.6.0 released 2026-10-11 (alpha; per-source roll-up visibility via `aggregate.SourceStatuses`, joined invalid-source errors from `aggregate.New`, the never-started-probe shutdown-grace skip, and throttle/aggregate fuzz hardening shipped; gate toolchain on go 1.27.2).
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.6.1 released 2026-10-11 (alpha; per-source roll-up visibility via `aggregate.SourceStatuses`, joined invalid-source errors from `aggregate.New`, the never-started-probe shutdown-grace skip, and throttle/aggregate fuzz hardening shipped — v0.6.1 itself is a security-gate tooling fix only, library content identical to v0.6.0; gate toolchain on go 1.27.2, gosec's toolchain pinned to 1.27.1).
 
 ---
 

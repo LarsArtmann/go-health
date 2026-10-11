@@ -61,7 +61,10 @@ remote mapped onto the shared `internal/merge` primitive (fetch error → `Fetch
 federation-side on successful fetch, never inside the merge), and one synthetic `name/reachable` FAIL check per
 unreachable/undecodable remote (never a silent freeze, never a status override). Wire input is untrusted (invalid documents
 refused whole),
-`Check.Since`/`DurationNanos` survive verbatim, scalars do not. Full semantics (fetch caps,
+`Check.Since`/`DurationNanos` survive verbatim, scalars do not. Two-phase drain: `MarkShuttingDown()`
+flips a one-way hub-side flag overlaid onto every merged read (readiness 503, `shutting_down: true`,
+fetches continue so drained bodies stay fresh; liveness/startup unaffected) — the one surface whose
+drain a caller cannot reach by marking remotes. Full semantics (fetch caps,
 dashboard-`Prober` structural assertion, API surface): docs/federation-design.md. Remote
 names never hit `ErrUnknownCriticalService` (fetch-side is a different universe):
 docs/federation-validation-semantics.md.

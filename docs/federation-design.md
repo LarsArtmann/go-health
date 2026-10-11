@@ -100,18 +100,36 @@ pulling the full document instead of a synthetic overall status.
 - **Liveness** — process-local, always 200/pass with empty checks, no
   fetches. Restarting the hub because a remote is down would cause a
   cascade; the hub being alive says nothing about its remotes (same
-  rationale as `aggregate` and `Probe`).
+  rationale as `aggregate` and `Probe`). Unaffected by the drain.
 - **Readiness** — serves the merged view: 503 on overall fail (which
-  includes any unreachable remote and any shutting-down remote), 200
-  otherwise. A dark remote takes the hub out of rotation — deliberate:
-  the hub's whole answer is its remotes.
+  includes any unreachable remote, any shutting-down remote, and the hub
+  itself once marked for drain), 200 otherwise. A dark remote takes the
+  hub out of rotation — deliberate: the hub's whole answer is its
+  remotes.
 - **Startup** — fetches (which is also how latches move), then: 200 when
   every remote has answered successfully at least once; 503 otherwise
   with one fail check per not-yet-latched remote. The latch is one-way
   per remote (atomic), mirroring `Probe`'s startup latch; a remote that
-  flaps after latching does not re-block startup.
+  flaps after latching does not re-block startup. Unaffected by the
+  drain.
 
 `StartupComplete()` reports the AND of the latches.
+
+### Two-phase drain (`MarkShuttingDown`)
+
+`Prober.MarkShuttingDown()` flips a one-way hub-side flag that the
+merged read overlays (fail + `shutting_down: true`), so a hub behind a
+load balancer answers 503 for the rest of its drain window while the
+merge-on-read fetches keep running — drained bodies stay fresh, and a
+dashboard keeps seeing real remote state. This is the federation
+counterpart of `Probe.MarkShuttingDown`: the one surface whose drain a
+caller cannot reach by marking remotes (aggregate's drain flows through
+its sources' own probes). The overlay consults the flag live on every
+read, so the flip takes effect on the next request even with every
+remote healthy. There is no unmark and no `Shutdown` counterpart: the
+prober runs no background loop, so phase two of the drain is the host
+process draining its own HTTP server. Liveness and startup are
+unaffected, mirroring `Probe`.
 
 ### `RefreshInterval()` returns zero
 
@@ -138,6 +156,7 @@ func WithTimeout(time.Duration) Option // per-fetch deadline, default 5s
 
 func (p *Prober) CachedResponse() health.Response
 func (p *Prober) RefreshInterval() time.Duration // always 0
+func (p *Prober) MarkShuttingDown()              // one-way drain: readiness 503, fetches continue
 func (p *Prober) LivenessHandler() http.HandlerFunc
 func (p *Prober) ReadinessHandler() http.HandlerFunc
 func (p *Prober) StartupHandler() http.HandlerFunc

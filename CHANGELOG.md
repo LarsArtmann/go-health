@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- `federation`: `Prober.MarkShuttingDown()` gives the federation hub the two-phase drain a single probe already had (`health.Probe.MarkShuttingDown`). Once marked, readiness answers 503 with `shutting_down: true` and overall `fail` even with every remote healthy, while the merge-on-read fetches keep running so drained bodies stay fresh for dashboards and monitoring; liveness and startup are unaffected. This closes the LB hole where a hub behind a load balancer answered 200 "ready" all the way through graceful shutdown. There is no `Shutdown` counterpart: the prober runs no background loop, so phase two is the host process draining its own HTTP server. Design: docs/federation-design.md §"Two-phase drain".
 
 ### Changed
 

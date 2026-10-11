@@ -492,7 +492,10 @@ input**. An unreachable, non-200, undecodable, or status-invalid remote
 contributes one synthetic `name/reachable` FAIL check rather than freezing or
 silently reporting healthy, responses are capped at 1 MiB, and a document
 missing a valid status is refused whole. Liveness is fetch-free (always 200);
-readiness serves the merged verdict. Design:
+readiness serves the merged verdict, and `fed.MarkShuttingDown()` flips a
+one-way drain so readiness answers 503 with `shutting_down: true` while the
+fetches keep running — the load balancer pulls the hub before the listener
+closes during graceful shutdown. Design:
 [docs/federation-design.md](docs/federation-design.md). Because it fetches
 live on every read, `RefreshInterval` is always 0 — cadence is the remotes'.
 

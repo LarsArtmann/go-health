@@ -25,7 +25,9 @@ info:
     with the fetch/decode error for every unreachable or undecodable remote —
     an unreachable remote is never a silent freeze and never a status
     override. Wire input is untrusted: invalid documents are refused whole.
-    See docs/federation-design.md.
+    A hub marked for drain (`federation.Prober.MarkShuttingDown`) overlays
+    `shutting_down: true` with overall `fail` on its own merged body while
+    the fetches continue. See docs/federation-design.md.
   license:
     name: MIT
     identifier: MIT

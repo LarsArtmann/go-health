@@ -8,16 +8,16 @@
 
 ## Headline numbers
 
-| Metric | Value |
-| --- | --- |
-| TODO rows executed & deleted | 3 of 3 actionable (merge unification, WithGETOnly, stale hook-panic row) + buildflow row |
-| New package | `internal/merge` (Source + Responses, pure fold) |
-| Removed exported API | `WithGETOnly()` (deprecated since v0.1.1) |
-| Latent test flakes fixed | 2 (both surfaced by buildflow's race-stress fan-out) |
-| Gates | `.#gates` exit 0 · `nix flake check` exit 0 · `buildflow --build-mode full` exit 0 (79/79) · docs-check in sync with v0.6.1 |
-| Buildflow runs this session | 6 (3 failed on real signal: format, AGENTS.md line cap, ticker flake — each fixed) |
-| Merge fuzz campaign | 4.7M execs, 0 failures |
-| Docs touched | 13 files (README, FEATURES, AGENTS, CHANGELOG, INDEX, TODO_LIST, ROADMAP, CONTRIBUTING, DOMAIN_LANGUAGE, openapi.yaml, deprecation-policy, naming-integrity, adoption-matrix, merge-unification-design) |
+| Metric                       | Value                                                                                                                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TODO rows executed & deleted | 3 of 3 actionable (merge unification, WithGETOnly, stale hook-panic row) + buildflow row                                                                                                                |
+| New package                  | `internal/merge` (Source + Responses, pure fold)                                                                                                                                                        |
+| Removed exported API         | `WithGETOnly()` (deprecated since v0.1.1)                                                                                                                                                               |
+| Latent test flakes fixed     | 2 (both surfaced by buildflow's race-stress fan-out)                                                                                                                                                    |
+| Gates                        | `.#gates` exit 0 · `nix flake check` exit 0 · `buildflow --build-mode full` exit 0 (79/79) · docs-check in sync with v0.6.1                                                                             |
+| Buildflow runs this session  | 6 (3 failed on real signal: format, AGENTS.md line cap, ticker flake — each fixed)                                                                                                                      |
+| Merge fuzz campaign          | 4.7M execs, 0 failures                                                                                                                                                                                  |
+| Docs touched                 | 13 files (README, FEATURES, AGENTS, CHANGELOG, INDEX, TODO_LIST, ROADMAP, CONTRIBUTING, DOMAIN_LANGUAGE, openapi.yaml, deprecation-policy, naming-integrity, adoption-matrix, merge-unification-design) |
 
 ---
 
@@ -27,7 +27,7 @@
 2. **One fold semantics decision resolved and documented** — rank ties are now tie-stable (never replace the accumulator), which preserves aggregate's exact historical behavior, makes the fold order-independent (pinned by `TestResponses_OrderIndependent`), and closes a real federation edge: a remote document with top-level `status: "off"`/unknown could previously leak into the merged roll-up via last-same-rank-wins. Recorded in CHANGELOG §Unreleased, the design doc (now IMPLEMENTED), and AGENTS.md.
 3. **Fuzz/property suite collapse** — the duplicated merge-invariant assertions collapsed into `FuzzResponsesMergeInvariants` over the primitive (arbitrary Source pairs, independent fold oracle); aggregate's fuzz thinned to the mapping pin (merged output must equal `merge.Responses` over the mapped views, same corpus-safe signature); federation keeps its fetch-path fuzz (decode/refusal semantics, not merge semantics). Deleted with the port: `statusRank` + `TestStatusRank` (rank ordering now pinned through the primitive's tests). Evidence: 4.7M-exec fuzz campaign clean, suite green.
 4. **`WithGETOnly` removed** — function deleted from probe.go, the three `TestGETOnly_*` pin tests deleted, `FuzzHandlerInput` seed switched to `WithAllowedMethods()` (signature unchanged, corpus safe), and the 405-body-message pin folded into `TestWithAllowedMethods_EmptyActsAsGETOnly` so no observable contract coverage was lost. Evidence: zero `WithGETOnly` references in Go code (`rg` exit 1), full suite green, `.#lint` green.
-5. **Deprecation policy reconciled before removal** — docs/deprecation-policy.md said v0.x symbols are never removed, directly conflicting with the staged A22 decision; amended with an explicit zero-production-adopter removal path (adoption matrix clean + decision-table record + CHANGELOG migration snippet), with `WithGETOnly` as the first application. ROADMAP's "no earlier than v1.0" burn-down line updated to reflect the executed removal. The policy change was made *before* the code cut so docs and code never disagreed.
+5. **Deprecation policy reconciled before removal** — docs/deprecation-policy.md said v0.x symbols are never removed, directly conflicting with the staged A22 decision; amended with an explicit zero-production-adopter removal path (adoption matrix clean + decision-table record + CHANGELOG migration snippet), with `WithGETOnly` as the first application. ROADMAP's "no earlier than v1.0" burn-down line updated to reflect the executed removal. The policy change was made _before_ the code cut so docs and code never disagreed.
 6. **KeyHolderAI consumer fix (local)** — `cmd/keyholderai/health_probe_http_test.go` switched from `WithGETOnly()` to `WithAllowedMethods()`; verified compiling against its pinned go-health v0.5.1 (`go vet` exit 0). Daemon-committed in that repo (`0a1c5117`), unpushed per the fleet's push-authority hold.
 7. **Two latent test flakes fixed** — (1) `TestCachedResponse_NeverStartedSource` hardcoded `TotalLatencyMs == 0` while the primed source's own evaluation latency can legitimately read 1ms under full-suite parallelism; now asserts the real property (merged total == the real source's cached batch, ghost contributes nothing). (2) `TestRefreshLoop_TickerFiresBeforeShutdown` slept a fixed 50ms then required two calls; under the fan-out the 5ms ticker starved past the window; now polls with a 5s deadline. Both CHANGELOG'd as test-only. Both fail on mechanism analysis independent of the merge port (the port propagates latency identically — old code took max over the same sources), though isolated reproduction on the pre-change commit under simulated load did not fire; the reliable reproducer was buildflow itself.
 8. **`buildflow --build-mode full` restored to exit 0** — the gate red since 2026-10-08. Six runs this session: run 1 failed treefmt (self-inflicted, unformatted deletion), runs 2/3 failed on test-race (flake #2, then flake #1 context), run 4/5 failed the findings gate (AGENTS.md over the 220-line cap — my additions), run 6: **exit 0, 79/79 steps** on rebuilt binary `200ab99` + `GOTOOLCHAIN=auto`. The four 2026-10-09 stragglers (license-check, govalid-generate, root+tools variants) now pass.
@@ -91,70 +91,70 @@ Nearest misses worth naming honestly:
 
 **Tier 1 — direct follow-ups from this session (high impact, low effort)**
 
-| # | Task | Impact | Effort | Category |
-| --- | --- | --- | --- | --- |
-| 1 | Cut the next release (v0.7.0): CHANGELOG cut, full gates, tag, proxy/pkg.go.dev verification — Unreleased carries a breaking removal that consumers must be able to pin past | Critical | M | Release |
-| 2 | Draft v0.7.0 release notes: WithGETOnly migration snippet + tie-rule behavior callout (pair with #1) | High | S | Documentation |
-| 3 | Root-cause the AGENTS.md 220-cap line-count off-by-one (linter 221 vs wc 220); record as gotcha | Medium | S | Quality |
-| 4 | Restore AGENTS.md headroom: move `internal/merge` semantics detail to the design doc, leave a 2-line pointer | Medium | S | Cleanup |
-| 5 | Test whether rebuilt buildflow `200ab99` still needs `GOTOOLCHAIN=auto` (run full mode without the export); simplify gotchas if not | High | S | Quality |
-| 6 | Add the federation tie-rule delta pin test (remote `{"status":"off"}` + passing remote → merged pass) | High | S | Bug |
-| 7 | Verify go-health-dashboard against the tie-rule change — it renders merged Status, which could previously be `"off"`; confirm rendering path is safe | High | S | Bug |
-| 8 | Execute the golangci LSP owner decision: fix or disable `golangci_lint_ls` (it lied for a full session again) | High | S | Quality |
-| 9 | Investigate `.buildflow.yml` per-tool skip config to silence the 9 JS/TS/Python unavailable-tool warnings | Low | S | Quality |
-| 10 | HARVEST this report's section (f) into TODO_LIST.md/ROADMAP.md (docs-health) | Medium | S | Documentation |
-| 11 | Record the flake-reproducer gotcha ("buildflow full mode is the reproducer, not local load loops") in AGENTS.md — needs a line freed first (#4) | Low | S | Documentation |
-| 12 | After v0.7.0 tag: bump KeyHolderAI to it — REQUIRED together, its test fix is local and `WithGETOnly` no longer exists post-tag | High | S | Cleanup |
-| 13 | Fleet bump train post-v0.7.0, dashboard first (deepest aggregate/federation consumer) | High | L | Cleanup |
+| #  | Task                                                                                                                                                                         | Impact   | Effort | Category      |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
+| 1  | Cut the next release (v0.7.0): CHANGELOG cut, full gates, tag, proxy/pkg.go.dev verification — Unreleased carries a breaking removal that consumers must be able to pin past | Critical | M      | Release       |
+| 2  | Draft v0.7.0 release notes: WithGETOnly migration snippet + tie-rule behavior callout (pair with #1)                                                                         | High     | S      | Documentation |
+| 3  | Root-cause the AGENTS.md 220-cap line-count off-by-one (linter 221 vs wc 220); record as gotcha                                                                              | Medium   | S      | Quality       |
+| 4  | Restore AGENTS.md headroom: move `internal/merge` semantics detail to the design doc, leave a 2-line pointer                                                                 | Medium   | S      | Cleanup       |
+| 5  | Test whether rebuilt buildflow `200ab99` still needs `GOTOOLCHAIN=auto` (run full mode without the export); simplify gotchas if not                                          | High     | S      | Quality       |
+| 6  | Add the federation tie-rule delta pin test (remote `{"status":"off"}` + passing remote → merged pass)                                                                        | High     | S      | Bug           |
+| 7  | Verify go-health-dashboard against the tie-rule change — it renders merged Status, which could previously be `"off"`; confirm rendering path is safe                         | High     | S      | Bug           |
+| 8  | Execute the golangci LSP owner decision: fix or disable `golangci_lint_ls` (it lied for a full session again)                                                                | High     | S      | Quality       |
+| 9  | Investigate `.buildflow.yml` per-tool skip config to silence the 9 JS/TS/Python unavailable-tool warnings                                                                    | Low      | S      | Quality       |
+| 10 | HARVEST this report's section (f) into TODO_LIST.md/ROADMAP.md (docs-health)                                                                                                 | Medium   | S      | Documentation |
+| 11 | Record the flake-reproducer gotcha ("buildflow full mode is the reproducer, not local load loops") in AGENTS.md — needs a line freed first (#4)                              | Low      | S      | Documentation |
+| 12 | After v0.7.0 tag: bump KeyHolderAI to it — REQUIRED together, its test fix is local and `WithGETOnly` no longer exists post-tag                                              | High     | S      | Cleanup       |
+| 13 | Fleet bump train post-v0.7.0, dashboard first (deepest aggregate/federation consumer)                                                                                        | High     | L      | Cleanup       |
 
 **Tier 2 — next breaking window (staged, harvested into TODO_LIST)**
 
-| # | Task | Impact | Effort | Category |
-| --- | --- | --- | --- | --- |
-| 14 | Owner go/no-go on ServiceName typed identity (blocks 15–18) | Critical | S | Decision |
-| 15 | Execute ServiceName clean cut + `WithCriticalChecks` deprecated alias (inventory + scanner ready) | High | L | Feature |
-| 16 | `SanitizeResponse` → `CoerceValidUTF8` alias + deprecate (dashboard-only) | Medium | S | Feature |
-| 17 | `Check.Since` → `StatusSince` clean cut, JSON `since` frozen | Medium | S | Feature |
-| 18 | Post-rewrite fleet verification (11 repos, Zlota44/dnsblockd const-decls, KeyHolderAI literal-vs-typed) | High | L | Quality |
-| 19 | PMA scan on next contact (no local checkout) | Low | S | Quality |
-| 20 | Correct adoption-matrix over-counts (go-daemon rows are NOT consumers) | Low | S | Documentation |
-| 21 | Re-baseline branching-flow budget after typing lands (finding mix changes) | Low | S | Quality |
+| #  | Task                                                                                                    | Impact   | Effort | Category      |
+| -- | ------------------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
+| 14 | Owner go/no-go on ServiceName typed identity (blocks 15–18)                                             | Critical | S      | Decision      |
+| 15 | Execute ServiceName clean cut + `WithCriticalChecks` deprecated alias (inventory + scanner ready)       | High     | L      | Feature       |
+| 16 | `SanitizeResponse` → `CoerceValidUTF8` alias + deprecate (dashboard-only)                               | Medium   | S      | Feature       |
+| 17 | `Check.Since` → `StatusSince` clean cut, JSON `since` frozen                                            | Medium   | S      | Feature       |
+| 18 | Post-rewrite fleet verification (11 repos, Zlota44/dnsblockd const-decls, KeyHolderAI literal-vs-typed) | High     | L      | Quality       |
+| 19 | PMA scan on next contact (no local checkout)                                                            | Low      | S      | Quality       |
+| 20 | Correct adoption-matrix over-counts (go-daemon rows are NOT consumers)                                  | Low      | S      | Documentation |
+| 21 | Re-baseline branching-flow budget after typing lands (finding mix changes)                              | Low      | S      | Quality       |
 
 **Tier 3 — owner actions (artifacts ready or blocked on decision)**
 
-| # | Task | Impact | Effort | Category |
-| --- | --- | --- | --- | --- |
-| 22 | Publish the v0.1.1/v0.1.2 announcement (draft + channels checklist ready) | Low | S | Release |
-| 23 | Post samber/do#318 comment (draft ready, citations re-verified 2026-10-09) | Medium | S | Release |
-| 24 | Decide coverage-threshold CI job (fail < 97%?) | Medium | S | Decision |
-| 25 | Grant/decline consumer push authority (gates version-skew CI + the fleet train) | High | S | Decision |
-| 26 | Decide samber-do-auditlog `DetailedHealthRecorder` (ADR-004 tension documented) | Medium | M | Decision |
-| 27 | Version-skew CI script (fleet go.mod pins vs latest tag) — after #25 | Medium | M | Quality |
+| #  | Task                                                                            | Impact | Effort | Category |
+| -- | ------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 22 | Publish the v0.1.1/v0.1.2 announcement (draft + channels checklist ready)       | Low    | S      | Release  |
+| 23 | Post samber/do#318 comment (draft ready, citations re-verified 2026-10-09)      | Medium | S      | Release  |
+| 24 | Decide coverage-threshold CI job (fail < 97%?)                                  | Medium | S      | Decision |
+| 25 | Grant/decline consumer push authority (gates version-skew CI + the fleet train) | High   | S      | Decision |
+| 26 | Decide samber-do-auditlog `DetailedHealthRecorder` (ADR-004 tension documented) | Medium | M      | Decision |
+| 27 | Version-skew CI script (fleet go.mod pins vs latest tag) — after #25            | Medium | M      | Quality  |
 
 **Tier 4 — quality surfaces & tooling**
 
-| # | Task | Impact | Effort | Category |
-| --- | --- | --- | --- | --- |
-| 28 | Federation `CachedResponse`/merge benchmark (carried from 2026-10-11 04:27 §f.6) | Medium | S | Quality |
-| 29 | Watch securego/gosec #1772; drop the gosec nix pin when nixpkgs ships export-data-v5 reader | Low | S | Quality |
-| 30 | Normalize `tools/doanalyzerv2` go directive when samber-linter releases (then `go get` branching-flow, re-lower directives) | Low | M | Cleanup |
-| 31 | Drop `tools/bin` wrappers + `tool_paths` once #30 lands (conditional chain) | Low | S | Cleanup |
-| 32 | Verify the 42 govulncheck stdlib warnings (GO-2026-66xx class) are the documented accepted toolchain-track findings, note the clearing condition | Medium | S | Quality |
-| 33 | Source-verify go-branded-id v0.5.1 claims iff #14 advances | Low | S | Quality |
-| 34 | Vocabulary reconciliation (Probe/Prober/Source/Remote lexicon) — revisit only with enforcement tooling (A22 deferral stands) | Low | L | Cleanup |
-| 35 | Tidy merge-unification-design.md's stale "Schedule with E1" migration line now that it is IMPLEMENTED | Low | S | Documentation |
-| 36 | Confirm `internal/merge` is intentionally absent from FEATURES.md (internal packages are) — one-line doc-policy note | Low | S | Documentation |
-| 37 | Consider a godoc `Example` for `internal/merge.Responses` (package has none) | Low | S | Documentation |
-| 38 | Decide the CHANGELOG `### Tests`/`Internal` heading convention (see e.10) | Low | S | Documentation |
-| 39 | Add "format before gates" to the personal workflow gotchas (see e.1) | Low | S | Documentation |
-| 40 | Re-run `buildflow --build-mode full` weekly cadence check — it caught 2 flakes CI never did; consider adding full mode to the pre-release checklist explicitly | Medium | S | Quality |
+| #  | Task                                                                                                                                                           | Impact | Effort | Category      |
+| -- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
+| 28 | Federation `CachedResponse`/merge benchmark (carried from 2026-10-11 04:27 §f.6)                                                                               | Medium | S      | Quality       |
+| 29 | Watch securego/gosec #1772; drop the gosec nix pin when nixpkgs ships export-data-v5 reader                                                                    | Low    | S      | Quality       |
+| 30 | Normalize `tools/doanalyzerv2` go directive when samber-linter releases (then `go get` branching-flow, re-lower directives)                                    | Low    | M      | Cleanup       |
+| 31 | Drop `tools/bin` wrappers + `tool_paths` once #30 lands (conditional chain)                                                                                    | Low    | S      | Cleanup       |
+| 32 | Verify the 42 govulncheck stdlib warnings (GO-2026-66xx class) are the documented accepted toolchain-track findings, note the clearing condition               | Medium | S      | Quality       |
+| 33 | Source-verify go-branded-id v0.5.1 claims iff #14 advances                                                                                                     | Low    | S      | Quality       |
+| 34 | Vocabulary reconciliation (Probe/Prober/Source/Remote lexicon) — revisit only with enforcement tooling (A22 deferral stands)                                   | Low    | L      | Cleanup       |
+| 35 | Tidy merge-unification-design.md's stale "Schedule with E1" migration line now that it is IMPLEMENTED                                                          | Low    | S      | Documentation |
+| 36 | Confirm `internal/merge` is intentionally absent from FEATURES.md (internal packages are) — one-line doc-policy note                                           | Low    | S      | Documentation |
+| 37 | Consider a godoc `Example` for `internal/merge.Responses` (package has none)                                                                                   | Low    | S      | Documentation |
+| 38 | Decide the CHANGELOG `### Tests`/`Internal` heading convention (see e.10)                                                                                      | Low    | S      | Documentation |
+| 39 | Add "format before gates" to the personal workflow gotchas (see e.1)                                                                                           | Low    | S      | Documentation |
+| 40 | Re-run `buildflow --build-mode full` weekly cadence check — it caught 2 flakes CI never did; consider adding full mode to the pre-release checklist explicitly | Medium | S      | Quality       |
 
 ## g) QUESTIONS (up to 3 — not answerable from the repo)
 
 1. **Release policy: cut v0.7.0 now, or wait for the A22 renames?** Unreleased carries one breaking removal (`WithGETOnly`) and one behavior delta (federation tie rule). Tagging now means consumers take one breaking bump; waiting means the ServiceName/alias renames ride the same window but delays the fix train. Which do you want — and if "wait," is there a target date?
 2. **golangci LSP: fix or disable?** The panel delivered a provably false compile error for the entire session while every CLI gate stayed green (third documented incident). Disabling `golangci_lint_ls` in the Crush config removes the false-signal source but loses in-editor lint; the CLI gates remain canonical either way. Your call — I cannot determine your editor workflow needs.
-3. **Consumer push authority: granted, and for which repos?** The fleet's fixes (KeyHolderAI's `WithAllowedMethods` switch today; the earlier consumer commits from the pareto-v2 train) sit local-unpushed pending your answer. After a v0.7.0 tag, KeyHolderAI's fix becomes *required* on its next bump (the symbol no longer exists), so this answer gates the whole fleet train and the version-skew CI row.
+3. **Consumer push authority: granted, and for which repos?** The fleet's fixes (KeyHolderAI's `WithAllowedMethods` switch today; the earlier consumer commits from the pareto-v2 train) sit local-unpushed pending your answer. After a v0.7.0 tag, KeyHolderAI's fix becomes _required_ on its next bump (the symbol no longer exists), so this answer gates the whole fleet train and the version-skew CI row.
 
 ---
 
-*Arte in Aeternum*
+_Arte in Aeternum_

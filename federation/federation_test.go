@@ -42,7 +42,7 @@ type jsonRemote struct {
 	server *httptest.Server
 }
 
-func newRemote(t *testing.T, handler http.HandlerFunc) jsonRemote {
+func newRemote(t testing.TB, handler http.HandlerFunc) jsonRemote {
 	t.Helper()
 
 	server := httptest.NewServer(handler)
@@ -51,7 +51,7 @@ func newRemote(t *testing.T, handler http.HandlerFunc) jsonRemote {
 	return jsonRemote{server: server}
 }
 
-func serveDocument(t *testing.T, doc health.Response) jsonRemote {
+func serveDocument(t testing.TB, doc health.Response) jsonRemote {
 	t.Helper()
 
 	payload, err := json.Marshal(doc, json.Deterministic(true))
@@ -68,7 +68,7 @@ func serveDocument(t *testing.T, doc health.Response) jsonRemote {
 // healthyUpstream serves a valid pass document and rejects requests
 // without the Accept header federation must send — the content
 // negotiation contract with dashboard-hosted remotes.
-func healthyUpstream(t *testing.T) jsonRemote {
+func healthyUpstream(t testing.TB) jsonRemote {
 	t.Helper()
 
 	return newRemote(t, func(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func healthyUpstream(t *testing.T) jsonRemote {
 }
 
 func mustNew(
-	t *testing.T,
+	t testing.TB,
 	remotes []federation.Remote,
 	opts ...federation.Option,
 ) *federation.Prober {

@@ -17,7 +17,10 @@ import (
 // input: no panic, a non-empty overall status, and no synthesized check
 // other than the reachable fail row with a failing status — the hub must
 // never render a remote's garbage as a healthy check. One shared server
-// backs the whole campaign: a listener per iteration exhausts ports.
+// backs the whole campaign: a listener per iteration exhausts ports. A
+// second prober, marked draining once at setup, runs the same bodies
+// through the drain overlay: whatever the merge produced, the drained
+// read must answer fail with shutting_down set.
 func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 	seeds := []string{
 		`{"status":"pass","checks":{}}`,
@@ -49,6 +52,19 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 	if err != nil {
 		f.Fatalf("New: %v", err)
 	}
+
+	// Draining twin: same remote, marked once before the campaign. Every
+	// read below must carry the overlay regardless of what the body did to
+	// the merge — the mark beats any remote document.
+	draining, err := federation.New(
+		[]federation.Remote{{Name: "fuzz", URL: server.URL}},
+		federation.WithTimeout(time.Second),
+	)
+	if err != nil {
+		f.Fatalf("New draining twin: %v", err)
+	}
+
+	draining.MarkShuttingDown()
 
 	for _, seed := range seeds {
 		f.Add(seed)
@@ -91,6 +107,15 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 			default:
 				t.Fatalf("accepted remote check %q has invalid status %q", name, check.Status)
 			}
+		}
+
+		drained := draining.CachedResponse()
+		if !drained.ShuttingDown || drained.Status != health.StatusFail {
+			t.Fatalf(
+				"drained read must overlay fail+shutting_down over any merge result, got status %q, shutting_down %t",
+				drained.Status,
+				drained.ShuttingDown,
+			)
 		}
 	})
 }

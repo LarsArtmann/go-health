@@ -127,3 +127,9 @@ _(Stopping at 40 — items 41–50 would be padding; the honest count of real, a
 ---
 
 _Point-in-time snapshot. Section (f) is HARVEST fuel for `TODO_LIST.md`/`ROADMAP.md` (not yet harvested — see c.2). Waiting for instructions._
+
+---
+
+## Addendum (05:45, follow-up session)
+
+b2 is closed: `buildflow --build-mode full` re-run with `GOTOOLCHAIN=auto` exported → **EXIT=0, "passed with warnings", 79 success / 0 failed** (test-race ✔ 2.1s, test-coverage ✔ 0.8s) — the federation refactor has now seen the second quality surface. The run also cleared the two gate items from the 01:38 failed sweep: `SECURITY.md` gained a Security Practices section + a "Response time" heading (securitymd now 0 findings), and the `test-coverage` step failure was diagnosed as transient-environmental (one instance of a 19-repo fleet window around the 23:15 reboot; exact-seed replays 12/12 green; full mode EXIT=0 after) — the head+tail output-truncation post-mortem recipe is recorded in AGENTS.md Gotchas. Remaining warnings are the documented within-budget classes (govulncheck version-skew, nix-checker info, file-size, art-dupl 63/80, branching-flow 8/9, go-auto-upgrade 7/8).

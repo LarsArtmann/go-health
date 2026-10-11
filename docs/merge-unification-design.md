@@ -19,7 +19,7 @@ twice and can silently diverge (the classic split brain).
    no-slash source-name contract (ADR-005).
 4. Shutdown overlays: any source draining → merged fail; source startup
    latches AND. (Boundary, settled with federation's two-phase drain: the
-   overlay in this list is a *per-source* property carried by the
+   overlay in this list is a _per-source_ property carried by the
    `Response` a source contributes. A hub-side drain — federation's
    `MarkShuttingDown` — is deliberately NOT a merge input: a `Source`
    cannot express "the whole hub is draining", so federation applies its

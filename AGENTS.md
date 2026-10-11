@@ -51,17 +51,16 @@ export_test.go   — ResetStartupLatchForTest (test builds only; public latch st
 Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
 `health.Response`: `Source{Name, Probe}`, `New(sources...)` (rejects empty, duplicate,
 slash-containing, or nil-probe sources — docs/aggregate-source-name-design.md), merge-on-read
-`CachedResponse` (N lock-free loads mapped one-to-one onto the shared `internal/merge` primitive,
-FetchErr always empty), `StartupComplete` (AND of latches), the three kubelet handlers, and a
-standalone `Healthz()` single-endpoint handler (docs/aggregate-healthz-design.md).
+`CachedResponse` (N lock-free loads onto the shared `internal/merge` primitive), `StartupComplete`
+(AND of latches), the three kubelet handlers, and a standalone `Healthz()` handler
+(docs/aggregate-healthz-design.md).
 
-Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N
-remote go-health instances over HTTP into one `health.Response` — same source-name contract as
-aggregate, merge-on-read with one parallel fetch per remote mapped onto the shared
-`internal/merge` primitive (fetch error → `FetchErr`), per-remote startup latches (advanced
-federation-side on successful fetch, never inside the merge), and one synthetic
-`name/reachable` FAIL check per unreachable/undecodable remote (never a
-silent freeze, never a status override). Wire input is untrusted (invalid documents refused whole),
+Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N remote go-health instances
+over HTTP into one `health.Response` — same source-name contract as aggregate, merge-on-read with one parallel fetch per
+remote mapped onto the shared `internal/merge` primitive (fetch error → `FetchErr`), per-remote startup latches (advanced
+federation-side on successful fetch, never inside the merge), and one synthetic `name/reachable` FAIL check per
+unreachable/undecodable remote (never a silent freeze, never a status override). Wire input is untrusted (invalid documents
+refused whole),
 `Check.Since`/`DurationNanos` survive verbatim, scalars do not. Full semantics (fetch caps,
 dashboard-`Prober` structural assertion, API surface): docs/federation-design.md. Remote
 names never hit `ErrUnknownCriticalService` (fetch-side is a different universe):
@@ -76,13 +75,10 @@ docs/batteries-ownership-decision.md; tests use an in-process `sql.Register` fak
 
 Sub-package `internal/merge` (source: `internal/merge/merge.go`) is the single home of the
 worst-of fold behind both merge-on-read packages (docs/merge-unification-design.md):
-`Source{Name, Response, FetchErr}` + `Responses(sources)` — worst-of status via `Status.Rank`
-with tie stability (rank ties never replace the accumulator, so `off`/unknown source roll-ups
-cannot leak into the merged status and the fold is order-independent), `"source/check"`
-namespacing, the shutdown overlay, one synthetic `"name/reachable"` fail per fetch-errored source
-(Response ignored), max-latency over successful sources, per-process scalars dropped. Pure: no
-locks, no goroutines, no state. The collapsed merge fuzz suite (`FuzzResponsesMergeInvariants`)
-lives here; the packages keep only thin mapping tests.
+`Source{Name, Response, FetchErr}` + `Responses(sources)` — worst-of via `Rank` with tie
+stability (`off`/unknown roll-ups can't leak in; order-independent), `"source/check"` namespacing,
+shutdown overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars dropped.
+Pure. The collapsed merge fuzz suite lives here; packages keep thin mapping tests.
 
 ### Key Design Decisions
 

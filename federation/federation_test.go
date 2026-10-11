@@ -862,6 +862,60 @@ func TestMarkShuttingDown_LivenessAndStartupUnaffected(t *testing.T) {
 	}
 }
 
+// TestMarkShuttingDown_DrainsThroughRegisterRoutes observes the drain
+// through the wired surface a hub actually serves: the same handlers
+// mounted on a real mux via RegisterRoutes. Only readiness flips to 503
+// with the shutting_down body; the mux-mounted liveness and startup
+// routes answer as if nothing happened.
+func TestMarkShuttingDown_DrainsThroughRegisterRoutes(t *testing.T) {
+	t.Parallel()
+
+	upstream := newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"status":"pass","checks":{}}`))
+	})
+
+	fed := mustNew(t, []federation.Remote{{Name: "a", URL: upstream.server.URL}})
+
+	mux := http.NewServeMux()
+	fed.RegisterRoutes(mux, health.DefaultRoutes())
+
+	for _, path := range []string{"/healthz", "/readyz", "/startupz"} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("GET %s before the mark: want 200, got %d (%s)", path, rec.Code, rec.Body.String())
+		}
+	}
+
+	fed.MarkShuttingDown()
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("GET /readyz while draining: want 503, got %d (%s)", rec.Code, rec.Body.String())
+	}
+
+	var got health.Response
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("drained body: %v", err)
+	}
+
+	if !got.ShuttingDown || got.Status != health.StatusFail {
+		t.Errorf("drained body: want shutting-down fail, got %+v", got)
+	}
+
+	for _, path := range []string{"/healthz", "/startupz"} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("GET %s while draining: want 200, got %d (%s)", path, rec.Code, rec.Body.String())
+		}
+	}
+}
+
 // TestStress_MarkShuttingDown_ConcurrentReads hammers the mark from many
 // goroutines while readers assert the drain invariant the whole time.
 // Run under -race it verifies the flag's atomic discipline: no data

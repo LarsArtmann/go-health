@@ -163,6 +163,16 @@
                   || drift "FEATURES.md ADR range does not cover ADR-00''${adr_max}"
               fi
 
+              # AGENTS.md line cap: go-structure-linter enforces the 220-line
+              # preflight cap at ERROR severity, but only BuildFlow runs that
+              # tool — the canonical gate sweep stayed blind to it (an
+              # over-cap edit shipped gates-green once). Mirror the cap here
+              # so `nix run .#gates` and `nix flake check` enforce it too.
+              agents_lines="$(wc -l < AGENTS.md)"
+              if [ "$agents_lines" -gt 220 ]; then
+                drift "AGENTS.md is ''${agents_lines} lines, over the 220-line preflight cap (move detail to docs/INDEX.md)"
+              fi
+
               if [ "$fail" -eq 0 ]; then
                 echo "docs-drift-check: OK - README/AGENTS/CHANGELOG/FEATURES in sync with ''${latest}"
               fi

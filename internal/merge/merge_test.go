@@ -44,17 +44,22 @@ func assertChecks(t *testing.T, merged map[string]health.Check, want map[string]
 	}
 }
 
-// TestResponses_Table walks the shared fold: worst-of with tie stability,
-// the shutdown overlay, the synthetic reachable row, namespacing with value
-// carry, latency max, and scalar non-survival.
-func TestResponses_Table(t *testing.T) {
-	t.Parallel()
+// responsesTableCases is the case table for TestResponses_Table, held in its own
+// function to stay under the funlen budget.
+// check builds a Check row for the case table.
+func check(status health.Status, err string) health.Check {
+	return health.Check{Status: status, Error: err}
+}
 
-	check := func(status health.Status, err string) health.Check {
-		return health.Check{Status: status, Error: err}
-	}
-
-	tests := []struct {
+func responsesTableCases() []struct {
+	name          string
+	sources       []merge.Source
+	wantStatus    health.Status
+	wantShutDown  bool
+	wantLatencyMs int64
+	wantChecks    map[string]health.Check
+} {
+	return []struct {
 		name          string
 		sources       []merge.Source
 		wantStatus    health.Status
@@ -242,8 +247,15 @@ func TestResponses_Table(t *testing.T) {
 			},
 		},
 	}
+}
 
-	for _, testCase := range tests {
+// TestResponses_Table walks the shared fold: worst-of with tie stability,
+// the shutdown overlay, the synthetic reachable row, namespacing with value
+// carry, latency max, and scalar non-survival.
+func TestResponses_Table(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range responsesTableCases() {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 

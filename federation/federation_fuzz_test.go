@@ -93,20 +93,8 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 					got.Checks,
 				)
 			}
-
-			return
-		}
-
-		for name, check := range got.Checks {
-			if !strings.HasPrefix(name, "fuzz/") {
-				t.Fatalf("accepted remote checks must be namespaced, got %q", name)
-			}
-
-			switch check.Status {
-			case health.StatusPass, health.StatusWarn, health.StatusFail, health.StatusOff:
-			default:
-				t.Fatalf("accepted remote check %q has invalid status %q", name, check.Status)
-			}
+		} else {
+			assertAcceptedChecksValid(t, got)
 		}
 
 		drained := draining.CachedResponse()
@@ -118,4 +106,24 @@ func FuzzCachedResponse_ArbitraryRemoteBodies(f *testing.F) {
 			)
 		}
 	})
+}
+
+// assertAcceptedChecksValid pins the invariants for checks that came from a
+// decoded (not refused) remote body: every key namespaced under the remote,
+// every status inside the frozen enum. The hub must never render a remote's
+// garbage as a healthy check.
+func assertAcceptedChecksValid(t *testing.T, got health.Response) {
+	t.Helper()
+
+	for name, check := range got.Checks {
+		if !strings.HasPrefix(name, "fuzz/") {
+			t.Fatalf("accepted remote checks must be namespaced, got %q", name)
+		}
+
+		switch check.Status {
+		case health.StatusPass, health.StatusWarn, health.StatusFail, health.StatusOff:
+		default:
+			t.Fatalf("accepted remote check %q has invalid status %q", name, check.Status)
+		}
+	}
 }

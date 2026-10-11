@@ -42,24 +42,24 @@ type jsonRemote struct {
 	server *httptest.Server
 }
 
-func newRemote(t testing.TB, handler http.HandlerFunc) jsonRemote {
-	t.Helper()
+func newRemote(tb testing.TB, handler http.HandlerFunc) jsonRemote {
+	tb.Helper()
 
 	server := httptest.NewServer(handler)
-	t.Cleanup(server.Close)
+	tb.Cleanup(server.Close)
 
 	return jsonRemote{server: server}
 }
 
-func serveDocument(t testing.TB, doc health.Response) jsonRemote {
-	t.Helper()
+func serveDocument(tb testing.TB, doc health.Response) jsonRemote {
+	tb.Helper()
 
 	payload, err := json.Marshal(doc, json.Deterministic(true))
 	if err != nil {
-		t.Fatalf("marshal test document: %v", err)
+		tb.Fatalf("marshal test document: %v", err)
 	}
 
-	return newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
+	return newRemote(tb, func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(payload)
 	})
@@ -68,10 +68,10 @@ func serveDocument(t testing.TB, doc health.Response) jsonRemote {
 // healthyUpstream serves a valid pass document and rejects requests
 // without the Accept header federation must send — the content
 // negotiation contract with dashboard-hosted remotes.
-func healthyUpstream(t testing.TB) jsonRemote {
-	t.Helper()
+func healthyUpstream(tb testing.TB) jsonRemote {
+	tb.Helper()
 
-	return newRemote(t, func(w http.ResponseWriter, r *http.Request) {
+	return newRemote(tb, func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Accept") != "application/json" {
 			w.WriteHeader(http.StatusNotAcceptable)
 
@@ -83,15 +83,15 @@ func healthyUpstream(t testing.TB) jsonRemote {
 }
 
 func mustNew(
-	t testing.TB,
+	tb testing.TB,
 	remotes []federation.Remote,
 	opts ...federation.Option,
 ) *federation.Prober {
-	t.Helper()
+	tb.Helper()
 
 	prober, err := federation.New(remotes, opts...)
 	if err != nil {
-		t.Fatalf("New: unexpected error: %v", err)
+		tb.Fatalf("New: unexpected error: %v", err)
 	}
 
 	return prober
@@ -884,7 +884,12 @@ func TestMarkShuttingDown_DrainsThroughRegisterRoutes(t *testing.T) {
 		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
 
 		if rec.Code != http.StatusOK {
-			t.Fatalf("GET %s before the mark: want 200, got %d (%s)", path, rec.Code, rec.Body.String())
+			t.Fatalf(
+				"GET %s before the mark: want 200, got %d (%s)",
+				path,
+				rec.Code,
+				rec.Body.String(),
+			)
 		}
 	}
 
@@ -911,7 +916,12 @@ func TestMarkShuttingDown_DrainsThroughRegisterRoutes(t *testing.T) {
 		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
 
 		if rec.Code != http.StatusOK {
-			t.Errorf("GET %s while draining: want 200, got %d (%s)", path, rec.Code, rec.Body.String())
+			t.Errorf(
+				"GET %s while draining: want 200, got %d (%s)",
+				path,
+				rec.Code,
+				rec.Body.String(),
+			)
 		}
 	}
 }

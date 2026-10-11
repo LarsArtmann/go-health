@@ -744,7 +744,9 @@ func TestMarkShuttingDown_ReadinessDrainsWithFreshBody(t *testing.T) {
 			return
 		}
 
-		_, _ = w.Write([]byte(`{"status":"pass","checks":{"disk":{"status":"off","error":"enable recipe"}}}`))
+		_, _ = w.Write(
+			[]byte(`{"status":"pass","checks":{"disk":{"status":"off","error":"enable recipe"}}}`),
+		)
 	})
 
 	fed := mustNew(t, []federation.Remote{{Name: "api", URL: upstream.server.URL}})

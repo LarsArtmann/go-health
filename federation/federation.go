@@ -116,9 +116,9 @@ func WithTimeout(d time.Duration) Option {
 // no goroutines): reads fetch, handlers fetch, liveness does not.
 // Prober is safe for concurrent use.
 type Prober struct {
-	// states holds one entry per remote; index i is the single pairing key
-	// for fetch results, latch reads, and merge — no cross-slice length
-	// invariant exists.
+	// states holds one entry per remote. Fetch results carry their entry's
+	// pointer (fetchedRemote), so no cross-slice length invariant exists
+	// anywhere.
 	states  []remoteState
 	client  *http.Client
 	timeout time.Duration
@@ -234,6 +234,14 @@ type fetchResult struct {
 	errMsg string
 }
 
+// fetchedRemote pairs a remote's state with its fetch outcome so the
+// merge loop never relies on two slices staying index-aligned: the
+// pairing is carried in the data.
+type fetchedRemote struct {
+	state  *remoteState
+	result fetchResult
+}
+
 // CachedResponse returns the merged health state of all remotes: one
 // parallel fetch per remote, then the merge. The overall status is the
 // worst of the remote statuses and every synthetic reachable check; a
@@ -249,15 +257,15 @@ func (p *Prober) CachedResponse() health.Response {
 // the request's context so a disconnected caller cancels its fetches.
 func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 	//nolint:makezero // pre-sized slice: parallel goroutines write results[i] by index
-	results := make([]fetchResult, len(p.states))
+	results := make([]fetchedRemote, len(p.states))
 
 	var wg sync.WaitGroup
 
 	for i := range p.states {
-		remote := p.states[i].remote
+		state := &p.states[i]
 
 		wg.Go(func() {
-			results[i] = p.fetch(ctx, remote)
+			results[i] = fetchedRemote{state: state, result: p.fetch(ctx, state.remote)}
 		})
 	}
 
@@ -268,16 +276,15 @@ func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 
 // merge combines fetch results into one response and advances the
 // startup latches. Runs single-threaded after the parallel fetches.
-func (p *Prober) merge(results []fetchResult) health.Response {
+func (p *Prober) merge(results []fetchedRemote) health.Response {
 	checks := make(map[string]health.Check)
 	status := health.StatusPass
 	shuttingDown := false
 
 	var maxLatency int64
 
-	for i := range p.states {
-		state := &p.states[i]
-		result := results[i]
+	for _, fetched := range results {
+		state, result := fetched.state, fetched.result
 
 		if !result.ok {
 			checks[state.remote.Name+"/reachable"] = health.Check{

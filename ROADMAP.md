@@ -198,6 +198,20 @@ Raw ideas, none scheduled:
   explicit hook removes per-consumer diffing bugs). Needs a design note first
   (severity mapping, overlapping batches, panic isolation). 2026-09-18 report
   §f4/§f18.
+- `WithEvaluationHook` parity for `federation` — the hook surface is
+  root-package-only today; a federation hub wanting metrics/alerting on the
+  merged verdict composes at the dashboard instead. Revisit only with a
+  concrete consumer need (drain-report 2026-10-11 §f36).
+- Hub-drain orchestration helper — a tiny composer around
+  `MarkShuttingDown` + grace sleep + `server.Shutdown` for hub operators,
+  mirroring `WithShutdownGracePeriod`'s automation at the root (drain-report
+  2026-10-11 §f40). Only if the dashboard wiring (#5 follow-through) shows
+  the composition is error-prone in practice.
+- Formalize aggregate's sources-only drain stance as an ADR — the decision
+  (aggregate carries no own mark; drain flows through sources; federation's
+  hub-side mark is the exception) is recorded in the aggregate package doc
+  and federation-design §"Two-phase drain", but not yet an ADR (drain-report
+  2026-10-11 §f20).
 - `healthtest` consumer helper package (fake batch, recording recorder, ready
   assertions) — needs a design note + owner decision before any API surface.
   2026-09-18 report §f19.

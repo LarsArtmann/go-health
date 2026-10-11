@@ -18,9 +18,21 @@ env:
 # spawned a go-licenses running go 1.27.0). The full-mode gaps need
 # `GOTOOLCHAIN=auto` exported in the launching shell (7 of 8 originally
 # skew-red steps pass with it) and license-check/govalid-generate remain
-# BuildFlow upstream tasks. Drop the wrappers and this block once the graph
-# no longer requires a newer patch than BuildFlow's toolchain AND full-mode
-# spawn env/resolution is fixed upstream.
+# BuildFlow upstream tasks.
+#
+# Binary forensics (2026-10-11 evening): the shared profile install is the
+# chore/linter-v050-guard branch build 5aaf336 (go 1.27.0 closure) — the
+# 200ab99 binary verified green 79/79 that same morning was silently
+# replaced, and `buildflow upgrade` was a no-op (it targeted a parent
+# flake that does not exist; nothing at ~/projects was mutated). Effect:
+# full-mode license-check (root + tools) exits 1 on "branching-flow
+# requires go >= 1.27.1 (running go 1.27.0)" while the single step passes
+# and `.#gates` is fully green. Arbitrate full-mode reds against `.#gates`
+# (AGENTS.md BuildFlow gotcha); the red moves only when the profile
+# installs a BuildFlow whose closure carries go >= 1.27.1. Drop the
+# wrappers and this block once the graph no longer requires a newer patch
+# than BuildFlow's toolchain AND full-mode spawn env/resolution is fixed
+# upstream.
 tool_paths:
   go-generate: tools/bin
   govalid-generate: tools/bin

@@ -1057,8 +1057,15 @@ func TestRefreshLoop_TickerFiresBeforeShutdown(t *testing.T) {
 
 	mustStart(t, probe, t.Context())
 
-	// Wait long enough for at least 3 ticker cycles.
-	time.Sleep(50 * time.Millisecond)
+	// Poll for the initial evaluation plus at least one ticker-driven
+	// refresh instead of sleeping a fixed window: under a loaded scheduler
+	// even a 5ms ticker can starve past any fixed wait (observed under the
+	// race-stress fan-out), and the property under test is "the loop fires",
+	// not "it fires within 50ms".
+	deadline := time.Now().Add(5 * time.Second)
+	for svc.calls.Load() < 2 && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
 
 	probe.Shutdown()
 

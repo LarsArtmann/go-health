@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Test-surface fix: `TestCachedResponse_NeverStartedSource` hardcoded `TotalLatencyMs == 0`, but the primed source's own evaluation latency can legitimately read 1ms under full-suite parallelism (observed once under the race-stress fan-out), flaking the never-started merge property it pins. The assertion now checks the real property — the never-started source contributes nothing, so the merged total equals the real source's own cached batch. Test-only; no library change.
+- Test-surface fix: `TestRefreshLoop_TickerFiresBeforeShutdown` slept a fixed 50ms and then required two health-check calls; under the full-suite race-stress fan-out the 5ms ticker could starve past the fixed window (observed once), flaking the loop-fires property it pins. The test now polls for the second call with a 5s deadline. Test-only; no library change.
 
 ## [v0.6.1] - 2026-10-11
 

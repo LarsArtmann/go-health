@@ -73,12 +73,11 @@ path. Resource checks are warn-by-default: criticality stays with the caller; th
 arguments, not constants. Ownership decision + constraints:
 docs/batteries-ownership-decision.md; tests use an in-process `sql.Register` fake driver.
 
-Sub-package `internal/merge` (source: `internal/merge/merge.go`) is the single home of the
-worst-of fold behind both merge-on-read packages (docs/merge-unification-design.md):
-`Source{Name, Response, FetchErr}` + `Responses(sources)` — worst-of via `Rank` with tie
-stability (`off`/unknown roll-ups can't leak in; order-independent), `"source/check"` namespacing,
-shutdown overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars dropped.
-Pure. The collapsed merge fuzz suite lives here; packages keep thin mapping tests.
+Sub-package `internal/merge` (source: `internal/merge/merge.go`) is the single home of the worst-of fold behind both
+merge-on-read packages (docs/merge-unification-design.md): `Source{Name, Response, FetchErr}` + `Responses(sources)` — worst-of
+via `Rank` with tie stability (`off`/unknown roll-ups can't leak in; order-independent), `"source/check"` namespacing, shutdown
+overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars dropped. Pure. The collapsed merge fuzz suite
+lives here; packages keep thin mapping tests.
 
 ### Key Design Decisions
 

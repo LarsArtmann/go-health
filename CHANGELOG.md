@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - `federation`: fetch results now carry their remote's state pointer (`fetchedRemote`) instead of pairing with `p.states` by index, so the merge loop can never rely on two slices staying length-aligned. Internal only — no exported API and no behavior change.
+- `aggregate` and `federation` now share one merge implementation: the new `internal/merge` package owns the worst-of fold (worst source status via `Status.Rank`, `"source/check"` namespacing, the shutdown overlay, max-latency, per-process-scalar drop), and both packages map their acquisitions onto it. No exported API change. One rule was unified while doing so: rank ties (a source whose own roll-up is `off` or unknown) no longer replace the accumulated status in federation's merged roll-up, which keeps the merged status inside the frozen pass/warn/fail enum and makes the fold order-independent; previously federation let the last same-rank value win, so a remote document with top-level `status: "off"` followed by a passing remote flipped the merged status to `off`. The duplicated merge fuzz/property assertions collapsed into one suite over the primitive (`FuzzResponsesMergeInvariants`); each package keeps thin mapping tests, and every pre-existing package test passed unchanged as the port's oracle. Design: docs/merge-unification-design.md.
+
+### Removed
+
+- `WithGETOnly()`, deprecated since v0.1.1: `WithAllowedMethods()` with no arguments is the canonical, behavior-identical spelling (both seed the accepted method set with GET alone). The adoption matrix (2026-10-09) found zero production adopters — KeyHolderAI's usage was tests only and is fixed locally; removal rides the staged rename decision table (docs/naming-integrity.md §"v0.6 staged-rename decision table") under the deprecation policy's new zero-production-adopter removal path. Migration: replace `health.WithGETOnly()` with `health.WithAllowedMethods()` — or list methods explicitly (e.g. `health.WithAllowedMethods(http.MethodGet)`).
 
 ### Fixed
 

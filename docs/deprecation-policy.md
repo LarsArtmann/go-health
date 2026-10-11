@@ -16,9 +16,16 @@ A symbol is deprecated only when all of the following are true:
 
 ## Lifetime of a deprecated symbol
 
-- **v0.x (current):** deprecated symbols are **not removed**. The v0.x line
-  treats removals as breaking no matter how small the symbol; current
-  example: `WithGETOnly` (deprecated in v0.1.1, no removal planned).
+- **v0.x (current, default):** deprecated symbols are **not removed**. The
+  v0.x line treats removals as breaking no matter how small the symbol.
+- **v0.x exception (zero-production-adopter removal, ratified A22
+  2026-10-09, first applied to `WithGETOnly` in v0.7):** a deprecated
+  symbol may be removed in a minor release when ALL of the following hold:
+  the adoption matrix shows zero production call sites (test-only usage is
+  acceptable to break), the removal is recorded in the staged-rename
+  decision table (docs/naming-integrity.md), and the CHANGELOG carries the
+  mechanical migration snippet. The one-minor deprecation marker still
+  applies.
 - **v1.0 and later:** a deprecated symbol may be removed **no earlier than
   the second minor release after the one that deprecated it** (deprecated in
   v1.2 → earliest removal in v1.4), and never in a patch release. Removals
@@ -35,10 +42,14 @@ not ride along with deprecations.
 
 `staticcheck` (SA1019) and most IDEs will flag usage of a deprecated symbol.
 Suppressing that warning at the call site is your decision; the upstream
-project does not require it. Within go-health's own test suite, four tests
-intentionally pin the deprecated `WithGETOnly` so its compatibility promise
-is enforced by CI — the in-repo SA1019 findings are accepted, not `nolint`ed.
+project does not require it. Within go-health's own test suite, pin-tests
+for a deprecated symbol stay until the symbol is removed — its compatibility
+promise is enforced by CI — and the in-repo SA1019 findings are accepted,
+not `nolint`ed. (`WithGETOnly` was the standing example: four tests pinned
+it from v0.1.1 until its zero-production-adopter removal deleted them with
+the symbol.)
 
 **Confirmed 2026-09-04 (decision G5):** this is the formal SA1019 policy —
-in-repo pin-tests stay, accepted SA1019 findings are the documented default,
-and no `//nolint:staticcheck` suppressions are introduced for them.
+in-repo pin-tests stay until removal, accepted SA1019 findings are the
+documented default, and no `//nolint:staticcheck` suppressions are
+introduced for them.

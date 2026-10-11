@@ -58,7 +58,7 @@ mechanics per the A22 table.
 
 | Task | Status | Impact | Effort | Evidence |
 | ---- | ------ | ------ | ------ | -------- |
-| `WithCriticalServices(...string)` → `(...ServiceName)` clean cut + `WithCriticalChecks` deprecated alias (A22 order step 1–2, ServiceName cut first) | TODO | Med | 2h | docs/servicename-design.md (fleet inventory + `tools/servicename-scan.sh`); 8 constructor repos + 2 bridges break, mechanical |
+| `WithCriticalServices(...string)` → `(...ServiceName)` clean cut + `WithCriticalChecks` deprecated alias (A22 order step 1–2, ServiceName cut first) | BLOCKED | Med | 2h | Owner go/no-go on typed identity still reserved (2026-10-11 report §b1; servicename-design.md is DESIGN-ONLY) — then docs/servicename-design.md fleet inventory + `tools/servicename-scan.sh`; 8 constructor repos + 2 bridges break, mechanical |
 | `SanitizeResponse` → `CoerceValidUTF8` alias + deprecate (A22 step 3) | TODO | Low | 30min | dashboard-only break (`dashboard.go`, 1 prod + 1 test file) |
 | `Check.Since` → `StatusSince` Go-field clean cut, JSON `since` frozen (A22 step 4) | TODO | Low | 30min | dashboard-only break (`status.go:311,391` + 3 test files); pair with docs/check-metadata-design.md doc pass |
 | `Probe`/`Prober`/`Source`/`Remote` lexicon reconciliation | BLOCKED | Low | 1d | A22: deferred past the window — highest coupling, lowest lie-factor; revisit only with docs/vocabulary-reconciliation.md enforcement tooling |

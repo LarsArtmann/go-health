@@ -4,12 +4,14 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	health "github.com/larsartmann/go-health"
 	aggregate "github.com/larsartmann/go-health/aggregate"
+	merge "github.com/larsartmann/go-health/internal/merge"
 )
 
 // fuzzRequest builds a plain GET request for handler smoke assertions.
@@ -87,11 +89,13 @@ func newFuzzSource(t *testing.T, spec fuzzSourceSpec) *health.Probe {
 }
 
 // FuzzAggregateMergeInvariants fuzzes source topology through the merge-on-read
-// path. Invariants under any input: no panic; the merged status is the worst
-// of the source statuses (fail when any source shuts down); every merged check
-// key is namespaced "source/check" and carries the source's own check value;
-// per-process scalars (version, instance_id, uptime, timestamp) never survive
-// the merge; and the three handlers only emit their documented status codes.
+// path. The fold semantics (worst-of status, shutdown overlay, namespacing,
+// scalar drop, latency max) live in the shared [merge.Responses] primitive and
+// its own suite; this harness pins the aggregate-specific surface under any
+// input: the mapping (one Source per probe, carrying the probe's cached view
+// verbatim, no fetch errors) — asserted bit-for-bit against the primitive —
+// the startup AND, and the three handlers' documented status codes. Merge
+// results and handler codes never depend on the sources' freshness modes.
 //
 // Source names containing "/" are out of contract: aggregate.New rejects
 // them (they would blur the "source/check" grouping axis and could alias
@@ -139,7 +143,18 @@ func FuzzAggregateMergeInvariants(f *testing.F) {
 
 		merged := agg.CachedResponse()
 
-		assertMergedState(t, merged, foldSources(cachedViews), cachedViews)
+		mapped := []merge.Source{
+			{Name: nameOne, Response: cachedViews[nameOne]},
+			{Name: nameTwo, Response: cachedViews[nameTwo]},
+		}
+
+		if want := merge.Responses(mapped); !reflect.DeepEqual(merged, want) {
+			t.Fatalf(
+				"merged response drifts from the shared fold:\nwant %+v\ngot  %+v",
+				want,
+				merged,
+			)
+		}
 
 		wantStartup := probeOne.StartupComplete() && probeTwo.StartupComplete()
 		if agg.StartupComplete() != wantStartup {
@@ -181,109 +196,6 @@ func buildFuzzSources(
 	}
 
 	return newFuzzSource(t, specOne), newFuzzSource(t, specTwo)
-}
-
-// mergeExpectation holds the folded expectations for one merge scenario.
-type mergeExpectation struct {
-	status     health.Status
-	shutdown   bool
-	latencyMs  int64
-	checkCount int
-}
-
-// assertMergedState verifies the merged response against the folded
-// expectations and the namespacing rule.
-func assertMergedState(
-	t *testing.T,
-	merged health.Response,
-	want mergeExpectation,
-	sources map[string]health.Response,
-) {
-	t.Helper()
-
-	if merged.Status != want.status {
-		t.Fatalf("merged status: want %q, got %q", want.status, merged.Status)
-	}
-
-	if merged.ShuttingDown != want.shutdown {
-		t.Fatalf("merged shutting_down: want %v, got %v", want.shutdown, merged.ShuttingDown)
-	}
-
-	if merged.TotalLatencyMs != want.latencyMs {
-		t.Fatalf("merged latency: want %d, got %d", want.latencyMs, merged.TotalLatencyMs)
-	}
-
-	if len(merged.Checks) != want.checkCount {
-		t.Fatalf("merged check count: want %d, got %d", want.checkCount, len(merged.Checks))
-	}
-
-	assertChecksNamespaced(t, merged.Checks, sources)
-	assertScalarsDropped(t, merged)
-}
-
-// assertScalarsDropped verifies per-process scalars never survive the merge.
-func assertScalarsDropped(t *testing.T, merged health.Response) {
-	t.Helper()
-
-	if merged.Version != "" || merged.InstanceID != "" || merged.Uptime != "" ||
-		!merged.Timestamp.IsZero() {
-		t.Fatalf("per-process scalars survived the merge: %+v", merged)
-	}
-}
-
-// foldSources computes the merge expectations from the sources' cached views.
-func foldSources(sources map[string]health.Response) mergeExpectation {
-	want := mergeExpectation{status: health.StatusPass}
-
-	for _, cached := range sources {
-		if cached.Status.Rank() < want.status.Rank() {
-			want.status = cached.Status
-		}
-
-		if cached.ShuttingDown {
-			want.shutdown = true
-		}
-
-		if cached.TotalLatencyMs > want.latencyMs {
-			want.latencyMs = cached.TotalLatencyMs
-		}
-
-		want.checkCount += len(cached.Checks)
-	}
-
-	if want.shutdown {
-		want.status = health.StatusFail
-	}
-
-	return want
-}
-
-// assertChecksNamespaced verifies every merged check key is prefixed by a
-// source name and carries exactly that source's check value.
-func assertChecksNamespaced(
-	t *testing.T,
-	merged map[string]health.Check,
-	sources map[string]health.Response,
-) {
-	t.Helper()
-
-	for key, check := range merged {
-		prefix, rest, _ := strings.Cut(key, "/")
-
-		source, ok := sources[prefix]
-		if !ok {
-			t.Fatalf("merged check %q has prefix %q which is not a source name", key, prefix)
-		}
-
-		want, ok := source.Checks[rest]
-		if !ok {
-			t.Fatalf("merged check %q absent from source %q", key, prefix)
-		}
-
-		if want != check {
-			t.Fatalf("merged check %q value drift: want %+v, got %+v", key, want, check)
-		}
-	}
 }
 
 // assertAggregateHandlers verifies the three handlers answer with their

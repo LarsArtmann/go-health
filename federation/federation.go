@@ -43,6 +43,7 @@ import (
 	"time"
 
 	health "github.com/larsartmann/go-health"
+	merge "github.com/larsartmann/go-health/internal/merge"
 )
 
 // ErrNoRemotes is returned by [New] when called without any remotes. A
@@ -275,63 +276,32 @@ func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 }
 
 // merge combines fetch results into one response and advances the
-// startup latches. Runs single-threaded after the parallel fetches.
+// startup latches. Runs single-threaded after the parallel fetches. The
+// fold itself is the shared [merge.Responses] primitive; this method owns
+// the federation-specific pieces: latch movement is an output of a
+// successful fetch (not a merge input), and a failed fetch maps to the
+// primitive's FetchErr channel so the dark remote surfaces as its synthetic
+// reachable row.
 func (p *Prober) merge(results []fetchedRemote) health.Response {
-	checks := make(map[string]health.Check)
-	status := health.StatusPass
-	shuttingDown := false
-
-	var maxLatency int64
+	sources := make([]merge.Source, 0, len(results))
 
 	for _, fetched := range results {
 		state, result := fetched.state, fetched.result
 
 		if !result.ok {
-			checks[state.remote.Name+"/reachable"] = health.Check{
-				Status: health.StatusFail,
-				Error:  "fetch: " + result.errMsg,
-			}
-			status = worst(status, health.StatusFail)
+			sources = append(
+				sources,
+				merge.Source{Name: state.remote.Name, FetchErr: result.errMsg},
+			)
 
 			continue
 		}
 
 		state.latched.Store(true)
-
-		if result.resp.ShuttingDown {
-			shuttingDown = true
-		}
-
-		if result.resp.TotalLatencyMs > maxLatency {
-			maxLatency = result.resp.TotalLatencyMs
-		}
-
-		status = worst(status, result.resp.Status)
-
-		for name, check := range result.resp.Checks {
-			checks[state.remote.Name+"/"+name] = check
-		}
+		sources = append(sources, merge.Source{Name: state.remote.Name, Response: result.resp})
 	}
 
-	if shuttingDown {
-		status = health.StatusFail
-	}
-
-	return health.Response{
-		Status:         status,
-		ShuttingDown:   shuttingDown,
-		Checks:         checks,
-		TotalLatencyMs: maxLatency,
-	}
-}
-
-// worst returns the more severe of two statuses by [health.Status.Rank].
-func worst(a, b health.Status) health.Status {
-	if a.Rank() < b.Rank() {
-		return a
-	}
-
-	return b
+	return merge.Responses(sources)
 }
 
 // fetch retrieves and decodes one remote's health document. Every failure

@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/larsartmann/go-health"
 )
 
 // errMarshalBoom is the canned marshal failure for the seam test.

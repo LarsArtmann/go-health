@@ -1112,7 +1112,6 @@ func TestReadiness_BeforeStart_EvaluatesLive(t *testing.T) {
 	}
 }
 
-
 func TestDefault_AllowsNonGETWithoutGuard(t *testing.T) {
 	t.Parallel()
 

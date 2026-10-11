@@ -12,14 +12,35 @@ import (
 // doc builds a source response with the given roll-up and check set.
 func doc(status health.Status, checks map[string]health.Check) health.Response {
 	return health.Response{
-		Status:         status,
-		Version:        "1.2.3",
-		InstanceID:     "pod-1",
-		Uptime:         "4h",
-		Timestamp:      time.Date(2026, 10, 11, 12, 0, 0, 0, time.UTC),
-		ShuttingDown:   status == health.StatusFail,
-		TotalLatencyMs: 7,
-		Checks:         checks,
+		Status:     status,
+		Version:    "1.2.3",
+		InstanceID: "pod-1",
+		Uptime:     "4h",
+		Timestamp:  time.Date(2026, 10, 11, 12, 0, 0, 0, time.UTC),
+		Checks:     checks,
+	}
+}
+
+// assertChecks compares the merged check set against the expectation,
+// including per-entry equality.
+func assertChecks(t *testing.T, merged map[string]health.Check, want map[string]health.Check) {
+	t.Helper()
+
+	if len(merged) != len(want) {
+		t.Fatalf("checks = %v, want %v", merged, want)
+	}
+
+	for key, wantCheck := range want {
+		got, ok := merged[key]
+		if !ok {
+			t.Errorf("missing merged check %q", key)
+
+			continue
+		}
+
+		if got != wantCheck {
+			t.Errorf("check %q = %+v, want %+v", key, got, wantCheck)
+		}
 	}
 }
 
@@ -50,7 +71,13 @@ func TestResponses_Table(t *testing.T) {
 		{
 			name: "single healthy source",
 			sources: []merge.Source{
-				{Name: "a", Response: doc(health.StatusPass, map[string]health.Check{"db": check(health.StatusPass, "")})},
+				{
+					Name: "a",
+					Response: doc(
+						health.StatusPass,
+						map[string]health.Check{"db": check(health.StatusPass, "")},
+					),
+				},
 			},
 			wantStatus: health.StatusPass,
 			wantChecks: map[string]health.Check{"a/db": check(health.StatusPass, "")},
@@ -58,9 +85,27 @@ func TestResponses_Table(t *testing.T) {
 		{
 			name: "worst-of fail beats warn beats pass",
 			sources: []merge.Source{
-				{Name: "a", Response: doc(health.StatusPass, map[string]health.Check{"db": check(health.StatusPass, "")})},
-				{Name: "b", Response: doc(health.StatusWarn, map[string]health.Check{"cache": check(health.StatusWarn, "degraded")})},
-				{Name: "c", Response: doc(health.StatusFail, map[string]health.Check{"db": check(health.StatusFail, "down")})},
+				{
+					Name: "a",
+					Response: doc(
+						health.StatusPass,
+						map[string]health.Check{"db": check(health.StatusPass, "")},
+					),
+				},
+				{
+					Name: "b",
+					Response: doc(
+						health.StatusWarn,
+						map[string]health.Check{"cache": check(health.StatusWarn, "degraded")},
+					),
+				},
+				{
+					Name: "c",
+					Response: doc(
+						health.StatusFail,
+						map[string]health.Check{"db": check(health.StatusFail, "down")},
+					),
+				},
 			},
 			wantStatus: health.StatusFail,
 			wantChecks: map[string]health.Check{
@@ -74,7 +119,9 @@ func TestResponses_Table(t *testing.T) {
 			sources: []merge.Source{
 				{Name: "a", Response: health.Response{
 					Status: health.StatusPass,
-					Checks: map[string]health.Check{"queue": check(health.StatusOff, "not configured: set queue.url")},
+					Checks: map[string]health.Check{
+						"queue": check(health.StatusOff, "not configured: set queue.url"),
+					},
 				}},
 			},
 			wantStatus: health.StatusPass,
@@ -85,7 +132,13 @@ func TestResponses_Table(t *testing.T) {
 		{
 			name: "unknown roll-up status ranks pass-tier and never leaks",
 			sources: []merge.Source{
-				{Name: "a", Response: health.Response{Status: "degraded", Checks: map[string]health.Check{}}},
+				{
+					Name: "a",
+					Response: health.Response{
+						Status: "degraded",
+						Checks: map[string]health.Check{},
+					},
+				},
 			},
 			wantStatus: health.StatusPass,
 			wantChecks: map[string]health.Check{},
@@ -93,11 +146,25 @@ func TestResponses_Table(t *testing.T) {
 		{
 			name: "shutdown overlay forces fail",
 			sources: []merge.Source{
-				{Name: "a", Response: doc(health.StatusPass, map[string]health.Check{"db": check(health.StatusPass, "")})},
-				{Name: "b", Response: health.Response{Status: health.StatusPass, ShuttingDown: true}},
+				{
+					Name: "a",
+					Response: doc(
+						health.StatusPass,
+						map[string]health.Check{"db": check(health.StatusPass, "")},
+					),
+				},
+				{
+					Name: "b",
+					Response: health.Response{
+						Status:         health.StatusPass,
+						ShuttingDown:   true,
+						TotalLatencyMs: 9,
+					},
+				},
 			},
-			wantStatus:   health.StatusFail,
-			wantShutDown: true,
+			wantStatus:    health.StatusFail,
+			wantShutDown:  true,
+			wantLatencyMs: 9,
 			wantChecks: map[string]health.Check{
 				"a/db": check(health.StatusPass, ""),
 			},
@@ -115,7 +182,14 @@ func TestResponses_Table(t *testing.T) {
 		{
 			name: "fetch error ignores the carried response entirely",
 			sources: []merge.Source{
-				{Name: "ghost", FetchErr: "timeout", Response: doc(health.StatusPass, map[string]health.Check{"db": check(health.StatusPass, "")})},
+				{
+					Name:     "ghost",
+					FetchErr: "timeout",
+					Response: doc(
+						health.StatusPass,
+						map[string]health.Check{"db": check(health.StatusPass, "")},
+					),
+				},
 			},
 			wantStatus: health.StatusFail,
 			wantChecks: map[string]health.Check{
@@ -125,9 +199,21 @@ func TestResponses_Table(t *testing.T) {
 		{
 			name: "mixed: healthy, degraded, and dark sources",
 			sources: []merge.Source{
-				{Name: "a", Response: doc(health.StatusPass, map[string]health.Check{"db": check(health.StatusPass, "")})},
+				{
+					Name: "a",
+					Response: doc(
+						health.StatusPass,
+						map[string]health.Check{"db": check(health.StatusPass, "")},
+					),
+				},
 				{Name: "ghost", FetchErr: "no such host"},
-				{Name: "c", Response: doc(health.StatusWarn, map[string]health.Check{"cache": check(health.StatusWarn, "slow")})},
+				{
+					Name: "c",
+					Response: doc(
+						health.StatusWarn,
+						map[string]health.Check{"cache": check(health.StatusWarn, "slow")},
+					),
+				},
 			},
 			wantStatus: health.StatusFail,
 			wantChecks: map[string]health.Check{
@@ -139,9 +225,15 @@ func TestResponses_Table(t *testing.T) {
 		{
 			name: "latency is the max across successful sources only",
 			sources: []merge.Source{
-				{Name: "a", Response: health.Response{Status: health.StatusPass, TotalLatencyMs: 42}},
+				{
+					Name:     "a",
+					Response: health.Response{Status: health.StatusPass, TotalLatencyMs: 42},
+				},
 				{Name: "ghost", FetchErr: "boom", Response: health.Response{TotalLatencyMs: 999}},
-				{Name: "c", Response: health.Response{Status: health.StatusPass, TotalLatencyMs: 17}},
+				{
+					Name:     "c",
+					Response: health.Response{Status: health.StatusPass, TotalLatencyMs: 17},
+				},
 			},
 			wantStatus:    health.StatusFail,
 			wantLatencyMs: 42,
@@ -169,22 +261,7 @@ func TestResponses_Table(t *testing.T) {
 				t.Errorf("latency = %d, want %d", merged.TotalLatencyMs, testCase.wantLatencyMs)
 			}
 
-			if len(merged.Checks) != len(testCase.wantChecks) {
-				t.Fatalf("checks = %v, want %v", merged.Checks, testCase.wantChecks)
-			}
-
-			for key, want := range testCase.wantChecks {
-				got, ok := merged.Checks[key]
-				if !ok {
-					t.Errorf("missing merged check %q", key)
-
-					continue
-				}
-
-				if got != want {
-					t.Errorf("check %q = %+v, want %+v", key, got, want)
-				}
-			}
+			assertChecks(t, merged.Checks, testCase.wantChecks)
 
 			if merged.Version != "" || merged.InstanceID != "" || merged.Uptime != "" ||
 				!merged.Timestamp.IsZero() {

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	health "github.com/larsartmann/go-health"
+	merge "github.com/larsartmann/go-health/internal/merge"
 )
 
 // ErrNoSources is returned by [New] when called without any sources. An
@@ -128,43 +129,20 @@ func validateSource(src Source, seen map[string]struct{}) error {
 // [health.Probe] semantics. TotalLatencyMs is the slowest source's batch.
 // Version, Uptime, and InstanceID are zero: they are per-process scalars and
 // do not survive a merge.
+//
+// The fold itself is the shared [merge.Responses] primitive; this method owns
+// only the acquisition (one atomic cache load per source, FetchErr always
+// empty — in-process probes are trusted) and hands the views over.
 func (a *Aggregate) CachedResponse() health.Response {
-	checks := make(map[string]health.Check)
-	status := health.StatusPass
-	shuttingDown := false
-
-	var maxLatency int64
-
+	sources := make([]merge.Source, 0, len(a.sources))
 	for _, src := range a.sources {
-		resp := src.Probe.CachedResponse()
-
-		if resp.ShuttingDown {
-			shuttingDown = true
-		}
-
-		if resp.TotalLatencyMs > maxLatency {
-			maxLatency = resp.TotalLatencyMs
-		}
-
-		if statusRank(resp.Status) < statusRank(status) {
-			status = resp.Status
-		}
-
-		for name, check := range resp.Checks {
-			checks[src.Name+"/"+name] = check
-		}
+		sources = append(sources, merge.Source{
+			Name:     src.Name,
+			Response: src.Probe.CachedResponse(),
+		})
 	}
 
-	if shuttingDown {
-		status = health.StatusFail
-	}
-
-	return health.Response{
-		Status:         status,
-		ShuttingDown:   shuttingDown,
-		Checks:         checks,
-		TotalLatencyMs: maxLatency,
-	}
+	return merge.Responses(sources)
 }
 
 // SourceStatuses folds each source's cached view to its own roll-up status:
@@ -314,13 +292,6 @@ func (a *Aggregate) RegisterRoutes(mux *http.ServeMux, routes health.Routes) {
 	mux.HandleFunc(routes.Liveness, a.LivenessHandler())
 	mux.HandleFunc(routes.Readiness, a.ReadinessHandler())
 	mux.HandleFunc(routes.Startup, a.StartupHandler())
-}
-
-// statusRank orders statuses by severity so merges can pick the worst:
-// lower rank wins. Delegates to [health.Status.Rank] — the module-wide
-// severity ordering shared with federation.
-func statusRank(s health.Status) int {
-	return s.Rank()
 }
 
 // marshalResponse is the single serialization seam for aggregate responses.

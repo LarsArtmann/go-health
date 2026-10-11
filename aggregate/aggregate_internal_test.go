@@ -6,31 +6,10 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	health "github.com/larsartmann/go-health"
 )
 
 // errMarshalBoom is the canned marshal failure for the seam test.
 var errMarshalBoom = errors.New("boom")
-
-// TestStatusRank pins the worst-of merge order, including the contract that
-// unknown statuses rank as healthy: the Status type is validated at the
-// boundaries, so an unknown value arriving here must not fail an aggregate.
-func TestStatusRank(t *testing.T) {
-	t.Parallel()
-
-	for status, want := range map[health.Status]int{
-		health.StatusFail: 0,
-		health.StatusWarn: 1,
-		health.StatusPass: 2,
-		"degraded":        2,
-		"":                2,
-	} {
-		if got := statusRank(status); got != want {
-			t.Errorf("statusRank(%q): want %d, got %d", status, want, got)
-		}
-	}
-}
 
 // TestWriteResponse_MarshalError forces the defensive encode-failure branch:
 // the client gets a plain-text 500 carrying the underlying cause, never a

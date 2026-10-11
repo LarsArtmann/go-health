@@ -8,19 +8,19 @@
 
 ## Headline numbers
 
-| Metric | Value |
-| --- | --- |
-| Findings before session | 8 (1 correctness warning, 6 info, 1 structure warning) |
-| Findings after session | 7 (all documented accepted / owner-reserved classes) |
-| Code changes | 1 file (`federation/federation.go`, +17/−10), behavior-identical |
-| Policy/doc changes | `.buildflow.yml` (budget rationale rewrite, 14→9), `AGENTS.md` (budget line) |
-| Verification | build ✅ vet ✅ test-race ✅ lint 0 issues ✅ `.#gates` exit 0 ✅ `nix flake check` ✅ branching-flow recount ✅ |
+| Metric                  | Value                                                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Findings before session | 8 (1 correctness warning, 6 info, 1 structure warning)                                                           |
+| Findings after session  | 7 (all documented accepted / owner-reserved classes)                                                             |
+| Code changes            | 1 file (`federation/federation.go`, +17/−10), behavior-identical                                                 |
+| Policy/doc changes      | `.buildflow.yml` (budget rationale rewrite, 14→9), `AGENTS.md` (budget line)                                     |
+| Verification            | build ✅ vet ✅ test-race ✅ lint 0 issues ✅ `.#gates` exit 0 ✅ `nix flake check` ✅ branching-flow recount ✅ |
 
 ---
 
 ## a) FULLY DONE
 
-1. **INDEX_OUT_OF_RANGE eliminated structurally** (the only code-actionable finding, `federation.go:280`). Verified first: `merge` has exactly one call site, no test constructs its input, so there was no live panic path. But the `p.states`/`results` parallel-array pairing was an *incidental* invariant (enforced only by convention). Fix: new unexported `fetchedRemote{state *remoteState; result fetchResult}` pairs each remote with its fetch outcome in one slice; `cachedResponse` fills it under `wg.Go`, `merge` iterates pairs. No cross-slice index exists anymore — the invariant became unrepresentable rather than accepted. The `Prober.states` doc comment (which claimed "index i is the single pairing key") was updated to match.
+1. **INDEX_OUT_OF_RANGE eliminated structurally** (the only code-actionable finding, `federation.go:280`). Verified first: `merge` has exactly one call site, no test constructs its input, so there was no live panic path. But the `p.states`/`results` parallel-array pairing was an _incidental_ invariant (enforced only by convention). Fix: new unexported `fetchedRemote{state *remoteState; result fetchResult}` pairs each remote with its fetch outcome in one slice; `cachedResponse` fills it under `wg.Go`, `merge` iterates pairs. No cross-slice index exists anymore — the invariant became unrepresentable rather than accepted. The `Prober.states` doc comment (which claimed "index i is the single pairing key") was updated to match.
 2. **Triage of all 8 findings with evidence, not vibes.** Every accepted finding was re-verified against its recorded rationale before accepting: `.buildflow.yml` budget block (2026-10-09) covers mixins/large-struct/slice-index/strong-ID; `AGENTS.md` Key Design Decisions covers the construction-only-config idiom; `docs/servicename-design.md` proves strong-ID is an owner-reserved v0.6-window decision and that branded-type coupling (the suggestion's exact shape) was already REJECTED as Option C for `ServiceName`.
 3. **Budget policy re-review (the "don't let them ratchet" duty).** `.buildflow.yml` branching-flow ceiling lowered `14 → 9` (7 stable documented findings + ~20% headroom per the block's own policy); stale "two remaining slice-index warnings" rationale replaced with the elimination record. `AGENTS.md` budget parenthetical synced. Committed by the daemon / pending in working tree respectively.
 4. **Full verification sweep with explicit exit codes** (per the "gate output tails lie" gotcha): `nix run .#build`, `.#vet`, `.#test-race` (race detector exercises the concurrent index writes), `.#lint` (0 issues; only the documented `nolint_filter` noise), `nix run .#gates` → `GATES_EXIT=0` (fail-fast sweep incl. fuzz-short, gosec, govulncheck, docs-drift, openapi-lockstep), `nix flake check` → green (treefmt included).
@@ -30,7 +30,7 @@
 ## b) PARTIALLY DONE
 
 1. **STRONG_ID findings (4×): analyzed, deliberately NOT implemented.** The repo reserves wire-shape identity decisions to the owner (`servicename-design.md` is DESIGN-ONLY, staged for the v0.6 breaking window). What exists: a complete recommendation (see section e.3) grounded in the recorded Option-C rejection, the single-dependency policy, the golden wire format, and one now-source-verified detail: `SanitizeResponse` coerces `resp.InstanceID` with `strings.ToValidUTF8` (handlers.go:212), which a branded `id.ID` field would complicate. What's missing: the owner's go/no-go, and source-verification of the `go-branded-id` claims themselves (see e.4).
-2. **Second quality surface (BuildFlow) not re-run this session.** `nix run .#gates` is canonical and green; `buildflow --build-mode full` was not executed (known: needs `GOTOOLCHAIN=auto` in the launching shell, 4 straggler steps are an upstream task). The repo's own rule says full mode is a *surface*, never the only gate — nothing blocks, but the second surface hasn't seen the refactor.
+2. **Second quality surface (BuildFlow) not re-run this session.** `nix run .#gates` is canonical and green; `buildflow --build-mode full` was not executed (known: needs `GOTOOLCHAIN=auto` in the launching shell, 4 straggler steps are an upstream task). The repo's own rule says full mode is a _surface_, never the only gate — nothing blocks, but the second surface hasn't seen the refactor.
 3. **Federation merge test depth.** The refactor is covered through the public `CachedResponse()` path (14 federation tests + merge-table + fuzz + race). No direct unit test feeds hand-built result slices into `merge` — defensible (unexported, single caller, structural pairing now makes malformed inputs impossible), but it's a seam with no direct pin.
 
 ## c) NOT STARTED (all pre-existing, noticed in passing)
@@ -47,16 +47,16 @@
 
 **Nothing at fuckup severity.** All gates green, no regressions, no data loss, working tree clean except the two intended doc edits.
 
-Nearest miss worth recording: the *class* of bug the flagged line hinted at (an index-alignment invariant held only by convention) shipped in v0.6.0/v0.6.1 as accepted "safe by construction" — it was never reachable, but it was also never *enforced*. It is now structurally impossible, which is the better resting state.
+Nearest miss worth recording: the _class_ of bug the flagged line hinted at (an index-alignment invariant held only by convention) shipped in v0.6.0/v0.6.1 as accepted "safe by construction" — it was never reachable, but it was also never _enforced_. It is now structurally impossible, which is the better resting state.
 
 ## e) WHAT WE SHOULD IMPROVE (includes: what I forgot, what I could have done better)
 
 1. **I asserted before I verified — once.** My STRONG_ID analysis cited the `SanitizeResponse` UTF-8 interplay as a "consideration" from memory of the AGENTS.md file map; I only source-verified it (handlers.go:212) after the main work, while writing this report. `verify-external-claims` applies to my own intermediate claims, not just filed artifacts. Fix: make source-verification part of the triage step, not the report step.
 2. **No CHANGELOG entry for the refactor.** It's internal (no API/wire change) so `docs-check` stayed green, but an "Unreleased → Internal" line would keep the release-cutting habit honest. Forgotten.
 3. **No before/after benchmark.** `fetchedRemote` grows each element by one pointer (8 bytes/remote, one slice, read once per merge). Provably negligible — but "provably" here means "obviously", not "measured". A `CachedResponse` federation benchmark existed for the root package's handlers, not for federation merge throughput.
-4. **The STRONG_ID recommendation itself (for the owner):** if identity typing happens at v0.6, the consistent shape is a *defined string type* (`type ServiceName string`, per the design doc's Option A) — possibly `type InstanceID string` alongside — NOT `go-branded-id`: it would be a second dependency in a single-dependency library, its zero value marshals as `null` (vs today's omitted `""` under `instance_id,omitzero` — golden-wire risk), and `SanitizeResponse`'s `ToValidUTF8` would need a conversion. Additionally the tool's own suggestion (`WithInstanceID(id WithInstanceID)` — a type named after an option) is name-mangled nonsense, which further reduces trust in this suggestion set.
+4. **The STRONG_ID recommendation itself (for the owner):** if identity typing happens at v0.6, the consistent shape is a _defined string type_ (`type ServiceName string`, per the design doc's Option A) — possibly `type InstanceID string` alongside — NOT `go-branded-id`: it would be a second dependency in a single-dependency library, its zero value marshals as `null` (vs today's omitted `""` under `instance_id,omitzero` — golden-wire risk), and `SanitizeResponse`'s `ToValidUTF8` would need a conversion. Additionally the tool's own suggestion (`WithInstanceID(id WithInstanceID)` — a type named after an option) is name-mangled nonsense, which further reduces trust in this suggestion set.
 5. **Budget ceilings are judgment calls made autonomously.** 14→9 restores the documented ~20%-headroom policy and keeps the noise tripwire meaningful — but it's a policy change an owner should ratify (question 2 below).
-6. **Accepted findings re-report every run.** The 7 survivors are healthy *as an inventory* (they force re-reading the rationale), but if the noise annoys, a branching-flow suppression config is the alternative — owner preference (question 3 below).
+6. **Accepted findings re-report every run.** The 7 survivors are healthy _as an inventory_ (they force re-reading the rationale), but if the noise annoys, a branching-flow suppression config is the alternative — owner preference (question 3 below).
 7. **Session hygiene:** the auto-commit daemon captured the code change (`a104301`) before the doc edits landed — fine here, but the split means `git log` shows the refactor without the budget-context edits in the same commit. For deliberate work, committing atomically beats racing the daemon.
 
 ## f) NEXT TASKS (up to 50; tiers by impact — most are ROADMAP fuel, not commitments)
@@ -69,7 +69,7 @@ Nearest miss worth recording: the *class* of bug the flagged line hinted at (an 
 4. Run HARVEST (`docs-health`) to route this report's section (f) into `TODO_LIST.md` / `ROADMAP.md`.
 5. Commit the two pending doc edits (`.buildflow.yml`, `AGENTS.md`) atomically, or verify the daemon did — keep log coherent.
 6. Add a federation `CachedResponse`/merge benchmark; record the pre-refactor number for posterity if the old binary is still buildable at `a104301^`.
-7. Source-verify the `go-branded-id` v0.5.1 claims (zero-marshals-as-null, omitzero×IsZero interplay) *if and only if* question 1 goes anywhere — the analysis currently leans on the skill reference, not the library source.
+7. Source-verify the `go-branded-id` v0.5.1 claims (zero-marshals-as-null, omitzero×IsZero interplay) _if and only if_ question 1 goes anywhere — the analysis currently leans on the skill reference, not the library source.
 
 **Tier 2 — v0.6 breaking window (high impact, planned)**
 
@@ -91,7 +91,7 @@ Nearest miss worth recording: the *class* of bug the flagged line hinted at (an 
 20. Drop `tools/bin` wrappers + `tool_paths` block once the graph stops needing a newer patch than BuildFlow's toolchain (conditional on 19).
 21. Drop the `gosecGo` overrideAttrs pin when nixpkgs ships gosec with export-data v5 support (#1772).
 22. Consider a branching-flow suppression config for the 7 accepted findings (vs. living-inventory status quo — question 3).
-23. File the branching-flow STRONG_ID name-mangling bug (`WithInstanceID` suggested as a *type* named after the option) upstream in the branching-flow repo — it's the user's own tool; one verified reproduction is in this session's output.
+23. File the branching-flow STRONG_ID name-mangling bug (`WithInstanceID` suggested as a _type_ named after the option) upstream in the branching-flow repo — it's the user's own tool; one verified reproduction is in this session's output.
 24. Re-check `go.mod`'s `go 1.27` directive vs tidy auto-bump drift next dependency touch (standing gotcha).
 25. Confirm `.#fuzz-long` (5 min/target) actually runs weekly in CI as documented; wire it if not.
 26. Re-run `nix run .#test-race -count=2` style stress on federation once as cheap extra assurance for the concurrent index writes (race ran once in gates).
@@ -116,14 +116,14 @@ Nearest miss worth recording: the *class* of bug the flagged line hinted at (an 
 39. CI: gate on `nix run .#ci-emulation` in addition to `.#gates` (exists, green locally, unclear if scheduled).
 40. Release hygiene: after v0.6.0, re-run the full gates on the tag itself (the v0.6.0 lesson: tag CI was red with zero code changes due to toolchain drift).
 
-*(Stopping at 40 — items 41–50 would be padding; the honest count of real, articulable next tasks is 40.)*
+_(Stopping at 40 — items 41–50 would be padding; the honest count of real, articulable next tasks is 40.)_
 
 ## g) QUESTIONS I CANNOT FIGURE OUT MYSELF (3)
 
 1. **Typed identity at v0.6:** do you want `type ServiceName string` (per the design doc's recommendation), and if so should `type InstanceID string` join it in the same breaking window — or do we permanently reject typing instance identity and record that? This is the exact decision the repo reserves to you; everything downstream (fleet migration, budget re-baseline, my STRONG_ID stance) keys off it.
 2. **Budget ceiling:** ratify `branching-flow: 14 → 9` (restores the documented ~20% headroom over the now-7 stable findings, tripwire fires on +2 noise) — or do you prefer keeping 14 as slack for the v0.6 churn?
-3. **Accepted-findings visibility:** should the 7 documented-accepted branching-flow findings stay re-reported on every run (living inventory that forces rationale re-reads — today's state), or do you want them suppressed in tool config so only *new* classes surface?
+3. **Accepted-findings visibility:** should the 7 documented-accepted branching-flow findings stay re-reported on every run (living inventory that forces rationale re-reads — today's state), or do you want them suppressed in tool config so only _new_ classes surface?
 
 ---
 
-*Point-in-time snapshot. Section (f) is HARVEST fuel for `TODO_LIST.md`/`ROADMAP.md` (not yet harvested — see c.2). Waiting for instructions.*
+_Point-in-time snapshot. Section (f) is HARVEST fuel for `TODO_LIST.md`/`ROADMAP.md` (not yet harvested — see c.2). Waiting for instructions._

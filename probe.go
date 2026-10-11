@@ -189,10 +189,10 @@ func WithNowFunc(fn func() time.Time) Option {
 	return func(c *config) { c.nowFunc = fn }
 }
 
-// WithAllowedMethods extends GET-only enforcement: the listed methods are
-// accepted (plus GET, always), anything else gets 405 with an Allow header.
-// Use it when infrastructure probes with HEAD or OPTIONS must pass. It
-// implies [WithGETOnly]; calling both is harmless.
+// WithAllowedMethods wraps all handlers with method enforcement: the listed
+// methods are accepted (plus GET, always), anything else gets 405 with an
+// Allow header. Use it when infrastructure probes with HEAD or OPTIONS must
+// pass. Calling it with no arguments seeds the set with GET alone.
 func WithAllowedMethods(methods ...string) Option {
 	return func(cfg *config) {
 		if cfg.allowedMethods == nil {
@@ -249,28 +249,8 @@ func WithBootTime(t time.Time) Option {
 	return func(c *config) { c.bootTime = t }
 }
 
-// WithGETOnly wraps all handlers so they reject non-GET requests with 405
-// Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces
-// misconfigurations (e.g. a load balancer sending HEAD or POST) early.
-//
-// It is the zero-argument spelling of the accepted-method set: calling it seeds
-// the set with GET, exactly like [WithAllowedMethods] with no arguments, so
-// the two compose in any order without one clobbering the other.
-//
-// Deprecated: use [WithAllowedMethods] instead — it is the method-set
-// superset (WithAllowedMethods() with no arguments behaves identically) and
-// the option to extend later without switching. WithGETOnly keeps working;
-// there is no removal planned in the v0.x line.
-func WithGETOnly() Option {
-	return func(cfg *config) {
-		if cfg.allowedMethods == nil {
-			cfg.allowedMethods = map[string]struct{}{http.MethodGet: {}}
-		}
-	}
-}
-
 // guard wraps a handler with method enforcement when a method set is
-// configured via [WithAllowedMethods] or [WithGETOnly]. The accepted set is
+// configured via [WithAllowedMethods]. The accepted set is
 // GET plus any explicitly allowed methods; the Allow response header names
 // the full set.
 func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {

@@ -133,7 +133,7 @@
 //
 // [WithAllowedMethods] restricts the HTTP methods the handlers accept;
 // rejected requests get 405 with a sorted Allow header (GET is always
-// allowed). [WithGETOnly] is the deprecated zero-argument equivalent.
+// allowed).
 //
 // # Instance Identity
 //

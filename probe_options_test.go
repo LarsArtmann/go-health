@@ -184,6 +184,10 @@ func TestWithAllowedMethods_EmptyActsAsGETOnly(t *testing.T) {
 	if allow := postW.Header().Get("Allow"); allow != "GET" {
 		t.Errorf("Allow header: want GET, got %s", allow)
 	}
+
+	if !strings.Contains(postW.Body.String(), "health probes only accept GET") {
+		t.Errorf("405 body should contain actionable message, got %q", postW.Body.String())
+	}
 }
 
 // --- WithInstanceID tests ---.

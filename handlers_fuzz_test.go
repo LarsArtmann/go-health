@@ -230,7 +230,7 @@ func FuzzHandlerInput(f *testing.F) {
 
 		probe := health.New(injector,
 			health.WithCriticalServices("db"),
-			health.WithGETOnly(),
+			health.WithAllowedMethods(),
 		)
 
 		handlers := map[string]http.HandlerFunc{

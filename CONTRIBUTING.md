@@ -89,8 +89,8 @@ pattern. Checklist for a new `With*` option:
 3. **Validate in `Validate()`** if a zero/negative value would degrade
    silently — `Start()` fail-fast depends on it.
 4. **Test in `probe_options_test.go`** — default behavior, option applied, and
-   every option it composes with (order-dependence is a real bug class: see
-   `WithGETOnly` × `WithAllowedMethods`).
+   every option it composes with (order-dependence is a real bug class: the
+   retired `WithGETOnly` × `WithAllowedMethods` pair was pinned this way).
 5. **Document the interaction** with the background cache when the option
    affects evaluation (see `WithLiveThrottle` in the README).
 6. **README Configuration Reference** — add the row (keep the table order

@@ -14,7 +14,7 @@ the re-verified state; corrections are documented in
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | core `New` + handlers + `WithCriticalServices`                      | all 14 direct consumers                                                                                  | core                                                                                                                        |
 | `WithAllowedMethods`                                                | dnsblockd, file-and-image-renamer, KeyHolderAI, nsfw-classifier, projects-management-automation, Zlota44 | healthy (all six re-verified 2026-10-09)                                                                                    |
-| `WithGETOnly` (deprecated)                                          | KeyHolderAI (tests only, `cmd/keyholderai/health_probe_http_test.go`)                                    | zero production adoption — retirement unblocked, no consumer nudge needed (deprecation-policy cycle still applies)          |
+| `WithGETOnly` (deprecated → removed, post-v0.6.1)                   | KeyHolderAI (tests only, `cmd/keyholderai/health_probe_http_test.go` — switched to `WithAllowedMethods()` locally)        | zero production adoption — removal EXECUTED under the deprecation policy's zero-production-adopter path (migration snippet in CHANGELOG) |
 | `MarkShuttingDown`                                                  | CV, DiscordSync, KeyHolderAI, nsfw-classifier, go-appkit (+doadapter)                                    | healthy                                                                                                                     |
 | `WithEvaluationHook`                                                | dnsblockd, go-appkit/health                                                                              | healthy                                                                                                                     |
 | `AwaitReady`                                                        | dnsblockd, go-appkit/health                                                                              | healthy                                                                                                                     |
@@ -52,7 +52,10 @@ symbol grep + `go.mod` require check + call-site qualifier inspection):
   10-02 survey matched the symbol name without qualifying the package.
 - **`WithGETOnly` in KeyHolderAI is test-only** (`health_probe_http_test.go`);
   the only non-test hits are the vendored library's own doc comments. No
-  production usage anywhere in the fleet.
+  production usage anywhere in the fleet. The symbol has since been removed
+  (post-v0.6.1, Unreleased) under the zero-production-adopter path;
+  KeyHolderAI's test call site now uses `WithAllowedMethods()` (local
+  commit, unpushed).
 - **Abbreviated repo names expanded** for grep-ability: "fir" →
   file-and-image-renamer (confirmed consumer at v0.5.1,
   `pkg/injector/providers.go`), "PMA" → projects-management-automation.

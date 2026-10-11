@@ -150,7 +150,7 @@ components:
   responses:
     MethodNotAllowed:
       description: Non-GET request when method enforcement is enabled
-        (WithGETOnly / WithAllowedMethods). The Allow header lists the
+        (WithAllowedMethods). The Allow header lists the
         accepted methods, sorted, GET always first.
       headers:
         Allow:

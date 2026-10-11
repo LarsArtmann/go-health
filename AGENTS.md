@@ -51,14 +51,16 @@ export_test.go   — ResetStartupLatchForTest (test builds only; public latch st
 Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
 `health.Response`: `Source{Name, Probe}`, `New(sources...)` (rejects empty, duplicate,
 slash-containing, or nil-probe sources — docs/aggregate-source-name-design.md), merge-on-read
-`CachedResponse` (N lock-free loads, worst-of status, `"source/check"` namespacing, shutdown
-overlay), `StartupComplete` (AND of latches), the three kubelet handlers, and a standalone
-`Healthz()` single-endpoint handler (docs/aggregate-healthz-design.md).
+`CachedResponse` (N lock-free loads mapped one-to-one onto the shared `internal/merge` primitive,
+FetchErr always empty), `StartupComplete` (AND of latches), the three kubelet handlers, and a
+standalone `Healthz()` single-endpoint handler (docs/aggregate-healthz-design.md).
 
 Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N
 remote go-health instances over HTTP into one `health.Response` — same source-name contract as
-aggregate, merge-on-read with one parallel fetch per remote, worst-of status, per-remote startup
-latches, and one synthetic `name/reachable` FAIL check per unreachable/undecodable remote (never a
+aggregate, merge-on-read with one parallel fetch per remote mapped onto the shared
+`internal/merge` primitive (fetch error → `FetchErr`), per-remote startup latches (advanced
+federation-side on successful fetch, never inside the merge), and one synthetic
+`name/reachable` FAIL check per unreachable/undecodable remote (never a
 silent freeze, never a status override). Wire input is untrusted (invalid documents refused whole),
 `Check.Since`/`DurationNanos` survive verbatim, scalars do not. Full semantics (fetch caps,
 dashboard-`Prober` structural assertion, API surface): docs/federation-design.md. Remote
@@ -72,6 +74,16 @@ path. Resource checks are warn-by-default: criticality stays with the caller; th
 arguments, not constants. Ownership decision + constraints:
 docs/batteries-ownership-decision.md; tests use an in-process `sql.Register` fake driver.
 
+Sub-package `internal/merge` (source: `internal/merge/merge.go`) is the single home of the
+worst-of fold behind both merge-on-read packages (docs/merge-unification-design.md):
+`Source{Name, Response, FetchErr}` + `Responses(sources)` — worst-of status via `Status.Rank`
+with tie stability (rank ties never replace the accumulator, so `off`/unknown source roll-ups
+cannot leak into the merged status and the fold is order-independent), `"source/check"`
+namespacing, the shutdown overlay, one synthetic `"name/reachable"` fail per fetch-errored source
+(Response ignored), max-latency over successful sources, per-process scalars dropped. Pure: no
+locks, no goroutines, no state. The collapsed merge fuzz suite (`FuzzResponsesMergeInvariants`)
+lives here; the packages keep only thin mapping tests.
+
 ### Key Design Decisions
 
 - **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
@@ -79,7 +91,7 @@ docs/batteries-ownership-decision.md; tests use an in-process `sql.Register` fak
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching by default** (1s refresh) — kubelet/LB polling doesn't hammer dependencies. Set `WithRefreshInterval(0)` for live mode.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200.
-- **Method-set enforcement** — `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse). Off by default. `WithGETOnly()` is **deprecated** (v0.1.1) but still functional — it is the zero-arg equivalent; keep its tests until removal is decided. Middleware composes outside this guard (see docs/middleware-design.md).
+- **Method-set enforcement** — `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse; no arguments = GET alone). Off by default. `WithGETOnly` was **removed** post-v0.6.1 under the deprecation policy's zero-production-adopter path (migration snippet in CHANGELOG). Middleware composes outside this guard (see docs/middleware-design.md).
 - **Deterministic clock seam** — `p.now()` (backed by `WithNowFunc`) drives uptime, `Response.Timestamp`, and live-throttle freshness. Latency measurement stays on the real clock. Tests inject a fixed clock instead of sleeping.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly; so does `go-appkit/flightrecorderhealth.Trigger` (captures a flight-recorder snapshot when checks fail).
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down). `Off` sentinel results are excluded from the roll-up entirely (docs/configured-off-design.md).
@@ -139,7 +151,7 @@ go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod re
 - Each test creates its own `do.Injector` — no shared state.
 - `mockRecorder` type replaces the old auditlog integration tests.
 - Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `StartupHandler_Contention`, `CachedResponse_ParallelReads`, `Evaluate`, `GuardOverhead`.
-- Fuzz targets: `FuzzResponseMarshalDeterministic` + `FuzzHandlerInput` + `FuzzThrottleWindowBoundary` (root; the throttle fuzz drives the window rule on a fake clock), `FuzzAggregateMergeInvariants` (aggregate; source freshness modes — live/cache/throttled — derived from name parity so the corpus signature stays valid), `FuzzBatteries` (checks — pins the sentinel-or-nil error surface of the four batteries over untrusted inputs); run via `nix run .#fuzz`.
+- Fuzz targets: `FuzzResponseMarshalDeterministic` + `FuzzHandlerInput` + `FuzzThrottleWindowBoundary` (root; the throttle fuzz drives the window rule on a fake clock), `FuzzResponsesMergeInvariants` (internal/merge; the collapsed merge-property suite over arbitrary Source pairs — worst-of/tie stability, reachable row, namespacing, scalar drop), `FuzzAggregateMergeInvariants` (aggregate; the thin mapping harness — merged output must equal `merge.Responses` over the mapped views; source freshness modes — live/cache/throttled — derived from name parity so the corpus signature stays valid), `FuzzBatteries` (checks — pins the sentinel-or-nil error surface of the four batteries over untrusted inputs); run via `nix run .#fuzz`.
 - **Seam-swap tests must not be parallel** — tests swapping a package-global
   seam (`marshalResponse` in both packages) mutate shared state, so they omit
   `t.Parallel()` (marked `//nolint:paralleltest`). A parallel seam test

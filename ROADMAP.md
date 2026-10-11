@@ -139,10 +139,10 @@ What "1.0" will mean here — none of this is promised yet:
 - **API freeze:** the JSON wire format, the three-probe contract, and the
   full public surface (options, `Response`, `Probe` methods, the aggregate
   API) carry explicit backward-compatibility promises
-- **Deprecation burn-down:** `WithGETOnly` removal happens no earlier than
-  v1.0 (it is kept through all of v0.x per
-  [docs/deprecation-policy.md](docs/deprecation-policy.md)); the
-  `HealthRecorder` signature revisit (ADR-004) lands here if at all
+- **Deprecation burn-down:** `WithGETOnly` is already removed (post-v0.6.1,
+  Unreleased — the deprecation policy's zero-production-adopter path made a
+  pre-1.0 cut possible); the `HealthRecorder` signature revisit (ADR-004)
+  lands here if at all
 - **Toolchain floor:** go.mod ≥ 1.27 so json/v2 needs no experiment
 - **Consumer proof:** at least the known consumer
   (go-health-dashboard) running the released module without a replace

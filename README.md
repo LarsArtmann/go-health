@@ -250,7 +250,7 @@ for the unauthenticated-probe threat model and consumer hardening checklist.
 - **Per-check metadata** — every check reports `since` (how long it has been in its current status, probe-observed transition tracking) and `duration_ns` when its executor reports timing (`NewWithDetailedCheck`, `DetailedHealthRecorder`); both omitted when unknown.
 - **Background caching** (1s default) — kubelet/LB polling doesn't hammer dependencies.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately; liveness stays 200.
-- **Method-set enforcement** — `WithAllowedMethods(...)` rejects non-allowed methods with 405 and a sorted `Allow` header (`WithGETOnly` is the deprecated zero-arg equivalent).
+- **Method-set enforcement** — `WithAllowedMethods(...)` rejects non-allowed methods with 405 and a sorted `Allow` header (calling it with no arguments restricts to GET).
 - **Build-version endpoint** — `health.VersionHandler(stamp)` serves the binary's ldflags/VCS version as `{"version":"..."}` next to the health routes; identity, not health (no checks, always 200, unaffected by shutdown, GET-only 405 unconditionally).
 - **Programmatic health API** — `Status()`, `Alive()`, `Ready()`, `AwaitReady(ctx)`, `Healthz()` — query health without spinning up HTTP; register the probe in its own injector via `HealthCheck`.
 - **Observability seam** — `WithEvaluationHook(fn)` observes every classified response; Prometheus exposition and OpenTelemetry compose on top without new dependencies.
@@ -302,15 +302,9 @@ health.WithRefreshInterval(0) // live mode
 
 Overrides the boot timestamp used to compute uptime. Defaults to the time `New()` was called. Useful for testing.
 
-### `WithGETOnly()` — deprecated
-
-> **Deprecated:** use [`WithAllowedMethods(...)`](#withallowedmethodsmethods-string) instead — the method-set superset (`WithAllowedMethods()` with no arguments behaves identically). `WithGETOnly` keeps working; no removal is planned in the v0.x line. See [docs/deprecation-policy.md](docs/deprecation-policy.md) for the full policy.
-
-Wraps all handlers to reject non-GET requests with 405 Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces misconfigurations (e.g. a load balancer sending HEAD or POST) early.
-
 ### `WithAllowedMethods(methods ...string)`
 
-Method-set variant of `WithGETOnly`: the listed methods are accepted too (GET is always allowed). Rejected requests get a 405 whose `Allow` header lists the full set, sorted:
+Method-set guard for the handlers: the listed methods are accepted alongside GET (always allowed); everything else gets a 405 whose `Allow` header lists the full set, sorted. Calling it with no arguments restricts the handlers to GET alone — the canonical spelling of the retired `WithGETOnly()` (deprecated v0.1.1, removed post-v0.6.1; the CHANGELOG carries the migration):
 
 ```go
 health.WithAllowedMethods(http.MethodHead) // kubelet GET + LB HEAD both pass
@@ -608,7 +602,7 @@ The default timeout is 5 seconds shared across ALL services. If one service is s
 
 ### 405 Method Not Allowed with an `Allow` header
 
-A method-set guard is active (`WithAllowedMethods` or the deprecated `WithGETOnly`). The `Allow` header lists every accepted method, sorted. Add the missing method to the set — or remove the guard — if a caller (e.g. a load balancer sending HEAD) is legitimate.
+A method-set guard is active (`WithAllowedMethods`). The `Allow` header lists every accepted method, sorted. Add the missing method to the set — or remove the guard — if a caller (e.g. a load balancer sending HEAD) is legitimate.
 
 ### pkg.go.dev shows old docs
 

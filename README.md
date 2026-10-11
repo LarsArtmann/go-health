@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.6.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+> **Stability:** v0.7.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
 
 ---
 
@@ -304,7 +304,7 @@ Overrides the boot timestamp used to compute uptime. Defaults to the time `New()
 
 ### `WithAllowedMethods(methods ...string)`
 
-Method-set guard for the handlers: the listed methods are accepted alongside GET (always allowed); everything else gets a 405 whose `Allow` header lists the full set, sorted. Calling it with no arguments restricts the handlers to GET alone — the canonical spelling of the retired `WithGETOnly()` (deprecated v0.1.1, removed post-v0.6.1; the CHANGELOG carries the migration):
+Method-set guard for the handlers: the listed methods are accepted alongside GET (always allowed); everything else gets a 405 whose `Allow` header lists the full set, sorted. Calling it with no arguments restricts the handlers to GET alone — the canonical spelling of the retired `WithGETOnly()` (deprecated v0.1.1, removed in v0.7.0; the CHANGELOG carries the migration):
 
 ```go
 health.WithAllowedMethods(http.MethodHead) // kubelet GET + LB HEAD both pass

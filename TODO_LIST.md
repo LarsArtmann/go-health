@@ -34,6 +34,9 @@
 > The buildflow full-mode row is also executed and deleted: gate verified
 > exit 0 on 2026-10-11 (rebuilt binary 200ab99, `GOTOOLCHAIN=auto`), budgets
 > re-reviewed and confirmed (7/9, 63/80, 7/8).
+>
+> Cut as v0.7.0 the same day (merge unification + `WithGETOnly` removal);
+> the A22 rename section below is the successor breaking window.
 
 ## Status legend
 
@@ -45,7 +48,7 @@
 
 Both v0.6-staging rows (merge unification, `WithGETOnly` removal) were
 executed 2026-10-11 and deleted per lifecycle — they now live in the
-CHANGELOG's Unreleased section. The v0.6 window itself closed with v0.6.0
+CHANGELOG's v0.7.0 section. The v0.6 window itself closed with v0.6.0
 without the staged renames; they are harvested below for the next breaking
 window.
 

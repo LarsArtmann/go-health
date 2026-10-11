@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.6.1 released 2026-10-11 (alpha; per-source roll-up visibility via `aggregate.SourceStatuses`, joined invalid-source errors from `aggregate.New`, the never-started-probe shutdown-grace skip, and throttle/aggregate fuzz hardening shipped — v0.6.1 itself is a security-gate tooling fix only, library content identical to v0.6.0; gate toolchain on go 1.27.2, gosec's toolchain pinned to 1.27.1).
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.7.0 released 2026-10-11 (alpha; `internal/merge` owns the shared worst-of fold for aggregate+federation — rank ties no longer let off/unknown remote roll-ups leak into federation's merged status — and `WithGETOnly` is removed under the zero-production-adopter path, `WithAllowedMethods()` with no arguments is the canonical GET-only spelling; gate toolchain on go 1.27.2, gosec's toolchain pinned to 1.27.1).
 
 ---
 
@@ -86,7 +86,7 @@ lives here; packages keep thin mapping tests.
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching by default** (1s refresh) — kubelet/LB polling doesn't hammer dependencies. Set `WithRefreshInterval(0)` for live mode.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200.
-- **Method-set enforcement** — `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse; no arguments = GET alone). Off by default. `WithGETOnly` was **removed** post-v0.6.1 under the deprecation policy's zero-production-adopter path (migration snippet in CHANGELOG). Middleware composes outside this guard (see docs/middleware-design.md).
+- **Method-set enforcement** — `WithAllowedMethods(...)` wraps all handlers: non-allowed methods get 405 with a sorted `Allow` header (GET always included; duplicates collapse; no arguments = GET alone). Off by default. `WithGETOnly` was **removed** in v0.7.0 under the deprecation policy's zero-production-adopter path (migration snippet in CHANGELOG). Middleware composes outside this guard (see docs/middleware-design.md).
 - **Deterministic clock seam** — `p.now()` (backed by `WithNowFunc`) drives uptime, `Response.Timestamp`, and live-throttle freshness. Latency measurement stays on the real clock. Tests inject a fixed clock instead of sleeping.
 - **HealthRecorder interface** — replaces the old concrete `*auditlog.Plugin` dependency. Any type with `RecordHealthCheckWithContext(ctx, injector) map[string]error` satisfies it. `samber-do-auditlog.Plugin` implements it implicitly; so does `go-appkit/flightrecorderhealth.Trigger` (captures a flight-recorder snapshot when checks fail).
 - **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down). `Off` sentinel results are excluded from the roll-up entirely (docs/configured-off-design.md).

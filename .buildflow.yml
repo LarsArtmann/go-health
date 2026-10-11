@@ -43,8 +43,7 @@ warnings_budget:
   # and per-test setup blocks are intentional similarity, not copy-paste debt.
   art-dupl: 80
   # Design-signal advisories, accepted as documented decisions
-  # (re-verified 2026-10-09 post-v0.5.1: 9 findings, every one in a
-  # documented class — sampling recorded in the Pareto status trail):
+  # (re-verified 2026-10-11: 7 findings, every one in a documented class):
   #   - Probe/config field sharing (10 fields) and federation config/Prober
   #     sharing (2) are the functional-options idiom: options write to a
   #     construction-only config that Probe consumes (AGENTS.md Key Design
@@ -53,11 +52,11 @@ warnings_budget:
   #     single-package design decision seen from the size axis: Probe is
   #     deliberately the one orchestrator (flat public library layout,
   #     .go-structure-linter excludes).
-  #   - The two remaining federation slice-index warnings are the pre-sized
-  #     parallel-fetch buffer (results[i] written by index under wg.Go, read
-  #     after wg.Wait) — safe by construction, same documented pattern as the
-  #     makezero nolint on that slice.
   #   - strong-ID suggestions (instanceID → InstanceID) are wire-shape design
   #     decisions reserved for the owner (cf. docs/servicename-design.md),
   #     not lint-pass material.
-  branching-flow: 14
+  # The former federation slice-index warnings were eliminated 2026-10-11:
+  # merge iterates one slice of state+result pairs (fetchedRemote), so no
+  # index-alignment invariant exists to flag. Lowered 14→9: steady state is
+  # the 7 documented findings above, ~20% headroom per this block's policy.
+  branching-flow: 9

@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Nothing yet.
+- `federation`: fetch results now carry their remote's state pointer (`fetchedRemote`) instead of pairing with `p.states` by index, so the merge loop can never rely on two slices staying length-aligned. Internal only — no exported API and no behavior change.
 
 ### Fixed
 

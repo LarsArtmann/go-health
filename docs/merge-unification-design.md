@@ -1,6 +1,6 @@
 # Design: unified merge for `aggregate` and `federation`
 
-**Date:** 2026-10-02 · **Status:** DESIGN — implementation-ready sketch (2026-10-09 re-grounding below); v0.6 window vehicle. No code changes yet. See TODO_LIST "v0.6 window — staging".
+**Date:** 2026-10-02 · **Status:** IMPLEMENTED (2026-10-11, post-v0.6.1, Unreleased) — `internal/merge` extracted per the placement decision below, both packages ported, the duplicated fuzz/property assertions collapsed into `FuzzResponsesMergeInvariants` over the primitive with thin per-package mapping tests. Every pre-existing package test passed unchanged and served as the port's golden-check oracle. One open point in the sketch was resolved on the way: rank ties are **tie-stable** (never replace the accumulator) — that preserves aggregate's behavior exactly and changes federation only for remote documents whose top-level `status` is `off`/unknown (previously last-same-rank-wins could leak those into the merged roll-up; CHANGELOG §Unreleased).
 
 ## Problem (P9)
 

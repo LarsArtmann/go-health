@@ -22,6 +22,15 @@
 > CV all verified green on v0.5.1 (CV: go 1.27 floor, nix build green);
 > evidence in `docs/status/2026-10-09_21-57_*.md`. Consumer commits are
 > local-unpushed pending the owner's push-authority answer.
+>
+> 2026-10-11 (staging execution): the merge-unification row and the
+> `WithGETOnly` row are executed and deleted per lifecycle —
+> `internal/merge` extracted (docs/merge-unification-design.md, now
+> IMPLEMENTED), the symbol removed under the deprecation policy's
+> zero-production-adopter path, KeyHolderAI's test call site fixed locally.
+> The stale hook-panic hardening row is deleted: the fix shipped in v0.5.1
+> (CHANGELOG) — the row predates the header's own re-verification stamp.
+> Remaining A22 staged renames harvested into their own section below.
 
 ## Status legend
 
@@ -31,25 +40,31 @@
 | IN_PROGRESS | Actively being worked on.                               |
 | BLOCKED     | Cannot proceed, external dependency or decision needed. |
 
-## v0.6 window — staging (20%)
+Both v0.6-staging rows (merge unification, `WithGETOnly` removal) were
+executed 2026-10-11 and deleted per lifecycle — they now live in the
+CHANGELOG's Unreleased section. The v0.6 window itself closed with v0.6.0
+without the staged renames; they are harvested below for the next breaking
+window.
 
-| Task                                                                                                                                                                          | Status | Impact | Effort | Evidence                                                                                                              |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------------------------------- |
-| Port `mergeResponses` (aggregate + federation) onto the `internal/merge` primitive; collapse the duplicated fuzz property suites                                              | TODO   | Med    | 50min  | Sketch landed 2026-10-09: docs/merge-unification-design.md (placement `internal/merge`, `Started` is federation-side) |
-| Remove `WithGETOnly` (deprecated since v0.1.1): zero production adopters — KeyHolderAI usage is tests only (adoption matrix 2026-10-09); run the deprecation-policy checklist | TODO   | Low    | 20min  | docs/naming-integrity.md staged-rename table; docs/adoption-matrix.md re-verification                                 |
+## Next breaking window — staged renames (A22 decision table)
 
-_Staging completed 2026-10-09 and deleted per lifecycle: ServiceName call-site
-inventory + scanner + verification plan (A21 → docs/servicename-design.md
-§"Fleet inventory", `tools/servicename-scan.sh`); rename decision table
-(A22 → docs/naming-integrity.md §"v0.6 staged-rename decision table"). Both
-execute only at v0.6 window-open._
+Harvested 2026-10-11 from docs/naming-integrity.md §"v0.6 staged-rename
+decision table" (the window these were staged for closed without them; they
+ride the next minor that already carries a breaking change). Order and
+mechanics per the A22 table.
+
+| Task | Status | Impact | Effort | Evidence |
+| ---- | ------ | ------ | ------ | -------- |
+| `WithCriticalServices(...string)` → `(...ServiceName)` clean cut + `WithCriticalChecks` deprecated alias (A22 order step 1–2, ServiceName cut first) | TODO | Med | 2h | docs/servicename-design.md (fleet inventory + `tools/servicename-scan.sh`); 8 constructor repos + 2 bridges break, mechanical |
+| `SanitizeResponse` → `CoerceValidUTF8` alias + deprecate (A22 step 3) | TODO | Low | 30min | dashboard-only break (`dashboard.go`, 1 prod + 1 test file) |
+| `Check.Since` → `StatusSince` Go-field clean cut, JSON `since` frozen (A22 step 4) | TODO | Low | 30min | dashboard-only break (`status.go:311,391` + 3 test files); pair with docs/check-metadata-design.md doc pass |
+| `Probe`/`Prober`/`Source`/`Remote` lexicon reconciliation | BLOCKED | Low | 1d | A22: deferred past the window — highest coupling, lowest lie-factor; revisit only with docs/vocabulary-reconciliation.md enforcement tooling |
 
 ## Hardening — the tail (100%)
 
 | Task                                                                                                                                                                               | Status  | Impact | Effort | Evidence                                                                                                                                                                |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Version-skew CI script: fleet `go.mod` pins vs latest tag, fail-on-drift                                                                                                           | BLOCKED | Med    | 45min  | plan R14; gated on owner push authority (2026-10-09 report §next 3): consumer bumps are local-unpushed, so the workflow would observe stale pins and run red on day one |
-| Panicking `WithEvaluationHook` callback is unrecovered on the refresh-loop path (probe.go:661-663): decide recover-vs-document per docs/panic-recovery-design.md + pin with a test | TODO    | Med    | 45min  | Verified unrecovered 2026-10-08 (docs-health audit); flagged 2026-09-15 §e6                                                                                             |
 | Fix or disable the stale golangci LSP integration (3 standing false warnings; discipline note now in AGENTS Gotchas)                                                               | TODO    | Low    | 30min  | 2026-10-08 20:58 §f19; reconfirmed lying 2026-10-09 (report §e7); owner call                                                                                            |
 | Restore `buildflow --fix --build-mode=full` to exit 0 (toolchain-skew follow-ups, binary rebuild) and re-review the `.buildflow.yml` budgets once green                            | TODO    | Med    | 1h     | 2026-10-08 20:59 §b1–§b4/§e7; gate last verified red                                                                                                                    |
 

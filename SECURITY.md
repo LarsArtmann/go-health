@@ -46,7 +46,32 @@ they affect the probe contract itself, for example:
 - Vulnerabilities in samber/do service graphs themselves; report those
   upstream to [samber/do](https://github.com/samber/do).
 
-## Response targets
+## Security practices
+
+How this repository reduces the chance that a vulnerability ships:
+
+- **Automated gates on every change** — `govulncheck` (known CVEs in the
+  module graph), `gosec` (static security analysis), and the fuzz targets
+  (`FuzzHandlerInput`, `FuzzResponseMarshalDeterministic`,
+  `FuzzAggregateMergeInvariants`, `FuzzBatteries`, and the throttle-window
+  fuzz) run in the pre-push gate sweep (`nix run .#gates`).
+- **Panic containment, fail closed** — panics recovered inside health-check
+  execution become a synthetic failing check (readiness 503), never a
+  process crash and never a false pass; evaluation-hook panics degrade to a
+  warn row without killing the refresh loop. See
+  [docs/panic-recovery-design.md](docs/panic-recovery-design.md).
+- **Untrusted wire input is refused whole** — the federation package rejects
+  invalid remote documents entirely rather than merging partial data, and
+  handler output is UTF-8-coerced before it hits the wire.
+- **Minimal dependency surface** — the library's only Go dependency is
+  `samber/do/v2`; check implementations in `checks/` are stdlib-only. Fewer
+  dependencies, fewer CVE transports.
+- **Deterministic, typed wire format** — the HTTP contract is pinned by a
+  golden OpenAPI document (verified in CI via `nix run .#openapi-lockstep`)
+  and deterministic JSON marshaling, so downstream security tooling sees a
+  stable schema.
+
+## Response time
 
 - Acknowledgement: within 7 days.
 - Triage and severity assessment: within 14 days.

@@ -15,6 +15,13 @@
 // "source/check" grouping axis and could alias another source's namespace.
 // [New] rejects such names at construction. Check names may contain "/";
 // everything before the first slash in a merged key is always the source name.
+//
+// Draining flows through the sources: mark each source probe
+// ([health.Probe.MarkShuttingDown] or [health.Probe.Shutdown]) and the merged
+// readiness flips to 503 via the per-source shutdown overlay. The one drain a
+// caller cannot reach that way — a federation hub draining above its remotes —
+// is why the federation package carries its own mark; the aggregate
+// deliberately does not.
 package aggregate
 
 import (

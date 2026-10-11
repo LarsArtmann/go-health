@@ -18,7 +18,12 @@ twice and can silently diverge (the classic split brain).
 3. Check names namespace as `<source>/<check>`; collision-free by the
    no-slash source-name contract (ADR-005).
 4. Shutdown overlays: any source draining → merged fail; source startup
-   latches AND.
+   latches AND. (Boundary, settled with federation's two-phase drain: the
+   overlay in this list is a *per-source* property carried by the
+   `Response` a source contributes. A hub-side drain — federation's
+   `MarkShuttingDown` — is deliberately NOT a merge input: a `Source`
+   cannot express "the whole hub is draining", so federation applies its
+   overlay after `merge.Responses` returns and the primitive stays pure.)
 5. Scalars (`Version`, `Uptime`, `InstanceID`, `Timestamp`) never survive;
    `TotalLatencyMs` = max across sources.
 6. Any source appearing unhealthy/unreachable surfaces as a synthetic

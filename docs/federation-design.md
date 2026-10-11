@@ -131,6 +131,13 @@ prober runs no background loop, so phase two of the drain is the host
 process draining its own HTTP server. Liveness and startup are
 unaffected, mirroring `Probe`.
 
+Operational note for the drain window: the hub keeps fetching every
+remote on every merged read, so its fetch volume during the drain is the
+read cadence (dashboard push interval + kubelet/LB polling) × N remotes.
+Bound the load balancer's drain window accordingly — a hub holding 503
+for minutes while scraped every second still polls each remote every
+second.
+
 ### `RefreshInterval()` returns zero
 
 Federation fetches live; it has no background cache and no cadence of
@@ -193,6 +200,11 @@ body drain on non-200 responses for connection reuse.
 - **No health status synthesis for staleness.** An unreachable remote
   reports `fail` because the fetch failed — that is an observation, not
   a guess about the remote's services.
+- **No unmark, no drain-state queries.** The mark is one-way by design
+  (mirroring `Probe`); a host that needs to undo a drain decision
+  replaces the prober. The drain is observable through
+  `CachedResponse().ShuttingDown` — there is deliberately no `IsDraining()`
+  getter to keep beside it.
 - **No `ErrUnknownCriticalService` on the fetch side.** `Start()`-time
   critical-name validation applies to a probe's own evaluation batch;
   remote names are a different universe (a typo'd remote name surfaces

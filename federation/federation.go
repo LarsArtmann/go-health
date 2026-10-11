@@ -27,6 +27,13 @@
 // frozen at its last state. Check.Since is probe-observed on the remote
 // and survives the merge verbatim, keeping "since when" truthful end to
 // end. See docs/federation-design.md for the full design.
+//
+// A hub being gracefully shut down must leave its load balancer's
+// rotation before the listener closes. [Prober.MarkShuttingDown] flips a
+// one-way drain state: readiness answers 503 with shutting_down set
+// while the fetches keep running, so drained bodies stay fresh, and
+// liveness and startup are unaffected — the same two-phase contract
+// [health.Probe] already gives a single probe.
 package federation
 
 import (
@@ -123,6 +130,9 @@ type Prober struct {
 	states  []remoteState
 	client  *http.Client
 	timeout time.Duration
+	// shuttingDown is the one-way drain flag set by
+	// [Prober.MarkShuttingDown], overlaid onto every merged read.
+	shuttingDown atomic.Bool
 }
 
 // remoteState pairs one remote with its one-way startup latch so both
@@ -247,9 +257,11 @@ type fetchedRemote struct {
 // parallel fetch per remote, then the merge. The overall status is the
 // worst of the remote statuses and every synthetic reachable check; a
 // shutting-down remote forces overall fail, mirroring [health.Probe] and
-// [aggregate.Aggregate] semantics. Unreachable remotes contribute a
-// "name/reachable" fail check with the cause. TotalLatencyMs is the
-// slowest remote's reported batch.
+// [aggregate.Aggregate] semantics. A hub marked via
+// [Prober.MarkShuttingDown] forces fail on its own merged view too, so
+// programmatic readers (a dashboard) see the drain. Unreachable remotes
+// contribute a "name/reachable" fail check with the cause.
+// TotalLatencyMs is the slowest remote's reported batch.
 func (p *Prober) CachedResponse() health.Response {
 	return p.cachedResponse(context.Background())
 }
@@ -272,7 +284,19 @@ func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 
 	wg.Wait()
 
-	return p.merge(results)
+	resp := p.merge(results)
+
+	// Drain overlay, mirroring [health.Probe.CachedResponse]: the flag is
+	// consulted live on every read, so a hub marked mid-flight flips to 503
+	// on the next request even with every remote still healthy. The
+	// StartupHandler discards this response and LivenessHandler never
+	// fetches, so the overlay reaches exactly the surfaces it must.
+	if p.shuttingDown.Load() {
+		resp.ShuttingDown = true
+		resp.Status = health.StatusFail
+	}
+
+	return resp
 }
 
 // merge combines fetch results into one response and advances the
@@ -382,6 +406,19 @@ func (p *Prober) RefreshInterval() time.Duration {
 	return 0
 }
 
+// MarkShuttingDown flips the prober into its one-way drain state: from
+// the call on, [Prober.CachedResponse] and [Prober.ReadinessHandler]
+// report ShuttingDown with overall fail (readiness answers 503), while
+// the merge-on-read fetches keep running so drained bodies stay fresh —
+// the two-phase contract [health.Probe.MarkShuttingDown] gives a single
+// probe. Liveness and startup are unaffected. There is no unmark and no
+// [health.Probe.Shutdown] counterpart: the prober runs no background
+// loop, so phase two of the drain is the host process draining its own
+// HTTP server.
+func (p *Prober) MarkShuttingDown() {
+	p.shuttingDown.Store(true)
+}
+
 // StartupComplete reports whether every remote has answered successfully
 // at least once. It is the AND of one-way per-remote latches, mirroring
 // [health.Probe]'s startup latch: a remote that flaps after latching
@@ -413,7 +450,8 @@ func (p *Prober) LivenessHandler() http.HandlerFunc {
 // ReadinessHandler answers the federation's readiness question: "can
 // this hub serve traffic?" Serves the merged view: 503 when the overall
 // status is fail (which includes any unreachable or shutting-down
-// remote), 200 otherwise. A dark remote takes the hub out of rotation —
+// remote, and the hub itself once [Prober.MarkShuttingDown] flipped the
+// drain), 200 otherwise. A dark remote takes the hub out of rotation —
 // deliberate: the hub's whole answer is its remotes.
 func (p *Prober) ReadinessHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

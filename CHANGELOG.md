@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Nothing yet.
+- Test-surface fix: `TestCachedResponse_NeverStartedSource` hardcoded `TotalLatencyMs == 0`, but the primed source's own evaluation latency can legitimately read 1ms under full-suite parallelism (observed once under the race-stress fan-out), flaking the never-started merge property it pins. The assertion now checks the real property — the never-started source contributes nothing, so the merged total equals the real source's own cached batch. Test-only; no library change.
 
 ## [v0.6.1] - 2026-10-11
 

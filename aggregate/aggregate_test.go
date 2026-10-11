@@ -464,7 +464,13 @@ func TestCachedResponse_NeverStartedSource(t *testing.T) {
 		t.Errorf("merged status = %q, want pass (never-started folds as healthy)", merged.Status)
 	}
 
-	if merged.ShuttingDown || merged.TotalLatencyMs != 0 ||
+	// The ghost contributes no latency: the merged total is exactly the real
+	// source's own cached batch, not a hardcoded zero — the priming
+	// evaluation's own time.Since reading can legitimately be 1ms on a loaded
+	// machine (observed flaking under full-suite parallelism), and the
+	// property under test is "the ghost adds nothing", not "the batch is
+	// instant".
+	if merged.ShuttingDown || merged.TotalLatencyMs != started.CachedResponse().TotalLatencyMs ||
 		merged.InstanceID != "" || merged.Version != "" {
 		t.Errorf("unexpected merged scalars: %+v", merged)
 	}

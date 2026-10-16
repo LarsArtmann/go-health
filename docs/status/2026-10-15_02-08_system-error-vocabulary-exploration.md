@@ -121,4 +121,28 @@
 
 ---
 
+---
+
+## ADDENDUM (02:20, same session) — verification debt paid down
+
+User challenged the evidence base ("you checked like 1 project right?"). Correct — so I read the actual leads from the scans. **8 consumer projects now examined firsthand** (was 1). Revised findings:
+
+| Project | Error approach | Verdict for syserr thesis |
+|---|---|---|
+| DiscordSync | errorfamily + hand-rolled ENOSPC predicates + errkit registry copy | Direct consumer (unchanged) |
+| ArtCode | **bespoke framework**: `StorageError{Type enum}` with `file_not_found`, `permission_denied`, `disk_full`, `corruption` | Strongest duplication evidence, but a *framework* migration, not a sentinel swap — doesn't use errorfamily at all |
+| chats | **bespoke framework**: `StandardError{Message, Code, Cause}` with code-based `Is` | Parallel mini-errorfamily; separate adoption decision |
+| docs-organizer | errorfamily constructors: FileNotFound/DirectoryNotFound/PermissionDenied/GitError/MoveError | Direct consumer (system-adjacent wrappers with per-app codes) |
+| go-localsync | errorfamily sentinels with *generic* codes (`not_found`, `rate_limited`, `database`, `invalid_input`) | Third class: common-API errors, NOT OS-level — confirms syserr must stay OS/IO-focused, not become a giant catalog |
+| go-cqrs-lite (relational) | pure errorfamily Rejection sentinels; relies on Classify/IsRetryable, zero hand predicates | The good citizen — proof the library design works when adopted; no syscall layer, no syserr need |
+| dnsblockd | hand-rolled transient sentinel + retry predicate (`context.Canceled`/`DeadlineExceeded` checks) | Predicate-class duplication — direct consumer |
+| golangci-lint-auto-configure | `IsContextCanceled` helper over stdlib sentinels | Predicate-class duplication — direct consumer |
+
+**Revised verdict:** the core claim survives and sharpens into TWO duplication classes I under-distinguished before:
+
+1. **Detection/predicates + classification** (DiscordSync, dnsblockd, golangci-lint-auto-configure, docs-organizer) — the `syserr` module thesis holds exactly for these.
+2. **Bespoke error frameworks** (ArtCode, chats) — a shared syserr module does NOT fix them by existing; each is a per-project adoption/migration decision onto errorfamily first.
+
+Track 3 items: #18 (ArtCode) done; #17 partially done (8 leads read, remaining ~17 unopened); #16, #19, #20 still open.
+
 *Report format note: user explicitly demanded `.md` at `docs/status/` (overriding this skill's HTML-canonical default). No commit made — harness forbids unprompted commits; auto-commit daemon will pick this up.*

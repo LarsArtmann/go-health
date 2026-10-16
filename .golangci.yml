@@ -1,7 +1,7 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.26.5
+  go: "1.27"
   build-tags:
     - goexperiment.arenas
     - goexperiment.goroutineleakprofile
@@ -70,6 +70,7 @@ linters:
     - intrange
     - iotamixing
     - ireturn
+    - lll
     - loggercheck
     - maintidx
     - makezero
@@ -148,9 +149,17 @@ linters:
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
+    gocognit:
+      min-complexity: 25
+    goconst:
+      ignore-tests: true
+      min-len: 4
+      min-occurrences: 5
     gocritic:
       disabled-checks:
         - ifElseChain
+    gocyclo:
+      min-complexity: 20
     gomoddirectives:
       replace-local: true
     gosec:
@@ -164,16 +173,6 @@ linters:
         - anon
         - stdlib
         - generic
-    # Contract (pinned empirically 2026-10-09, golangci-lint 2.14 + analyzer
-    # source): `always: true` flags EVERY two-arg `x := make([]T, n)` bound to
-    # a plain identifier unless the length is the literal `0` — usage is
-    # irrelevant (no append needed; index writes do not exempt it). Makes
-    # inside composite literals (`field: make([]T, n)`) are INVISIBLE to the
-    # rule (the analyzer only visits assignment-statement RHS) — form, not
-    # usage, is why the old `startup: make([]atomic.Bool, len(remotes))` never
-    # tripped while the refactored `states := make(...)` did. Blessed forms:
-    # `make([]T, 0, n)` + append, or index-written pre-sizing with a rationale
-    # `//nolint:makezero` (see federation.go `results`).
     makezero:
       always: true
     mnd:
@@ -182,12 +181,29 @@ linters:
         - "1"
         - "2"
         - "100"
+    nestif:
+      min-complexity: 6
     revive:
       rules:
         - disabled: true
           name: exported
         - disabled: true
           name: package-comments
+    tagalign:
+      align: false
+      order:
+        - binding
+        - json
+        - yaml
+        - xml
+        - toml
+        - validate
+        - mapstructure
+      sort: true
+    tagliatelle:
+      case:
+        rules:
+          json: snake
     testifylint:
       disable:
         - go-require
@@ -210,10 +226,6 @@ linters:
         - r
         - wg
       ignore-type-assert-ok: true
-    tagliatelle:
-      case:
-        rules:
-          json: snake
     wrapcheck:
       ignore-sigs:
         - .Errorf(
@@ -234,6 +246,17 @@ linters:
           - goconst
           - noctx
           - errcheck
+          - exhaustruct_v5
+          - testpackage
+          - funlen
+          - cyclop
+          - forcetypeassert
+          - gosec
+          - wrapcheck
+          - ireturn
+          - recvcheck
+          - contextcheck
+          - exhaustive
       - path: _test\.go
         text: unused
         linters:

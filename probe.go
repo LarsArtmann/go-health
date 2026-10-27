@@ -902,14 +902,9 @@ func (p *Probe) CacheAge() (time.Duration, bool) {
 		return 0, false
 	}
 
-	age := p.now().Sub(cached.Timestamp)
-	if age < 0 {
-		// A backwards clock step must not report a negative age; the
-		// snapshot is simply as fresh as it can be.
-		age = 0
-	}
-
-	return age, true
+	// A backwards clock step must not report a negative age; the snapshot
+	// is simply as fresh as it can be.
+	return max(p.now().Sub(cached.Timestamp), 0), true
 }
 
 // CachedResponseFresh returns the served snapshot when it was evaluated at

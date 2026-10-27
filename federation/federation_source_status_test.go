@@ -1,6 +1,7 @@
 package federation_test
 
 import (
+	"sync"
 	"testing"
 
 	health "github.com/larsartmann/go-health"
@@ -108,5 +109,71 @@ func TestSourceStatuses_HubDrainLeavesRemoteVerdictsAlone(t *testing.T) {
 
 	if merged := prober.CachedResponse(); merged.Status != health.StatusFail {
 		t.Errorf("merged status = %q after the hub drained, want fail", merged.Status)
+	}
+}
+
+// TestSourceStatuses_ConcurrentWithMarkShuttingDown is the race-detector case
+// for the drain boundary: readers hammer SourceStatuses and the merged view
+// while another goroutine flips the hub's drain. Neither accessor may observe
+// a torn or partially updated state — the per-remote map stays exactly one
+// entry per remote with a known status across the whole run, and the drain
+// flag is an atomic load rather than shared map state. Run under -race.
+func TestSourceStatuses_ConcurrentWithMarkShuttingDown(t *testing.T) {
+	t.Parallel()
+
+	healthy := serveDocument(t, health.Response{Status: health.StatusPass})
+	warning := serveDocument(t, health.Response{
+		Status: health.StatusWarn,
+		Checks: map[string]health.Check{"q": {Status: health.StatusWarn}},
+	})
+
+	prober := mustNew(t, []federation.Remote{
+		{Name: "healthy", URL: healthy.server.URL},
+		{Name: "warning", URL: warning.server.URL},
+	})
+
+	const readers = 8
+
+	var wg sync.WaitGroup
+
+	for range readers {
+		wg.Go(func() {
+			for range 4 {
+				statuses := prober.SourceStatuses()
+				if len(statuses) != 2 {
+					t.Errorf("statuses = %v, want two remotes", statuses)
+
+					return
+				}
+
+				switch statuses["healthy"] {
+				case health.StatusPass, health.StatusWarn,
+					health.StatusFail, health.StatusOff:
+				default:
+					t.Errorf("healthy status %q left the enum", statuses["healthy"])
+
+					return
+				}
+
+				merged := prober.CachedResponse()
+				if merged.Status == "" {
+					t.Error("merged status is empty under a concurrent drain")
+
+					return
+				}
+			}
+		})
+	}
+
+	wg.Go(func() {
+		for range 4 {
+			prober.MarkShuttingDown()
+		}
+	})
+
+	wg.Wait()
+
+	if !prober.StartupComplete() {
+		t.Error("latches never advanced; the fixture did not exercise the read path")
 	}
 }

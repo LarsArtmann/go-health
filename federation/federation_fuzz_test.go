@@ -347,4 +347,3 @@ func assertHealthzCodeMatchesBody(t *testing.T, handler http.HandlerFunc) {
 		t.Fatalf("healthz answered %d, want 200 or 503", got.code)
 	}
 }
-

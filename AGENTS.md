@@ -62,7 +62,7 @@ federation-side on successful fetch, never inside the merge), and one synthetic 
 unreachable/undecodable remote (never a silent freeze, never a status override). Wire input is untrusted (invalid documents refused whole); `Check.Since`/`DurationNanos` survive verbatim, scalars do not.
 `MarkShuttingDown()` adds a one-way hub-side drain (readiness 503 with `shutting_down: true`, fetches continue so bodies stay fresh; liveness/startup unaffected). `SourceStatuses()` mirrors aggregate's per-remote roll-up (unreachable/draining remotes report fail; no latch movement). `Healthz()` completes single-endpoint parity (503 while any latch is unset or the merged roll-up is fail; warn stays 200).
 Full semantics (fetch caps, dashboard-`Prober` structural assertion, API surface): docs/federation-design.md +
-docs/federation-source-statuses-design.md; remote names never hit `ErrUnknownCriticalService`:
+docs/federation-source-statuses-design.md + docs/federation-healthz-design.md; remote names never hit `ErrUnknownCriticalService`:
 docs/federation-validation-semantics.md.
 
 Sub-package `checks` (source: `checks/checks.go`) is the batteries package: zero-dependency,

@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- `nix run .#fuzz-registry` (also `checks.fuzz-registry`, part of `.#gates`) diffs both fuzz apps in `flake.nix` against the `Fuzz*` targets in the tree and against each other, so a new target can no longer be written and silently never fuzzed. Backed by `tools/fuzz-registry-check.sh`.
+- `docs-check` grew two drift rules: `[Unreleased]` must document something while HEAD is past the latest tag, and `docs/federation-design.md`'s fenced go API block must match federation's exported surface in both directions (it was missing `SourceStatuses` and `Healthz` while both shipped).
+- `docs/ARCHITECTURE.md` now carries the per-file source map, the sub-package contracts and the test-file layout, moved out of `AGENTS.md` to keep that file under its 220-line preflight cap.
 
 ### Changed
 
-- Nothing yet.
+- Statement coverage is now 100% for `health`, `aggregate`, `checks` and `internal/merge`, 99.5% for `federation` (99.9% total). The one remaining statement is federation's request-construction guard, unreachable for any remote `New` accepts; the reason is recorded at `fetch`.
+- New tests pin `federation.WithClient`, the truncated-body fetch path, and a concurrent drain through `federation.Healthz` (race detector plus the invariant that a drain never unlatches startup).
+- Two defensive branches became testable instead of silent coverage holes: `applyStartupFailureOverlay` (root `Healthz`) and `versionMarshalFailure` behind a `marshalVersionResponse` seam, matching the existing `marshalResponse` seam.
 
 ### Removed
 
@@ -21,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Nothing yet.
+- The `nix fmt` row in `AGENTS.md` claimed goimports while treefmt runs gofmt, golines and nixfmt; corrected, and markdown formatting is now documented as BuildFlow's responsibility because treefmt runs sandboxed and dprint downloads its plugins.
 
 ## [v0.8.1] - 2026-10-27
 

@@ -185,6 +185,114 @@ func TestValidate_RejectsRecorderOnFunctionPath(t *testing.T) {
 	}
 }
 
+// TestValidate_RecorderRejectionOutranksConfigErrors pins the precedence the
+// rejection path took when it was added: a probe that is wrong in two ways at
+// once reports the recorder mis-wiring first. The recorder problem is the one
+// with no runtime evidence (it captures nothing at all), so naming it first is
+// what saves a consumer from "fixing" a timeout and still observing nothing.
+func TestValidate_RecorderRejectionOutranksConfigErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		probe *health.Probe
+	}{
+		{
+			name: "recorder plus invalid timeout",
+			probe: health.NewChecks(
+				map[string]health.CheckFunc{"database": func(context.Context) error { return nil }},
+				health.WithHealthRecorder(plainRecorder{batch: map[string]error{"database": nil}}),
+				health.WithTimeout(0),
+			),
+		},
+		{
+			name: "recorder plus invalid refresh interval",
+			probe: health.NewWithHealthCheck(
+				func(context.Context) map[string]error { return map[string]error{"database": nil} },
+				health.WithHealthRecorder(plainRecorder{batch: map[string]error{"database": nil}}),
+				health.WithRefreshInterval(-time.Second),
+			),
+		},
+		{
+			name: "recorder plus both config errors",
+			probe: health.NewWithDetailedCheck(
+				func(context.Context) map[string]health.CheckDetail {
+					return map[string]health.CheckDetail{"database": {}}
+				},
+				health.WithHealthRecorder(plainRecorder{batch: map[string]error{"database": nil}}),
+				health.WithTimeout(-time.Second),
+				health.WithRefreshInterval(-time.Second),
+			),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if err := tt.probe.Validate(); !errors.Is(err, health.ErrRecorderNotApplicable) {
+				t.Errorf("Validate = %v, want ErrRecorderNotApplicable", err)
+			}
+
+			if err := tt.probe.Start(t.Context()); !errors.Is(err, health.ErrRecorderNotApplicable) {
+				t.Errorf("Start = %v, want ErrRecorderNotApplicable", err)
+			}
+		})
+	}
+}
+
+// TestNewWithRecorder_ChainReachesServedResponse wires the two injector-free
+// pieces together: a chain of a plain and a detailed recorder, handed to
+// NewWithRecorder, must both run and its detailed member's durations must
+// reach the served response. Pins the composition the bridge replacement
+// depends on (cqrs-htmx's hand-rolled RecorderChain lost durations).
+func TestNewWithRecorder_ChainReachesServedResponse(t *testing.T) {
+	t.Parallel()
+
+	var plainCalls int
+
+	chain := health.ChainRecorders(
+		health.HealthRecorderFunc(
+			func(context.Context, do.Injector) map[string]error {
+				plainCalls++
+
+				return map[string]error{"audit-log": nil}
+			},
+		),
+		health.DetailedHealthRecorderFunc(
+			func(context.Context, do.Injector) map[string]health.CheckDetail {
+				return map[string]health.CheckDetail{
+					"database": {Duration: 7 * time.Millisecond},
+				}
+			},
+		),
+	)
+
+	probe := health.NewWithRecorder(chain, health.WithRefreshInterval(0))
+	t.Cleanup(probe.Shutdown)
+
+	if err := probe.Start(t.Context()); err != nil {
+		t.Fatalf("Start: unexpected error: %v", err)
+	}
+
+	resp := probe.CachedResponse()
+
+	if plainCalls == 0 {
+		t.Error("plain chain member never ran")
+	}
+
+	for _, name := range []string{"audit-log", "database"} {
+		if _, ok := resp.Checks[name]; !ok {
+			t.Errorf("check %q missing from the served response: %v", name, resp.Checks)
+		}
+	}
+
+	if got := resp.Checks["database"].DurationNanos; got != int64(7*time.Millisecond) {
+		t.Errorf("database duration = %d ns, want %d (detailed member's duration lost)",
+			got, int64(7*time.Millisecond))
+	}
+}
+
 func TestValidate_AcceptsRecorderOnInjectorPath(t *testing.T) {
 	t.Parallel()
 

@@ -151,6 +151,49 @@ func TestCachedResponseFresh_OverlaysShutdown(t *testing.T) {
 	}
 }
 
+// TestCachedResponse_ChecksAliasThePublishedSnapshot pins the ownership
+// contract in both directions, because both halves are load-bearing:
+//
+//   - the returned Checks map aliases the published snapshot (the lock-free
+//     read must not allocate), so a write through it is visible to the next
+//     reader — the hazard dnsblockd and cv each crashed on;
+//   - Clone() breaks that alias, so the sanctioned overlay pattern is safe.
+//
+// A refactor that quietly starts deep-copying CachedResponse passes every
+// other test in this file while regressing the zero-allocation guarantee, so
+// this test is the tripwire for it.
+func TestCachedResponse_ChecksAliasThePublishedSnapshot(t *testing.T) {
+	t.Parallel()
+
+	probe := health.NewChecks(
+		map[string]health.CheckFunc{"database": func(context.Context) error { return nil }},
+		health.WithRefreshInterval(0),
+	)
+	t.Cleanup(probe.Shutdown)
+
+	if err := probe.Start(t.Context()); err != nil {
+		t.Fatalf("Start: unexpected error: %v", err)
+	}
+
+	mutated := probe.CachedResponse()
+	mutated.Checks["overlay"] = health.Check{Status: health.StatusWarn}
+
+	// No background loop is running (live mode), so this write is the only
+	// mutator and the read below cannot race it.
+	if _, ok := probe.CachedResponse().Checks["overlay"]; !ok {
+		t.Fatal("write through CachedResponse().Checks was not visible; " +
+			"CachedResponse stopped aliasing the published snapshot, " +
+			"which silently changes the documented zero-allocation contract")
+	}
+
+	cloned := probe.CachedResponse().Clone()
+	cloned.Checks["cloned-only"] = health.Check{Status: health.StatusWarn}
+
+	if _, ok := probe.CachedResponse().Checks["cloned-only"]; ok {
+		t.Error("write through Clone().Checks leaked into the served response")
+	}
+}
+
 func TestEvaluateAndCache_PublishesButEvaluateDoesNot(t *testing.T) {
 	t.Parallel()
 

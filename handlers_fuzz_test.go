@@ -76,50 +76,53 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 				t.Fatalf("round-trip unmarshal: %v", err)
 			}
 
-			if decoded.Status != resp.Status {
-				t.Fatalf("status round-trip: want %q, got %q", resp.Status, decoded.Status)
-			}
-
-			if decoded.InstanceID != resp.InstanceID {
-				t.Fatalf(
-					"instance_id round-trip: want %q, got %q",
-					resp.InstanceID,
-					decoded.InstanceID,
-				)
-			}
-
-			for name, wantCheck := range resp.Checks {
-				check, ok := decoded.Checks[name]
-				if !ok {
-					t.Fatalf("check %q lost in round-trip", name)
-				}
-
-				if check.Error != wantCheck.Error {
-					t.Fatalf(
-						"check error round-trip: want %q, got %q",
-						wantCheck.Error,
-						check.Error,
-					)
-				}
-
-				if !check.Since.Equal(wantCheck.Since) {
-					t.Fatalf(
-						"check since round-trip: want %v, got %v",
-						wantCheck.Since,
-						check.Since,
-					)
-				}
-
-				if check.DurationNanos != wantCheck.DurationNanos {
-					t.Fatalf(
-						"check duration round-trip: want %d, got %d",
-						wantCheck.DurationNanos,
-						check.DurationNanos,
-					)
-				}
-			}
+			assertResponseRoundTrip(t, resp, decoded)
 		},
 	)
+}
+
+// assertResponseRoundTrip checks that decoded carries every field of sent
+// through the wire intact: the roll-up status, the instance id, and each
+// check's name, status, error, Since, and DurationNanos.
+func assertResponseRoundTrip(t *testing.T, sent, decoded health.Response) {
+	t.Helper()
+
+	if decoded.Status != sent.Status {
+		t.Fatalf("status round-trip: want %q, got %q", sent.Status, decoded.Status)
+	}
+
+	if decoded.InstanceID != sent.InstanceID {
+		t.Fatalf(
+			"instance_id round-trip: want %q, got %q",
+			sent.InstanceID,
+			decoded.InstanceID,
+		)
+	}
+
+	for name, wantCheck := range sent.Checks {
+		check, ok := decoded.Checks[name]
+		if !ok {
+			t.Fatalf("check %q lost in round-trip", name)
+		}
+
+		if check.Status != wantCheck.Status {
+			t.Fatalf("check status round-trip for %q: want %q, got %q",
+				name, wantCheck.Status, check.Status)
+		}
+
+		if check.Error != wantCheck.Error {
+			t.Fatalf("check error round-trip: want %q, got %q", wantCheck.Error, check.Error)
+		}
+
+		if !check.Since.Equal(wantCheck.Since) {
+			t.Fatalf("check since round-trip: want %v, got %v", wantCheck.Since, check.Since)
+		}
+
+		if check.DurationNanos != wantCheck.DurationNanos {
+			t.Fatalf("check duration round-trip: want %d, got %d",
+				wantCheck.DurationNanos, check.DurationNanos)
+		}
+	}
 }
 
 // FuzzThrottleWindowBoundary fuzzes clock advances around the

@@ -121,12 +121,26 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 	})
 }
 
-// RegisterRoutes registers all three probe handlers on the given mux using
-// the provided routes. Pass [DefaultRoutes] for conventional Kubernetes paths.
+// RegisterRoutes registers the probe handlers on the given mux using the
+// provided routes. Pass [DefaultRoutes] for conventional Kubernetes paths.
+//
+// A route whose pattern is empty is skipped, so a service that only exposes
+// readiness can pass Routes{Readiness: "/readyz"} without mounting handlers it
+// does not serve (an empty pattern would otherwise panic in ServeMux). Pass
+// [DefaultRoutes] when all three are wanted.
 func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes) {
-	mux.HandleFunc(routes.Liveness, p.LivenessHandler())
-	mux.HandleFunc(routes.Readiness, p.ReadinessHandler())
-	mux.HandleFunc(routes.Startup, p.StartupHandler())
+	registerRoute(mux, routes.Liveness, p.LivenessHandler())
+	registerRoute(mux, routes.Readiness, p.ReadinessHandler())
+	registerRoute(mux, routes.Startup, p.StartupHandler())
+}
+
+// registerRoute mounts handler at pattern unless the pattern is empty.
+func registerRoute(mux *http.ServeMux, pattern string, handler http.HandlerFunc) {
+	if pattern == "" {
+		return
+	}
+
+	mux.HandleFunc(pattern, handler)
 }
 
 // evaluateBounded runs one live batch under the probe's batch deadline

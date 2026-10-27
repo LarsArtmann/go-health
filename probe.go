@@ -895,7 +895,8 @@ func (p *Probe) CachedResponse() Response {
 // Age comes from the same injected clock the probe stamps responses with, so
 // a fixed test clock yields a deterministic age. Use it with
 // [Probe.CachedResponseFresh] for the serve-cache-or-evaluate policy that
-// consumers otherwise hand-roll around the raw timestamp.
+// consumers otherwise hand-roll around the raw timestamp. See
+// docs/cache-freshness-design.md.
 func (p *Probe) CacheAge() (time.Duration, bool) {
 	cached := p.latest.Load()
 	if cached == nil || cached.Timestamp.IsZero() {

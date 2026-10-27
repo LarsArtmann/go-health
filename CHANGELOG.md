@@ -9,12 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `Probe.CacheAge()` and `Probe.CachedResponseFresh(maxAge)` expose cache freshness as a contract instead of a timestamp convention. `CacheAge` separates "fresh snapshot" from "never evaluated" (the synthesized pass response is not evidence), uses the probe's injected clock so tests stay deterministic, and clamps a backwards clock step to zero. `CachedResponseFresh` returns the cached view (with the live shutdown overlay) only while `0 < age <= maxAge`; a non-positive window never reports fresh. Both are lock-free and allocate nothing. Four fleet consumers (DiscordSync, dnsblockd, cv, go-taskqueue) had hand-rolled the same adapters around `Timestamp`. Design: docs/cache-freshness-design.md.
+- `Probe.EvaluateAndCache(ctx)` runs one `WithTimeout`-bounded batch, publishes it as the served snapshot, and returns it. `Evaluate` deliberately does not publish, so a fallback built on it answered correctly once and then kept serving the older snapshot — the bug shape behind three consumer adapters and the reason the documented "does not update the cache" note was not enough. Design: docs/cache-freshness-design.md.
+- `Response.Clone()` returns an independent copy including the `Checks` map. `CachedResponse` is a lock-free read whose `Checks` map necessarily aliases the published snapshot; two consumers (dnsblockd, cv) hit the concurrent-map-write crash and cloned by hand, and docs/synthetic-check-overlay.md called that clone "the load-bearing line". The godoc now states the ownership rule and Clone is the sanctioned copy. Design: docs/response-ownership-design.md.
+- `ErrRecorderNotApplicable` makes the function-path recorder trap loud: `NewWithHealthCheck`, `NewWithDetailedCheck`, and `NewChecks` accept `WithHealthRecorder` and previously dropped it silently (no callbacks, no traces, no error — the exact wiring go-appkit warns about in its own godoc). `Validate()` and therefore `Start()` now reject it, matching the `ErrUnknownCriticalService` fail-at-boot precedent. No signature changes. See go-health#7 finding 2.
+- `ChainRecorders(...HealthRecorder)` composes several recorders into one ordered batch, skipping nils and winning collisions later. The chain always satisfies `DetailedHealthRecorder`, so per-check durations from detailed members survive while plain members contribute zero. This removes a bridge-level re-implementation (cqrs-htmx/health's own `RecorderChain` documented that "detailed recorders do not survive the merge").
+- `federation.Prober.SourceStatuses()` (issue #6) mirrors `aggregate.Aggregate.SourceStatuses`: one parallel-fetch pass yields a per-remote roll-up, `fail` for unreachable and draining remotes, no startup-latch movement, and no rewrite of remote verdicts when the hub itself drains. The identical signature lets one dashboard capability cover both merge surfaces. Design: docs/federation-source-statuses-design.md.
 - `federation`: `Prober.MarkShuttingDown()` gives the federation hub the two-phase drain a single probe already had (`health.Probe.MarkShuttingDown`, issue #5). Once marked, readiness answers 503 with `shutting_down: true` and overall `fail` even with every remote healthy, while the merge-on-read fetches keep running so drained bodies stay fresh for dashboards and monitoring; liveness and startup are unaffected. This closes the LB hole where a hub behind a load balancer answered 200 "ready" all the way through graceful shutdown. There is no `Shutdown` counterpart: the prober runs no background loop, so phase two is the host process draining its own HTTP server. Design: docs/federation-design.md §"Two-phase drain".
 - Test-surface hardening (no library behavior change): the drain is now pinned through the wired surface (`TestMarkShuttingDown_DrainsThroughRegisterRoutes` mounts the handlers on a real mux and observes only readiness flip to 503), through the fuzz safety net (`FuzzCachedResponse_ArbitraryRemoteBodies` gained a pre-marked draining twin prober, so the overlay branch — fail + `shutting_down` over ANY merge result — is fuzz-covered, corpus signature unchanged), and in the benchmark matrix (`BenchmarkReadinessHandler_Draining` records the drained readiness path end to end; federation's test helpers generalized from `*testing.T` to `testing.TB`, call-site compatible). The flake's `docs-drift-check` gate now also enforces the AGENTS.md 220-line preflight cap, so `nix run .#gates` and `nix flake check` catch what previously only BuildFlow's go-structure-linter saw.
 
 ### Changed
 
-- Nothing yet.
+- Behavior change (loud failure, no compile break): a probe built by
+  `NewWithHealthCheck`, `NewWithDetailedCheck`, or `NewChecks` with
+  `WithHealthRecorder` now fails `Validate()`/`Start()` with
+  `ErrRecorderNotApplicable`. Previously the option compiled and captured
+  nothing. Consumers that passed it by accident get a boot-time error naming
+  the fix; consumers that genuinely need recorder callbacks use
+  `New(injector, ...)`. Fleet scan (2026-10-27): no production call site
+  passes the option to a function-path constructor.
 
 ### Removed
 
@@ -22,7 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Nothing yet.
+- A recovered per-check panic (`ErrCheckPanicked`, the `NewChecks` executor)
+  now grades the roll-up to `fail` even when the panicking check is
+  non-critical, matching its godoc ("a recovered panic must read as a failure,
+  never a warning"). `classifier.isRecoveredPanic` previously matched only the
+  batch-level `ErrPanicDuringHealthCheck`. go-appkit/health pins the old warn
+  behavior on v0.5.1 and must flip that pin in the same change that bumps it
+  past this release (go-health#7 finding 1).
 
 ## [v0.7.0] - 2026-10-11
 

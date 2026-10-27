@@ -15,7 +15,7 @@ Two facts keep the question alive:
 
 1. **`Start` genuinely re-arms part of the lifecycle.** Calling `Start` after
    `Shutdown` re-validates the configuration and may start a fresh refresh loop
-   (the grace-window code captures the cancel function *after* the window
+   (the grace-window code captures the cancel function _after_ the window
    precisely so a `Start` racing a drain is still stopped by that drain). A
    reader who sees "the loop came back" naturally expects readiness to come
    back with it.
@@ -43,12 +43,12 @@ The supported recoveries are:
 
 ## Rejected alternatives
 
-| Alternative                                             | Why not                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Start` clears `shuttingDown`                           | A stray or supervisor-driven restart would return an instance to rotation after it announced departure — the exact failure the flag exists to prevent. It also races a drain that is still in progress: a load balancer mid-drain would see checks pass again and route traffic back to a process that is about to exit. |
-| `Probe.Rearm()` / `Probe.Reset()`                       | New public API with no verified adopter, and it makes "a response can get greener without a new evaluation" reachable — the invariant the cache and the startup latch are both built on. Constructing a new probe is strictly simpler and has no shared state to unwind.                                                                  |
-| A tri-state lifecycle enum (`starting/serving/draining`) | Bigger surface, more states for every handler to consider, and it still has to answer the same question (does anything clear `draining`?). The enum would buy readability, not semantics.                                                                                                                                                |
-| Document it and change nothing                          | That was the status quo; the fleet review shows the ambiguity survives documentation alone. A decision record is the cheap half of the fix — the test below is the other half.                                                                                                                                                           |
+| Alternative                                              | Why not                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Start` clears `shuttingDown`                            | A stray or supervisor-driven restart would return an instance to rotation after it announced departure — the exact failure the flag exists to prevent. It also races a drain that is still in progress: a load balancer mid-drain would see checks pass again and route traffic back to a process that is about to exit. |
+| `Probe.Rearm()` / `Probe.Reset()`                        | New public API with no verified adopter, and it makes "a response can get greener without a new evaluation" reachable — the invariant the cache and the startup latch are both built on. Constructing a new probe is strictly simpler and has no shared state to unwind.                                                 |
+| A tri-state lifecycle enum (`starting/serving/draining`) | Bigger surface, more states for every handler to consider, and it still has to answer the same question (does anything clear `draining`?). The enum would buy readability, not semantics.                                                                                                                                |
+| Document it and change nothing                           | That was the status quo; the fleet review shows the ambiguity survives documentation alone. A decision record is the cheap half of the fix — the test below is the other half.                                                                                                                                           |
 
 ## Consequences
 

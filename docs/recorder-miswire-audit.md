@@ -37,11 +37,11 @@ trap.
 
 What it deliberately does **not** catch:
 
-| Case                                                        | Why not                                          | Caught by     |
-| ----------------------------------------------------------- | ------------------------------------------------ | ------------- |
-| A recorder whose method signature does not satisfy the interface | It never compiles.                          | the compiler  |
-| A constructor aliased into another identifier before the call    | Requires type information, not text.         | the compiler  |
-| A recorder passed to a *third-party* wrapper constructor     | Unknown name, not in the rule.                   | code review   |
+| Case                                                             | Why not                              | Caught by    |
+| ---------------------------------------------------------------- | ------------------------------------ | ------------ |
+| A recorder whose method signature does not satisfy the interface | It never compiles.                   | the compiler |
+| A constructor aliased into another identifier before the call    | Requires type information, not text. | the compiler |
+| A recorder passed to a _third-party_ wrapper constructor         | Unknown name, not in the rule.       | code review  |
 
 Both blind spots fail loudly (compile error), so the audit covers the silent
 half and nothing else.

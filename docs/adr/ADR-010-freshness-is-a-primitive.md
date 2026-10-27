@@ -47,12 +47,12 @@ degradation-to-`warn`/`fail` on staleness.
 
 ## Rejected alternatives
 
-| Alternative                                          | Why not                                                                                                                       |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `WithStaleAfter(d)` + auto-degrade                   | Picks one degradation semantic for the whole fleet; changes the wire status without an evaluation behind it.                   |
-| `WithStalenessGuard(func(age) Status)`               | The callback is the primitive with extra indirection: the caller already owns the decision, it does not need the probe's loop. |
-| A `CachedResponse(maxAge)` overload                  | Go has no overloads; a second name (`CachedResponseFresh`) is the idiomatic spelling and keeps `CachedResponse` allocation-free. |
-| Serving the zero response on a miss instead of `ok`  | Silently answering "pass" for "never evaluated" is the exact bug the fleet adapters were written to work around.                |
+| Alternative                                         | Why not                                                                                                                          |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `WithStaleAfter(d)` + auto-degrade                  | Picks one degradation semantic for the whole fleet; changes the wire status without an evaluation behind it.                     |
+| `WithStalenessGuard(func(age) Status)`              | The callback is the primitive with extra indirection: the caller already owns the decision, it does not need the probe's loop.   |
+| A `CachedResponse(maxAge)` overload                 | Go has no overloads; a second name (`CachedResponseFresh`) is the idiomatic spelling and keeps `CachedResponse` allocation-free. |
+| Serving the zero response on a miss instead of `ok` | Silently answering "pass" for "never evaluated" is the exact bug the fleet adapters were written to work around.                 |
 
 ## Consequences
 

@@ -9,12 +9,12 @@ Every item below was checked against the current code before drafting — two of
 the four plans in the backlog turned out to be already done, and a draft for
 them would have been noise.
 
-| Item                                                | State at 2026-10-27                                                       | Action        |
-| --------------------------------------------------- | ------------------------------------------------------------------------- | ------------- |
-| fir DD9 — adopt templ-components `HTMLDataAttrs`    | **RESOLVED**: `layout.Base.HTMLDataAttrs` exists at templ-components v1.24.0, and file-and-image-renamer retired `datastarCSPBoot` itself (`healthd/views/nonce_attrs.go`, pinned by `healthd/csp_root_attrs_test.go`) | none |
-| dashboard#17 — nightly fuzz                         | **RESOLVED**: `.github/workflows/fuzz.yml` runs all 13 targets daily at 60s each with an issues-on-failure step | none |
-| dashboard#14 — `Shutdown` does not cancel `Start`'s ctx | **OPEN**, confirmed in source                                          | draft below   |
-| hub SIGTERM → `federation.MarkShuttingDown`         | **OPEN**, unblocked by go-health v0.8.0 (the hub comment still says the method does not exist) | draft below |
+| Item                                                    | State at 2026-10-27                                                                                                                                                                                                    | Action      |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| fir DD9 — adopt templ-components `HTMLDataAttrs`        | **RESOLVED**: `layout.Base.HTMLDataAttrs` exists at templ-components v1.24.0, and file-and-image-renamer retired `datastarCSPBoot` itself (`healthd/views/nonce_attrs.go`, pinned by `healthd/csp_root_attrs_test.go`) | none        |
+| dashboard#17 — nightly fuzz                             | **RESOLVED**: `.github/workflows/fuzz.yml` runs all 13 targets daily at 60s each with an issues-on-failure step                                                                                                        | none        |
+| dashboard#14 — `Shutdown` does not cancel `Start`'s ctx | **OPEN**, confirmed in source                                                                                                                                                                                          | draft below |
+| hub SIGTERM → `federation.MarkShuttingDown`             | **OPEN**, unblocked by go-health v0.8.0 (the hub comment still says the method does not exist)                                                                                                                         | draft below |
 
 ---
 
@@ -31,7 +31,7 @@ Proposed title: `Shutdown does not cancel Start's context, so the pusher gorouti
 
 `Dashboard.Shutdown()` stops the pusher by closing the broadcaster, but it never
 cancels the context `Start` was given — so the goroutine only exits when the
-*caller* cancels, not when the Dashboard is shut down.
+_caller_ cancels, not when the Dashboard is shut down.
 
 ## Problem
 

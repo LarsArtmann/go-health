@@ -78,7 +78,7 @@ verified adopter.
 of the nine repos that matter most (dashboard, cv, dnsblockd, DiscordSync,
 KeyHolderAI, cqrs-htmx, go-appkit, go-taskqueue, company-master-data), plus the
 bridge `go.mod` pins. This is the same method as the two earlier sweeps; it
-measures what is *in source*, not what a repo could adopt.
+measures what is _in source_, not what a repo could adopt.
 
 **Headline:** v0.7.0/v0.8.0 shipped 11 consumer-facing capabilities and the
 fleet's adoption of the newest six is zero. That is not a documentation failure
@@ -86,19 +86,19 @@ fleet's adoption of the newest six is zero. That is not a documentation failure
 (`go-appkit/health` v0.3.0 is a local-only tag; `cqrs-htmx/health` has no module
 tag at all), so ~24 of the 36 reachable repos cannot resolve the wave.
 
-| Capability (shipped in)                            | Symbol grep                                     | Adopters found                                                                                          | Verdict                                            |
-| -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| Freshness primitives (v0.8.0)                      | `CachedResponseFresh`, `EvaluateAndCache`, `CacheAge` | **0 files**                                                                                       | zero adoption — the four hand-rolled adapters remain |
-| `Response.Clone` (v0.8.0)                          | `Response.Clone` / `.Clone()`                   | dashboard only                                                                                          | single adopter                                     |
-| `ChainRecorders` (v0.8.0)                          | `ChainRecorders`                                | **bridge re-export only** (`cqrs-htmx/health/probe.go` + its test); no consumer calls it                 | zero consumer adoption                             |
-| `ErrRecorderNotApplicable` (v0.8.0)                | `ErrRecorderNotApplicable`                      | none (it is a rejection, not an adoption)                                                               | loud-on-bump; `go-appkit` still documents the silent era |
-| Per-check `Since` + `DurationNanos` (v0.8.0)       | `DurationNanos`, `detailed-checks`              | dashboard (`timedScreenshotRecorder`)                                                                   | single adopter                                     |
-| Merge-surface per-source roll-ups / `Healthz` (v0.8.0) | `SourceStatuses`, `Healthz`                 | dashboard (4 files; go-taskqueue only vendors dashboard's copy)                                         | single deep adopter                                |
-| Federation drain (v0.8.0)                          | `MarkShuttingDown` on a `federation.Prober`     | **0** — dashboard's hub still shuts down without the drain                                              | payoff not wired (dashboard repo)                  |
-| `NewChecks` (v0.3.0) / `checks` batteries (v0.5.0) | `NewChecks`, `checks.Disk`                      | webphone, dashboard example, typespec-eventsourcing (tests)                                             | healthy, low volume                                |
+| Capability (shipped in)                                | Symbol grep                                           | Adopters found                                                                           | Verdict                                                  |
+| ------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Freshness primitives (v0.8.0)                          | `CachedResponseFresh`, `EvaluateAndCache`, `CacheAge` | **0 files**                                                                              | zero adoption — the four hand-rolled adapters remain     |
+| `Response.Clone` (v0.8.0)                              | `Response.Clone` / `.Clone()`                         | dashboard only                                                                           | single adopter                                           |
+| `ChainRecorders` (v0.8.0)                              | `ChainRecorders`                                      | **bridge re-export only** (`cqrs-htmx/health/probe.go` + its test); no consumer calls it | zero consumer adoption                                   |
+| `ErrRecorderNotApplicable` (v0.8.0)                    | `ErrRecorderNotApplicable`                            | none (it is a rejection, not an adoption)                                                | loud-on-bump; `go-appkit` still documents the silent era |
+| Per-check `Since` + `DurationNanos` (v0.8.0)           | `DurationNanos`, `detailed-checks`                    | dashboard (`timedScreenshotRecorder`)                                                    | single adopter                                           |
+| Merge-surface per-source roll-ups / `Healthz` (v0.8.0) | `SourceStatuses`, `Healthz`                           | dashboard (4 files; go-taskqueue only vendors dashboard's copy)                          | single deep adopter                                      |
+| Federation drain (v0.8.0)                              | `MarkShuttingDown` on a `federation.Prober`           | **0** — dashboard's hub still shuts down without the drain                               | payoff not wired (dashboard repo)                        |
+| `NewChecks` (v0.3.0) / `checks` batteries (v0.5.0)     | `NewChecks`, `checks.Disk`                            | webphone, dashboard example, typespec-eventsourcing (tests)                              | healthy, low volume                                      |
 
 **What this changes in this table:** the rows above the divider describe
-*capability*, not *use*. Until M01-M04 of the consumption-wave plan land, every
+_capability_, not _use_. Until M01-M04 of the consumption-wave plan land, every
 "FULLY_FUNCTIONAL" row that names a v0.8.0 symbol should be read as "shipped and
 tested here; unused in the fleet".
 

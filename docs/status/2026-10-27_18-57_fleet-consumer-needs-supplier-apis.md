@@ -58,15 +58,15 @@ verification is blocked on a release (see §c, §f).
 
 ## 2. Delivered — code
 
-| # | Change | Kind | Location | Tests |
-| --- | --- | --- | --- | --- |
-| 1 | `Response.Clone()` — independent copy incl. `Checks` map | additive | `types.go:163` | `TestResponse_CloneIsIndependent` |
-| 2 | `Probe.CacheAge() (age, ok)` — freshness + "never evaluated" | additive | `probe.go:900` | 4 `TestCacheAge_*` cases |
-| 3 | `Probe.CachedResponseFresh(maxAge)` — windowed cached read | additive | `probe.go:928` | 3 `TestCachedResponseFresh_*` cases |
-| 4 | `Probe.EvaluateAndCache(ctx)` — evaluate **and** publish | additive | `probe.go:752` | `TestEvaluateAndCache_PublishesButEvaluateDoesNot` |
-| 5 | `ErrRecorderNotApplicable` at `Validate`/`Start` | behavior change (loud, no compile break) | `probe.go:464`, `probe.go:481` | 2 `TestValidate_*` functions |
-| 6 | `ChainRecorders(...)` — ordered, duration-preserving composition | additive | `recorder.go:32` | 3 `TestChainRecorders_*` functions |
-| 7 | `federation.Prober.SourceStatuses()` + shared `fetchAll` | additive | `federation/federation.go:305`, `:331` | 4 `TestSourceStatuses_*` functions |
+| # | Change                                                           | Kind                                     | Location                               | Tests                                              |
+| - | ---------------------------------------------------------------- | ---------------------------------------- | -------------------------------------- | -------------------------------------------------- |
+| 1 | `Response.Clone()` — independent copy incl. `Checks` map         | additive                                 | `types.go:163`                         | `TestResponse_CloneIsIndependent`                  |
+| 2 | `Probe.CacheAge() (age, ok)` — freshness + "never evaluated"     | additive                                 | `probe.go:900`                         | 4 `TestCacheAge_*` cases                           |
+| 3 | `Probe.CachedResponseFresh(maxAge)` — windowed cached read       | additive                                 | `probe.go:928`                         | 3 `TestCachedResponseFresh_*` cases                |
+| 4 | `Probe.EvaluateAndCache(ctx)` — evaluate **and** publish         | additive                                 | `probe.go:752`                         | `TestEvaluateAndCache_PublishesButEvaluateDoesNot` |
+| 5 | `ErrRecorderNotApplicable` at `Validate`/`Start`                 | behavior change (loud, no compile break) | `probe.go:464`, `probe.go:481`         | 2 `TestValidate_*` functions                       |
+| 6 | `ChainRecorders(...)` — ordered, duration-preserving composition | additive                                 | `recorder.go:32`                       | 3 `TestChainRecorders_*` functions                 |
+| 7 | `federation.Prober.SourceStatuses()` + shared `fetchAll`         | additive                                 | `federation/federation.go:305`, `:331` | 4 `TestSourceStatuses_*` functions                 |
 
 Total: **16 new test functions** across `probe_cache_test.go` (7), `recorder_test.go` (5),
 `federation/federation_source_status_test.go` (4).
@@ -75,47 +75,47 @@ Total: **16 new test functions** across `probe_cache_test.go` (7), `recorder_tes
 
 Each one maps to a repeated, independently discovered consumer need:
 
-| Need | Evidence (consumer) | Closes |
-| --- | --- | --- |
-| Serve cache if fresh, else evaluate | DiscordSync `health_readyz_cache.go:60`; dnsblockd `health.go:96`; cv `handlers.go:124`; go-taskqueue `health.go:86` (reimplements `Prober`) | #2 + #3 + #4 |
-| "Never evaluated" must not read green | same four + fir `healthd/dashboard_data.go:19` | #2 boolean |
-| Cached snapshot aliases probe state | dnsblockd `health.go:121`; cv `handlers.go:131`; `docs/synthetic-check-overlay.md` | #1 |
-| `Evaluate` answers but leaves the cache stale | go-health#7 F3; webphone's "hook never fires" park watch | #4 |
-| Recorder silently dropped on function paths | go-health#7 F2; `go-appkit/health/probe.go:25` | #5 |
-| Recorder chain loses durations | `cqrs-htmx/health/probe.go:97` | #6 |
-| Federation has no per-remote roll-up | go-health#6; dashboard hub v0.7.0 `1473fc2` | #7 |
+| Need                                          | Evidence (consumer)                                                                                                                          | Closes       |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Serve cache if fresh, else evaluate           | DiscordSync `health_readyz_cache.go:60`; dnsblockd `health.go:96`; cv `handlers.go:124`; go-taskqueue `health.go:86` (reimplements `Prober`) | #2 + #3 + #4 |
+| "Never evaluated" must not read green         | same four + fir `healthd/dashboard_data.go:19`                                                                                               | #2 boolean   |
+| Cached snapshot aliases probe state           | dnsblockd `health.go:121`; cv `handlers.go:131`; `docs/synthetic-check-overlay.md`                                                           | #1           |
+| `Evaluate` answers but leaves the cache stale | go-health#7 F3; webphone's "hook never fires" park watch                                                                                     | #4           |
+| Recorder silently dropped on function paths   | go-health#7 F2; `go-appkit/health/probe.go:25`                                                                                               | #5           |
+| Recorder chain loses durations                | `cqrs-htmx/health/probe.go:97`                                                                                                               | #6           |
+| Federation has no per-remote roll-up          | go-health#6; dashboard hub v0.7.0 `1473fc2`                                                                                                  | #7           |
 
 ---
 
 ## 3. Delivered — documentation
 
-| File | Content |
-| --- | --- |
-| `docs/research/2026-10-27_fleet-consumer-needs.md` | Main study: reach, pins, patterns, 14 needs with evidence, supplier posture, session log, remaining queue |
-| `docs/cache-freshness-design.md` | Decision record for `CacheAge` / `CachedResponseFresh` / `EvaluateAndCache`; why no staleness-policy option |
-| `docs/response-ownership-design.md` | Why `CachedResponse` stays a shallow read-only view, why `Clone` exists, rejected alternatives |
-| `docs/federation-source-statuses-design.md` | Issue #6 semantics: per-remote verdicts, drain/dark cases, latch boundary, cost |
-| `docs/INDEX.md` | Four new rows |
-| `docs/consumer-verification.md` | 2026-10-27 re-count: 36 consumers, three bridges, fifth pattern, version skew, release-coordination rule |
-| `CHANGELOG.md` | `[Unreleased]`: seven Added entries, one Changed entry (recorder rejection), one Fixed entry (panic grading) |
-| `FEATURES.md` | Rows for `EvaluateAndCache`, cache accessors, `Clone`, recorder composition, federation `SourceStatuses` |
-| `AGENTS.md` | Source-file map + two design-decision bullets, held at **219 lines** (cap 220) |
-| `TODO_LIST.md` | New "Consumer-needs wave" section (8 rows) + v0.8.0 release row rewritten |
+| File                                               | Content                                                                                                      |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `docs/research/2026-10-27_fleet-consumer-needs.md` | Main study: reach, pins, patterns, 14 needs with evidence, supplier posture, session log, remaining queue    |
+| `docs/cache-freshness-design.md`                   | Decision record for `CacheAge` / `CachedResponseFresh` / `EvaluateAndCache`; why no staleness-policy option  |
+| `docs/response-ownership-design.md`                | Why `CachedResponse` stays a shallow read-only view, why `Clone` exists, rejected alternatives               |
+| `docs/federation-source-statuses-design.md`        | Issue #6 semantics: per-remote verdicts, drain/dark cases, latch boundary, cost                              |
+| `docs/INDEX.md`                                    | Four new rows                                                                                                |
+| `docs/consumer-verification.md`                    | 2026-10-27 re-count: 36 consumers, three bridges, fifth pattern, version skew, release-coordination rule     |
+| `CHANGELOG.md`                                     | `[Unreleased]`: seven Added entries, one Changed entry (recorder rejection), one Fixed entry (panic grading) |
+| `FEATURES.md`                                      | Rows for `EvaluateAndCache`, cache accessors, `Clone`, recorder composition, federation `SourceStatuses`     |
+| `AGENTS.md`                                        | Source-file map + two design-decision bullets, held at **219 lines** (cap 220)                               |
+| `TODO_LIST.md`                                     | New "Consumer-needs wave" section (8 rows) + v0.8.0 release row rewritten                                    |
 
 ---
 
 ## 4. Verification evidence
 
-| Check | Command | Result |
-| --- | --- | --- |
-| Baseline suite | `GOWORK=off go test ./...` | 5/5 ok **before** edits |
-| Final suite | `GOWORK=off go test ./...` | 5/5 ok |
-| Race suite | `GOWORK=off go test -race ./...` | 5/5 ok |
-| Vet | `GOWORK=off go vet ./...` | clean |
-| gofmt | `gofmt -l <touched files>` | clean after fixing `recorder.go` once |
-| gofumpt | `gofumpt -l -extra .` | 3 **pre-existing** files flagged (`aggregate/aggregate_test.go`, `checks/checks_fuzz_test.go`, `internal/merge/merge_test.go`); not touched, not mine |
-| goimports | `goimports -l .` | clean |
-| Lint (local) | `GOWORK=off golangci-lint run ./...` | **1 finding**, pre-existing: `handlers_fuzz_test.go:21` gocognit 26 (>25). Four findings in this session's new tests (err113 ×3, wsl_v5 ×1) were found by the concurrent session's lint run and **fixed**: static test errors + whitespace. |
+| Check          | Command                              | Result                                                                                                                                                                                                                                      |
+| -------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Baseline suite | `GOWORK=off go test ./...`           | 5/5 ok **before** edits                                                                                                                                                                                                                     |
+| Final suite    | `GOWORK=off go test ./...`           | 5/5 ok                                                                                                                                                                                                                                      |
+| Race suite     | `GOWORK=off go test -race ./...`     | 5/5 ok                                                                                                                                                                                                                                      |
+| Vet            | `GOWORK=off go vet ./...`            | clean                                                                                                                                                                                                                                       |
+| gofmt          | `gofmt -l <touched files>`           | clean after fixing `recorder.go` once                                                                                                                                                                                                       |
+| gofumpt        | `gofumpt -l -extra .`                | 3 **pre-existing** files flagged (`aggregate/aggregate_test.go`, `checks/checks_fuzz_test.go`, `internal/merge/merge_test.go`); not touched, not mine                                                                                       |
+| goimports      | `goimports -l .`                     | clean                                                                                                                                                                                                                                       |
+| Lint (local)   | `GOWORK=off golangci-lint run ./...` | **1 finding**, pre-existing: `handlers_fuzz_test.go:21` gocognit 26 (>25). Four findings in this session's new tests (err113 ×3, wsl_v5 ×1) were found by the concurrent session's lint run and **fixed**: static test errors + whitespace. |
 
 Not run (see §c): `nix run .#gates`, `nix run .#docs-check`,
 `nix flake check`, markdown/dprint formatting, OpenAPI lockstep, any consumer build.
@@ -227,7 +227,7 @@ Not run (see §c): `nix run .#gates`, `nix run .#docs-check`,
    - `CHANGELOG.md` says "no production call site passes the option to a function-path
      constructor". `NewWithRecorder` is injector-free (and now documented as a function-path
      alternative); the sentence needs the precise list of rejecting constructors.
-   These are correctness bugs in this session's prose, introduced by the overlap.
+     These are correctness bugs in this session's prose, introduced by the overlap.
 3. **History is unreadable.** Six daemon commits (`c99cc0c` … `e3aef23`), each "chore:
    auto-commit N changed file(s) (heuristic)", mixing both sessions. The repo's own rule
    (commit intent immediately after each verified batch) was not followed; the daemon won.
@@ -239,7 +239,7 @@ Not run (see §c): `nix run .#gates`, `nix run .#docs-check`,
    and restored it, then verified the 219-line count. It was one read away from shipping a
    silent documentation regression.
 6. **Zero fleet verification.** No consumer was compiled or tested against these changes. The
-   recorder hardening is a *behavior change*: a consumer passing `WithHealthRecorder` to
+   recorder hardening is a _behavior change_: a consumer passing `WithHealthRecorder` to
    `NewChecks`/`NewWithHealthCheck` now fails at `Start`. Grep says no production call site does,
    but grep is not a build.
 7. **`SourceStatuses` doubles fetch cost** when called next to `CachedResponse`, and there is no
@@ -251,21 +251,21 @@ Not run (see §c): `nix run .#gates`, `nix run .#docs-check`,
    `WithCriticalService[T]`. Not mine, but the file is inconsistent.
 10. **No markdown format/lint run.** `dprint` may reflow the new docs; `docs-check` may object.
 11. **My new tests initially failed lint.** The concurrent session's `golangci-lint` run found
-   three `err113` findings and one `wsl_v5` finding in `probe_cache_test.go` / `recorder_test.go`
-   — i.e. code I wrote and considered "done". Fixed on sight (static test errors + blank line);
-   local lint now reports only the pre-existing `handlers_fuzz_test.go:21` gocognit finding.
-   Lesson: "tests pass" is not "lint passes"; run lint before claiming green.
+    three `err113` findings and one `wsl_v5` finding in `probe_cache_test.go` / `recorder_test.go`
+    — i.e. code I wrote and considered "done". Fixed on sight (static test errors + blank line);
+    local lint now reports only the pre-existing `handlers_fuzz_test.go:21` gocognit finding.
+    Lesson: "tests pass" is not "lint passes"; run lint before claiming green.
 12. **A peer status report exists for the same minute.**
-   `docs/status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md` was written by
-   the other session. It claims the panic-grading fix, typed identity, `NewWithRecorder`,
-   `HealthRecorderFunc`, federation `Healthz`, and selective route mounting; it attributes this
-   session's research doc, design notes, and four primitives to "the other session". Both reports
-   are accurate about their own edits, but there is **no single authored narrative** for the wave.
-   It also observed a mangled `invokeEvaluationHook` comment mid-session (an insertion collision);
-   the current tree is intact (§4 verified).
+    `docs/status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md` was written by
+    the other session. It claims the panic-grading fix, typed identity, `NewWithRecorder`,
+    `HealthRecorderFunc`, federation `Healthz`, and selective route mounting; it attributes this
+    session's research doc, design notes, and four primitives to "the other session". Both reports
+    are accurate about their own edits, but there is **no single authored narrative** for the wave.
+    It also observed a mangled `invokeEvaluationHook` comment mid-session (an insertion collision);
+    the current tree is intact (§4 verified).
 13. **`recorder.go` has two authors and no ownership note** — this session's `ChainRecorders`
-   plus the other session's function adapters. It is coherent, but a future reader cannot tell
-   which contract is load-bearing from the file alone.
+    plus the other session's function adapters. It is coherent, but a future reader cannot tell
+    which contract is load-bearing from the file alone.
 
 ---
 

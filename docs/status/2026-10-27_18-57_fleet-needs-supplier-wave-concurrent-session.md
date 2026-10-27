@@ -9,19 +9,19 @@
 
 ## 0. Gate state (verified 2026-10-27 18:55-18:58)
 
-| Gate | Command | Result |
-| --- | --- | --- |
-| Build | `GOWORK=off go build ./...` | **PASS** |
+| Gate                 | Command                             | Result                                                                     |
+| -------------------- | ----------------------------------- | -------------------------------------------------------------------------- |
+| Build                | `GOWORK=off go build ./...`         | **PASS**                                                                   |
 | Tests (all packages) | `GOWORK=off go test -count=1 ./...` | **PASS** (`health`, `aggregate`, `checks`, `federation`, `internal/merge`) |
-| Vet | `GOWORK=off go vet ./...` | **PASS** |
-| Formatting | `gofmt -l .` | **PASS** (no output) |
-| Lint | `golangci-lint run ./...` | **FAIL — 5 findings** (see §d.6) |
-| Race | `go test -race ./...` | **NOT RUN** this session |
-| Fuzz | `nix run .#fuzz` | **NOT RUN** |
-| Nix gates | `nix run .#gates` | **NOT RUN** |
-| Docs drift | `nix run .#docs-check` | **NOT RUN** |
-| OpenAPI lockstep | `nix run .#openapi-lockstep` | **NOT RUN** (no wire change, expected green) |
-| BuildFlow | `buildflow --fix --build-mode=full` | **NOT RUN** |
+| Vet                  | `GOWORK=off go vet ./...`           | **PASS**                                                                   |
+| Formatting           | `gofmt -l .`                        | **PASS** (no output)                                                       |
+| Lint                 | `golangci-lint run ./...`           | **FAIL — 5 findings** (see §d.6)                                           |
+| Race                 | `go test -race ./...`               | **NOT RUN** this session                                                   |
+| Fuzz                 | `nix run .#fuzz`                    | **NOT RUN**                                                                |
+| Nix gates            | `nix run .#gates`                   | **NOT RUN**                                                                |
+| Docs drift           | `nix run .#docs-check`              | **NOT RUN**                                                                |
+| OpenAPI lockstep     | `nix run .#openapi-lockstep`        | **NOT RUN** (no wire change, expected green)                               |
+| BuildFlow            | `buildflow --fix --build-mode=full` | **NOT RUN**                                                                |
 
 Lint detail (exact output, all five):
 
@@ -56,29 +56,29 @@ Cost paid: duplicated analysis (I re-derived the same five needs they documented
 
 ### 2.1 Mine (implemented, tested, documented in this session)
 
-| # | Change | Files | Test |
-| --- | --- | --- | --- |
-| 1 | **Per-check panic now grades `fail`, never `warn`** (go-health#7 finding 1). Added `isRecoveredPanic` matching both `ErrPanicDuringHealthCheck` and `ErrCheckPanicked`; wired into both `classify` (roll-up) and `grades` (per-row). The issue only named `grades`; `classify` was independently wrong, so a non-critical panic would still have rolled up as `warn` while the row read `fail`. | `classifier.go` | `TestNewChecks_NonCriticalPanicFailsClosed` (`checks_test.go`) |
-| 2 | **Typed critical identity**: `WithCriticalService[T]()` and `DoServiceName[T]()` call the same `go-type-to-string` helper samber/do uses, so a critical list cannot drift from the registered type. Promotes `github.com/samber/go-type-to-string` from indirect to direct dependency (already in the graph through do; runtime dep count unchanged). | `service_name.go`, `go.mod` | `TestWithCriticalService_UsesDosInferredName`, `TestWithCriticalService_ComposesWithNamedCriticalSet` |
-| 3 | **Injector-free recorder constructor**: `NewWithRecorder(recorder, opts...)`, nil-injector recorder semantics, `WithHealthRecorder` composition, empty all-pass batch when no recorder. Removes the `health.New(do.New(), ...)` fake-container idiom used by PMA, Zlota44, and cqrs-htmx. | `new_with_recorder.go` | 5 tests in `new_with_recorder_test.go` |
-| 4 | **Recorder function adapters**: `HealthRecorderFunc` and `DetailedHealthRecorderFunc` (recorder-side `http.HandlerFunc`); the detailed adapter implements both interfaces and projects durations away on the plain path. | `recorder.go` | covered by `TestNewWithRecorder_BatchesComeFromRecorder` + `TestDetailedHealthRecorderFunc_PreservesDurations` |
-| 5 | **`federation.Prober.Healthz()`** — single-endpoint parity with `health.Probe` and `aggregate.Aggregate`: 503 while a latch is unset, the merged roll-up is fail, or the hub drains; `warn` stays 200; keeps the readiness read path and fetch cost. | `federation/healthz.go` | 6 tests in `federation/healthz_test.go` |
-| 6 | **Selective route mounting**: an empty `Routes` field is skipped instead of panicking in `ServeMux`, on all three surfaces. Requested by Zlota44 ("method-scoped RegisterRoutes"). | `handlers.go`, `aggregate/aggregate.go`, `federation/federation.go` | `TestRegisterRoutes_SkipsEmptyPatterns` in root, aggregate, federation |
-| 7 | **Lint/format repairs to the concurrent session's new code**: `maps.Copy` instead of map loops (2 sites), `//nolint:ireturn` with rationale on `ChainRecorders`, `max(age, 0)` for the backwards-clock clamp, restored the severed `invokeEvaluationHook` doc comment. | `recorder.go`, `probe.go` | build + vet + tests |
-| 8 | **Documentation reconciliation**: six CHANGELOG bullets for the new APIs; four FEATURES rows (recorder constructor, recorder adapters, typed identity, selective routes) + updated options count to 13; README dependency claims (no longer "single dependency"), four new key-feature bullets, `WithCriticalService` config-reference section, federation `SourceStatuses`/`Healthz` paragraph; AGENTS architecture/key-decision updates (kept at 219/220 lines); INDEX rows for `federation-healthz-design.md` and `federation-design.md`. | `CHANGELOG.md`, `FEATURES.md`, `README.md`, `AGENTS.md`, `docs/INDEX.md` | docs only |
+| # | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Files                                                                    | Test                                                                                                           |
+| - | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| 1 | **Per-check panic now grades `fail`, never `warn`** (go-health#7 finding 1). Added `isRecoveredPanic` matching both `ErrPanicDuringHealthCheck` and `ErrCheckPanicked`; wired into both `classify` (roll-up) and `grades` (per-row). The issue only named `grades`; `classify` was independently wrong, so a non-critical panic would still have rolled up as `warn` while the row read `fail`.                                                                                                                                              | `classifier.go`                                                          | `TestNewChecks_NonCriticalPanicFailsClosed` (`checks_test.go`)                                                 |
+| 2 | **Typed critical identity**: `WithCriticalService[T]()` and `DoServiceName[T]()` call the same `go-type-to-string` helper samber/do uses, so a critical list cannot drift from the registered type. Promotes `github.com/samber/go-type-to-string` from indirect to direct dependency (already in the graph through do; runtime dep count unchanged).                                                                                                                                                                                        | `service_name.go`, `go.mod`                                              | `TestWithCriticalService_UsesDosInferredName`, `TestWithCriticalService_ComposesWithNamedCriticalSet`          |
+| 3 | **Injector-free recorder constructor**: `NewWithRecorder(recorder, opts...)`, nil-injector recorder semantics, `WithHealthRecorder` composition, empty all-pass batch when no recorder. Removes the `health.New(do.New(), ...)` fake-container idiom used by PMA, Zlota44, and cqrs-htmx.                                                                                                                                                                                                                                                    | `new_with_recorder.go`                                                   | 5 tests in `new_with_recorder_test.go`                                                                         |
+| 4 | **Recorder function adapters**: `HealthRecorderFunc` and `DetailedHealthRecorderFunc` (recorder-side `http.HandlerFunc`); the detailed adapter implements both interfaces and projects durations away on the plain path.                                                                                                                                                                                                                                                                                                                     | `recorder.go`                                                            | covered by `TestNewWithRecorder_BatchesComeFromRecorder` + `TestDetailedHealthRecorderFunc_PreservesDurations` |
+| 5 | **`federation.Prober.Healthz()`** — single-endpoint parity with `health.Probe` and `aggregate.Aggregate`: 503 while a latch is unset, the merged roll-up is fail, or the hub drains; `warn` stays 200; keeps the readiness read path and fetch cost.                                                                                                                                                                                                                                                                                         | `federation/healthz.go`                                                  | 6 tests in `federation/healthz_test.go`                                                                        |
+| 6 | **Selective route mounting**: an empty `Routes` field is skipped instead of panicking in `ServeMux`, on all three surfaces. Requested by Zlota44 ("method-scoped RegisterRoutes").                                                                                                                                                                                                                                                                                                                                                           | `handlers.go`, `aggregate/aggregate.go`, `federation/federation.go`      | `TestRegisterRoutes_SkipsEmptyPatterns` in root, aggregate, federation                                         |
+| 7 | **Lint/format repairs to the concurrent session's new code**: `maps.Copy` instead of map loops (2 sites), `//nolint:ireturn` with rationale on `ChainRecorders`, `max(age, 0)` for the backwards-clock clamp, restored the severed `invokeEvaluationHook` doc comment.                                                                                                                                                                                                                                                                       | `recorder.go`, `probe.go`                                                | build + vet + tests                                                                                            |
+| 8 | **Documentation reconciliation**: six CHANGELOG bullets for the new APIs; four FEATURES rows (recorder constructor, recorder adapters, typed identity, selective routes) + updated options count to 13; README dependency claims (no longer "single dependency"), four new key-feature bullets, `WithCriticalService` config-reference section, federation `SourceStatuses`/`Healthz` paragraph; AGENTS architecture/key-decision updates (kept at 219/220 lines); INDEX rows for `federation-healthz-design.md` and `federation-design.md`. | `CHANGELOG.md`, `FEATURES.md`, `README.md`, `AGENTS.md`, `docs/INDEX.md` | docs only                                                                                                      |
 
 ### 2.2 Concurrent session (observed in git; included for completeness, not mine)
 
-| # | Change | Evidence |
-| --- | --- | --- |
-| 9 | `Response.Clone()` + `CachedResponse` ownership godoc | `3d2ee10`, `docs/response-ownership-design.md` |
-| 10 | `Probe.CacheAge()` / `CachedResponseFresh(maxAge)` | `b953bd5`, `docs/cache-freshness-design.md` |
-| 11 | `Probe.EvaluateAndCache(ctx)` + "Evaluate does not publish" godoc | `b953bd5` |
-| 12 | `ErrRecorderNotApplicable` fail-fast for function-path constructors (go-health#7 F2) | `cc39429` |
-| 13 | `ChainRecorders(...)` duration-preserving recorder composition | `b953bd5`, `recorder.go` |
-| 14 | `federation.Prober.SourceStatuses()` (issue #6) | `89c0dcb`, `docs/federation-source-statuses-design.md` |
-| 15 | 293-line fleet-needs research doc + consumer-verification refresh + 3 design notes | `2e04d3d`, `441ab7e` |
-| 16 | 5 new test files (cache, recorder, source status) | `89c0dcb`, `b953bd5` |
+| #  | Change                                                                               | Evidence                                               |
+| -- | ------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| 9  | `Response.Clone()` + `CachedResponse` ownership godoc                                | `3d2ee10`, `docs/response-ownership-design.md`         |
+| 10 | `Probe.CacheAge()` / `CachedResponseFresh(maxAge)`                                   | `b953bd5`, `docs/cache-freshness-design.md`            |
+| 11 | `Probe.EvaluateAndCache(ctx)` + "Evaluate does not publish" godoc                    | `b953bd5`                                              |
+| 12 | `ErrRecorderNotApplicable` fail-fast for function-path constructors (go-health#7 F2) | `cc39429`                                              |
+| 13 | `ChainRecorders(...)` duration-preserving recorder composition                       | `b953bd5`, `recorder.go`                               |
+| 14 | `federation.Prober.SourceStatuses()` (issue #6)                                      | `89c0dcb`, `docs/federation-source-statuses-design.md` |
+| 15 | 293-line fleet-needs research doc + consumer-verification refresh + 3 design notes   | `2e04d3d`, `441ab7e`                                   |
+| 16 | 5 new test files (cache, recorder, source status)                                    | `89c0dcb`, `b953bd5`                                   |
 
 ---
 
@@ -158,58 +158,58 @@ Cost paid: duplicated analysis (I re-derived the same five needs they documented
 
 ## 7. f) Up to 50 things to get done next (ranked)
 
-| # | Task | Impact | Effort | Owner/gate |
-| --- | --- | --- | --- | --- |
-| 1 | Fix the 5 lint findings (3 × `err113` static errors in new tests, `wsl_v5`, `gocognit`) | High | 20 min | me/next |
-| 2 | Run `go test -race ./...` and `nix run .#gates` | High | 15 min | none |
-| 3 | Update the research doc §5/§6 with the five late features | High | 20 min | none |
-| 4 | Flip `federation-healthz-design.md` status to IMPLEMENTED + checklist | High | 10 min | none |
-| 5 | Add `SourceStatuses`/`Healthz` to `docs/federation-design.md` | Med | 20 min | none |
-| 6 | Cut v0.8.0 (tag + release notes + `go get @latest` smoke) | High | 30 min | owner push |
-| 7 | Add consumer-impact line to the v0.8.0 release notes | High | 10 min | #6 |
-| 8 | Bump `cqrs-htmx/health` and run its module suite | High | 45 min | #6 |
-| 9 | Bump `go-appkit/health` + flip its warn pin + run suite | High | 45 min | #6 |
-| 10 | Bump CV, cv, dnsblockd, KeyHolderAI to v0.8.0 | High | 60 min | #6 |
-| 11 | Replace cqrs-htmx `RecorderChain` with `ChainRecorders` | Med | 30 min | #8 |
-| 12 | Adopt `NewWithRecorder` in PMA and Zlota44 (drop `do.New()`) | Med | 30 min | #10 |
-| 13 | Adopt `WithCriticalService[T]` in CV, KeyHolderAI, nsfw-classifier, DiscordSync | Med | 45 min | #10 |
-| 14 | Adopt `CacheAge`/`CachedResponseFresh`/`EvaluateAndCache` in DiscordSync | High | 45 min | #10 |
-| 15 | Adopt the same in dnsblockd; use `Response.Clone` in `degradeStaleHealth` | High | 45 min | #10 |
-| 16 | Adopt the same in cv `internal/health/handlers.go` | Med | 30 min | #10 |
-| 17 | Collapse go-taskqueue's `queueProber` onto `NewChecks` + live throttle | High | 2 h | #10 |
-| 18 | Delete timesheets' stale `versionHandler` comment/handler in favor of `health.VersionHandler` | Low | 15 min | #10 |
-| 19 | Document one-way shutdown on `Start` and `Shutdown` (#7 F4) | Med | 20 min | none |
-| 20 | Document `AwaitReady` zero-value pass trap (N12) | Med | 15 min | none |
-| 21 | Add `checks` discoverability table to README (N11) | Med | 20 min | none |
-| 22 | Refresh `docs/consumer-verification.md` pattern list to five everywhere | Med | 30 min | none |
-| 23 | Update `tools/fleet-repos.txt` count/comment to 16 direct | Low | 10 min | none |
-| 24 | Add fuzz target for `federation.Healthz` status/row invariant | Med | 45 min | none |
-| 25 | Add benchmark for `SourceStatuses` fetch cost | Low | 20 min | none |
-| 26 | Add race test for `SourceStatuses` + concurrent `MarkShuttingDown` | Med | 30 min | none |
-| 27 | Add a test asserting `Healthz` never adds a `startup` row over a dark remote | Low | 10 min | done in my tests |
-| 28 | Add `openapi-lockstep` note that no new wire shape shipped | Low | 10 min | none |
-| 29 | Run `nix run .#fuzz` and record coverage delta | Med | 20 min | none |
-| 30 | Run `nix run .#docs-check` after doc edits | High | 10 min | none |
-| 31 | Re-run BuildFlow full mode and arbitrate against gates | Med | 30 min | toolchain |
-| 32 | Add an ADR/decision line for panic-fail-closed grading | Med | 15 min | none |
-| 33 | Add a migration snippet for `ErrRecorderNotApplicable` | Med | 10 min | none |
-| 34 | Add a migration snippet for non-critical panic → 503 | High | 10 min | none |
-| 35 | Dashboard: wire `SourceStatuses` into the hub's `SourceStatuser` | High | 30 min | dashboard repo |
-| 36 | Dashboard: adopt `Healthz` on the hub if the LB needs one URL | Med | 20 min | dashboard repo |
-| 37 | Dashboard: widen `cmd/health-hub` drain SIGTERM path (issue #5 payoff) | High | 45 min | dashboard repo |
-| 38 | Add `WithCriticalService` usage to go-health-dashboard examples | Low | 15 min | consumer |
-| 39 | Publish the issue-#5 close comment (draft ready) | Med | 5 min | owner |
-| 40 | Post the samber/do#318 duration comment (draft ready) | Med | 5 min | owner |
-| 41 | Version-skew CI script (blocked on push authority) | Med | 45 min | owner |
-| 42 | Typed `ServiceName` breaking cut (successor window) | Low | 2 h | owner |
-| 43 | `SanitizeResponse` → `CoerceValidUTF8` alias | Low | 30 min | owner |
-| 44 | `Check.Since` → `StatusSince` Go rename | Low | 30 min | owner |
-| 45 | `Probe`/`Prober`/`Source` lexicon reconciliation | Low | 1 d | owner |
-| 46 | Add per-check severity override design note (fleet ask from PMA/go-taskqueue) | Med | 1 h | none |
-| 47 | Make AGENTS.md file map a generated table or move it to INDEX | Med | 45 min | none |
-| 48 | Add a "new exported symbol appears in FEATURES" docs gate | Med | 1 h | none |
-| 49 | Record the concurrency incident as a lessons entry (two agents, same task) | Med | 15 min | none |
-| 50 | Re-run the full fleet survey after v0.8.0 to confirm adoption, not just pins | High | 2 h | after #6-17 |
+| #  | Task                                                                                          | Impact | Effort | Owner/gate       |
+| -- | --------------------------------------------------------------------------------------------- | ------ | ------ | ---------------- |
+| 1  | Fix the 5 lint findings (3 × `err113` static errors in new tests, `wsl_v5`, `gocognit`)       | High   | 20 min | me/next          |
+| 2  | Run `go test -race ./...` and `nix run .#gates`                                               | High   | 15 min | none             |
+| 3  | Update the research doc §5/§6 with the five late features                                     | High   | 20 min | none             |
+| 4  | Flip `federation-healthz-design.md` status to IMPLEMENTED + checklist                         | High   | 10 min | none             |
+| 5  | Add `SourceStatuses`/`Healthz` to `docs/federation-design.md`                                 | Med    | 20 min | none             |
+| 6  | Cut v0.8.0 (tag + release notes + `go get @latest` smoke)                                     | High   | 30 min | owner push       |
+| 7  | Add consumer-impact line to the v0.8.0 release notes                                          | High   | 10 min | #6               |
+| 8  | Bump `cqrs-htmx/health` and run its module suite                                              | High   | 45 min | #6               |
+| 9  | Bump `go-appkit/health` + flip its warn pin + run suite                                       | High   | 45 min | #6               |
+| 10 | Bump CV, cv, dnsblockd, KeyHolderAI to v0.8.0                                                 | High   | 60 min | #6               |
+| 11 | Replace cqrs-htmx `RecorderChain` with `ChainRecorders`                                       | Med    | 30 min | #8               |
+| 12 | Adopt `NewWithRecorder` in PMA and Zlota44 (drop `do.New()`)                                  | Med    | 30 min | #10              |
+| 13 | Adopt `WithCriticalService[T]` in CV, KeyHolderAI, nsfw-classifier, DiscordSync               | Med    | 45 min | #10              |
+| 14 | Adopt `CacheAge`/`CachedResponseFresh`/`EvaluateAndCache` in DiscordSync                      | High   | 45 min | #10              |
+| 15 | Adopt the same in dnsblockd; use `Response.Clone` in `degradeStaleHealth`                     | High   | 45 min | #10              |
+| 16 | Adopt the same in cv `internal/health/handlers.go`                                            | Med    | 30 min | #10              |
+| 17 | Collapse go-taskqueue's `queueProber` onto `NewChecks` + live throttle                        | High   | 2 h    | #10              |
+| 18 | Delete timesheets' stale `versionHandler` comment/handler in favor of `health.VersionHandler` | Low    | 15 min | #10              |
+| 19 | Document one-way shutdown on `Start` and `Shutdown` (#7 F4)                                   | Med    | 20 min | none             |
+| 20 | Document `AwaitReady` zero-value pass trap (N12)                                              | Med    | 15 min | none             |
+| 21 | Add `checks` discoverability table to README (N11)                                            | Med    | 20 min | none             |
+| 22 | Refresh `docs/consumer-verification.md` pattern list to five everywhere                       | Med    | 30 min | none             |
+| 23 | Update `tools/fleet-repos.txt` count/comment to 16 direct                                     | Low    | 10 min | none             |
+| 24 | Add fuzz target for `federation.Healthz` status/row invariant                                 | Med    | 45 min | none             |
+| 25 | Add benchmark for `SourceStatuses` fetch cost                                                 | Low    | 20 min | none             |
+| 26 | Add race test for `SourceStatuses` + concurrent `MarkShuttingDown`                            | Med    | 30 min | none             |
+| 27 | Add a test asserting `Healthz` never adds a `startup` row over a dark remote                  | Low    | 10 min | done in my tests |
+| 28 | Add `openapi-lockstep` note that no new wire shape shipped                                    | Low    | 10 min | none             |
+| 29 | Run `nix run .#fuzz` and record coverage delta                                                | Med    | 20 min | none             |
+| 30 | Run `nix run .#docs-check` after doc edits                                                    | High   | 10 min | none             |
+| 31 | Re-run BuildFlow full mode and arbitrate against gates                                        | Med    | 30 min | toolchain        |
+| 32 | Add an ADR/decision line for panic-fail-closed grading                                        | Med    | 15 min | none             |
+| 33 | Add a migration snippet for `ErrRecorderNotApplicable`                                        | Med    | 10 min | none             |
+| 34 | Add a migration snippet for non-critical panic → 503                                          | High   | 10 min | none             |
+| 35 | Dashboard: wire `SourceStatuses` into the hub's `SourceStatuser`                              | High   | 30 min | dashboard repo   |
+| 36 | Dashboard: adopt `Healthz` on the hub if the LB needs one URL                                 | Med    | 20 min | dashboard repo   |
+| 37 | Dashboard: widen `cmd/health-hub` drain SIGTERM path (issue #5 payoff)                        | High   | 45 min | dashboard repo   |
+| 38 | Add `WithCriticalService` usage to go-health-dashboard examples                               | Low    | 15 min | consumer         |
+| 39 | Publish the issue-#5 close comment (draft ready)                                              | Med    | 5 min  | owner            |
+| 40 | Post the samber/do#318 duration comment (draft ready)                                         | Med    | 5 min  | owner            |
+| 41 | Version-skew CI script (blocked on push authority)                                            | Med    | 45 min | owner            |
+| 42 | Typed `ServiceName` breaking cut (successor window)                                           | Low    | 2 h    | owner            |
+| 43 | `SanitizeResponse` → `CoerceValidUTF8` alias                                                  | Low    | 30 min | owner            |
+| 44 | `Check.Since` → `StatusSince` Go rename                                                       | Low    | 30 min | owner            |
+| 45 | `Probe`/`Prober`/`Source` lexicon reconciliation                                              | Low    | 1 d    | owner            |
+| 46 | Add per-check severity override design note (fleet ask from PMA/go-taskqueue)                 | Med    | 1 h    | none             |
+| 47 | Make AGENTS.md file map a generated table or move it to INDEX                                 | Med    | 45 min | none             |
+| 48 | Add a "new exported symbol appears in FEATURES" docs gate                                     | Med    | 1 h    | none             |
+| 49 | Record the concurrency incident as a lessons entry (two agents, same task)                    | Med    | 15 min | none             |
+| 50 | Re-run the full fleet survey after v0.8.0 to confirm adoption, not just pins                  | High   | 2 h    | after #6-17      |
 
 ---
 

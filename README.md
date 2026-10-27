@@ -542,12 +542,12 @@ Resource checks (Disk, Memory) are **warn-by-default**: list a name in
 `WithCriticalServices` to escalate it to 503. Thresholds are arguments, not
 constants — they are policy. See [docs/batteries-ownership-decision.md](docs/batteries-ownership-decision.md).
 
-| Failure you want to catch | Battery | Default grade |
-| --- | --- | --- |
-| Disk filling up | `checks.Disk(path, minFreeBytes)` | warn |
-| Memory / heap pressure | `checks.Memory(maxAllocBytes)` | warn |
-| Dependency answering but broken | `checks.HTTP(url, timeout)` | warn |
-| Database unreachable or query failing | `checks.Database(db, timeout)` | warn |
+| Failure you want to catch             | Battery                           | Default grade |
+| ------------------------------------- | --------------------------------- | ------------- |
+| Disk filling up                       | `checks.Disk(path, minFreeBytes)` | warn          |
+| Memory / heap pressure                | `checks.Memory(maxAllocBytes)`    | warn          |
+| Dependency answering but broken       | `checks.HTTP(url, timeout)`       | warn          |
+| Database unreachable or query failing | `checks.Database(db, timeout)`    | warn          |
 
 Every battery is `func(ctx) error` and carries a documented sentinel error, so
 it composes with `NewChecks`, `NewWithHealthCheck`, or any recorder path — the

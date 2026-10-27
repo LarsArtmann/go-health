@@ -28,11 +28,11 @@ library could not express either half:
 
 Three additive members; no policy, no new option, no default change.
 
-| Member | Contract |
-| --- | --- |
-| `Probe.CacheAge() (time.Duration, bool)` | Age of the published snapshot on the probe's injected clock; `false` when none exists (or the clock stamped the zero time). Never evaluates, never allocates. |
-| `Probe.CachedResponseFresh(maxAge) (Response, bool)` | The cached view (with the live shutdown overlay) when `0 < age <= maxAge`; otherwise zero + `false`. Non-positive `maxAge` never reports fresh. |
-| `Probe.EvaluateAndCache(ctx) Response` | One batch bounded by `WithTimeout` (or the caller's earlier deadline), published to the served snapshot, returned. |
+| Member                                               | Contract                                                                                                                                                      |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Probe.CacheAge() (time.Duration, bool)`             | Age of the published snapshot on the probe's injected clock; `false` when none exists (or the clock stamped the zero time). Never evaluates, never allocates. |
+| `Probe.CachedResponseFresh(maxAge) (Response, bool)` | The cached view (with the live shutdown overlay) when `0 < age <= maxAge`; otherwise zero + `false`. Non-positive `maxAge` never reports fresh.               |
+| `Probe.EvaluateAndCache(ctx) Response`               | One batch bounded by `WithTimeout` (or the caller's earlier deadline), published to the served snapshot, returned.                                            |
 
 The intended consumer shape:
 
@@ -50,7 +50,7 @@ bounds differ per consumer (dnsblockd 15s against a 1s refresh + 5s timeout;
 DiscordSync 2× its interval), and the degradation verdict is domain-specific
 (dnsblockd rewrites a real check to fail; cv folds a synthetic row with its
 own off→warn rule). A primitive composes; a policy guesses. The overlay
-design's "no API change" verdict is now superseded only on the *mechanics*
+design's "no API change" verdict is now superseded only on the _mechanics_
 half — nothing here decides what staleness means.
 
 ## Semantics pinned

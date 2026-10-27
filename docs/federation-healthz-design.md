@@ -3,7 +3,7 @@
 |            |                                                                                                                           |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
 | **Date**   | 2026-10-09 (implemented 2026-10-27)                                                                                       |
-| **Status** | **IMPLEMENTED** — `federation/healthz.go`; the design below is the shipped contract                                        |
+| **Status** | **IMPLEMENTED** — `federation/healthz.go`; the design below is the shipped contract                                       |
 | **Inputs** | `aggregate.Aggregate.Healthz()` (docs/aggregate-healthz-design.md), `federation` merge + latch semantics, ROADMAP Theme 7 |
 
 ## Problem

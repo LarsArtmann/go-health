@@ -77,8 +77,8 @@ pass-tier `Status.Rank` — it can never fail or warn the merged roll-up, only
 annotate a row (the contract is stated in the `decodeDocument` doc comment).
 
 Both status levels are validated for the same reason, though the exposure
-differs. An unknown *check* status reaches the merged surface, where the
-merge would fold it. An unknown *roll-up* status cannot reach the merged
+differs. An unknown _check_ status reaches the merged surface, where the
+merge would fold it. An unknown _roll-up_ status cannot reach the merged
 verdict (the merge recomputes from checks), but `SourceStatuses()` reports
 each remote's own claim verbatim, and `Status.Rank` scores an unrecognized
 value pass-tier — so an unvalidated roll-up is exactly the health-washing

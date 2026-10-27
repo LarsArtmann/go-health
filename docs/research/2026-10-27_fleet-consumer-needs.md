@@ -12,12 +12,12 @@ file or a command that produced it.
 The dashboard inventory (36 consumers of go-health-dashboard v0.12.1) is not
 the whole story. go-health reaches those repos **through three layers**:
 
-| Layer | Carriers | Count |
-| --- | --- | --- |
-| Direct `require github.com/larsartmann/go-health` | company-master-data, cqrs-htmx/health, cv, CV, DiscordSync, dnsblockd, file-and-image-renamer, go-appkit/health, go-health-dashboard, go-taskqueue, KeyHolderAI, library-policy, nsfw-classifier, projects-management-automation, timesheets, webphone, Zlota44 | 15 repos |
-| Bridge A: `cqrs-htmx/health` (v0.7.0) | every cqrs-htmx app that mounts health (the bulk of the 36) | ~20 repos |
-| Bridge B: `go-appkit/health` (v0.5.1) | company-master-data + go-appkit's integration suite + appkit-based services | 4+ repos |
-| Presentation: `go-health-dashboard` (v0.7.0) | the 36-repo inventory | 36 repos |
+| Layer                                             | Carriers                                                                                                                                                                                                                                                        | Count     |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| Direct `require github.com/larsartmann/go-health` | company-master-data, cqrs-htmx/health, cv, CV, DiscordSync, dnsblockd, file-and-image-renamer, go-appkit/health, go-health-dashboard, go-taskqueue, KeyHolderAI, library-policy, nsfw-classifier, projects-management-automation, timesheets, webphone, Zlota44 | 15 repos  |
+| Bridge A: `cqrs-htmx/health` (v0.7.0)             | every cqrs-htmx app that mounts health (the bulk of the 36)                                                                                                                                                                                                     | ~20 repos |
+| Bridge B: `go-appkit/health` (v0.5.1)             | company-master-data + go-appkit's integration suite + appkit-based services                                                                                                                                                                                     | 4+ repos  |
+| Presentation: `go-health-dashboard` (v0.7.0)      | the 36-repo inventory                                                                                                                                                                                                                                           | 36 repos  |
 
 Commands used:
 
@@ -36,10 +36,10 @@ assume, and the release cadence is the real bottleneck.**
 
 ### Version skew (verified today)
 
-| Pin | Repos |
-| --- | --- |
+| Pin                     | Repos                                                                                                                                                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | v0.7.0 (latest release) | dashboard, cqrs-htmx/health, DiscordSync, file-and-image-renamer, go-taskqueue, library-policy, nsfw-classifier, projects-management-automation, timesheets, webphone, Zlota44, company-master-data |
-| v0.5.1 | CV, cv, dnsblockd, KeyHolderAI, go-appkit/health, go-appkit/integration |
+| v0.5.1                  | CV, cv, dnsblockd, KeyHolderAI, go-appkit/health, go-appkit/integration                                                                                                                             |
 
 Master additionally carries unreleased work that **no consumer can get**: the
 federation drain (issue #5), the per-check-panic grading fix (landed
@@ -52,11 +52,11 @@ The manifest now lists all 15 direct consumers plus both bridges
 (`tools/fleet-repos.txt`; company-master-data is forgejo-hosted and therefore
 outside the GitHub-API sweep). Result at the moment v0.8.0 was cut:
 
-| Verdict | Repos |
-| --- | --- |
-| FAIL — minor behind (v0.7.0) | go-health-dashboard, Zlota44, library-policy, file-and-image-renamer, DiscordSync, nsfw-classifier, webphone, projects-management-automation, timesheets, cqrs-htmx/health, go-taskqueue |
-| FAIL — minor behind (v0.5.1) | CV, cv, dnsblockd, KeyHolderAI |
-| WARN — no pin on GitHub `@master` | go-appkit/health (its local checkout still pins v0.5.1; the remote branch lags) |
+| Verdict                           | Repos                                                                                                                                                                                    |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FAIL — minor behind (v0.7.0)      | go-health-dashboard, Zlota44, library-policy, file-and-image-renamer, DiscordSync, nsfw-classifier, webphone, projects-management-automation, timesheets, cqrs-htmx/health, go-taskqueue |
+| FAIL — minor behind (v0.5.1)      | CV, cv, dnsblockd, KeyHolderAI                                                                                                                                                           |
+| WARN — no pin on GitHub `@master` | go-appkit/health (its local checkout still pins v0.5.1; the remote branch lags)                                                                                                          |
 
 `minor-stale: 15, warnings: 1` — the expected end state: the tag exists, no
 consumer has moved yet. This table is the before-picture for the adoption
@@ -70,13 +70,13 @@ The four long-standing patterns recorded in `docs/consumer-verification.md`
 still hold, with one important addition (pattern E, which the consumer record
 now carries too):
 
-| Pattern | Shape | Consumers |
-| --- | --- | --- |
-| A | injector + `WithCriticalServices` | KeyHolderAI, CV, DiscordSync, nsfw-classifier, webphone, Zlota44 |
-| B | `NewWithHealthCheck` / `NewChecks` check-func map | dnsblockd, library-policy, file-and-image-renamer, timesheets, go-appkit/health |
-| C | recorder bridge over an often-empty injector | cqrs-htmx/health, projects-management-automation, Zlota44 |
-| D | framework bridge (`appkithealth.NewProbe` + doadapter) | company-master-data and appkit services |
-| E | **hand-rolled cache/Prober adapter** | dnsblockd, DiscordSync, cv, go-taskqueue, file-and-image-renamer healthd |
+| Pattern | Shape                                                  | Consumers                                                                       |
+| ------- | ------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| A       | injector + `WithCriticalServices`                      | KeyHolderAI, CV, DiscordSync, nsfw-classifier, webphone, Zlota44                |
+| B       | `NewWithHealthCheck` / `NewChecks` check-func map      | dnsblockd, library-policy, file-and-image-renamer, timesheets, go-appkit/health |
+| C       | recorder bridge over an often-empty injector           | cqrs-htmx/health, projects-management-automation, Zlota44                       |
+| D       | framework bridge (`appkithealth.NewProbe` + doadapter) | company-master-data and appkit services                                         |
+| E       | **hand-rolled cache/Prober adapter**                   | dnsblockd, DiscordSync, cv, go-taskqueue, file-and-image-renamer healthd        |
 
 Pattern E is the interesting one: five independent repos re-implement the
 same missing primitive around `CachedResponse`.
@@ -90,12 +90,12 @@ same missing primitive around `CachedResponse`.
 Every one of these forks exists because `CachedResponse()` cannot say how old
 its snapshot is in one call, and `Evaluate()` cannot publish:
 
-| Repo | Fork | What it does |
-| --- | --- | --- |
-| DiscordSync | `cmd/discordsync/health_readyz_cache.go:60` | `Timestamp.IsZero()` + `now - Timestamp > maxAge` → live sweep |
-| dnsblockd | `internal/server/health.go:96` | zero-timestamp → one bounded `Evaluate`; older than 15s → `degradeStaleHealth` |
-| cv | `internal/health/handlers.go:124` | empty cache → `Evaluate`, otherwise project the cache |
-| go-taskqueue | `internal/webui/health.go:86` | reimplements the whole `dashboard.Prober`; evaluates when older than its interval |
+| Repo         | Fork                                        | What it does                                                                      |
+| ------------ | ------------------------------------------- | --------------------------------------------------------------------------------- |
+| DiscordSync  | `cmd/discordsync/health_readyz_cache.go:60` | `Timestamp.IsZero()` + `now - Timestamp > maxAge` → live sweep                    |
+| dnsblockd    | `internal/server/health.go:96`              | zero-timestamp → one bounded `Evaluate`; older than 15s → `degradeStaleHealth`    |
+| cv           | `internal/health/handlers.go:124`           | empty cache → `Evaluate`, otherwise project the cache                             |
+| go-taskqueue | `internal/webui/health.go:86`               | reimplements the whole `dashboard.Prober`; evaluates when older than its interval |
 
 They differ only in the policy number; the primitive is identical. Three of
 them also need N2 (below) and two hit N3.
@@ -140,7 +140,7 @@ line".
 ### N4 (P0, 3 repos + issue #7 F3): `Evaluate` deliberately does not publish, but that is invisible
 
 DiscordSync, dnsblockd, and cv all fall back to `Evaluate` — which answers
-correctly once and leaves the *older* snapshot in the cache, so the next read
+correctly once and leaves the _older_ snapshot in the cache, so the next read
 regresses to stale data. `webphone/TODO_LIST.md` records the same seam from
 the other side: a `WithEvaluationHook` wired on a path that never calls
 `Evaluate` fires for nothing (their "M18 park watch").
@@ -273,15 +273,15 @@ recorded here so they are not lost when the go-health wave lands.
 
 ## 5. Session log — what changed in this repo
 
-| Change | Kind | Tests |
-| --- | --- | --- |
-| `Response.Clone()` | additive | `TestResponse_CloneIsIndependent` |
-| `Probe.CacheAge()` | additive | `TestCacheAge_*` (4 cases) |
-| `Probe.CachedResponseFresh(maxAge)` | additive | `TestCachedResponseFresh_*` |
-| `Probe.EvaluateAndCache(ctx)` | additive | `TestEvaluateAndCache_PublishesButEvaluateDoesNot` |
+| Change                                           | Kind                   | Tests                                                                                      |
+| ------------------------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------ |
+| `Response.Clone()`                               | additive               | `TestResponse_CloneIsIndependent`                                                          |
+| `Probe.CacheAge()`                               | additive               | `TestCacheAge_*` (4 cases)                                                                 |
+| `Probe.CachedResponseFresh(maxAge)`              | additive               | `TestCachedResponseFresh_*`                                                                |
+| `Probe.EvaluateAndCache(ctx)`                    | additive               | `TestEvaluateAndCache_PublishesButEvaluateDoesNot`                                         |
 | `ErrRecorderNotApplicable` at `Validate`/`Start` | behavior change (loud) | `TestValidate_RejectsRecorderOnFunctionPath`, `TestValidate_AcceptsRecorderOnInjectorPath` |
-| `ChainRecorders(...)` | additive | `TestChainRecorders_*` (3 cases) |
-| `federation.Prober.SourceStatuses()` | additive | `TestSourceStatuses_*` (4 cases) |
+| `ChainRecorders(...)`                            | additive               | `TestChainRecorders_*` (3 cases)                                                           |
+| `federation.Prober.SourceStatuses()`             | additive               | `TestSourceStatuses_*` (4 cases)                                                           |
 
 Verification (green at the time of writing):
 
@@ -300,14 +300,14 @@ cd ~/projects/go-health && GOWORK=off go test ./...
 closed; they are additive except where noted, and each closes a named need
 from §3.
 
-| Change | File | Closes | Kind | Tests |
-| --- | --- | --- | --- | --- |
-| `NewWithRecorder(recorder, opts...)` — injector-free recorder constructor | `new_with_recorder.go` | N5 (a recorder-only consumer no longer manufactures an empty `do.Injector`) | additive | `new_with_recorder_test.go` (5 cases) |
-| `HealthRecorderFunc` / `DetailedHealthRecorderFunc` adapters | `recorder.go` | N6 (a consumer can pass a method/closure where an interface is required) | additive | `TestDetailedHealthRecorderFunc_PreservesDurations` |
-| `DoServiceName[T]()` / `WithCriticalService[T]()` — typed critical identity | `service_name.go` | N9/N10 (stringly-typed critical sets drift from the service registration) | additive | `service_name_test.go` (2 cases) |
-| `RegisterRoutes` skips empty patterns on all three surfaces | `handlers.go`, `aggregate/aggregate.go`, `federation/federation.go` | fleet-wide: `routes.Liveness == ""` used to mount `""` on the default mux | additive | `routes_selective_test.go` ×3 |
-| `federation.Prober.Healthz()` | `federation/healthz.go` | N8 sibling + ROADMAP Theme 7 (an LB in front of a hub had no single endpoint) | additive | `healthz_test.go` (6 cases) |
-| Recovered panic fails closed in **both** `classify` and `grades` | `classifier.go` | N13 (the grader named one site; the roll-up path was independently wrong, so a non-critical panic still rolled up as `warn`) | **behavior change** | `TestNewChecks_NonCriticalPanicFailsClosed` |
+| Change                                                                      | File                                                                | Closes                                                                                                                       | Kind                | Tests                                               |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------- |
+| `NewWithRecorder(recorder, opts...)` — injector-free recorder constructor   | `new_with_recorder.go`                                              | N5 (a recorder-only consumer no longer manufactures an empty `do.Injector`)                                                  | additive            | `new_with_recorder_test.go` (5 cases)               |
+| `HealthRecorderFunc` / `DetailedHealthRecorderFunc` adapters                | `recorder.go`                                                       | N6 (a consumer can pass a method/closure where an interface is required)                                                     | additive            | `TestDetailedHealthRecorderFunc_PreservesDurations` |
+| `DoServiceName[T]()` / `WithCriticalService[T]()` — typed critical identity | `service_name.go`                                                   | N9/N10 (stringly-typed critical sets drift from the service registration)                                                    | additive            | `service_name_test.go` (2 cases)                    |
+| `RegisterRoutes` skips empty patterns on all three surfaces                 | `handlers.go`, `aggregate/aggregate.go`, `federation/federation.go` | fleet-wide: `routes.Liveness == ""` used to mount `""` on the default mux                                                    | additive            | `routes_selective_test.go` ×3                       |
+| `federation.Prober.Healthz()`                                               | `federation/healthz.go`                                             | N8 sibling + ROADMAP Theme 7 (an LB in front of a hub had no single endpoint)                                                | additive            | `healthz_test.go` (6 cases)                         |
+| Recovered panic fails closed in **both** `classify` and `grades`            | `classifier.go`                                                     | N13 (the grader named one site; the roll-up path was independently wrong, so a non-critical panic still rolled up as `warn`) | **behavior change** | `TestNewChecks_NonCriticalPanicFailsClosed`         |
 
 The last row is the wave's only behavior change. It ships with an ADR
 (`docs/adr/`), a CHANGELOG migration snippet, and a required pin flip in
@@ -316,19 +316,18 @@ The last row is the wave's only behavior change. It ships with an ADR
 
 ## 6. Remaining queue (owner-ordered)
 
-| # | Item | Impact | Effort | Gate |
-| --- | --- | --- | --- | --- |
-| 1 | Cut v0.8.0 (drain + panic fix + these APIs) | High | 30 min | owner push |
-| 2 | Bump both bridges; flip go-appkit's warn pin; delete cqrs-htmx `RecorderChain` | High | 2 h | #1 |
-| 3 | Adopt `CachedResponseFresh`/`EvaluateAndCache` in DiscordSync, dnsblockd, cv, go-taskqueue | High | 3 h | #1 |
-| 4 | Widen `cqrs-htmx/health.NewDashboard` to the dashboard `Prober` interface | Med | 30 min | #1 |
-| 5 | Document the one-way shutdown latch on `Start`/`Shutdown`; `AwaitReady` warning | Med | 30 min | none |
-| 6 | Refresh `docs/consumer-verification.md` to the 36-consumer inventory | Med | 1 h | none |
-| 7 | `checks` discoverability row in README (failure mode → battery) | Med | 30 min | none |
-| 8 | Bridge-level detailed constructor for `appkithealth` (`NewDetailedProbe`) | Med | 1 h | go-appkit |
-| 9 | Version-skew CI script | Med | 45 min | push authority |
-| 10 | Typed `ServiceName`, `SanitizeResponse`/`Since` renames | Low | 2 h | breaking window |
-| 11 | Adopt `NewWithRecorder` in PMA + Zlota44 (drops the empty-injector dance) | Med | 30 min | #1 |
-| 12 | Adopt `WithCriticalService[T]` in CV, KeyHolderAI, nsfw-classifier, DiscordSync labels | Med | 1 h | #1 |
-| 13 | Offer `federation.Healthz()` to the dashboard hub's LB-facing route | Med | 30 min | #1 |
-
+| #  | Item                                                                                       | Impact | Effort | Gate            |
+| -- | ------------------------------------------------------------------------------------------ | ------ | ------ | --------------- |
+| 1  | Cut v0.8.0 (drain + panic fix + these APIs)                                                | High   | 30 min | owner push      |
+| 2  | Bump both bridges; flip go-appkit's warn pin; delete cqrs-htmx `RecorderChain`             | High   | 2 h    | #1              |
+| 3  | Adopt `CachedResponseFresh`/`EvaluateAndCache` in DiscordSync, dnsblockd, cv, go-taskqueue | High   | 3 h    | #1              |
+| 4  | Widen `cqrs-htmx/health.NewDashboard` to the dashboard `Prober` interface                  | Med    | 30 min | #1              |
+| 5  | Document the one-way shutdown latch on `Start`/`Shutdown`; `AwaitReady` warning            | Med    | 30 min | none            |
+| 6  | Refresh `docs/consumer-verification.md` to the 36-consumer inventory                       | Med    | 1 h    | none            |
+| 7  | `checks` discoverability row in README (failure mode → battery)                            | Med    | 30 min | none            |
+| 8  | Bridge-level detailed constructor for `appkithealth` (`NewDetailedProbe`)                  | Med    | 1 h    | go-appkit       |
+| 9  | Version-skew CI script                                                                     | Med    | 45 min | push authority  |
+| 10 | Typed `ServiceName`, `SanitizeResponse`/`Since` renames                                    | Low    | 2 h    | breaking window |
+| 11 | Adopt `NewWithRecorder` in PMA + Zlota44 (drops the empty-injector dance)                  | Med    | 30 min | #1              |
+| 12 | Adopt `WithCriticalService[T]` in CV, KeyHolderAI, nsfw-classifier, DiscordSync labels     | Med    | 1 h    | #1              |
+| 13 | Offer `federation.Healthz()` to the dashboard hub's LB-facing route                        | Med    | 30 min | #1              |

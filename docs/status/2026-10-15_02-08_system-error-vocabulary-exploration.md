@@ -19,7 +19,7 @@
    - Multi-module layout of go-error-family confirmed (root, agent, diagnose(+git/postgres), bridge, examples — each with own go.mod).
 3. **Fleet scans executed:** ENOSPC usage (found DiscordSync only, outside vendor trees); `ErrDiskFull`/DiskFull (16 files, mostly tests/vendor — real production definitions: DiscordSync + a few test-only mentions elsewhere); IsRetryable/IsTransient duplication (25+ files listed, **not analyzed** — see b).
 4. **Recommendation delivered with rationale:**
-   - go-health disqualified by its own documented philosophy (single dep `samber/do`, "stdlib errors by design", checks are warn-by-default *outcomes*, not vocabulary).
+   - go-health disqualified by its own documented philosophy (single dep `samber/do`, "stdlib errors by design", checks are warn-by-default _outcomes_, not vocabulary).
    - Two modules rejected: same domain, same root dependency, same consumers → always imported together → no composability payoff.
    - Proposed `go-error-family/syserr` submodule: (1) errno→Family classification table (build-tagged unix/windows), (2) `errors.Is` predicates (`IsDiskFull`, `IsConnRefused`, …), (3) sentinels with canonical codes (`ErrDiskFull = NewInfrastructure("storage.disk_full", …)`).
    - Stays local: domain rejections (`ErrExpiredURL`), app retry policy, go-health check sentinels.
@@ -50,9 +50,9 @@
 
 ## d) TOTALLY FUCKED UP!
 
-**Nothing destructive** — no code, no files, no git state touched. But an honest audit of the *advisory* itself:
+**Nothing destructive** — no code, no files, no git state touched. But an honest audit of the _advisory_ itself:
 
-1. **Unverified confidence: "those AsType branches are dead code."** Shipped from spec reasoning, never executed. The claim is correct — `errors.Is` unwraps `PathError` — and it is actually *stronger* than I stated: **`os.PathError` is a type alias for `fs.PathError` since Go 1.16, so the two branches check the literally identical type.** I found the redundancy but missed the alias identity, and I asserted without a 10-line test that would have proven both in seconds.
+1. **Unverified confidence: "those AsType branches are dead code."** Shipped from spec reasoning, never executed. The claim is correct — `errors.Is` unwraps `PathError` — and it is actually _stronger_ than I stated: **`os.PathError` is a type alias for `fs.PathError` since Go 1.16, so the two branches check the literally identical type.** I found the redundancy but missed the alias identity, and I asserted without a 10-line test that would have proven both in seconds.
 2. **Fabricated-adjacent generality: "no fleet consumer would import go-health for errors."** One data point presented as a fleet fact.
 3. **Opinion smuggled as content:** the errno→Family table rows (`EMFILE/ENFILE → Infrastructure`, `EIO → Transient?`) were presented as settled rows without flagging the genuinely debatable ones (`EIO` could be a dying disk → Infrastructure; `EMFILE` is often a leak → arguably Rejection-by-fix). An advisory table needs a debate column.
 4. **Repo-history amnesia:** go-error-family's go.mod carries retracts (`v0.5.0–v0.6.0`, `diagnose v0.1.0`) from the local-replace-in-submodule poisoning incident. My submodule proposal never mentioned the one release rule that incident taught — no local-directory replaces in released submodules.
@@ -61,35 +61,36 @@
 
 ## e) BRUTAL SELF-REVIEW (what I forgot / could do better / improve)
 
-| # | Finding |
-|---|---------|
-| 1 | **Forgot:** the `os.PathError = fs.PathError` alias identity (strongest form of the dead-code finding). |
-| 2 | **Forgot:** read go-error-family's own `docs/modularization/PROPOSAL.md` before proposing a module boundary in that repo. |
-| 3 | **Forgot:** the retract-history lesson applies verbatim to any new submodule (no local replaces at release). |
-| 4 | **Better:** verify claims with a runnable snippet before calling production code dead — an advisory that's wrong costs the user's trust in all future advisories. |
-| 5 | **Better:** finish or explicitly abandon each scan; I silently dropped ArtCode and the 25-file IsRetryable list. |
-| 6 | **Improve:** persist exploration outcomes as design docs at decision time, not only when asked — this analysis existed only in chat until this report. |
-| 7 | **Improve:** quantify consumers before fleet-wide proposals (go-health keeps `docs/consumer-verification.md` for exactly this discipline; copy it). |
-| 8 | **Did I lie?** No — but three claims shipped with reasoning-only confidence (see d). Reasoning-only is how lies start. |
-| 9 | **Ghost systems:** none created. Pre-existing quasi-ghost noticed: `errkit` duplicates errorfamily's own registration surface — that IS the bug to delete, not integrate. |
-| 10 | **Split brains found (pre-existing):** (i) `errkit/classify.go` vs `RegisterStdlibDefaults` — already drifted by two entries; (ii) `IsDiskFullError`'s triple-branch vs plain `errors.Is`; (iii) *latent in my own proposal:* `syserr.ErrDiskFull` vs `checks.ErrDiskLow` — defensible (ENOSPC vs threshold-warning are different semantics) but must be documented as such or it drifts into confusion. |
-| 11 | **Tests:** none written — correct for an advisory, but the dead-code claim should have been one. |
+| #  | Finding                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1  | **Forgot:** the `os.PathError = fs.PathError` alias identity (strongest form of the dead-code finding).                                                                                                                                                                                                                                                                                                  |
+| 2  | **Forgot:** read go-error-family's own `docs/modularization/PROPOSAL.md` before proposing a module boundary in that repo.                                                                                                                                                                                                                                                                                |
+| 3  | **Forgot:** the retract-history lesson applies verbatim to any new submodule (no local replaces at release).                                                                                                                                                                                                                                                                                             |
+| 4  | **Better:** verify claims with a runnable snippet before calling production code dead — an advisory that's wrong costs the user's trust in all future advisories.                                                                                                                                                                                                                                        |
+| 5  | **Better:** finish or explicitly abandon each scan; I silently dropped ArtCode and the 25-file IsRetryable list.                                                                                                                                                                                                                                                                                         |
+| 6  | **Improve:** persist exploration outcomes as design docs at decision time, not only when asked — this analysis existed only in chat until this report.                                                                                                                                                                                                                                                   |
+| 7  | **Improve:** quantify consumers before fleet-wide proposals (go-health keeps `docs/consumer-verification.md` for exactly this discipline; copy it).                                                                                                                                                                                                                                                      |
+| 8  | **Did I lie?** No — but three claims shipped with reasoning-only confidence (see d). Reasoning-only is how lies start.                                                                                                                                                                                                                                                                                   |
+| 9  | **Ghost systems:** none created. Pre-existing quasi-ghost noticed: `errkit` duplicates errorfamily's own registration surface — that IS the bug to delete, not integrate.                                                                                                                                                                                                                                |
+| 10 | **Split brains found (pre-existing):** (i) `errkit/classify.go` vs `RegisterStdlibDefaults` — already drifted by two entries; (ii) `IsDiskFullError`'s triple-branch vs plain `errors.Is`; (iii) _latent in my own proposal:_ `syserr.ErrDiskFull` vs `checks.ErrDiskLow` — defensible (ENOSPC vs threshold-warning are different semantics) but must be documented as such or it drifts into confusion. |
+| 11 | **Tests:** none written — correct for an advisory, but the dead-code claim should have been one.                                                                                                                                                                                                                                                                                                         |
 
 ---
 
 ## f) NEXT TASKS (impact-sorted; 24 honest items, not 50 fabricated)
 
 **Track 1 — the cheap win (minutes):**
+
 1. Upstream `sql.ErrTxDone` + `syscall.ENOSPC` into `go-error-family/stdlib.go` `RegisterStdlibDefaults` (build-tag note: ENOSPC is unix-only).
 2. Table-test in go-error-family proving registry classification through wrapped `*fs.PathError` chains.
 3. Release go-error-family patch (go-release skill lifecycle).
 4. Bump DiscordSync dependency; delete `internal/errkit/classify.go` entirely.
 5. In DiscordSync `mediapipeline/errors.go`: collapse `IsDiskFullError` to `errors.Is(err, syscall.ENOSPC) \|\| errors.Is(err, ErrDiskFull)` with a test proving PathError unwrap (kills both redundant branches).
-6. While there: add the 10-line proof test for the alias-identity claim (documenting *why* the branches were dead).
+6. While there: add the 10-line proof test for the alias-identity claim (documenting _why_ the branches were dead).
 
 **Track 2 — the syserr submodule (hours):**
 7. Read `go-error-family/docs/modularization/PROPOSAL.md` + `EXECUTION_PLAN.md`; check the submodule proposal against their rules.
-8. Write the design doc (`docs/planning/` convention): scope, content table with a *debate* column (EIO, EMFILE family choices), naming (`syserr` vs alternatives), versioning posture.
+8. Write the design doc (`docs/planning/` convention): scope, content table with a _debate_ column (EIO, EMFILE family choices), naming (`syserr` vs alternatives), versioning posture.
 9. Decide stability posture: experimental v0.x submodule (diagnose precedent) vs root expansion (stdlib.go is already the natural home for the table — the module boundary must earn its go.mod).
 10. Scaffold `syserr` module: go.mod requiring root (NO local replaces at release — retract lesson), sentinels with canonical codes, predicates, `//go:build unix` errno table + windows stub.
 11. Predicates first: `IsDiskFull`, `IsConnRefused`, `IsBrokenPipe`, `IsTimeout`, `IsNoSpace`, `IsQuotaExceeded` — each one `errors.Is` line + unwrap-chain table tests.
@@ -102,7 +103,7 @@
 16. Verify "no consumer imports go-health for errors" against `go-health/docs/consumer-verification.md` inventory before the design doc cites it.
 17. Analyze the 25-file IsRetryable/IsTransient duplication list (go-cqrs-lite, BuildFlow, dnsblockd, go-localsync, InboxClean, …) — this is the real consumer count for the syserr proposal.
 18. Read the dropped lead: `ArtCode/pkg/errors/storage_errors.go`.
-19. Check whether any dashboard/alerting actually consumes errorfamily *codes* today — if nothing groups by `"storage.disk_full"`, layer 3 (canonical codes) is premature and should be cut from v1.
+19. Check whether any dashboard/alerting actually consumes errorfamily _codes_ today — if nothing groups by `"storage.disk_full"`, layer 3 (canonical codes) is premature and should be cut from v1.
 20. Check `go-cqrs-lite/storage/relational/errors.go` — a second classification-table implementation candidate for the same upstream.
 
 **Track 4 — hygiene:**
@@ -127,16 +128,16 @@
 
 User challenged the evidence base ("you checked like 1 project right?"). Correct — so I read the actual leads from the scans. **8 consumer projects now examined firsthand** (was 1). Revised findings:
 
-| Project | Error approach | Verdict for syserr thesis |
-|---|---|---|
-| DiscordSync | errorfamily + hand-rolled ENOSPC predicates + errkit registry copy | Direct consumer (unchanged) |
-| ArtCode | **bespoke framework**: `StorageError{Type enum}` with `file_not_found`, `permission_denied`, `disk_full`, `corruption` | Strongest duplication evidence, but a *framework* migration, not a sentinel swap — doesn't use errorfamily at all |
-| chats | **bespoke framework**: `StandardError{Message, Code, Cause}` with code-based `Is` | Parallel mini-errorfamily; separate adoption decision |
-| docs-organizer | errorfamily constructors: FileNotFound/DirectoryNotFound/PermissionDenied/GitError/MoveError | Direct consumer (system-adjacent wrappers with per-app codes) |
-| go-localsync | errorfamily sentinels with *generic* codes (`not_found`, `rate_limited`, `database`, `invalid_input`) | Third class: common-API errors, NOT OS-level — confirms syserr must stay OS/IO-focused, not become a giant catalog |
-| go-cqrs-lite (relational) | pure errorfamily Rejection sentinels; relies on Classify/IsRetryable, zero hand predicates | The good citizen — proof the library design works when adopted; no syscall layer, no syserr need |
-| dnsblockd | hand-rolled transient sentinel + retry predicate (`context.Canceled`/`DeadlineExceeded` checks) | Predicate-class duplication — direct consumer |
-| golangci-lint-auto-configure | `IsContextCanceled` helper over stdlib sentinels | Predicate-class duplication — direct consumer |
+| Project                      | Error approach                                                                                                         | Verdict for syserr thesis                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| DiscordSync                  | errorfamily + hand-rolled ENOSPC predicates + errkit registry copy                                                     | Direct consumer (unchanged)                                                                                        |
+| ArtCode                      | **bespoke framework**: `StorageError{Type enum}` with `file_not_found`, `permission_denied`, `disk_full`, `corruption` | Strongest duplication evidence, but a _framework_ migration, not a sentinel swap — doesn't use errorfamily at all  |
+| chats                        | **bespoke framework**: `StandardError{Message, Code, Cause}` with code-based `Is`                                      | Parallel mini-errorfamily; separate adoption decision                                                              |
+| docs-organizer               | errorfamily constructors: FileNotFound/DirectoryNotFound/PermissionDenied/GitError/MoveError                           | Direct consumer (system-adjacent wrappers with per-app codes)                                                      |
+| go-localsync                 | errorfamily sentinels with _generic_ codes (`not_found`, `rate_limited`, `database`, `invalid_input`)                  | Third class: common-API errors, NOT OS-level — confirms syserr must stay OS/IO-focused, not become a giant catalog |
+| go-cqrs-lite (relational)    | pure errorfamily Rejection sentinels; relies on Classify/IsRetryable, zero hand predicates                             | The good citizen — proof the library design works when adopted; no syscall layer, no syserr need                   |
+| dnsblockd                    | hand-rolled transient sentinel + retry predicate (`context.Canceled`/`DeadlineExceeded` checks)                        | Predicate-class duplication — direct consumer                                                                      |
+| golangci-lint-auto-configure | `IsContextCanceled` helper over stdlib sentinels                                                                       | Predicate-class duplication — direct consumer                                                                      |
 
 **Revised verdict:** the core claim survives and sharpens into TWO duplication classes I under-distinguished before:
 
@@ -145,4 +146,4 @@ User challenged the evidence base ("you checked like 1 project right?"). Correct
 
 Track 3 items: #18 (ArtCode) done; #17 partially done (8 leads read, remaining ~17 unopened); #16, #19, #20 still open.
 
-*Report format note: user explicitly demanded `.md` at `docs/status/` (overriding this skill's HTML-canonical default). No commit made — harness forbids unprompted commits; auto-commit daemon will pick this up.*
+_Report format note: user explicitly demanded `.md` at `docs/status/` (overriding this skill's HTML-canonical default). No commit made — harness forbids unprompted commits; auto-commit daemon will pick this up._

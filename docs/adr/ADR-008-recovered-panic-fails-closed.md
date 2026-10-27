@@ -10,11 +10,11 @@
 go-health recovers panics at three independent surfaces, and each one has to
 decide what status the recovered panic deserves:
 
-| Surface                          | Recovery point                      | Panic sentinel                               |
-| -------------------------------- | ----------------------------------- | -------------------------------------------- |
-| Recorder/injector batch          | `runHealthChecks`                   | `ErrPanicDuringHealthCheck`                  |
-| `NewChecks` per-check executor   | `runBoundedCheck`                   | `ErrCheckPanicked`                           |
-| `WithEvaluationHook` observer    | hook invocation in `probe.go`       | `ErrPanicDuringEvaluationHook`               |
+| Surface                        | Recovery point                | Panic sentinel                 |
+| ------------------------------ | ----------------------------- | ------------------------------ |
+| Recorder/injector batch        | `runHealthChecks`             | `ErrPanicDuringHealthCheck`    |
+| `NewChecks` per-check executor | `runBoundedCheck`             | `ErrCheckPanicked`             |
+| `WithEvaluationHook` observer  | hook invocation in `probe.go` | `ErrPanicDuringEvaluationHook` |
 
 The grading rule for the batch and hook surfaces was settled earlier: a
 recovered panic reads as **fail** for the batch (a check that panicked did not
@@ -43,12 +43,12 @@ verdict.** `isRecoveredPanic` matches both batch sentinels
 panicking check grades the roll-up to `fail` and readiness answers 503.
 
 The `WithEvaluationHook` surface keeps its earlier, deliberately different
-grading (`warn`): the hook is an observer that runs *after* the verdict was
+grading (`warn`): the hook is an observer that runs _after_ the verdict was
 computed, so its panic cannot have corrupted the answer. Recording it as a
 failure would take a healthy instance out of rotation because a metrics
 shipper crashed.
 
-Criticality still decides *which* status a healthy-or-failing check
+Criticality still decides _which_ status a healthy-or-failing check
 contributes; it no longer decides whether a panicking one gets to look
 non-fatal.
 

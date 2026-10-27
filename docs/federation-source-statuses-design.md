@@ -24,12 +24,12 @@ Add `(*Prober).SourceStatuses() map[string]health.Status`, mirroring
 the dashboard's optional `SourceStatuser` capability
 (`SourceStatuses() map[string]health.Status`) covers both merge surfaces.
 
-| Case | Reported status |
-| --- | --- |
-| Fetch succeeded, remote healthy | the remote document's `status` |
-| Fetch succeeded, remote `shutting_down` | `fail` (mirrors its contribution to the merged fold) |
-| Fetch failed (transport, non-200, oversized/undecodable, missing status) | `fail` (mirrors its `name/reachable` row) |
-| Hub marked via `MarkShuttingDown` | **no change** — the drain is the hub's, not any remote's |
+| Case                                                                     | Reported status                                          |
+| ------------------------------------------------------------------------ | -------------------------------------------------------- |
+| Fetch succeeded, remote healthy                                          | the remote document's `status`                           |
+| Fetch succeeded, remote `shutting_down`                                  | `fail` (mirrors its contribution to the merged fold)     |
+| Fetch failed (transport, non-200, oversized/undecodable, missing status) | `fail` (mirrors its `name/reachable` row)                |
+| Hub marked via `MarkShuttingDown`                                        | **no change** — the drain is the hub's, not any remote's |
 
 ## Cost, stated plainly
 

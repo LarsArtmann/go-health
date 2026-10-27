@@ -14,6 +14,17 @@ type versionResponse struct {
 	Version string `json:"version"`
 }
 
+// marshalVersionResponse is the single serialization seam for the version
+// endpoint. It is a package variable only so tests can force the marshal-error
+// branch (the payload's one string field cannot fail today, and a fake
+// json.Marshaler would change what the test proves); production code must
+// never swap it.
+//
+//nolint:gochecknoglobals // deliberate test seam; see version_internal_test.go
+var marshalVersionResponse = func(body versionResponse) ([]byte, error) {
+	return json.Marshal(body, json.Deterministic(true))
+}
+
 // VersionHandler returns an http.HandlerFunc that reports the binary's build
 // version — the ldflags/VCS stamp (e.g. built with
 // -ldflags "-X main.buildVersion=$(git describe --tags)") or whatever
@@ -40,7 +51,7 @@ type versionResponse struct {
 func VersionHandler(version string) http.HandlerFunc {
 	body := versionResponse{Version: strings.ToValidUTF8(version, "\uFFFD")}
 
-	payload, err := json.Marshal(body, json.Deterministic(true))
+	payload, err := marshalVersionResponse(body)
 	if err != nil {
 		return versionMarshalFailure(err)
 	}

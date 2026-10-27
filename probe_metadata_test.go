@@ -316,6 +316,24 @@ func TestEvaluate_ConcurrentBatchesAreRaceFree(t *testing.T) {
 	}
 }
 
+// TestEvaluate_TrackerDisabledLeavesSinceZero pins the benchmark-only escape
+// hatch behind [Probe.SetTrackerDisabledForTest]: with stamping off every
+// check keeps the zero time, which is how the A/B benchmark isolates the
+// tracker's marginal cost from the rest of an evaluation batch.
+func TestEvaluate_TrackerDisabledLeavesSinceZero(t *testing.T) {
+	t.Parallel()
+
+	probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"db": nil}
+	}, health.WithRefreshInterval(0))
+
+	probe.SetTrackerDisabledForTest(true)
+
+	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.IsZero() {
+		t.Errorf("Since = %v, want the zero time while the tracker is disabled", got)
+	}
+}
+
 // --- Check.Duration (executor-reported) ---.
 
 // TestNewWithDetailedCheck_DurationCarriedAndStatusGraded pins the detailed

@@ -339,6 +339,7 @@
               go test ./checks -run '^$' -fuzz=FuzzBatteries -fuzztime=10s
               go test ./federation -run '^$' -fuzz=FuzzCachedResponse_ArbitraryRemoteBodies -fuzztime=10s
               go test ./federation -run '^$' -fuzz=FuzzSourceStatuses_Invariants -fuzztime=10s
+              go test ./federation -run '^$' -fuzz=FuzzHealthz_CodeMatchesBody -fuzztime=10s
               go test ./internal/merge -run '^$' -fuzz=FuzzResponsesMergeInvariants -fuzztime=10s
             '';
 
@@ -353,6 +354,7 @@
               go test ./checks -run '^$' -fuzz=FuzzBatteries -fuzztime=5m "$@"
               go test ./federation -run '^$' -fuzz=FuzzCachedResponse_ArbitraryRemoteBodies -fuzztime=5m "$@"
               go test ./federation -run '^$' -fuzz=FuzzSourceStatuses_Invariants -fuzztime=5m "$@"
+              go test ./federation -run '^$' -fuzz=FuzzHealthz_CodeMatchesBody -fuzztime=5m "$@"
               go test ./internal/merge -run '^$' -fuzz=FuzzResponsesMergeInvariants -fuzztime=5m "$@"
             '';
 

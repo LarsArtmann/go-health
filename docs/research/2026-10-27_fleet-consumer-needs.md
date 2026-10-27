@@ -50,8 +50,9 @@ The v0.8.0 cut is already listed as an owner action in `TODO_LIST.md`.
 
 ## 2. Implementation patterns in the fleet
 
-The four patterns recorded in `docs/consumer-verification.md` still hold,
-with one important addition (pattern E):
+The four long-standing patterns recorded in `docs/consumer-verification.md`
+still hold, with one important addition (pattern E, which the consumer record
+now carries too):
 
 | Pattern | Shape | Consumers |
 | --- | --- | --- |

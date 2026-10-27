@@ -542,6 +542,18 @@ Resource checks (Disk, Memory) are **warn-by-default**: list a name in
 `WithCriticalServices` to escalate it to 503. Thresholds are arguments, not
 constants — they are policy. See [docs/batteries-ownership-decision.md](docs/batteries-ownership-decision.md).
 
+| Failure you want to catch | Battery | Default grade |
+| --- | --- | --- |
+| Disk filling up | `checks.Disk(path, minFreeBytes)` | warn |
+| Memory / heap pressure | `checks.Memory(maxAllocBytes)` | warn |
+| Dependency answering but broken | `checks.HTTP(url, timeout)` | warn |
+| Database unreachable or query failing | `checks.Database(db, timeout)` | warn |
+
+Every battery is `func(ctx) error` and carries a documented sentinel error, so
+it composes with `NewChecks`, `NewWithHealthCheck`, or any recorder path — the
+`checks` package is not a separate runtime, it is a set of check functions.
+Recipes and DB-metric guidance: [docs/system-checks-cookbook.md](docs/system-checks-cookbook.md).
+
 ## Audit Integration
 
 When a `HealthRecorder` is provided via `WithHealthRecorder`, every health-check batch is delegated to the recorder instead of the raw injector. [`samber-do-auditlog`](https://github.com/larsartmann/samber-do-auditlog)'s `*Plugin` satisfies the interface implicitly:

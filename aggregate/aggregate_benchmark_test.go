@@ -73,7 +73,26 @@ func BenchmarkAggregateCachedResponse(b *testing.B) {
 	}
 }
 
-// BenchmarkAggregateHandlers measures the aggregate HTTP path per handler:
+// BenchmarkAggregateSourceStatuses measures the per-source accessor: the same
+// one-atomic-load-per-source read as CachedResponse, folded into a status map
+// instead of a merged document. It should track the merge cost minus the check
+// map allocation — the point of the comparison is that per-source visibility
+// is not a second, more expensive read path.
+func BenchmarkAggregateSourceStatuses(b *testing.B) {
+	for _, sourceCount := range []int{1, 2, 4, 8} {
+		b.Run(fmt.Sprintf("sources=%d", sourceCount), func(b *testing.B) {
+			agg := benchAggregate(b, sourceCount)
+
+			b.ReportAllocs()
+
+			for range b.N {
+				agg.SourceStatuses()
+			}
+		})
+	}
+}
+
+
 // merge + UTF-8 sanitize + deterministic JSON marshal + write. Liveness is
 // the constant-time floor (empty checks, no merge); readiness is the merge
 // cost plus a marshaled body; startup is the unlatched 503 branch (no source

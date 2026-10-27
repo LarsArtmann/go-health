@@ -46,6 +46,22 @@ federation drain (issue #5), the per-check-panic grading fix (landed
 2026-10-27, `classifier.go` `isRecoveredPanic`), and this session's APIs.
 The v0.8.0 cut is already listed as an owner action in `TODO_LIST.md`.
 
+### Skew against the v0.8.0 tag (`tools/fleet-skew.sh v0.8.0`, 2026-10-27)
+
+The manifest now lists all 15 direct consumers plus both bridges
+(`tools/fleet-repos.txt`; company-master-data is forgejo-hosted and therefore
+outside the GitHub-API sweep). Result at the moment v0.8.0 was cut:
+
+| Verdict | Repos |
+| --- | --- |
+| FAIL — minor behind (v0.7.0) | go-health-dashboard, Zlota44, library-policy, file-and-image-renamer, DiscordSync, nsfw-classifier, webphone, projects-management-automation, timesheets, cqrs-htmx/health, go-taskqueue |
+| FAIL — minor behind (v0.5.1) | CV, cv, dnsblockd, KeyHolderAI |
+| WARN — no pin on GitHub `@master` | go-appkit/health (its local checkout still pins v0.5.1; the remote branch lags) |
+
+`minor-stale: 15, warnings: 1` — the expected end state: the tag exists, no
+consumer has moved yet. This table is the before-picture for the adoption
+milestones; after the consumer bumps it should read `minor-stale: 0`.
+
 ---
 
 ## 2. Implementation patterns in the fleet

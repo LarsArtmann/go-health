@@ -75,14 +75,14 @@ func BenchmarkHealthz(b *testing.B) {
 		{name: "draining", doc: `{"status":"pass","checks":{}}`, drain: true},
 	}
 
-	for _, tc := range cases {
-		b.Run(tc.name, func(b *testing.B) {
+	for _, benchCase := range cases {
+		b.Run(benchCase.name, func(b *testing.B) {
 			upstream := newRemote(b, func(w http.ResponseWriter, _ *http.Request) {
-				_, _ = w.Write([]byte(tc.doc))
+				_, _ = w.Write([]byte(benchCase.doc))
 			})
 
 			fed := mustNew(b, []federation.Remote{{Name: "a", URL: upstream.server.URL}})
-			if tc.drain {
+			if benchCase.drain {
 				fed.MarkShuttingDown()
 			}
 

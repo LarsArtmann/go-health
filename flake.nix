@@ -330,22 +330,23 @@
             # text, so a target written in Go could silently never be fuzzed.
             # One script backs the flake check (CI + nix flake check) and this
             # app; it also asserts fuzz and fuzz-long list the same targets.
-            fuzz-registry = mkApp "fuzz-registry" "Verify the flake's fuzz registry matches the Fuzz* targets in the tree"
-              [
-                pkgs.bash
-                pkgs.coreutils
-                pkgs.findutils
-                pkgs.git
-                pkgs.gnugrep
-                pkgs.gnused
-              ]
-              ''
-                root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-                if [ -n "$root" ]; then
-                  cd "$root"
-                fi
-                bash tools/fuzz-registry-check.sh
-              '';
+            fuzz-registry =
+              mkApp "fuzz-registry" "Verify the flake's fuzz registry matches the Fuzz* targets in the tree"
+                [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.findutils
+                  pkgs.git
+                  pkgs.gnugrep
+                  pkgs.gnused
+                ]
+                ''
+                  root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+                  if [ -n "$root" ]; then
+                    cd "$root"
+                  fi
+                  bash tools/fuzz-registry-check.sh
+                '';
 
             test = mkApp "test" "Run all tests" [ goPkg ] ''
               go test ./... -count=1 "$@"

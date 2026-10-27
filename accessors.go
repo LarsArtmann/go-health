@@ -171,17 +171,7 @@ func (p *Probe) Healthz() http.HandlerFunc {
 			resp.Status = StatusFail
 		}
 
-		if !p.startupPassed.Load() && resp.Status != StatusFail {
-			// Defensive: buildChecks and CachedResponse never return a nil
-			// map today; the guard keeps this handler safe if a future read
-			// path changes that.
-			if resp.Checks == nil {
-				resp.Checks = map[string]Check{}
-			}
-
-			resp.Checks["startup"] = Check{Status: StatusFail, Error: "startup latch not set"}
-			resp.Status = StatusFail
-		}
+		resp = applyStartupFailureOverlay(resp, p.startupPassed.Load())
 
 		code := http.StatusOK
 		if resp.Status == StatusFail {
@@ -190,4 +180,32 @@ func (p *Probe) Healthz() http.HandlerFunc {
 
 		writeResponse(w, code, resp)
 	})
+}
+
+// applyStartupFailureOverlay adds the synthetic failing "startup" row while the
+// startup latch is open, mirroring [aggregate.Aggregate.Healthz] and
+// [federation.Prober.Healthz]. It never overwrites a fail the read path already
+// produced: a failing critical dependency or a drain explains the real cause,
+// and replacing that explanation with "startup latch not set" would be a lie
+// about why the process is out of rotation.
+//
+// Extracted from [Probe.Healthz] so the nil-map guard is provable by test: on
+// today's read path buildChecks always allocates the map, which made the guard
+// reachable only by a future read-path change — the one situation it exists
+// for. The internal test pins all three cases directly.
+func applyStartupFailureOverlay(resp Response, startupComplete bool) Response {
+	if startupComplete || resp.Status == StatusFail {
+		return resp
+	}
+
+	// Defensive: every current read path allocates a Checks map, but the
+	// overlay must never panic if that changes.
+	if resp.Checks == nil {
+		resp.Checks = map[string]Check{}
+	}
+
+	resp.Checks["startup"] = Check{Status: StatusFail, Error: "startup latch not set"}
+	resp.Status = StatusFail
+
+	return resp
 }

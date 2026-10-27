@@ -4,6 +4,15 @@
 **Supersedes as the actionable plan:** `2026-10-27_19-18_supplier-wave-v080-from-primitives-to-fleet.md` (its distribution half is shipped) and `2026-10-27_19-18_fleet-supplier-wave-release-plan.md` (T01–T30; its executed rows are corrected in §7 Errata).
 **Inputs read before ranking:** `TODO_LIST.md`, `ROADMAP.md`, `FEATURES.md`, `docs/status/2026-10-27_21-02_distribution-shipped-consumption-zero.md` (peer, newest), `docs/status/2026-10-27_21-00_…` (mine), `docs/research/2026-10-27_fleet-consumer-needs.md`, `docs/consumer-verification.md`, `docs/adoption-matrix.md`, `CHANGELOG.md`, current code + `flake.nix`.
 
+> **Execution status (added 2026-10-28 01:0x):** the SELF-marked half of this
+> plan is finished and verified — **M05, M10–M17, M20–M23, M25, M26** are done
+> (evidence: `docs/status/2026-10-27_23-42_…` plus the `[Unreleased]` changelog
+> block), and `TODO_LIST.md` now carries the harvest instead of this file. The
+> OWNER/UPSTREAM half — **M01–M04, M06–M09, M18, M19, M24, M27** — has not
+> started: every one of them needs push authority to a repository this session
+> may not write, so re-reading this plan should start there, not at M05. Nothing
+> below was rewritten; it is the decision record that produced the work.
+
 ---
 
 ## 0. Where we actually are (verified, 21:12)
@@ -343,6 +352,8 @@ graph TD
 | `docs/planning/…19-18_supplier-wave` milestone checkboxes                           | Distribution milestones did execute; the plan's boxes were never ticked. This file is the successor.      |
 | `TODO_LIST` coverage figure 99.1%                                                   | 99.9% total, 100% root (measured 2026-10-27 20:5x).                                                       |
 | Peer report §b3 "both bridges pinned to v0.8.0"                                     | Now a milestone (M01) rather than a footnote — it is the cheapest correctness win on the board.           |
+| This file's §2 milestone table has **no M16 row** (M15 → M17)                        | M16 (ARCHITECTURE file-map completeness) executed anyway and is verified in §5; only the §2 row was lost.  |
+| M22 bundles "concurrent-writer preflight (T27)" as if it were a deliverable          | Not implemented as a mechanism on 2026-10-27 — it is a habit, not an artifact. Harvested into `TODO_LIST`. |
 
 ---
 

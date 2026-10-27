@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"maps"
 
 	"github.com/samber/do/v2"
 )
@@ -26,6 +27,8 @@ import (
 // probe reports as an all-pass response. That mirrors a recorder returning
 // no checks, and is almost always a wiring mistake — prefer letting the
 // probe run the injector directly (no recorder option) in that case.
+//
+//nolint:ireturn // returning the composed recorder interface is the point
 func ChainRecorders(recorders ...HealthRecorder) HealthRecorder {
 	chain := make([]HealthRecorder, 0, len(recorders))
 
@@ -54,9 +57,7 @@ func (c recorderChain) RecordHealthCheckWithContext(
 	merged := make(map[string]error)
 
 	for _, recorder := range c.recorders {
-		for name, err := range recorder.RecordHealthCheckWithContext(ctx, injector) {
-			merged[name] = err
-		}
+		maps.Copy(merged, recorder.RecordHealthCheckWithContext(ctx, injector))
 	}
 
 	return merged
@@ -72,9 +73,7 @@ func (c recorderChain) RecordDetailedHealthCheckWithContext(
 
 	for _, recorder := range c.recorders {
 		if detailed, ok := recorder.(DetailedHealthRecorder); ok {
-			for name, detail := range detailed.RecordDetailedHealthCheckWithContext(ctx, injector) {
-				merged[name] = detail
-			}
+			maps.Copy(merged, detailed.RecordDetailedHealthCheckWithContext(ctx, injector))
 
 			continue
 		}
@@ -86,3 +85,66 @@ func (c recorderChain) RecordDetailedHealthCheckWithContext(
 
 	return merged
 }
+
+// HealthRecorderFunc adapts a plain function to [HealthRecorder], so a
+// one-off check batch needs no named struct. It is the recorder-side analog
+// of [http.HandlerFunc]:
+//
+//	probe := health.NewWithRecorder(health.HealthRecorderFunc(
+//	    func(ctx context.Context, _ do.Injector) map[string]error {
+//	        return map[string]error{"sqlite": db.PingContext(ctx)}
+//	    },
+//	))
+//
+// A nil function panics when the first batch runs.
+type HealthRecorderFunc func(ctx context.Context, injector do.Injector) map[string]error
+
+// RecordHealthCheckWithContext implements [HealthRecorder] by calling f.
+func (f HealthRecorderFunc) RecordHealthCheckWithContext(
+	ctx context.Context,
+	injector do.Injector,
+) map[string]error {
+	return f(ctx, injector)
+}
+
+// DetailedHealthRecorderFunc adapts a metadata-rich function to both
+// [HealthRecorder] and [DetailedHealthRecorder], so per-check durations reach
+// the wire without a named struct. It is the detailed sibling of
+// [HealthRecorderFunc]:
+//
+//	probe := health.NewWithRecorder(health.DetailedHealthRecorderFunc(
+//	    func(ctx context.Context, _ do.Injector) map[string]health.CheckDetail {
+//	        start := time.Now()
+//	        err := ping(ctx)
+//
+//	        return map[string]health.CheckDetail{
+//	            "sqlite": {Err: err, Duration: time.Since(start)},
+//	        }
+//	    },
+//	))
+//
+// The plain [HealthRecorder] view projects each detail to its error, dropping
+// durations. A nil function panics when the first batch runs.
+type DetailedHealthRecorderFunc func(
+	ctx context.Context,
+	injector do.Injector,
+) map[string]CheckDetail
+
+// RecordHealthCheckWithContext implements [HealthRecorder] by projecting the
+// detailed batch to its plain error view.
+func (f DetailedHealthRecorderFunc) RecordHealthCheckWithContext(
+	ctx context.Context,
+	injector do.Injector,
+) map[string]error {
+	return errorsOf(f(ctx, injector))
+}
+
+// RecordDetailedHealthCheckWithContext implements [DetailedHealthRecorder] by
+// calling f.
+func (f DetailedHealthRecorderFunc) RecordDetailedHealthCheckWithContext(
+	ctx context.Context,
+	injector do.Injector,
+) map[string]CheckDetail {
+	return f(ctx, injector)
+}
+

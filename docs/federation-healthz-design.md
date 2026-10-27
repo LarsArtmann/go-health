@@ -2,8 +2,8 @@
 
 |            |                                                                                                                           |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
-| **Date**   | 2026-10-09                                                                                                                |
-| **Status** | ACCEPTED (design) — implementation stays in the v0.6 window; do NOT implement opportunistically                           |
+| **Date**   | 2026-10-09 (implemented 2026-10-27)                                                                                       |
+| **Status** | **IMPLEMENTED** — `federation/healthz.go`; the design below is the shipped contract                                        |
 | **Inputs** | `aggregate.Aggregate.Healthz()` (docs/aggregate-healthz-design.md), `federation` merge + latch semantics, ROADMAP Theme 7 |
 
 ## Problem
@@ -16,7 +16,7 @@ contract. `federation.Prober` exposes the three handlers but no `Healthz()`
 cannot get one URL without recomposing booting/failing/draining logic the
 package already owns.
 
-## Decision (proposed)
+## Decision (shipped)
 
 Add `(*Prober).Healthz() http.HandlerFunc`, mirroring the aggregate
 condition set with federation's fetch-based substitutions:
@@ -59,7 +59,7 @@ Prober.Healthz() == 503  iff  any per-remote latch is unset
   `CachedResponse()`'s, plus the same synthetic startup overlay rule the
   aggregate uses.
 
-## Enforcement (when implemented)
+## Enforcement (shipped)
 
 - Unit table: {all latched → 200; one never-answered remote → 503 with its
   reachable row; merged fail from a remote's own checks → 503; one remote
@@ -68,3 +68,17 @@ Prober.Healthz() == 503  iff  any per-remote latch is unset
   merged roll-up, across the topologies the existing federation property
   test enumerates.
 - ROADMAP Theme 7 cross-link updated at implementation time.
+
+## Implementation record (2026-10-27)
+
+`federation/healthz.go` ships the design above without deviation, plus one
+addition the design did not name: `Prober.MarkShuttingDown()` (the hub-side
+drain) forces 503 on its own. The design assumed the drain would surface
+through "any remote reporting shutting_down"; the hub's own drain is a
+property of this process, not of a remote, so it is tested directly.
+
+Tests: `federation/healthz_test.go` (six cases — healthy 200, warn 200,
+dark remote 503 + reachable row, remote roll-up fail 503, draining remote
+503, hub drain 503). The "hub drain does not rewrite remote statuses" claim
+is the same one `SourceStatuses` makes; see
+docs/federation-source-statuses-design.md.

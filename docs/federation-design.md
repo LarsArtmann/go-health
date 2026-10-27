@@ -115,6 +115,45 @@ pulling the full document instead of a synthetic overall status.
 
 `StartupComplete()` reports the AND of the latches.
 
+### `SourceStatuses`: the per-remote roll-up
+
+`Prober.SourceStatuses()` answers the question a hub dashboard asks next —
+"is remote `api` healthy overall?" — without refolding its `api/*` check
+keys. It returns one entry per remote name from the same
+one-parallel-fetch-per-remote pass the merged read performs, so calling
+both costs two passes; callers that need both should prefer the merged
+view's namespaced checks or two reads.
+
+- An unreachable or undecodable remote reports `fail` for itself,
+  mirroring its synthetic `name/reachable` row.
+- A remote whose document carries `shutting_down` also reports `fail`, so
+  a draining remote's card can never look greener than the page.
+- The hub's own drain does **not** rewrite remote statuses: it is a
+  property of this hub, not of any remote.
+- Reads that only need per-remote verdicts **do not advance startup
+  latches**; only the readiness/startup/healthz paths do.
+
+Every reported value is `pass`/`warn`/`fail`/`off`. A document whose own
+roll-up is outside that set is refused whole at decode, so the map can
+never carry a value the dashboard would rank as healthy without knowing
+it. The accessor mirrors `aggregate.Aggregate.SourceStatuses`, so one
+capability interface covers both merge surfaces. Full rationale:
+docs/federation-source-statuses-design.md.
+
+### `Healthz`: the single-endpoint view
+
+`Prober.Healthz()` exists for deployments behind an external load balancer
+that does not speak the kubelet three-probe contract. It returns 503 while
+any per-remote startup latch is unset, the merged roll-up is `fail` (which
+already covers unreachable remotes, shutting-down remotes, and this hub
+once marked for drain), or the hub itself is draining; 200 otherwise with
+the merged body. `warn` stays 200, matching `Probe.Healthz` and the
+aggregate. It is standalone: `RegisterRoutes` still wires only the three
+kubelet probes, and `health.DefaultRoutes` already claims `/healthz` for
+liveness. Cost is one fetch wave per request — the same as readiness, so
+the polling guidance above applies unchanged. Full rationale:
+docs/federation-healthz-design.md.
+
 ### Two-phase drain (`MarkShuttingDown`)
 
 `Prober.MarkShuttingDown()` flips a one-way hub-side flag that the
@@ -162,11 +201,13 @@ func WithClient(*http.Client) Option // transport control, pooling, TLS
 func WithTimeout(time.Duration) Option // per-fetch deadline, default 5s
 
 func (p *Prober) CachedResponse() health.Response
+func (p *Prober) SourceStatuses() map[string]health.Status // per-remote roll-up, own claim verbatim
 func (p *Prober) RefreshInterval() time.Duration // always 0
 func (p *Prober) MarkShuttingDown()              // one-way drain: readiness 503, fetches continue
 func (p *Prober) LivenessHandler() http.HandlerFunc
 func (p *Prober) ReadinessHandler() http.HandlerFunc
 func (p *Prober) StartupHandler() http.HandlerFunc
+func (p *Prober) Healthz() http.HandlerFunc // single-endpoint view for LBs without kubelet probes
 func (p *Prober) StartupComplete() bool
 func (p *Prober) RegisterRoutes(mux *http.ServeMux, routes health.Routes)
 ```

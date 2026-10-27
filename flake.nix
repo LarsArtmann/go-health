@@ -328,11 +328,18 @@
                   gosec ./...
                 '';
 
+            # Every target in the tree is listed here; a new fuzz target must
+            # be added in the same change (pre-push-checks.sh check 5 diffs
+            # the registry against `^func Fuzz` per package).
             fuzz = mkApp "fuzz" "Run fuzz targets with a short time budget" [ goPkg ] ''
               go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=10s
               go test . -run '^$' -fuzz=FuzzHandlerInput -fuzztime=10s
+              go test . -run '^$' -fuzz=FuzzThrottleWindowBoundary -fuzztime=10s
               go test ./aggregate -run '^$' -fuzz=FuzzAggregateMergeInvariants -fuzztime=10s
               go test ./checks -run '^$' -fuzz=FuzzBatteries -fuzztime=10s
+              go test ./federation -run '^$' -fuzz=FuzzCachedResponse_ArbitraryRemoteBodies -fuzztime=10s
+              go test ./federation -run '^$' -fuzz=FuzzSourceStatuses_Invariants -fuzztime=10s
+              go test ./internal/merge -run '^$' -fuzz=FuzzResponsesMergeInvariants -fuzztime=10s
             '';
 
             # Weekly deep fuzz (see .github/workflows/fuzz-long.yml). A
@@ -341,8 +348,12 @@
             fuzz-long = mkApp "fuzz-long" "Run fuzz targets with a 5-minute budget each" [ goPkg ] ''
               go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=5m "$@"
               go test . -run '^$' -fuzz=FuzzHandlerInput -fuzztime=5m "$@"
+              go test . -run '^$' -fuzz=FuzzThrottleWindowBoundary -fuzztime=5m "$@"
               go test ./aggregate -run '^$' -fuzz=FuzzAggregateMergeInvariants -fuzztime=5m "$@"
               go test ./checks -run '^$' -fuzz=FuzzBatteries -fuzztime=5m "$@"
+              go test ./federation -run '^$' -fuzz=FuzzCachedResponse_ArbitraryRemoteBodies -fuzztime=5m "$@"
+              go test ./federation -run '^$' -fuzz=FuzzSourceStatuses_Invariants -fuzztime=5m "$@"
+              go test ./internal/merge -run '^$' -fuzz=FuzzResponsesMergeInvariants -fuzztime=5m "$@"
             '';
 
             clean =

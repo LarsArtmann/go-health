@@ -68,13 +68,23 @@ value). This is the federation counterpart of `Probe.Validate`: enforcement
 at construction, before any fetch.
 
 **Per fetch — `decodeDocument` (federation/federation.go).** Wire input is
-untrusted. A document missing `status`, or carrying a check status outside
-pass/warn/fail/off, is refused whole — the fetch converts to one synthetic
-`name/reachable` FAIL carrying the cause. The refusal is fail-closed by
-design: an unknown status decoded naively would render healthy downstream.
-`off` is accepted because it is a known status with pass-tier
-`Status.Rank` — it can never fail or warn the merged roll-up, only annotate a
-row (the contract is stated in the `decodeDocument` doc comment).
+untrusted. A document missing a roll-up `status`, or carrying a roll-up status
+or a check status outside pass/warn/fail/off, is refused whole — the fetch
+converts to one synthetic `name/reachable` FAIL carrying the cause. The
+refusal is fail-closed by design: an unknown status decoded naively would
+render healthy downstream. `off` is accepted because it is a known status with
+pass-tier `Status.Rank` — it can never fail or warn the merged roll-up, only
+annotate a row (the contract is stated in the `decodeDocument` doc comment).
+
+Both status levels are validated for the same reason, though the exposure
+differs. An unknown *check* status reaches the merged surface, where the
+merge would fold it. An unknown *roll-up* status cannot reach the merged
+verdict (the merge recomputes from checks), but `SourceStatuses()` reports
+each remote's own claim verbatim, and `Status.Rank` scores an unrecognized
+value pass-tier — so an unvalidated roll-up is exactly the health-washing
+shape this package refuses everywhere else. Found 2026-10-27 by
+`FuzzSourceStatuses_Invariants`, which the earlier per-check-only guard left
+green.
 
 ## Configured-off rollout note
 

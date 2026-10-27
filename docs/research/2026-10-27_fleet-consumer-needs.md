@@ -277,6 +277,26 @@ cd ~/projects/go-health && GOWORK=off go test ./...
 # ok github.com/larsartmann/go-health/internal/merge
 ```
 
+## 5b. Late-wave addendum — features that landed after §5 was written
+
+§5 was captured mid-session. Six more capabilities landed before the wave
+closed; they are additive except where noted, and each closes a named need
+from §3.
+
+| Change | File | Closes | Kind | Tests |
+| --- | --- | --- | --- | --- |
+| `NewWithRecorder(recorder, opts...)` — injector-free recorder constructor | `new_with_recorder.go` | N5 (a recorder-only consumer no longer manufactures an empty `do.Injector`) | additive | `new_with_recorder_test.go` (5 cases) |
+| `HealthRecorderFunc` / `DetailedHealthRecorderFunc` adapters | `recorder.go` | N6 (a consumer can pass a method/closure where an interface is required) | additive | `TestDetailedHealthRecorderFunc_PreservesDurations` |
+| `DoServiceName[T]()` / `WithCriticalService[T]()` — typed critical identity | `service_name.go` | N9/N10 (stringly-typed critical sets drift from the service registration) | additive | `service_name_test.go` (2 cases) |
+| `RegisterRoutes` skips empty patterns on all three surfaces | `handlers.go`, `aggregate/aggregate.go`, `federation/federation.go` | fleet-wide: `routes.Liveness == ""` used to mount `""` on the default mux | additive | `routes_selective_test.go` ×3 |
+| `federation.Prober.Healthz()` | `federation/healthz.go` | N8 sibling + ROADMAP Theme 7 (an LB in front of a hub had no single endpoint) | additive | `healthz_test.go` (6 cases) |
+| Recovered panic fails closed in **both** `classify` and `grades` | `classifier.go` | N13 (the grader named one site; the roll-up path was independently wrong, so a non-critical panic still rolled up as `warn`) | **behavior change** | `TestNewChecks_NonCriticalPanicFailsClosed` |
+
+The last row is the wave's only behavior change. It ships with an ADR
+(`docs/adr/`), a CHANGELOG migration snippet, and a required pin flip in
+`go-appkit/health`, whose `health/probe_test.go` still asserts the old
+`warn` grading.
+
 ## 6. Remaining queue (owner-ordered)
 
 | # | Item | Impact | Effort | Gate |
@@ -291,3 +311,7 @@ cd ~/projects/go-health && GOWORK=off go test ./...
 | 8 | Bridge-level detailed constructor for `appkithealth` (`NewDetailedProbe`) | Med | 1 h | go-appkit |
 | 9 | Version-skew CI script | Med | 45 min | push authority |
 | 10 | Typed `ServiceName`, `SanitizeResponse`/`Since` renames | Low | 2 h | breaking window |
+| 11 | Adopt `NewWithRecorder` in PMA + Zlota44 (drops the empty-injector dance) | Med | 30 min | #1 |
+| 12 | Adopt `WithCriticalService[T]` in CV, KeyHolderAI, nsfw-classifier, DiscordSync labels | Med | 1 h | #1 |
+| 13 | Offer `federation.Healthz()` to the dashboard hub's LB-facing route | Med | 30 min | #1 |
+

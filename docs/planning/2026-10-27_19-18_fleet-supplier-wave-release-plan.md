@@ -8,6 +8,16 @@
 
 **Input universe:** the 50-item next-list from the session report, the 14 ranked consumer needs, the two open upstream issues (#6, #7), and the peer session's additions (typed identity, `NewWithRecorder`, recorder funcs, federation `Healthz`, selective route mounting).
 
+> **Two plans exist for the same wave.** The peer session wrote
+> [`2026-10-27_19-18_supplier-wave-v080-from-primitives-to-fleet.md`](2026-10-27_19-18_supplier-wave-v080-from-primitives-to-fleet.md)
+> (701 lines, milestones M01–M27) at the same minute. This file is the
+> **execution-order plan** (T01–T30; 155 base subtasks plus a 10-row peer-plan
+> addendum in §4b); the peer file is the
+> **risk/milestone register** and its unique items are folded into §4b.
+> Do not execute both in parallel: until the owner designates a single
+> canonical plan, execute this file's T-IDs and read the peer file's trap list
+> before each batch.
+
 ---
 
 ## 0. Where we are (verified 2026-10-27 18:57–19:18)
@@ -172,6 +182,7 @@ Order is dependency-respecting execution priority. Score = `(Impact×2 + Custome
 | T30 | Verify | Final fleet verification: go-health + 2 bridges + 4 consumers + inventory recheck | 50 | 5 | 100m | 5 | T10–T19 | one evidence table, all green |
 
 **Totals:** 30 tasks · ~1,820 minutes (~30 h) · 7 tasks (≈20%) deliver the first 80% of value.
+The peer-plan addendum (§4b) adds 10 subtasks (~108 min) and is part of Phase 0–1.
 
 ---
 
@@ -341,6 +352,48 @@ Each row is ≤12 minutes. `V:` is the verification that closes the row (no "loo
 
 ---
 
+## 4b. Peer-plan merge addendum — unique items folded in
+
+The peer plan (M01–M27) caught six things this plan's first draft missed. They are **not
+optional**: the panic-grading change is a behavior change and needs an ADR; the federation
+docs are now lying about `Healthz`; the dependency claims are stale. Each row is ≤12 minutes
+and belongs to the phase shown.
+
+| ID | ≤12-min task | Min | Phase / parent | V |
+| --- | --- | --- | --- | --- |
+| A01 | Write ADR-008: a recovered panic always fails closed (both recovery surfaces) | 12 | 0 / T01 | ADR file exists, linked from panic doc |
+| A02 | Add CHANGELOG migration snippets: non-critical panic 200/warn → 503/fail | 10 | 0 / T01 | snippet present |
+| A03 | Add CHANGELOG migration snippet: `ErrRecorderNotApplicable` path | 8 | 0 / T01 | snippet present |
+| A04 | Flip `docs/federation-healthz-design.md` status to IMPLEMENTED (it still says "do NOT implement opportunistically") | 8 | 0 / T01 | header truthful |
+| A05 | Add `SourceStatuses` + `Healthz` sections to `docs/federation-design.md` | 10 | 0 / T01 | cross-linked |
+| A06 | Reconcile dependency claims: README/AGENTS "single dependency" vs `samber/go-type-to-string` (peer change) | 10 | 0 / T03 | grep finds no false "single dependency" |
+| A07 | Reconcile FEATURES option count (13 with `WithCriticalService[T]`) and the new rows | 10 | 0 / T03 | count matches `With*` |
+| A08 | Fix the last lint finding: extract a helper in `FuzzResponseMarshalDeterministic` (gocognit 26→≤25, no nolint) | 12 | 0 / T04 | `golangci-lint` exit 0 |
+| A09 | Add INDEX rows for every doc touched by A01–A08 | 8 | 0 / T03 | rows present |
+| A10 | Run `nix run .#docs-check` after the addendum | 10 | 0 / T05 | exit 0 |
+
+**Plan-to-plan mapping (so nothing is lost):**
+
+| Peer milestones | This plan |
+| --- | --- |
+| M01 lint/test/race/vet gates | T04, T05, A08 |
+| M02 doc truth (federation/Healthz, deps, FEATURES, INDEX) | T01, T03, A04–A07, A09 |
+| M03 panic ADR + migration + issue annotation | T01, T14, A01–A03 |
+| M04 release mechanics | T06, T07 |
+| M05 cqrs-htmx bridge | T11, T13 |
+| M06 go-appkit bridge | T10, T12 |
+| M07 bridge smoke | T30 |
+| M08–M11 consumer adoptions | T15–T19 |
+| M12–M17 tests/bench/fuzz/decisions | T04, T21–T24 |
+| M18–M27 docs/process/handoff | T08, T09, T20, T25–T29 |
+
+**Additional peer guardrails adopted here:** no wire-format change in this wave; one repository
+per commit; never move a published tag (cut v0.8.1 instead); no opportunistic refactors —
+every touched file is named by a subtask; when writes race, prefer creating a new file over
+rewriting a shared one.
+
+---
+
 ## 5. Gates and verification per phase
 
 | Phase | Gate | Command / evidence | Fail action |
@@ -372,7 +425,12 @@ Each row is ≤12 minutes. `V:` is the verification that closes the row (no "loo
 7. **Stop the line on red.** A failing gate is never "probably unrelated".
 8. **AGENTS.md stays ≤220 lines**; new detail goes to a linked design note.
 9. **No new dependency** for this work (the peer's `go-type-to-string` is a separate decision to reconcile, not to extend).
-10. **Push docs/plan freely; never tag or push a release without G1.**
+10. **Push plan/docs freely; never tag or push a release without G1.**
+11. **No wire-format change in this wave** (peer guardrail): `encoding/json/v2` output is frozen.
+12. **One repository per commit** (peer guardrail): a broken consumer tree is reverted for that repo only.
+13. **No tag moves** (peer guardrail): if v0.8.0 is wrong, cut v0.8.1.
+14. **No opportunistic refactors** (peer guardrail): every touched file is named by a subtask.
+15. **When writes race, prefer a new file** over rewriting a shared one (peer guardrail, learned from `recorder.go`).
 
 ---
 

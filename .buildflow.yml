@@ -33,6 +33,18 @@ env:
 # wrappers and this block once the graph no longer requires a newer patch
 # than BuildFlow's toolchain AND full-mode spawn env/resolution is fixed
 # upstream.
+#
+# Why the fix is NOT expressible here (verified at source level 2026-10-27):
+# BuildFlow's config model carries exactly one env knob —
+# `OutputSettings.Env map[string]string` (model/config_substructs.go:156),
+# documented as "environment variables to set for all tool invocations" — and
+# there is no per-step env field anywhere in the schema (`grep -rn 'yaml:"env"'
+# ~/projects/BuildFlow --include=*.go` returns that single line). A step-scoped
+# GOTOOLCHAIN/GOWORK override therefore cannot be configured; the only lever is
+# the global block above, which already sets GOTOOLCHAIN=auto and still does not
+# reach the failing spawn. The residual red is upstream (spawn-env propagation
+# plus the binary's go 1.27.0 closure), which is why this is a documented
+# non-fix with proof instead of a config change.
 tool_paths:
   go-generate: tools/bin
   govalid-generate: tools/bin

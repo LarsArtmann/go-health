@@ -1,6 +1,13 @@
 version: "2"
 run:
-  timeout: 5m
+  # 10m, not the usual 5m: package loading is the expensive half, and it degrades
+  # to "context deadline exceeded" long before any linter reports an issue when
+  # the host is loaded (observed twice on 2026-10-27 at load average >250 with
+  # ~15 concurrent golangci-lint language servers; the same tree completed in
+  # ~9m with a 15m deadline and reported exactly one real finding). A longer
+  # deadline cannot hide a finding — issues still fail the run once loading
+  # completes.
+  timeout: 10m
   go: "1.27"
   build-tags:
     - goexperiment.arenas

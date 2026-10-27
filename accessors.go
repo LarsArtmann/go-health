@@ -36,6 +36,10 @@ type DetailedHealthCheckFunc func(ctx context.Context) map[string]CheckDetail
 // The function must be safe for concurrent use; a panic inside it is
 // recovered and reported as a fail-closed synthetic error, exactly like the
 // other check sources.
+//
+// [WithHealthRecorder] cannot run here (the function owns batch execution);
+// passing it makes [Probe.Validate] and [Probe.Start] fail with
+// [ErrRecorderNotApplicable].
 func NewWithDetailedCheck(fn DetailedHealthCheckFunc, opts ...Option) *Probe {
 	cfg := buildStandaloneConfig(opts)
 
@@ -52,9 +56,11 @@ func NewWithDetailedCheck(fn DetailedHealthCheckFunc, opts ...Option) *Probe {
 // inside the function is recovered and reported as a fail-closed synthetic
 // error, exactly like the recorder path.
 //
-// If the options include [WithHealthRecorder], it has no effect here: the
-// explicit function already owns batch execution. All other options apply
-// normally.
+// [WithHealthRecorder] cannot run here: the explicit function already owns
+// batch execution. Passing it makes [Probe.Validate] (and [Probe.Start])
+// fail with [ErrRecorderNotApplicable] rather than compiling into a silent
+// no-op. Use [New] with a samber/do injector for recorder callbacks. All
+// other options apply normally.
 func NewWithHealthCheck(fn HealthCheckFunc, opts ...Option) *Probe {
 	cfg := buildStandaloneConfig(opts)
 

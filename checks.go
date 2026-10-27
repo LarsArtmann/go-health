@@ -37,8 +37,10 @@ type CheckFunc func(ctx context.Context) error
 //   - Names are graded against [WithCriticalServices] exactly like injector
 //     services; an empty map yields a permanently-passing batch (the same
 //     contract as a readiness handler with no checks).
-//   - [WithHealthRecorder] has no effect here: the given checks own batch
-//     execution. All other options apply normally.
+//   - [WithHealthRecorder] cannot run here: the given checks own batch
+//     execution. Passing it makes [Probe.Validate] and [Probe.Start] fail
+//     with [ErrRecorderNotApplicable] instead of silently dropping the
+//     observer. All other options apply normally.
 func NewChecks(checks map[string]CheckFunc, opts ...Option) *Probe {
 	cfg := buildStandaloneConfig(opts)
 

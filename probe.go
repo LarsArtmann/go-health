@@ -220,6 +220,13 @@ func WithAllowedMethods(methods ...string) Option {
 // Pass an [auditlog.Plugin] directly when you want audit-log integration:
 //
 //	probe := health.New(injector, health.WithHealthRecorder(plugin))
+//
+// The option only applies to the injector path ([New]). The function-path
+// constructors ([NewWithHealthCheck], [NewWithDetailedCheck], [NewChecks])
+// own batch execution themselves, so they cannot run a recorder: passing it
+// there makes [Probe.Validate] (and therefore [Probe.Start]) fail with
+// [ErrRecorderNotApplicable] instead of silently capturing nothing. Use
+// [ChainRecorders] to observe one batch through several recorders.
 func WithHealthRecorder(r HealthRecorder) Option {
 	return func(c *config) { c.recorder = r }
 }
@@ -686,6 +693,13 @@ func (p *Probe) MarkShuttingDown() {
 // The context should carry a deadline; [Probe.Start] applies [Probe.timeout]
 // automatically. When a [HealthRecorder] is configured, checks are delegated
 // to it instead of the raw injector.
+//
+// Evaluate does NOT publish its result: the served snapshot
+// ([Probe.CachedResponse], readiness, dashboards) keeps the previous
+// evaluation until the background loop or an explicit
+// [Probe.EvaluateAndCache] replaces it. Use Evaluate for one-off probes and
+// tests; use EvaluateAndCache when the result must become what the next
+// request sees.
 func (p *Probe) Evaluate(ctx context.Context) Response {
 	start := time.Now()
 
@@ -719,7 +733,31 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 	return resp
 }
 
-// invokeEvaluationHook calls fn with a defensive copy of resp: the struct by
+// EvaluateAndCache runs one full health-check batch bounded by
+// [WithTimeout], publishes the result as the served snapshot, and returns
+// it. It is the on-demand sibling of the background refresh tick: after the
+// call, [Probe.CachedResponse], readiness, and every dashboard read observe
+// this evaluation.
+//
+// Use it when a consumer's fallback path must leave the cache coherent —
+// the common shape is "serve the cached response while it is fresh, run
+// EvaluateAndCache when it is not". [Probe.Evaluate] deliberately does not
+// publish, so a fallback built on it would answer correctly once and then
+// keep serving the older snapshot.
+//
+// The caller's context may carry an earlier deadline; the batch deadline is
+// the earlier of the two. Publishing races a concurrent refresh tick the
+// same way two ticks would: both responses are truthful evaluations and the
+// last store wins.
+func (p *Probe) EvaluateAndCache(ctx context.Context) Response {
+	evalCtx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	resp := p.Evaluate(evalCtx)
+	p.latest.Store(&resp)
+
+	return resp
+}
 // value and a fresh clone of the Checks map, so a misbehaving hook can
 // neither corrupt the response the probe serves and caches nor observe later
 // mutations of it. A panicking hook is recovered and reported as an error
@@ -814,6 +852,13 @@ func (p *Probe) StartupComplete() bool {
 // The live shuttingDown flag is overlaid on the cached value so a stale cached
 // response (evaluated before [Probe.Shutdown] was called) still reflects the
 // current shutdown state.
+//
+// The returned Response is a read-only view: its Checks map aliases the
+// published snapshot on purpose (the lock-free read must not allocate). Use
+// [Response.Clone] before projecting extra rows onto it, and use
+// [Probe.CacheAge] to distinguish "fresh pass" from "never evaluated" — the
+// zero-value response above is indistinguishable from a real all-pass batch
+// by status alone.
 func (p *Probe) CachedResponse() Response {
 	if cached := p.latest.Load(); cached != nil {
 		resp := *cached
@@ -834,6 +879,65 @@ func (p *Probe) CachedResponse() Response {
 	}
 
 	return resp
+}
+
+// CacheAge reports how long ago the served snapshot was evaluated, and
+// whether a snapshot exists at all. It never runs checks and never allocates.
+//
+// The boolean separates the two states [Probe.CachedResponse] cannot: false
+// means no evaluation has been published yet (never started, or live mode
+// with no request so far), so the synthesized pass response must not be
+// trusted as evidence. A zero evaluation timestamp (a custom
+// [WithNowFunc] returning the zero time) also reports false.
+//
+// Age comes from the same injected clock the probe stamps responses with, so
+// a fixed test clock yields a deterministic age. Use it with
+// [Probe.CachedResponseFresh] for the serve-cache-or-evaluate policy that
+// consumers otherwise hand-roll around the raw timestamp.
+func (p *Probe) CacheAge() (time.Duration, bool) {
+	cached := p.latest.Load()
+	if cached == nil || cached.Timestamp.IsZero() {
+		return 0, false
+	}
+
+	age := p.now().Sub(cached.Timestamp)
+	if age < 0 {
+		// A backwards clock step must not report a negative age; the
+		// snapshot is simply as fresh as it can be.
+		age = 0
+	}
+
+	return age, true
+}
+
+// CachedResponseFresh returns the served snapshot when it was evaluated at
+// most maxAge ago. When no snapshot exists, it is older than maxAge, or
+// maxAge is not positive, it returns the zero Response and false.
+//
+// This is the read-side half of the "serve cache while fresh, otherwise
+// evaluate" policy:
+//
+//	if resp, ok := probe.CachedResponseFresh(2 * probe.RefreshInterval()); ok {
+//	    serve(resp)
+//	} else {
+//	    serve(probe.EvaluateAndCache(ctx))
+//	}
+//
+// The returned response carries the live shutdown overlay, exactly like
+// [Probe.CachedResponse]. A non-positive maxAge never reports fresh: a
+// zero-length freshness window would otherwise bless a snapshot taken an
+// arbitrary time ago.
+func (p *Probe) CachedResponseFresh(maxAge time.Duration) (Response, bool) {
+	if maxAge <= 0 {
+		return Response{}, false
+	}
+
+	age, ok := p.CacheAge()
+	if !ok || age > maxAge {
+		return Response{}, false
+	}
+
+	return p.CachedResponse(), true
 }
 
 // RefreshInterval returns the configured background cache refresh interval.

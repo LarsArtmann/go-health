@@ -209,6 +209,23 @@
               ${lib.getExe docsDriftCheck}
               touch $out
             '';
+
+            fuzz-registry =
+              pkgs.runCommand "fuzz-registry"
+                {
+                  nativeBuildInputs = [
+                    pkgs.bash
+                    pkgs.coreutils
+                    pkgs.findutils
+                    pkgs.gnugrep
+                    pkgs.gnused
+                  ];
+                }
+                ''
+                  cd ${self}
+                  bash tools/fuzz-registry-check.sh
+                  touch $out
+                '';
           };
 
           devShells.default = pkgs.mkShell {
@@ -248,6 +265,26 @@
               program = lib.getExe docsDriftCheck;
               meta.description = "Verify README/AGENTS/CHANGELOG/FEATURES stay in sync with the latest tag (CONTRIBUTING release checklist)";
             };
+
+            # Fuzz-registry parity: both fuzz apps are hand-maintained shell
+            # text, so a target written in Go could silently never be fuzzed.
+            # One script backs the flake check (CI + nix flake check) and this
+            # app; it also asserts fuzz and fuzz-long list the same targets.
+            fuzz-registry = mkApp "fuzz-registry" "Verify the flake's fuzz registry matches the Fuzz* targets in the tree"
+              [
+                pkgs.bash
+                pkgs.coreutils
+                pkgs.findutils
+                pkgs.gnugrep
+                pkgs.gnused
+              ]
+              ''
+                root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+                if [ -n "$root" ]; then
+                  cd "$root"
+                fi
+                bash tools/fuzz-registry-check.sh
+              '';
 
             test = mkApp "test" "Run all tests" [ goPkg ] ''
               go test ./... -count=1 "$@"
@@ -341,9 +378,13 @@
                   gosec -exclude-dir=tools ./...
                 '';
 
-            # Every target in the tree is listed here; a new fuzz target must
-            # be added in the same change (pre-push-checks.sh check 5 diffs
-            # the registry against `^func Fuzz` per package).
+            # Every target in the tree is listed here AND in fuzz-long, in
+            # lockstep; a new target must be added to both in the same change.
+            # The `fuzz-registry` app (and checks.fuzz-registry) diff this
+            # registry against `^func Fuzz` per package, so a forgotten
+            # registration fails `nix run .#gates` instead of silently never
+            # fuzzing. Before that check existed this comment claimed a
+            # pre-push hook did the diff, and no such hook existed.
             fuzz = mkApp "fuzz" "Run fuzz targets with a short time budget" [ goPkg ] ''
               go test . -run '^$' -fuzz=FuzzResponseMarshalDeterministic -fuzztime=10s
               go test . -run '^$' -fuzz=FuzzHandlerInput -fuzztime=10s

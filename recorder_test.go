@@ -178,7 +178,12 @@ func TestValidate_RejectsRecorderOnFunctionPath(t *testing.T) {
 				t.Errorf("Validate = %v, want ErrRecorderNotApplicable", err)
 			}
 
-			if err := tt.probe.Start(t.Context()); !errors.Is(err, health.ErrRecorderNotApplicable) {
+			if err := tt.probe.Start(
+				t.Context(),
+			); !errors.Is(
+				err,
+				health.ErrRecorderNotApplicable,
+			) {
 				t.Errorf("Start = %v, want ErrRecorderNotApplicable", err)
 			}
 		})
@@ -234,7 +239,12 @@ func TestValidate_RecorderRejectionOutranksConfigErrors(t *testing.T) {
 				t.Errorf("Validate = %v, want ErrRecorderNotApplicable", err)
 			}
 
-			if err := tt.probe.Start(t.Context()); !errors.Is(err, health.ErrRecorderNotApplicable) {
+			if err := tt.probe.Start(
+				t.Context(),
+			); !errors.Is(
+				err,
+				health.ErrRecorderNotApplicable,
+			) {
 				t.Errorf("Start = %v, want ErrRecorderNotApplicable", err)
 			}
 		})

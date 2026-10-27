@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Removed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [v0.8.0] - 2026-10-27
+
+### Added
+
 - `Probe.CacheAge()` and `Probe.CachedResponseFresh(maxAge)` expose cache freshness as a contract instead of a timestamp convention. `CacheAge` separates "fresh snapshot" from "never evaluated" (the synthesized pass response is not evidence), uses the probe's injected clock so tests stay deterministic, and clamps a backwards clock step to zero. `CachedResponseFresh` returns the cached view (with the live shutdown overlay) only while `0 < age <= maxAge`; a non-positive window never reports fresh. Both are lock-free and allocate nothing. Four fleet consumers (DiscordSync, dnsblockd, cv, go-taskqueue) had hand-rolled the same adapters around `Timestamp`. Design: docs/cache-freshness-design.md.
 - `Probe.EvaluateAndCache(ctx)` runs one `WithTimeout`-bounded batch, publishes it as the served snapshot, and returns it. `Evaluate` deliberately does not publish, so a fallback built on it answered correctly once and then kept serving the older snapshot — the bug shape behind three consumer adapters and the reason the documented "does not update the cache" note was not enough. Design: docs/cache-freshness-design.md.
 - `Response.Clone()` returns an independent copy including the `Checks` map. `CachedResponse` is a lock-free read whose `Checks` map necessarily aliases the published snapshot; two consumers (dnsblockd, cv) hit the concurrent-map-write crash and cloned by hand, and docs/synthetic-check-overlay.md called that clone "the load-bearing line". The godoc now states the ownership rule and Clone is the sanctioned copy. Design: docs/response-ownership-design.md.
@@ -471,7 +489,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.8.0...HEAD
+[v0.8.0]: https://github.com/larsartmann/go-health/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/larsartmann/go-health/compare/v0.6.1...v0.7.0
 [v0.6.1]: https://github.com/larsartmann/go-health/compare/v0.6.0...v0.6.1
 [v0.6.0]: https://github.com/larsartmann/go-health/compare/v0.5.1...v0.6.0

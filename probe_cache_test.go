@@ -236,7 +236,9 @@ func TestEvaluateAndCache_PublishesButEvaluateDoesNot(t *testing.T) {
 			"(Evaluate must not publish)", cached.Status)
 	}
 
-	if published := probe.EvaluateAndCache(context.Background()); published.Status != health.StatusPass {
+	if published := probe.EvaluateAndCache(
+		context.Background(),
+	); published.Status != health.StatusPass {
 		t.Fatalf("second EvaluateAndCache status = %q, want pass", published.Status)
 	}
 

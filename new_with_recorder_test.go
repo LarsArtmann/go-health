@@ -115,6 +115,10 @@ func TestDetailedHealthRecorderFunc_PreservesDurations(t *testing.T) {
 
 	check := probe.Evaluate(t.Context()).Checks["db"]
 	if check.DurationNanos != (3 * time.Millisecond).Nanoseconds() {
-		t.Errorf("duration_ns = %d, want %d", check.DurationNanos, (3 * time.Millisecond).Nanoseconds())
+		t.Errorf(
+			"duration_ns = %d, want %d",
+			check.DurationNanos,
+			(3 * time.Millisecond).Nanoseconds(),
+		)
 	}
 }

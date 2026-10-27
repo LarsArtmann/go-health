@@ -211,7 +211,8 @@ func FuzzSourceStatuses_Invariants(f *testing.F) {
 			t.Fatalf("SourceStatuses is not deterministic: %v then %v", statuses, again)
 		}
 
-		if _, refused := prober.CachedResponse().Checks["fuzz/reachable"]; refused && status != health.StatusFail {
+		if _, refused := prober.CachedResponse().Checks["fuzz/reachable"]; refused &&
+			status != health.StatusFail {
 			t.Fatalf("refused remote reports %q, want fail", status)
 		}
 

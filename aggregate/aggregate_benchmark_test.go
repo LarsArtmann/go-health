@@ -92,7 +92,6 @@ func BenchmarkAggregateSourceStatuses(b *testing.B) {
 	}
 }
 
-
 // merge + UTF-8 sanitize + deterministic JSON marshal + write. Liveness is
 // the constant-time floor (empty checks, no merge); readiness is the merge
 // cost plus a marshaled body; startup is the unlatched 503 branch (no source

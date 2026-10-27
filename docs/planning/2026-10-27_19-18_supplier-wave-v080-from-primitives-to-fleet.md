@@ -724,3 +724,4 @@ flowchart LR
 | 2026-10-27 19:18 | plan | created | Plan authored, graph + tables verified | this file |
 | 2026-10-27 19:26 | M01 (prep) | lint re-check | 1 finding remains (`gocognit`); peer fixed err113 + wsl | `golangci-lint run ./...` |
 | 2026-10-27 19:26 | coordination | peer plan detected | Two plans; this one is the risk register, peer file owns T-IDs | `docs/planning/2026-10-27_19-18_fleet-supplier-wave-release-plan.md` |
+| 2026-10-27 19:31 | plan | validated | 62 P items, 27 milestones, 212 subtasks, 0 over 12 min, mermaid nodes/edges resolve | validation script in session log |

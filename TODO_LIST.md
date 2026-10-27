@@ -92,6 +92,19 @@ mechanics per the A22 table.
 | Re-measure `BenchmarkReadinessHandler_Draining` with `-benchmem -count=3`; unify FEATURES row provenance (median ns + single-run allocs mixed)                                                                                                | TODO   | Low    | S      | 20:39 report B2; FEATURES Performance row, `federation/federation_benchmark_test.go`                                                                                  |
 | Multi-remote draining benchmark (1/2/4/8 remotes), mirroring the aggregate scaling rows                                                                                                                                                       | TODO   | Low    | S      | 20:39 report f15; complements the single-remote draining baseline                                                                                                     |
 
+## Consumer-needs wave (2026-10-27 sweep — evidence: docs/research/2026-10-27_fleet-consumer-needs.md)
+
+| Task | Status | Impact | Effort | Evidence |
+| --- | --- | --- | --- | --- |
+| Bump `go-appkit/health` (v0.5.1) to the release carrying #7-F1, flip `probe_test.go` warn→fail, delete the "silently dropped recorder" godoc (it now fails at Start) | BLOCKED | High | 1h | blocked on the v0.8.0 cut; §N13/N5 of the needs sweep |
+| Bump `cqrs-htmx/health` (v0.7.0) to the release; delete its `RecorderChain` in favour of `health.ChainRecorders` (durations survive); widen `NewDashboard` to the dashboard `Prober` interface so aggregate/federation render | BLOCKED | High | 1h | blocked on the v0.8.0 cut; §N6/N10 |
+| Adopt `CachedResponseFresh` + `EvaluateAndCache` in DiscordSync, dnsblockd, cv, go-taskqueue; delete the four hand-rolled cache adapters | BLOCKED | High | 3h | blocked on the v0.8.0 cut; §N1/R2 |
+| Document the one-way shutdown latch on `Start`/`Shutdown` and the `AwaitReady` zero-value caveat | TODO | Med | 30min | §N7/N12; issue #7 F4 |
+| Refresh `docs/consumer-verification.md` to the 36-consumer inventory, three bridges, five patterns | TODO | Med | 1h | §1/§2 |
+| README pointer: failure mode → `checks.*` battery (Disk on the data dir was scored "unused" by company-master-data) | TODO | Med | 30min | §N11 |
+| Annotate issue #7: F1/F2/F3 fixed on master, F4 docs pending; F2 shipped as Start-time rejection (no signature change) | TODO | Low | 10min | owner act |
+| Dashboard-family asks carried, not owned here: `HTMLDataAttrs` (fir DD9, draft ready), dashboard#14 (`Shutdown` does not cancel the `Start` ctx), dashboard#17 (nightly fuzz) | TODO | Med | — | §N14; separate repo |
+
 ## Owner Actions (artifacts ready, publishing is yours)
 
 | Task                                                                | Status | Impact | Effort | Evidence                                                                                                                                                                                                                                                                                                                                                               |
@@ -99,7 +112,7 @@ mechanics per the A22 table.
 | Publish the v0.1.1/v0.1.2 announcement                              | TODO   | Low    | 15min  | Draft + channels checklist ready in `docs/announcements/2026-09-04_v0.1.1-v0.1.2.md`.                                                                                                                                                                                                                                                                                  |
 | Post samber/do#318 comment: per-service duration on `HealthOutcome` | TODO   | Medium | 5min   | Draft + verification notes + checklist ready in `docs/announcements/2026-09-22_samber-do-issue-318-duration-comment.md` (gates passed, voice-checked). **2026-10-09: citations re-verified against samber/do master** (batch machinery moved to `queueServiceHealthcheck`, root_scope.go:213); #318 still has 0 comments. Posting is the owner act (third-party repo). |
 | Post the issue-#5 close comment                                     | TODO   | Medium | 5min   | Draft ready in `docs/drafts/issue5-close-comment.md` (implementation + gates evidence, closing as completed); posting is the owner act.                                                                                                                                                                                                                                |
-| Cut the next release carrying the federation drain (v0.8.0)         | TODO   | High   | 30min  | CHANGELOG `[Unreleased]` entry ready (drain + test-surface hardening, `issue #5` xref); manual tag flow per ROADMAP; post-release checklist incl. docs-check vs the new tag + `go get @latest` smoke. The drain did NOT ride v0.7.0.                                                                                                                                   |
+| Cut v0.8.0 (drain + issue #6 + #7-F1 + the 2026-10-27 consumer APIs) | TODO   | High   | 30min  | CHANGELOG `[Unreleased]` carries all of it: federation drain (#5), `SourceStatuses` (#6), per-check-panic grading (#7-F1), `CacheAge`/`CachedResponseFresh`/`EvaluateAndCache`/`Response.Clone`/`ErrRecorderNotApplicable`/`ChainRecorders`. Manual tag flow per ROADMAP; post-release checklist incl. docs-check vs the new tag + `go get @latest` smoke. None of it rode v0.7.0. |
 
 ## High Impact (owner decisions — blocked)
 

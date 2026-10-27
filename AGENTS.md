@@ -50,21 +50,19 @@ export_test.go   — ResetStartupLatchForTest (test builds only; public latch st
 ```
 
 Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
-`health.Response`: `Source{Name, Probe}`, `New(sources...)` (rejects empty, duplicate,
-slash-containing, or nil-probe sources — docs/aggregate-source-name-design.md), merge-on-read
-`CachedResponse` (N lock-free loads onto the shared `internal/merge` primitive), `StartupComplete`
-(AND of latches), the three kubelet handlers, and a standalone `Healthz()` handler
-(docs/aggregate-healthz-design.md).
+`health.Response`: `Source{Name, Probe}`, `New(sources...)` (rejects empty, duplicate, slash-containing, or nil-probe
+sources — docs/aggregate-source-name-design.md), merge-on-read `CachedResponse` (N lock-free loads onto the shared
+`internal/merge` primitive), `StartupComplete` (AND of latches), the three kubelet handlers, and a standalone
+`Healthz()` handler (docs/aggregate-healthz-design.md).
 
 Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N remote go-health instances
 over HTTP into one `health.Response` — same source-name contract as aggregate, merge-on-read with one parallel fetch per
 remote mapped onto the shared `internal/merge` primitive (fetch error → `FetchErr`), per-remote startup latches (advanced
 federation-side on successful fetch, never inside the merge), and one synthetic `name/reachable` FAIL check per
-unreachable/undecodable remote (never a silent freeze, never a status override). Wire input is untrusted (invalid documents
-refused whole),
-`Check.Since`/`DurationNanos` survive verbatim, scalars do not. `MarkShuttingDown()` adds a one-way hub-side drain (readiness 503 with `shutting_down: true`, fetches continue so bodies stay fresh; liveness/startup unaffected). Full semantics (fetch caps,
-dashboard-`Prober` structural assertion, API surface): docs/federation-design.md. Remote
-names never hit `ErrUnknownCriticalService` (fetch-side is a different universe):
+unreachable/undecodable remote (never a silent freeze, never a status override). Wire input is untrusted (invalid documents refused whole); `Check.Since`/`DurationNanos` survive verbatim, scalars do not.
+`MarkShuttingDown()` adds a one-way hub-side drain (readiness 503 with `shutting_down: true`, fetches continue so bodies stay fresh; liveness/startup unaffected). `SourceStatuses()` mirrors aggregate's per-remote roll-up (unreachable/draining remotes report fail; no latch movement).
+Full semantics (fetch caps, dashboard-`Prober` structural assertion, API surface): docs/federation-design.md +
+docs/federation-source-statuses-design.md; remote names never hit `ErrUnknownCriticalService`:
 docs/federation-validation-semantics.md.
 
 Sub-package `checks` (source: `checks/checks.go`) is the batteries package: zero-dependency,
@@ -77,8 +75,7 @@ docs/batteries-ownership-decision.md; tests use an in-process `sql.Register` fak
 Sub-package `internal/merge` (source: `internal/merge/merge.go`) is the single home of the worst-of fold behind both
 merge-on-read packages (docs/merge-unification-design.md): `Source{Name, Response, FetchErr}` + `Responses(sources)` — worst-of
 via `Rank` with tie stability (`off`/unknown roll-ups can't leak in; order-independent), `"source/check"` namespacing, shutdown
-overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars dropped. Pure. The collapsed merge fuzz suite
-lives here; packages keep thin mapping tests.
+overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars dropped. Pure; the collapsed merge fuzz suite lives here.
 
 ### Key Design Decisions
 
@@ -103,6 +100,8 @@ lives here; packages keep thin mapping tests.
 - **Panic recovery in health checks, fail closed** — `runHealthChecks` recovers panics from the recoverable surface (recorder implementations, batch machinery) and converts them to a synthetic `health-check` error wrapping `ErrPanicDuringHealthCheck`; `classify` maps any recovered panic to `fail` (503), never `warn`. Service `HealthCheck` panics on the injector path are process-fatal: samber/do runs each check in its own goroutine, so no probe-side recover can catch them. See [docs/panic-recovery-design.md](docs/panic-recovery-design.md).
 - **Hook panics recovered, warn-not-fail (2026-10-09)** — the `WithEvaluationHook` call site is a separate surface: the hook runs after evidence collection completes, so a recovered hook panic degrades the response to a synthetic non-critical `evaluation-hook` warn row (sentinel `ErrPanicDuringEvaluationHook`), never `fail`, and never kills the refresh loop. The hook receives a defensive copy (own `Checks` map), so it cannot corrupt the served/cached response. The "recovered panics never warn" rule binds the data-collection surface only — see the design doc's evaluation-hook addendum.
 - **Validate-on-Start** — `Start()` calls `Validate()` and returns an error on invalid configuration (zero/negative timeout, negative refresh interval). Fail-fast instead of silent runtime degradation.
+- **Cache freshness is a primitive, not a policy (2026-10-27)** — `CacheAge`/`CachedResponseFresh`/`EvaluateAndCache` supply the serve-cache-or-evaluate mechanics four fleet consumers had hand-rolled; `CachedResponse` stays a zero-alloc read-only view (`Checks` aliases the snapshot) and `Response.Clone` is the sanctioned copy before overlays (docs/cache-freshness-design.md, docs/response-ownership-design.md).
+- **Fail at boot, not silently (2026-10-27)** — function-path constructors reject `WithHealthRecorder` through `ErrRecorderNotApplicable` in `Validate`/`Start` (go-health#7 F2), and `ChainRecorders` preserves detailed durations across sinks (`recorder.go`). A recovered per-check panic grades `fail` even for non-critical checks (`isRecoveredPanic`, #7 F1); go-appkit must flip its warn pin when it bumps past this release.
 - **Zero logging coupling** — the library does not import `log/slog` or any logging package. HTTP write failures (client disconnect) are silently swallowed. A library must not make logging decisions for the host application.
 - **Observability via hook, not library** — `WithEvaluationHook` is the metrics/alerting seam; Prometheus/OpenTelemetry formats are consumer composition (docs/prometheus-exposition-design.md). No client_golang dependency.
 - **Programmatic API mirrors handlers** — `Status/Alive/Ready/AwaitReady` read the cached view (never trigger checks); `Healthz` answers "route traffic here?"; `HealthCheck`/`AsShutdowner` make the probe a first-class do citizen.
@@ -120,7 +119,7 @@ Migration guide for pre-extraction code: [docs/migration-plugin-to-recorder.md](
 `(cd tools/doanalyzerv2 && go run . ..)`) reports 0 DO-1..DO-6 findings. It needs the
 go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod replace path).
 
-**Consumer verification:** fleet compatibility inventory (15 direct + 16 indirect consumers, four implementation patterns), the per-release dashboard verification timeline, and the samber-do-auditlog reverse-dependency prohibition live in [docs/consumer-verification.md](docs/consumer-verification.md).
+**Consumer verification:** fleet compatibility inventory (15 direct repos → 36 dashboard consumers through three bridges; five implementation patterns, incl. hand-rolled cache adapters), the per-release dashboard verification timeline, and the samber-do-auditlog reverse-dependency prohibition live in [docs/consumer-verification.md](docs/consumer-verification.md); the 2026-10-27 needs sweep + supplier plan is [docs/research/2026-10-27_fleet-consumer-needs.md](docs/research/2026-10-27_fleet-consumer-needs.md).
 
 ### Data Flow
 

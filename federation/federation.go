@@ -269,6 +269,66 @@ func (p *Prober) CachedResponse() health.Response {
 // cachedResponse is CachedResponse with an explicit context: handlers pass
 // the request's context so a disconnected caller cancels its fetches.
 func (p *Prober) cachedResponse(ctx context.Context) health.Response {
+	resp := p.merge(p.fetchAll(ctx))
+
+	// Drain overlay, mirroring [health.Probe.CachedResponse]: the flag is
+	// consulted live on every read, so a hub marked mid-flight flips to 503
+	// on the next request even with every remote still healthy. The
+	// StartupHandler discards this response and LivenessHandler never
+	// fetches, so the overlay reaches exactly the surfaces it must.
+	if p.shuttingDown.Load() {
+		resp.ShuttingDown = true
+		resp.Status = health.StatusFail
+	}
+
+	return resp
+}
+
+// SourceStatuses folds every remote's own document to its roll-up status:
+// one entry per remote name, from the same one-parallel-fetch-per-remote
+// pass [Prober.CachedResponse] performs (so calling both costs two passes;
+// callers that need both should prefer two reads or the merged view's
+// namespaced checks). It answers the per-remote question a hub dashboard
+// asks next — "is remote api healthy overall?" — without refolding
+// "api/*" check keys.
+//
+// An unreachable or undecodable remote reports [health.StatusFail] for
+// itself, mirroring its synthetic "name/reachable" row; a remote whose
+// document carries shutting_down also reports fail, so a draining remote's
+// card cannot look greener than the page. The hub's own drain
+// ([Prober.MarkShuttingDown]) does not rewrite remote statuses — it is a
+// property of this hub, not of any remote.
+//
+// This accessor mirrors [aggregate.Aggregate.SourceStatuses], so one
+// capability interface covers both merge surfaces. See
+// docs/federation-source-statuses-design.md.
+func (p *Prober) SourceStatuses() map[string]health.Status {
+	statuses := make(map[string]health.Status, len(p.states))
+
+	for _, fetched := range p.fetchAll(context.Background()) {
+		name := fetched.state.remote.Name
+		if !fetched.result.ok {
+			statuses[name] = health.StatusFail
+
+			continue
+		}
+
+		status := fetched.result.resp.Status
+		if fetched.result.resp.ShuttingDown {
+			status = health.StatusFail
+		}
+
+		statuses[name] = status
+	}
+
+	return statuses
+}
+
+// fetchAll performs one parallel fetch per remote. Results carry their
+// remote's state pointer, so callers never rely on two slices staying
+// index-aligned. Latch movement and merging stay with the callers: reads
+// that only need per-remote verdicts must not advance startup latches.
+func (p *Prober) fetchAll(ctx context.Context) []fetchedRemote {
 	//nolint:makezero // pre-sized slice: parallel goroutines write results[i] by index
 	results := make([]fetchedRemote, len(p.states))
 
@@ -284,19 +344,7 @@ func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 
 	wg.Wait()
 
-	resp := p.merge(results)
-
-	// Drain overlay, mirroring [health.Probe.CachedResponse]: the flag is
-	// consulted live on every read, so a hub marked mid-flight flips to 503
-	// on the next request even with every remote still healthy. The
-	// StartupHandler discards this response and LivenessHandler never
-	// fetches, so the overlay reaches exactly the surfaces it must.
-	if p.shuttingDown.Load() {
-		resp.ShuttingDown = true
-		resp.Status = health.StatusFail
-	}
-
-	return resp
+	return results
 }
 
 // merge combines fetch results into one response and advances the

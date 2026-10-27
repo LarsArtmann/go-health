@@ -758,6 +758,8 @@ func (p *Probe) EvaluateAndCache(ctx context.Context) Response {
 
 	return resp
 }
+
+// invokeEvaluationHook calls fn with a defensive copy of resp: the struct by
 // value and a fresh clone of the Checks map, so a misbehaving hook can
 // neither corrupt the response the probe serves and caches nor observe later
 // mutations of it. A panicking hook is recovered and reported as an error

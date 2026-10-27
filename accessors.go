@@ -95,6 +95,13 @@ func (p *Probe) Ready() bool {
 // background cache it observes refreshes; in live mode it observes the
 // requests of others. AwaitReady after Shutdown never becomes ready —
 // shutdown is one-way.
+//
+// It is NOT a startup gate. [Probe.Ready] means "not currently failing", and
+// the cache before the first evaluation holds a zero-value pass, so
+// AwaitReady returns nil immediately on a probe that has never checked
+// anything — proving nothing. Gate startup on [Probe.StartupComplete] (the
+// one-way latch) instead, and use [Probe.CacheAge] to tell an evaluated pass
+// from the never-evaluated one.
 func (p *Probe) AwaitReady(ctx context.Context) error {
 	const pollInterval = 50 * time.Millisecond
 

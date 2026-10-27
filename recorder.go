@@ -19,9 +19,11 @@ import (
 // plus a flight recorder, projection health plus injector services —
 // without re-implementing the merge in every consumer bridge.
 //
-// The returned recorder is only usable with [New] (the injector path); a
-// function-path constructor rejects [WithHealthRecorder] at
-// [Probe.Validate] with [ErrRecorderNotApplicable].
+// The returned recorder composes with both recorder-capable constructors:
+// [New] (the injector path) and [NewWithRecorder] (injector-free). The three
+// function-path constructors — [NewWithHealthCheck], [NewWithDetailedCheck],
+// and [NewChecks] — reject [WithHealthRecorder] at [Probe.Validate] with
+// [ErrRecorderNotApplicable].
 //
 // A chain of only nils records nothing: its batches are empty, which the
 // probe reports as an all-pass response. That mirrors a recorder returning

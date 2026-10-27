@@ -509,6 +509,15 @@ func (p *Probe) Validate() error {
 //
 // The provided ctx controls the lifetime of the background goroutine. Call
 // [Probe.Shutdown] to stop the loop and mark the probe as shutting down.
+//
+// Shutdown is one-way, and Start does not undo it: calling Start on a shut
+// down probe re-validates and may re-arm the refresh loop, but the draining
+// flag stays set, so readiness keeps answering 503. This is deliberate — a
+// process that announced it is leaving rotation must not be resurrected by a
+// stray restart call (a supervisor that wants the service back starts a new
+// process). The supported retry is a Start that FAILED validation: that path
+// never set the flag, so retrying it recovers. Pinned by
+// TestStart_AfterShutdown_RestartsLoopButStaysDown.
 func (p *Probe) Start(ctx context.Context) error {
 	if err := p.Validate(); err != nil {
 		return err
@@ -641,6 +650,12 @@ func (p *Probe) refreshCache(ctx context.Context) {
 // without a loop, the block is the caller's drain window before teardown) and
 // skipped when it never did (Start not called, or failed validation): there
 // is no lifecycle to drain, and blocking for the window would be dead time.
+//
+// Shutdown is one-way: the draining flag is never cleared, so a later
+// [Probe.Start] may re-arm the loop but cannot make the probe ready again.
+// Call it once from the host's teardown path; repeat calls are harmless but
+// re-run the grace window. For a two-phase drain use
+// [Probe.MarkShuttingDown] first.
 func (p *Probe) Shutdown() {
 	p.shuttingDown.Store(true)
 

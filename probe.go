@@ -446,16 +446,36 @@ var ErrPanicDuringHealthCheck = errors.New("health: panic during health check")
 // docs/panic-recovery-design.md, "the evaluation-hook surface".
 var ErrPanicDuringEvaluationHook = errors.New("health: panic during evaluation hook")
 
+// ErrRecorderNotApplicable is returned by [Probe.Validate] (and therefore
+// [Probe.Start]) when [WithHealthRecorder] was passed to a function-path
+// constructor — [NewWithHealthCheck], [NewWithDetailedCheck], or [NewChecks].
+// Those constructors take an explicit batch function that owns execution, so
+// the recorder would be accepted and silently ignored: no callbacks, no
+// traces, no error. Rejecting at Start turns that dead wiring into a visible
+// misconfiguration. Use [New] with a samber/do injector when recorder
+// callbacks are required.
+var ErrRecorderNotApplicable = errors.New(
+	"health: WithHealthRecorder is not applicable to function-path constructors " +
+		"(NewWithHealthCheck, NewWithDetailedCheck, NewChecks); use New(injector, ...) instead",
+)
+
 // Validate checks that the Probe configuration is internally consistent.
 // Returns nil when the configuration is safe to use.
 //
-// This catches the two common mistakes that cause runtime problems:
+// This catches the common mistakes that cause runtime problems:
 //
 //   - Timeout <= 0 creates an already-expired context, so every health check
 //     fails immediately with "context deadline exceeded".
 //   - RefreshInterval < 0 is treated the same as 0 (live evaluation) by Start,
 //     but callers likely intended a positive interval.
+//   - A recorder configured on a function-path constructor can never run
+//     ([ErrRecorderNotApplicable]); Start fails instead of silently dropping
+//     the observer.
 func (p *Probe) Validate() error {
+	if p.recorderDropped {
+		return ErrRecorderNotApplicable
+	}
+
 	if p.timeout <= 0 {
 		return fmt.Errorf("%w: got %s (configure via WithTimeout)", ErrInvalidTimeout, p.timeout)
 	}

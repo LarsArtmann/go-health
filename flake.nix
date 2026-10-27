@@ -325,7 +325,20 @@
                   gosecGo
                 ]
                 ''
-                  gosec ./...
+                  # `./...` walks nested module directories too, so gosec also
+                  # typechecks tools/doanalyzerv2 — a LOCAL-ONLY tool whose
+                  # go.mod replaces github.com/larsartmann/go-design-smells
+                  # with an absolute /home/lars/projects path and whose
+                  # dependency is not published anywhere. On CI that path does
+                  # not exist, the package fails to import
+                  # ("invalid package name"), and gosec exits 1 with ZERO
+                  # findings — a red gate reporting nothing. It was the only
+                  # thing keeping the security job red from 2026-10-25 to
+                  # 2026-10-27 (the v0.8.0 tag's CI run included) while the
+                  # library itself scanned clean. The tool stays a local gate
+                  # (tools/doanalyzerv2/run.sh); the security gate scans the
+                  # library.
+                  gosec -exclude-dir=tools ./...
                 '';
 
             # Every target in the tree is listed here; a new fuzz target must

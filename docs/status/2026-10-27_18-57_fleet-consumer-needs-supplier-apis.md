@@ -24,7 +24,8 @@
   cache freshness (`CacheAge`, `CachedResponseFresh`), `EvaluateAndCache`, `Response.Clone`,
   `ErrRecorderNotApplicable`, `ChainRecorders`, `federation.Prober.SourceStatuses`.
 - **16 new test functions**, full suite + `-race` green, `go vet` green, gofumpt/goimports clean
-  on every touched file. Baseline was green before the first edit.
+  on every touched file, local lint clean apart from one pre-existing gocognit finding.
+  Baseline was green before the first edit.
 - **Nothing reached a consumer:** no release was cut (owner push is gated), no bridge or consumer
   repo was edited. All seven changes are `[Unreleased]`.
 - **One correction:** issue #7 finding 1 (per-check panic graded warn) was already fixed on master
@@ -114,8 +115,9 @@ Each one maps to a repeated, independently discovered consumer need:
 | gofmt | `gofmt -l <touched files>` | clean after fixing `recorder.go` once |
 | gofumpt | `gofumpt -l -extra .` | 3 **pre-existing** files flagged (`aggregate/aggregate_test.go`, `checks/checks_fuzz_test.go`, `internal/merge/merge_test.go`); not touched, not mine |
 | goimports | `goimports -l .` | clean |
+| Lint (local) | `GOWORK=off golangci-lint run ./...` | **1 finding**, pre-existing: `handlers_fuzz_test.go:21` gocognit 26 (>25). Four findings in this session's new tests (err113 ×3, wsl_v5 ×1) were found by the concurrent session's lint run and **fixed**: static test errors + whitespace. |
 
-Not run (see §c): `nix run .#gates`, `nix run .#lint`, `nix run .#docs-check`,
+Not run (see §c): `nix run .#gates`, `nix run .#docs-check`,
 `nix flake check`, markdown/dprint formatting, OpenAPI lockstep, any consumer build.
 
 ---
@@ -200,11 +202,13 @@ Not run (see §c): `nix run .#gates`, `nix run .#lint`, `nix run .#docs-check`,
    scored `checks.Disk` as "unused" while its #1 failure mode is a full data dir).
 10. **Dashboard-family asks** (`HTMLDataAttrs` for fir DD9, dashboard#14 ctx leak, dashboard#17
     nightly fuzz) — recorded, untouched (different repo).
-11. **Full canonical gates** (`nix run .#gates`, lint, docs-check, flake check, OpenAPI lockstep).
+11. **Full canonical gates** (`nix run .#gates`, docs-check, flake check, OpenAPI lockstep);
+    local `golangci-lint` is down to one pre-existing gocognit finding.
 12. **Benchmarks** for the new APIs (see §e-3).
 13. **Fuzz coverage** for `SourceStatuses` (the `CachedResponse` overlay is fuzzed; the new
     accessor is not).
 14. **No intent commit** with a written message; the daemon owns the history.
+15. **Markdown formatting** (`nix fmt`/dprint) over the new docs — unverified.
 
 ---
 
@@ -246,6 +250,22 @@ Not run (see §c): `nix run .#gates`, `nix run .#lint`, `nix run .#docs-check`,
 9. **`FEATURES.md` "Functional options (12 total)"** is now stale — the concurrent session added
    `WithCriticalService[T]`. Not mine, but the file is inconsistent.
 10. **No markdown format/lint run.** `dprint` may reflow the new docs; `docs-check` may object.
+11. **My new tests initially failed lint.** The concurrent session's `golangci-lint` run found
+   three `err113` findings and one `wsl_v5` finding in `probe_cache_test.go` / `recorder_test.go`
+   — i.e. code I wrote and considered "done". Fixed on sight (static test errors + blank line);
+   local lint now reports only the pre-existing `handlers_fuzz_test.go:21` gocognit finding.
+   Lesson: "tests pass" is not "lint passes"; run lint before claiming green.
+12. **A peer status report exists for the same minute.**
+   `docs/status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md` was written by
+   the other session. It claims the panic-grading fix, typed identity, `NewWithRecorder`,
+   `HealthRecorderFunc`, federation `Healthz`, and selective route mounting; it attributes this
+   session's research doc, design notes, and four primitives to "the other session". Both reports
+   are accurate about their own edits, but there is **no single authored narrative** for the wave.
+   It also observed a mangled `invokeEvaluationHook` comment mid-session (an insertion collision);
+   the current tree is intact (§4 verified).
+13. **`recorder.go` has two authors and no ownership note** — this session's `ChainRecorders`
+   plus the other session's function adapters. It is coherent, but a future reader cannot tell
+   which contract is load-bearing from the file alone.
 
 ---
 
@@ -352,7 +372,8 @@ Not run (see §c): `nix run .#gates`, `nix run .#lint`, `nix run .#docs-check`,
     merge helper for synthetic rows).
 45. Run `nix fmt`/dprint over the new Markdown and commit the result.
 46. Add "concurrent writer detected" to the pre-edit handshake in AGENTS (mtime/HEAD probe).
-47. Record the consumer-needs study as the standing inventory refresh trigger.
+47. Record the consumer-needs study as the standing inventory refresh trigger, and link both
+    18:57 status reports from it so the two-agent wave has one entry point.
 48. Decide whether `SourceStatuses` should share one fetch pass with `CachedResponse` (new
     combined read API) or keep the documented 2× cost.
 49. Decide `WithStaleAfter` once and for all: keep rejected (current docs) or ship a policy option.
@@ -393,6 +414,9 @@ docs/research/2026-10-27_fleet-consumer-needs.md
 docs/status/2026-10-27_18-57_fleet-consumer-needs-supplier-apis.md
 ```
 
+Peer report in the same minute (not authored here, kept untouched):
+`docs/status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md`.
+
 Modified:
 
 ```
@@ -425,6 +449,9 @@ e7a07ec 18:42 chore: auto-commit 7 changed file(s)
 2e04d3d       chore: auto-commit 4 changed file(s)
 c99cc0c       chore: auto-commit 4 changed file(s)
 ```
+
+The peer report counts **twelve** auto-commit commits between 18:24 and 18:57; this list is the
+six most recent visible at report time. Assume more exist above them.
 
 ## Appendix C — consumer evidence (commands used)
 

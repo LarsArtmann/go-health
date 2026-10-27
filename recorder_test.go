@@ -10,6 +10,12 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// Canned dependency failures for ordering assertions.
+var (
+	errCacheDown = errors.New("cache down")
+	errQueueDown = errors.New("queue down")
+)
+
 // plainRecorder reports a canned plain batch.
 type plainRecorder struct {
 	batch map[string]error
@@ -53,11 +59,11 @@ func TestChainRecorders_MergesInOrderWithLaterWinning(t *testing.T) {
 
 	first := plainRecorder{batch: map[string]error{
 		"database": nil,
-		"cache":    errors.New("cache down"),
+		"cache":    errCacheDown,
 	}}
 	second := plainRecorder{batch: map[string]error{
 		"cache": nil,
-		"queue": errors.New("queue down"),
+		"queue": errQueueDown,
 	}}
 
 	chain := health.ChainRecorders(first, nil, second)

@@ -10,6 +10,9 @@ import (
 	"github.com/larsartmann/go-health"
 )
 
+// errDatabaseDown is the canned dependency failure used by the publish tests.
+var errDatabaseDown = errors.New("database down")
+
 // fixedClock is a manually advanced clock for age assertions.
 type fixedClock struct {
 	now atomic.Int64
@@ -157,7 +160,7 @@ func TestEvaluateAndCache_PublishesButEvaluateDoesNot(t *testing.T) {
 		map[string]health.CheckFunc{
 			"database": func(context.Context) error {
 				if failing.Load() {
-					return errors.New("database down")
+					return errDatabaseDown
 				}
 
 				return nil
@@ -168,6 +171,7 @@ func TestEvaluateAndCache_PublishesButEvaluateDoesNot(t *testing.T) {
 	t.Cleanup(probe.Shutdown)
 
 	failing.Store(true)
+
 	published := probe.EvaluateAndCache(context.Background())
 
 	if published.Status != health.StatusWarn {

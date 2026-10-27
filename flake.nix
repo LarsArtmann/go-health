@@ -348,6 +348,115 @@
                   bash tools/fuzz-registry-check.sh
                 '';
 
+            # Coverage floor: CONTRIBUTING has carried a percentage since
+            # v0.5.1 and nothing enforced it, so the number was an aspiration
+            # a deletion could silently contradict. The gate runs the suite
+            # once and grades both the total and each package; the floors sit
+            # several points below the measured value (2026-10-27: 99.9%
+            # total, federation 99.5%) so an unrelated refactor cannot red it.
+            coverage-gate =
+              mkApp "coverage-gate" "Fail when total or per-package coverage drops below the floor"
+                [
+                  goPkg
+                  pkgs.bash
+                  pkgs.gawk
+                  pkgs.coreutils
+                ]
+                ''
+                  root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+                  if [ -n "$root" ]; then
+                    cd "$root"
+                  fi
+                  bash tools/coverage-gate.sh "$@"
+                '';
+
+            # Fleet version-skew: the script has existed since 2026-10-09 and
+            # nothing invoked it, so a consumer pinning a two-minor-old release
+            # was invisible until its build broke. The expectation is
+            # machine-derived (the newest tag) unless --expect says otherwise,
+            # because a hand-typed version becomes a second source of truth.
+            skew =
+              mkApp "skew" "Compare every fleet consumer's go-health pin against the newest release"
+                [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.git
+                  pkgs.gh
+                  pkgs.gnugrep
+                  pkgs.gnused
+                ]
+                ''
+                  root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+                  if [ -n "$root" ]; then
+                    cd "$root"
+                  fi
+                  bash tools/fleet-skew.sh "$@"
+                '';
+
+            # The release gate. `.#gates` already covers the same commands CI
+            # runs, but the v0.8.0 tag went red because the tagger ran the
+            # tests and not the gates — a missing invocation, not a missing
+            # gate. This app adds what a tag additionally needs: a clean tree,
+            # a CHANGELOG section for the version, an unused tag name, and a
+            # fleet that is not behind. `nix run .#pre-tag -- v0.9.0`.
+            pre-tag =
+              mkApp "pre-tag" "Run every gate plus release readiness before cutting a tag"
+                [
+                  pkgs.nix
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.git
+                  pkgs.gnugrep
+                ]
+                ''
+                  root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+                  if [ -n "$root" ]; then
+                    cd "$root"
+                  fi
+
+                  version="''${1:-}"
+                  if [ -n "$version" ]; then
+                    case "$version" in
+                    v[0-9]*.[0-9]*.[0-9]*) ;;
+                    *)
+                      echo "pre-tag: version must look like vX.Y.Z, got '$version'" >&2
+                      exit 1
+                      ;;
+                    esac
+                  fi
+
+                  # Readiness first: no point paying for the full gate sweep
+                  # (several minutes) when the tree cannot be tagged at all.
+                  if [ -n "$(git status --porcelain)" ]; then
+                    echo "pre-tag: working tree is dirty — commit or stash before tagging" >&2
+                    git status --short >&2
+                    exit 1
+                  fi
+
+                  if [ -n "$version" ]; then
+                    if git rev-parse -q --verify "refs/tags/$version" >/dev/null; then
+                      echo "pre-tag: tag $version already exists; published tags are never moved — pick a new patch" >&2
+                      exit 1
+                    fi
+                    if ! grep -qE "^## \[?''${version#v}\]?" CHANGELOG.md; then
+                      echo "pre-tag: CHANGELOG.md has no '## [$version]' section — cut the release section first" >&2
+                      exit 1
+                    fi
+                  else
+                    echo "pre-tag: no version argument, tag-specific checks skipped (pass e.g. v0.9.0)"
+                  fi
+
+                  echo "=== pre-tag: gate sweep (.#gates) ==="
+                  nix run .#gates
+
+                  echo "=== pre-tag: fleet version skew ==="
+                  # A local tag nobody has bumped to is still unpublished work.
+                  # --allow records a known backlog instead of hiding new drift.
+                  nix run .#skew
+
+                  echo "pre-tag: ready to tag ''${version:-<version>}"
+                '';
+
             test = mkApp "test" "Run all tests" [ goPkg ] ''
               go test ./... -count=1 "$@"
             '';
@@ -492,7 +601,7 @@
             gates =
               mkApp "gates" "Run the full pre-push gate sweep, fail-fast (same gates as CI)" [ pkgs.nix ]
                 ''
-                  gates="''${*:-test-race vet lint vulncheck security fuzz fuzz-registry docs-check}"
+                  gates="''${*:-test-race vet lint coverage-gate vulncheck security fuzz fuzz-registry docs-check}"
                   # shellcheck disable=SC2086 # word splitting over gate names is intended
                   for gate in $gates; do
                     echo "=== gate: $gate ==="

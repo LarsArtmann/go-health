@@ -1,0 +1,55 @@
+# Fleet version skew — weekly alarm, not a per-push gate.
+#
+# Every consumer pins go-health independently, so a release makes the fleet
+# stale the moment it is cut. Nothing observed that: tools/fleet-skew.sh has
+# existed since 2026-10-09 and no workflow ever invoked it, so the drift was
+# discovered by a consumer failing to build rather than by a red run.
+#
+# Weekly rather than per-push on purpose. The signal is "who has fallen a minor
+# behind", which cannot change because of a commit in this repo; polling it on
+# every push would red master for work that belongs in someone else's repo.
+# workflow_dispatch exists so a release can check the fleet immediately.
+#
+# The pin source is the live default branch of each repo (GitHub API), so this
+# measures what is published, not what is sitting unpushed on a laptop.
+
+name: Fleet skew
+
+on:
+  schedule:
+    # Mondays 06:17 UTC. Off the hour so it does not queue behind the
+    # top-of-hour cron crush on GitHub's shared runners.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-skew
+  cancel-in-progress: true
+
+jobs:
+  skew:
+    name: Consumer pins vs newest release
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 is load-bearing: the script derives the expected version
+      # from the newest local tag, and a shallow checkout has none.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+
+      - name: Report the whole table, then gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Two invocations: the first prints every row so the job log is the
+        # evidence, the second decides the exit code. --allow 0 makes a single
+        # minor-stale consumer red, which is the point of the alarm.
+        run: |
+          nix run .#skew -- --allow 999 || true
+          nix run .#skew -- --allow 0

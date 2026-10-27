@@ -38,6 +38,14 @@ jobs:
       - name: Run tests with race detector
         run: nix run .#test-race
 
+      # The coverage floor lives in tools/coverage-gate.sh (total 99.5%,
+      # per-package 98%, against a measured 99.9%/99.5% on 2026-10-27). It runs
+      # the suite itself, so it is a step here rather than a sixth job;
+      # branch protection names five checks, and a new job would silently sit
+      # outside the required set.
+      - name: Coverage floor
+        run: nix run .#coverage-gate
+
       # Race-stress: repeat the race suite to surface order-dependent flakes.
       # Added 2026-10-09 only after a local -count=3 run was flake-free; if it
       # ever trips intermittently, triage the flake — do not delete the step.

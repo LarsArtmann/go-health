@@ -17,6 +17,8 @@ nix run .#test                 # Run tests
 nix run .#test-race            # Run tests with race detector
 nix run .#lint                 # Run golangci-lint
 nix run .#coverage             # Run tests with coverage report
+nix run .#coverage-gate        # Fail below the coverage floor (total + per package)
+nix run .#skew                 # Fleet consumers' go-health pins vs the newest release
 nix run .#vulncheck            # Run govulncheck
 nix run .#security             # Run gosec
 nix fmt                        # Format code (treefmt)
@@ -39,7 +41,7 @@ golangci-lint run ./...        # Install: go install github.com/golangci/golangc
    subset: `nix run .#gates -- test-race lint`):
 
 ```bash
-nix run .#gates         # test-race, vet, lint, vulncheck, security, fuzz, flake check
+nix run .#gates         # test-race, vet, lint, coverage-gate, vulncheck, security, fuzz, flake check
 nix fmt                 # gofumpt/goimports/golines/nixfmt
 erraudit ./... --type-aware   # error-handling audit (baseline: 0 violations)
 ```
@@ -99,6 +101,14 @@ pattern. Checklist for a new `With*` option:
    changes _how_ callers use the probe, not just a value.
 8. **Gates**: `nix run .#test-race`, `.#lint`, `nix fmt`, and the CI-emulation
    step above if any gate is affected.
+
+## Release Checklist
+
+**Tagging starts with `nix run .#pre-tag -- vX.Y.Z`.** It refuses a dirty tree,
+an already-used tag name, or a version with no CHANGELOG section, then runs the
+full gate sweep and the fleet-skew check. This exists because the v0.8.0 tag
+went red: the gates were fine, the tagger ran the tests and not the gates.
+Nothing else is a pre-tag command.
 
 ## Release / API-Sync Checklist
 
@@ -160,10 +170,14 @@ doc). Archiving is a claim that nothing living points at the report anymore.
   (field order, `json.Deterministic` key sorting, json/v2's
   ignore-`omitempty`-on-scalars behavior). Regenerate with `go test . -update`
   and call the change out in the changelog — the wire format is frozen.
-- **Coverage** — baseline is **99.7%** statements (2026-09-04, after closing
-  the aggregate gaps). The single uncovered statement is the documented
-  defensive nil-`Checks` guard in `Healthz` (accessors.go), unreachable via
-  the public API today. `nix run .#coverage` must not regress below this.
+- **Coverage**: measured **99.9%** statements total on 2026-10-27 (root,
+  aggregate, checks and internal/merge at 100%; federation 99.5%, whose one
+  uncovered statement is the documented defensive nil-`Checks` guard in
+  `Healthz`, unreachable via the public API today). The floor is enforced by
+  `nix run .#coverage-gate` at **99.5% total / 98% per package**, several
+  points of headroom on purpose so an unrelated refactor cannot red the gate.
+  Raise a floor only after a deliberate coverage improvement lands, never to
+  make a red run green.
 - **Fuzzing** — `nix run .#fuzz` runs all three targets (root marshal,
   handler input, aggregate merge invariants) on a 10s budget each; the
   aggregate fuzz additionally pins instance_id round-trips and the

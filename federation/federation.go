@@ -299,6 +299,10 @@ func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 // ([Prober.MarkShuttingDown]) does not rewrite remote statuses — it is a
 // property of this hub, not of any remote.
 //
+// Every reported value is one of pass/warn/fail/off: a document whose own
+// roll-up is outside that set is refused at decode, so this map can never
+// carry a status the dashboard would rank as healthy without knowing it.
+//
 // This accessor mirrors [aggregate.Aggregate.SourceStatuses], so one
 // capability interface covers both merge surfaces. See
 // docs/federation-source-statuses-design.md.
@@ -416,12 +420,13 @@ func (p *Prober) fetch(ctx context.Context, remote Remote) fetchResult {
 }
 
 // decodeDocument validates the wire shape beyond JSON syntax: a document
-// without a status, or with a check status that is not pass/warn/fail/off,
-// is refused whole. Unlike aggregate, which reads trusted in-process probes,
-// federation decodes untrusted wire input — rendering an unknown status
-// would let it masquerade as healthy on the merged surface. Off is accepted
-// because it is a known status with pass-tier [health.Status.Rank]: it can
-// never fail or warn the merged roll-up, only annotate a row.
+// without a status, with a roll-up status or a check status that is not
+// pass/warn/fail/off, is refused whole. Unlike aggregate, which reads trusted
+// in-process probes, federation decodes untrusted wire input — rendering an
+// unknown status would let it masquerade as healthy on the merged surface.
+// Off is accepted because it is a known status with pass-tier
+// [health.Status.Rank]: it can never fail or warn the merged roll-up, only
+// annotate a row.
 func decodeDocument(body []byte) fetchResult {
 	var parsed health.Response
 	if err := json.Unmarshal(body, &parsed); err != nil {
@@ -430,6 +435,21 @@ func decodeDocument(body []byte) fetchResult {
 
 	if parsed.Status == "" {
 		return fetchResult{errMsg: "response has no status — is this a go-health endpoint?"}
+	}
+
+	// The roll-up status needs the same guard as a check status. The merge
+	// recomputes the verdict from the checks, so an unknown roll-up cannot
+	// reach the merged surface — but SourceStatuses() reports the document's
+	// own claim verbatim, and an unrecognized value there ranks pass-tier in
+	// Status.Rank and would render as a healthy source card. Refusing the
+	// document keeps one rule for both levels instead of trusting the field
+	// nobody validated.
+	switch parsed.Status {
+	case health.StatusPass, health.StatusWarn, health.StatusFail, health.StatusOff:
+	default:
+		return fetchResult{
+			errMsg: fmt.Sprintf("response has invalid status %q", parsed.Status),
+		}
 	}
 
 	for name, check := range parsed.Checks {

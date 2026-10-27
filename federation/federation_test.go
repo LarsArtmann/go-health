@@ -401,6 +401,20 @@ func TestCachedResponse_Merge(t *testing.T) {
 				"liar/reachable": {Status: health.StatusFail},
 			},
 		},
+		{
+			// SourceStatuses reports the document's own roll-up verbatim and
+			// Status.Rank scores an unknown value pass-tier, so an unvalidated
+			// roll-up would render as a healthy source card.
+			name:    "invalid roll-up status is refused whole",
+			remotes: []federation.Remote{{Name: "liar", URL: ""}},
+			servers: []jsonRemote{newRemote(t, func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte(`{"status":"healthy","checks":{}}`))
+			})},
+			wantStatus: health.StatusFail,
+			wantChecks: map[string]health.Check{
+				"liar/reachable": {Status: health.StatusFail},
+			},
+		},
 	}
 
 	for _, tt := range tests {

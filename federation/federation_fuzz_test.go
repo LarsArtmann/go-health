@@ -127,3 +127,96 @@ func assertAcceptedChecksValid(t *testing.T, got health.Response) {
 		}
 	}
 }
+
+// FuzzSourceStatuses_Invariants drives the per-remote accessor with arbitrary
+// remote documents. The accessor answers a different question than the merged
+// view — "how is each remote overall?" — so its invariants are about the
+// per-remote map, not the roll-up: exactly one entry keyed by the remote name,
+// never an empty or unrecognized status, deterministic across two reads of the
+// same body, and fail whenever the merged view refused the remote at all. The
+// hub's own drain must not enter the map: the drained twin runs the same body
+// and must produce an identical map while its merged roll-up reads fail.
+//
+// The merged roll-up is deliberately NOT asserted against the per-remote map:
+// the merge derives a status from the checks while SourceStatuses reports the
+// document's own claim, and a body may legally disagree with itself.
+func FuzzSourceStatuses_Invariants(f *testing.F) {
+	seeds := []string{
+		`{"status":"pass","checks":{}}`,
+		`{"status":"fail","checks":{"db":{"status":"fail","error":"down"}}}`,
+		`{"status":"warn","checks":{"q":{"status":"warn"}}}`,
+		`{"status":"off","checks":{"analytics":{"status":"off"}}}`,
+		`{"status":"pass","checks":{"db":{"status":"fail"}}}`,
+		`{"status":"pass","shutting_down":true,"checks":{}}`,
+		`{"status":"bogus","checks":{}}`,
+		`not json`,
+		``,
+	}
+
+	var bodyMu sync.Mutex
+
+	body := []byte(seeds[0])
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		bodyMu.Lock()
+		payload := body
+		bodyMu.Unlock()
+
+		_, _ = w.Write(payload)
+	}))
+	defer server.Close()
+
+	remotes := []federation.Remote{{Name: "fuzz", URL: server.URL}}
+
+	prober, err := federation.New(remotes, federation.WithTimeout(time.Second))
+	if err != nil {
+		f.Fatalf("New: %v", err)
+	}
+
+	draining, err := federation.New(remotes, federation.WithTimeout(time.Second))
+	if err != nil {
+		f.Fatalf("New draining twin: %v", err)
+	}
+
+	draining.MarkShuttingDown()
+
+	for _, seed := range seeds {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, next string) {
+		bodyMu.Lock()
+		body = []byte(next)
+		bodyMu.Unlock()
+
+		statuses := prober.SourceStatuses()
+
+		if len(statuses) != 1 {
+			t.Fatalf("statuses = %v, want exactly one entry for the single remote", statuses)
+		}
+
+		status, ok := statuses["fuzz"]
+		if !ok {
+			t.Fatalf("statuses = %v, want the key %q", statuses, "fuzz")
+		}
+
+		switch status {
+		case health.StatusPass, health.StatusWarn, health.StatusFail, health.StatusOff:
+		default:
+			t.Fatalf("per-remote status %q is not a known status", status)
+		}
+
+		again := prober.SourceStatuses()
+		if len(again) != len(statuses) || again["fuzz"] != status {
+			t.Fatalf("SourceStatuses is not deterministic: %v then %v", statuses, again)
+		}
+
+		if _, refused := prober.CachedResponse().Checks["fuzz/reachable"]; refused && status != health.StatusFail {
+			t.Fatalf("refused remote reports %q, want fail", status)
+		}
+
+		if drained := draining.SourceStatuses(); len(drained) != 1 || drained["fuzz"] != status {
+			t.Fatalf("hub drain rewrote the per-remote map: %v vs %v", drained, statuses)
+		}
+	})
+}

@@ -131,3 +131,36 @@ func multiRemoteProber(b *testing.B, n int) *federation.Prober {
 func remoteCountName(n int) string {
 	return strconv.Itoa(n) + "_remotes"
 }
+
+// BenchmarkReadinessHandler_DrainingScaling extends the single-remote drain
+// baseline to the fan-out that actually costs: 1, 2, 4 and 8 remotes, drained,
+// each request still fetching every remote. Read it beside
+// BenchmarkSourceStatuses — same fetch wave, different fold — to see that the
+// drain overlay is not what scales; the remote count is.
+func BenchmarkReadinessHandler_DrainingScaling(b *testing.B) {
+	req, err := http.NewRequest(http.MethodGet, "/readyz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	for _, remotes := range []int{1, 2, 4, 8} {
+		b.Run(remoteCountName(remotes), func(b *testing.B) {
+			fed := multiRemoteProber(b, remotes)
+
+			fed.MarkShuttingDown()
+
+			handler := fed.ReadinessHandler()
+
+			b.ResetTimer()
+
+			b.RunParallel(func(pb *testing.PB) {
+				w := httptest.NewRecorder()
+
+				for pb.Next() {
+					w.Body.Reset()
+					handler(w, req)
+				}
+			})
+		})
+	}
+}

@@ -113,6 +113,9 @@
             runtimeInputs = [
               pkgs.git
               pkgs.gnugrep
+              pkgs.gnused
+              pkgs.gawk
+              pkgs.coreutils
             ];
             text = ''
               root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
@@ -171,6 +174,63 @@
               agents_lines="$(wc -l < AGENTS.md)"
               if [ "$agents_lines" -gt 220 ]; then
                 drift "AGENTS.md is ''${agents_lines} lines, over the 220-line preflight cap (move detail to docs/INDEX.md)"
+              fi
+
+              # [Unreleased] truth: when HEAD has moved past the latest tag the
+              # Unreleased section must say what moved. A release that promotes
+              # the section but leaves "Nothing yet." behind makes the changelog
+              # lie about the tree it describes (v0.8.0 and v0.8.1 both did).
+              if [ -d .git ]; then
+                tagged="$(git rev-list -n1 "$latest" 2>/dev/null || true)"
+                head_rev="$(git rev-parse HEAD 2>/dev/null || true)"
+                if [ -n "$tagged" ] && [ -n "$head_rev" ] && [ "$tagged" != "$head_rev" ]; then
+                  unreleased="$(awk '/^## \[Unreleased\]/ { inside = 1; next } /^## / { inside = 0 } inside' CHANGELOG.md)"
+                  documented="$(printf '%s\n' "$unreleased" |
+                    grep -E '^[-*] ' |
+                    grep -vE '^[-*] Nothing yet\.$' || true)"
+                  if [ -z "$documented" ]; then
+                    drift "CHANGELOG [Unreleased] documents nothing although HEAD is past ''${latest} (add the entries, or cut the tag)"
+                  fi
+                fi
+              fi
+
+              # API-list lockstep (federation): the design doc's API block is
+              # the published surface. A method added or removed without
+              # touching it is drift — SourceStatuses and Healthz were both
+              # missing from it until 2026-10-27 while shipped and tested.
+              api_doc="docs/federation-design.md"
+              api_code="$(mktemp)"
+              api_listed="$(mktemp)"
+              trap 'rm -f "$api_code" "$api_listed"' EXIT
+              for file in federation/*.go; do
+                case "$file" in
+                *_test.go) continue ;;
+                esac
+                grep -hoE '^func (\(p \*Prober\) )?[A-Z][A-Za-z0-9]*' "$file" || true
+              done |
+                sed -E 's/^func \(p \*Prober\) //; s/^func //' |
+                sort -u >"$api_code"
+              awk -v fence='```' '
+                $0 == fence "go" { inside = 1; next }
+                $0 == fence { inside = 0; next }
+                inside
+              ' "$api_doc" |
+                grep -oE '^(func \(p \*Prober\) |func )[A-Z][A-Za-z0-9]*' |
+                sed -E 's/^func \(p \*Prober\) //; s/^func //' |
+                sort -u >"$api_listed"
+              if [ ! -s "$api_listed" ]; then
+                drift "$api_doc has no fenced go API block to compare against federation's exported surface"
+              else
+                while IFS= read -r name; do
+                  [ -n "$name" ] || continue
+                  grep -qxF "$name" "$api_listed" ||
+                    drift "federation exports $name but $api_doc's API block does not list it"
+                done <"$api_code"
+                while IFS= read -r name; do
+                  [ -n "$name" ] || continue
+                  grep -qxF "$name" "$api_code" ||
+                    drift "$api_doc's API block lists $name but federation does not export it"
+                done <"$api_listed"
               fi
 
               if [ "$fail" -eq 0 ]; then
@@ -275,6 +335,7 @@
                 pkgs.bash
                 pkgs.coreutils
                 pkgs.findutils
+                pkgs.git
                 pkgs.gnugrep
                 pkgs.gnused
               ]
@@ -430,7 +491,7 @@
             gates =
               mkApp "gates" "Run the full pre-push gate sweep, fail-fast (same gates as CI)" [ pkgs.nix ]
                 ''
-                  gates="''${*:-test-race vet lint vulncheck security fuzz docs-check}"
+                  gates="''${*:-test-race vet lint vulncheck security fuzz fuzz-registry docs-check}"
                   # shellcheck disable=SC2086 # word splitting over gate names is intended
                   for gate in $gates; do
                     echo "=== gate: $gate ==="
@@ -459,7 +520,7 @@
                   trap 'rm -rf "$tmpbin"' EXIT
                   ln -s "$(command -v nix)" "$tmpbin/nix"
                   ln -s "$(command -v gcc)" "$tmpbin/gcc"
-                  gates="''${*:-test-race fuzz lint vet vulncheck security}"
+                  gates="''${*:-test-race fuzz fuzz-registry lint vet vulncheck security}"
                   # shellcheck disable=SC2086 # word splitting over gate names is intended
                   for gate in $gates; do
                     echo "=== ci-emulation: $gate (no host go on PATH) ==="

@@ -39,7 +39,9 @@ jobs:
         run: nix run .#test-race
 
       # The coverage floor lives in tools/coverage-gate.sh (total 99.5%,
-      # per-package 98%, against a measured 99.9%/99.5% on 2026-10-27). It runs
+      # per-package 98%, against a measured 99.9% total / 99.3% federation on
+      # 2026-10-27 — the gate's own toolchain; a host go1.27.0 reads the same
+      # source as 99.5%). It runs
       # the suite itself, so it is a step here rather than a sixth job;
       # branch protection names five checks, and a new job would silently sit
       # outside the required set.

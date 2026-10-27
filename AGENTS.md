@@ -116,9 +116,13 @@ go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod re
   `//nolint:paralleltest`). A parallel seam test corrupts concurrent handler
   tests (observed: spurious 500s).
 - **Coverage floor (measured 2026-10-27): root 100%, aggregate/checks/merge
-  100%, federation 99.5%, total 99.9%** — the one uncovered statement is
+  100%, federation 99.3%, total 99.9%** — the one uncovered statement is
   federation's request-construction guard, unreachable for every remote `New`
   accepts (rationale at `fetch`); closing it would mean deleting an error check.
+  That percentage is toolchain-relative: the gate's go1.27.3 counts 148 blocks
+  (99.3%), a host go1.27.0 counts 207 (99.5%) over the same source and the same
+  uncovered line. Neither is a regression — quote the gate's number with the
+  toolchain, and never "fix" the gap by editing the figure.
 - **Defensive branches get extracted, never suppressed** — a branch reachable
   only by a future read-path change is moved into a named function with the
   reason in its doc comment, then pinned by an `*_internal_test.go`:

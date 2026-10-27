@@ -391,7 +391,8 @@
             # a deletion could silently contradict. The gate runs the suite
             # once and grades both the total and each package; the floors sit
             # several points below the measured value (2026-10-27: 99.9%
-            # total, federation 99.5%) so an unrelated refactor cannot red it.
+            # total, federation 99.3% under this go's instrumentation and
+            # 99.5% under go1.27.0's) so an unrelated refactor cannot red it.
             coverage-gate =
               mkApp "coverage-gate" "Fail when total or per-package coverage drops below the floor"
                 [

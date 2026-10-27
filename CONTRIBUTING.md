@@ -171,15 +171,23 @@ doc). Archiving is a claim that nothing living points at the report anymore.
   ignore-`omitempty`-on-scalars behavior). Regenerate with `go test . -update`
   and call the change out in the changelog — the wire format is frozen.
 - **Coverage**: measured **99.9%** statements total on 2026-10-27 (root,
-  aggregate, checks and internal/merge at 100%; federation 99.5%, whose one
-  uncovered statement is the documented defensive nil-`Checks` guard in
-  `Healthz`, unreachable via the public API today). The floor is enforced by
-  `nix run .#coverage-gate` at **99.5% total / 98% per package**, several
-  points of headroom on purpose so an unrelated refactor cannot red the gate.
-  Raise a floor only after a deliberate coverage improvement lands, never to
-  make a red run green.
-- **Fuzzing** — `nix run .#fuzz` runs all three targets (root marshal,
-  handler input, aggregate merge invariants) on a 10s budget each; the
+  aggregate, checks and internal/merge at 100%; federation **99.3%**, whose one
+  uncovered statement is the documented request-construction guard in `fetch`,
+  unreachable for any remote `New` accepts). Read that percentage with its
+  toolchain: the gate runs the dev shell's go1.27.3, which instruments the
+  package as 148 blocks and reports 99.3%; a host go1.27.0 counts the same
+  source as 207 blocks and prints 99.5%. Same statement, no code difference, so
+  quote the gate's number and say which toolchain produced it. The floor is
+  enforced by `nix run .#coverage-gate` at **99.5% total / 98% per package**,
+  several points of headroom on purpose so an unrelated refactor cannot red the
+  gate. Raise a floor only after a deliberate coverage improvement lands, never
+  to make a red run green.
+- **Fuzzing** — `nix run .#fuzz` runs all **nine** targets on a 10s budget each
+  (root marshal determinism, handler input, throttle-window boundary; merge
+  invariants; the aggregate mapping harness; federation's arbitrary bodies,
+  `SourceStatuses` invariants and `Healthz` code-vs-body; the batteries'
+  sentinel surface). `nix run .#fuzz-registry` fails when a target exists in one
+  fuzz app and not the other, so a new target cannot land silently unrun. The
   aggregate fuzz additionally pins instance_id round-trips and the
   worst-of/shutdown merge rules. Fuzz failures land in `testdata/fuzz/` and
   must be fixed, never deleted.

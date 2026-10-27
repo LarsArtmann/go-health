@@ -5,10 +5,11 @@
 # that a deletion could quietly contradict.
 #
 # Floors are deliberately several points below the measured value (2026-10-27:
-# total 99.9%, root/aggregate/checks/merge 100%, federation 99.5%) because a
-# gate pinned to the current number is a gate that fails on someone else's
-# unrelated refactor. Raise a floor only after a deliberate coverage
-# improvement lands, never to make a red run green.
+# total 99.9%, root/aggregate/checks/merge 100%, federation 99.3% under this
+# toolchain's instrumentation, 99.5% under go1.27.0's) because a gate pinned to
+# the current number is a gate that fails on someone else's unrelated refactor.
+# Raise a floor only after a deliberate coverage improvement lands, never to
+# make a red run green.
 #
 # Usage:
 #   coverage-gate.sh [--total PCT] [--package PCT] [--report-only]

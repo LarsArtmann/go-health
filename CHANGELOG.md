@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Statement coverage is now 100% for `health`, `aggregate`, `checks` and `internal/merge`, 99.5% for `federation` (99.9% total). The one remaining statement is federation's request-construction guard, unreachable for any remote `New` accepts; the reason is recorded at `fetch`.
+- Statement coverage is now 100% for `health`, `aggregate`, `checks` and `internal/merge`, 99.3% for `federation` (99.9% total). The one remaining statement is federation's request-construction guard, unreachable for any remote `New` accepts; the reason is recorded at `fetch`. The federation figure is toolchain-relative: the dev shell's go1.27.3 instruments it as 148 blocks, a host go1.27.0 as 207, so the same source reads 99.5% there.
 - New tests pin `federation.WithClient`, the truncated-body fetch path, and a concurrent drain through `federation.Healthz` (race detector plus the invariant that a drain never unlatches startup).
 - Two defensive branches became testable instead of silent coverage holes: `applyStartupFailureOverlay` (root `Healthz`) and `versionMarshalFailure` behind a `marshalVersionResponse` seam, matching the existing `marshalResponse` seam.
 - The freshness read is now measured rather than asserted: `BenchmarkCachedResponseFresh` confirms 0 B/op and 0 allocs/op, and `BenchmarkEvaluateAndCache` prices publishing at +384 B/+5 allocs (the batch deadline context, not the atomic store). Numbers in FEATURES "Performance".

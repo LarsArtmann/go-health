@@ -122,6 +122,28 @@ func TestNewChecks_RecoversPanickingCheck(t *testing.T) {
 	}
 }
 
+func TestNewChecks_NonCriticalPanicFailsClosed(t *testing.T) {
+	t.Parallel()
+
+	probe := health.NewChecks(map[string]health.CheckFunc{
+		"cache": func(_ context.Context) error { panic("cache exploded") },
+		"calm":  func(_ context.Context) error { return nil },
+	})
+
+	resp := probe.Evaluate(context.Background())
+
+	// A recovered panic is untrustworthy evidence, not a degraded dependency:
+	// ErrCheckPanicked's contract says fail, never warn, regardless of the
+	// critical set (issue #7, finding 1).
+	if resp.Status != health.StatusFail {
+		t.Errorf("a non-critical panicked check must fail the roll-up, got %q", resp.Status)
+	}
+
+	if got := resp.Checks["cache"].Status; got != health.StatusFail {
+		t.Errorf("panicked check status = %q, want fail", got)
+	}
+}
+
 func TestNewChecks_NilCheckFailsClosed(t *testing.T) {
 	t.Parallel()
 

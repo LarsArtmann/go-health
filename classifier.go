@@ -14,6 +14,14 @@ func isOff(err error) bool {
 	return ok
 }
 
+// isRecoveredPanic reports whether err is a recovered panic at either
+// recovery surface: the batch-level [ErrPanicDuringHealthCheck] or the
+// per-check [ErrCheckPanicked]. Both mean the evidence is untrustworthy, so
+// they grade fail regardless of criticality, never warn.
+func isRecoveredPanic(err error) bool {
+	return errors.Is(err, ErrPanicDuringHealthCheck) || errors.Is(err, ErrCheckPanicked)
+}
+
 // classifier rolls raw health-check results into the library's decisions:
 // the three-state roll-up status and the startup-latch verdict. It holds the
 // critical set and nothing else — no lifecycle state, no synchronization —
@@ -25,9 +33,9 @@ type classifier struct {
 
 // classify computes the roll-up status from health-check results:
 //
-//   - StatusFail when shutting down, any critical service failed, or the
-//     batch panicked (recovered panic: results are untrustworthy — see
-//     docs/panic-recovery-design.md).
+//   - StatusFail when shutting down, any critical service failed, or a
+//     recovered panic occurred (either batch-level or per-check: the
+//     results are untrustworthy, see docs/panic-recovery-design.md).
 //   - StatusWarn when no critical service failed but at least one
 //     non-critical service failed (degraded but still serving traffic).
 //   - StatusPass when every checked service is healthy or off ([OffError]
@@ -45,7 +53,7 @@ func (c classifier) classify(results map[string]error, shuttingDown bool) Status
 			continue
 		}
 
-		if errors.Is(err, ErrPanicDuringHealthCheck) {
+		if isRecoveredPanic(err) {
 			return StatusFail
 		}
 
@@ -97,7 +105,7 @@ func (c classifier) evaluateStartup(results map[string]error) bool {
 // [*OffError] is always [StatusOff] — off beats criticality because a
 // deliberately unconfigured dependency has nothing to fail.
 func (c classifier) grades(name string, err error) Status {
-	if errors.Is(err, ErrPanicDuringHealthCheck) {
+	if isRecoveredPanic(err) {
 		return StatusFail
 	}
 

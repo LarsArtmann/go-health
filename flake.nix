@@ -438,7 +438,8 @@
             # gate. It is a maintainer command whose evidence lands in
             # docs/recorder-miswire-audit.md.
             recorder-audit =
-              mkApp "recorder-audit" "Audit fleet checkout for WithHealthRecorder passed to a function-path constructor"
+              mkApp "recorder-audit"
+                "Audit fleet checkout for WithHealthRecorder passed to a function-path constructor"
                 [
                   pkgs.bash
                   pkgs.coreutils

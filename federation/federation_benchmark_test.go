@@ -166,6 +166,7 @@ func BenchmarkMergedReadAndStatuses(b *testing.B) {
 		})
 	}
 }
+
 // BenchmarkReadinessHandler_DrainingScaling extends the single-remote drain
 // baseline to the fan-out that actually costs: 1, 2, 4 and 8 remotes, drained,
 // each request still fetching every remote. Read it beside

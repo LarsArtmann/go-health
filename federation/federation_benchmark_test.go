@@ -132,6 +132,40 @@ func remoteCountName(n int) string {
 	return strconv.Itoa(n) + "_remotes"
 }
 
+// BenchmarkMergedReadAndStatuses quantifies the cost the two accessors share:
+// CachedResponse and SourceStatuses each perform their own
+// one-parallel-fetch-per-remote pass, so a dashboard that needs both pays for
+// both. The three shapes are the actual choices a caller has — read the merged
+// document, read the per-remote roll-up, or read both — over four remotes.
+// Recorded numbers live in docs/accessor-read-cost-design.md, which also
+// records why merging the two read paths was rejected.
+func BenchmarkMergedReadAndStatuses(b *testing.B) {
+	const remotes = 4
+
+	shapes := []struct {
+		name string
+		run  func(*federation.Prober)
+	}{
+		{name: "merged_only", run: func(fed *federation.Prober) { _ = fed.CachedResponse() }},
+		{name: "statuses_only", run: func(fed *federation.Prober) { _ = fed.SourceStatuses() }},
+		{name: "both", run: func(fed *federation.Prober) {
+			_ = fed.CachedResponse()
+			_ = fed.SourceStatuses()
+		}},
+	}
+
+	for _, shape := range shapes {
+		b.Run(shape.name, func(b *testing.B) {
+			fed := multiRemoteProber(b, remotes)
+
+			b.ResetTimer()
+
+			for b.Loop() {
+				shape.run(fed)
+			}
+		})
+	}
+}
 // BenchmarkReadinessHandler_DrainingScaling extends the single-remote drain
 // baseline to the fan-out that actually costs: 1, 2, 4 and 8 remotes, drained,
 // each request still fetching every remote. Read it beside

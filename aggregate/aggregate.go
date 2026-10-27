@@ -158,7 +158,10 @@ func (a *Aggregate) CachedResponse() health.Response {
 // the merged view. The merged [Aggregate.CachedResponse] status is the worst
 // of these values; this accessor answers the per-source question a dashboard
 // or CLI asks next ("is source api healthy overall?") without refolding the
-// namespaced check keys. See docs/aggregate-per-source-visibility-design.md.
+// namespaced check keys. It shares [Aggregate.CachedResponse]'s source loads,
+// so calling both performs two passes (the loads are atomic, not network);
+// docs/accessor-read-cost-design.md records the measurement and why no merged
+// accessor exists. See docs/aggregate-per-source-visibility-design.md.
 func (a *Aggregate) SourceStatuses() map[string]health.Status {
 	statuses := make(map[string]health.Status, len(a.sources))
 

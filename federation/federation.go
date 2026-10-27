@@ -287,8 +287,9 @@ func (p *Prober) cachedResponse(ctx context.Context) health.Response {
 // SourceStatuses folds every remote's own document to its roll-up status:
 // one entry per remote name, from the same one-parallel-fetch-per-remote
 // pass [Prober.CachedResponse] performs (so calling both costs two passes;
-// callers that need both should prefer two reads or the merged view's
-// namespaced checks). It answers the per-remote question a hub dashboard
+// a caller that needs the merged document should read only that, and fold
+// per-remote verdicts from its namespaced keys). It answers the per-remote
+// question a hub dashboard
 // asks next — "is remote api healthy overall?" — without refolding
 // "api/*" check keys.
 //

@@ -148,18 +148,14 @@ func TestHealthz_ConcurrentDrainIsRaceFree(t *testing.T) {
 	var wg sync.WaitGroup
 
 	for range 8 {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			for range 4 {
 				handler(
 					httptest.NewRecorder(),
 					httptest.NewRequest(http.MethodGet, "/healthz", nil),
 				)
 			}
-		}()
+		})
 	}
 
 	fed.MarkShuttingDown()

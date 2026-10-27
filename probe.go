@@ -517,7 +517,8 @@ func (p *Probe) Validate() error {
 // stray restart call (a supervisor that wants the service back starts a new
 // process). The supported retry is a Start that FAILED validation: that path
 // never set the flag, so retrying it recovers. Pinned by
-// TestStart_AfterShutdown_RestartsLoopButStaysDown.
+// TestStart_AfterShutdown_RestartsLoopButStaysDown; the decision and its
+// rejected alternatives are docs/adr/ADR-009-shutdown-is-one-way.md.
 func (p *Probe) Start(ctx context.Context) error {
 	if err := p.Validate(); err != nil {
 		return err
@@ -655,7 +656,7 @@ func (p *Probe) refreshCache(ctx context.Context) {
 // [Probe.Start] may re-arm the loop but cannot make the probe ready again.
 // Call it once from the host's teardown path; repeat calls are harmless but
 // re-run the grace window. For a two-phase drain use
-// [Probe.MarkShuttingDown] first.
+// [Probe.MarkShuttingDown] first. See docs/adr/ADR-009-shutdown-is-one-way.md.
 func (p *Probe) Shutdown() {
 	p.shuttingDown.Store(true)
 
@@ -911,7 +912,8 @@ func (p *Probe) CachedResponse() Response {
 // a fixed test clock yields a deterministic age. Use it with
 // [Probe.CachedResponseFresh] for the serve-cache-or-evaluate policy that
 // consumers otherwise hand-roll around the raw timestamp. See
-// docs/cache-freshness-design.md.
+// docs/cache-freshness-design.md; why this stays a primitive rather than a
+// staleness option is docs/adr/ADR-010-freshness-is-a-primitive.md.
 func (p *Probe) CacheAge() (time.Duration, bool) {
 	cached := p.latest.Load()
 	if cached == nil || cached.Timestamp.IsZero() {

@@ -327,3 +327,66 @@ func BenchmarkEvaluate_TrackerDelta(b *testing.B) {
 		})
 	}
 }
+
+// BenchmarkCachedResponseFresh measures the read half of the
+// "serve cache while fresh, otherwise evaluate" policy: one clock read plus one
+// atomic load, with the response's Checks map aliased rather than copied. The
+// zero-allocation property is the reason consumers can call it on every
+// request instead of caching the decision themselves. The freshness window is
+// an hour so the hit path (the one that matters) is what gets measured.
+func BenchmarkCachedResponseFresh(b *testing.B) {
+	probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+		return map[string]error{"db": nil, "cache": nil}
+	}, health.WithRefreshInterval(0))
+
+	probe.EvaluateAndCache(context.Background())
+
+	if _, ok := probe.CachedResponseFresh(time.Hour); !ok {
+		b.Fatal("a just-published snapshot must read as fresh")
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for range b.N {
+		_, _ = probe.CachedResponseFresh(time.Hour)
+	}
+}
+
+// BenchmarkEvaluateAndCache measures the write half of the freshness policy:
+// a full evaluation, once without publishing (Evaluate) and once with the
+// single atomic store that makes the result the served snapshot
+// (EvaluateAndCache). The delta is the price of "evaluate on miss" as opposed
+// to "evaluate and discard", measured A/B on the same probe shape so the batch
+// cost cancels out.
+func BenchmarkEvaluateAndCache(b *testing.B) {
+	for _, checks := range []int{1, 8} {
+		b.Run(fmt.Sprintf("checks=%d", checks), func(b *testing.B) {
+			results := make(map[string]error, checks)
+			for i := range checks {
+				results[fmt.Sprintf("svc%02d", i)] = nil
+			}
+
+			for _, publish := range []bool{false, true} {
+				b.Run(fmt.Sprintf("publish=%v", publish), func(b *testing.B) {
+					probe := health.NewWithHealthCheck(func(context.Context) map[string]error {
+						return results
+					}, health.WithRefreshInterval(0))
+
+					ctx := context.Background()
+
+					b.ReportAllocs()
+					b.ResetTimer()
+
+					for range b.N {
+						if publish {
+							_ = probe.EvaluateAndCache(ctx)
+						} else {
+							_ = probe.Evaluate(ctx)
+						}
+					}
+				})
+			}
+		})
+	}
+}

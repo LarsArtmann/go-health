@@ -550,13 +550,23 @@ func (p *Prober) StartupHandler() http.HandlerFunc {
 	}
 }
 
-// RegisterRoutes registers all three federation probe handlers on the
-// given mux using the provided routes. Pass [health.DefaultRoutes] for
-// the conventional Kubernetes paths.
+// RegisterRoutes registers the federation probe handlers on the given mux
+// using the provided routes. Pass [health.DefaultRoutes] for the conventional
+// Kubernetes paths. A route whose pattern is empty is skipped, so a hub that
+// only exposes readiness mounts only that handler.
 func (p *Prober) RegisterRoutes(mux *http.ServeMux, routes health.Routes) {
-	mux.HandleFunc(routes.Liveness, p.LivenessHandler())
-	mux.HandleFunc(routes.Readiness, p.ReadinessHandler())
-	mux.HandleFunc(routes.Startup, p.StartupHandler())
+	registerRoute(mux, routes.Liveness, p.LivenessHandler())
+	registerRoute(mux, routes.Readiness, p.ReadinessHandler())
+	registerRoute(mux, routes.Startup, p.StartupHandler())
+}
+
+// registerRoute mounts handler at pattern unless the pattern is empty.
+func registerRoute(mux *http.ServeMux, pattern string, handler http.HandlerFunc) {
+	if pattern == "" {
+		return
+	}
+
+	mux.HandleFunc(pattern, handler)
 }
 
 // marshalResponse is the single serialization seam for federation

@@ -292,13 +292,23 @@ func (a *Aggregate) Healthz() http.HandlerFunc {
 	}
 }
 
-// RegisterRoutes registers all three aggregate probe handlers on the given
-// mux using the provided routes. Pass [health.DefaultRoutes] for the
-// conventional Kubernetes paths.
+// RegisterRoutes registers the aggregate probe handlers on the given mux
+// using the provided routes. Pass [health.DefaultRoutes] for the conventional
+// Kubernetes paths. A route whose pattern is empty is skipped, so an
+// aggregate that only exposes readiness mounts only that handler.
 func (a *Aggregate) RegisterRoutes(mux *http.ServeMux, routes health.Routes) {
-	mux.HandleFunc(routes.Liveness, a.LivenessHandler())
-	mux.HandleFunc(routes.Readiness, a.ReadinessHandler())
-	mux.HandleFunc(routes.Startup, a.StartupHandler())
+	registerRoute(mux, routes.Liveness, a.LivenessHandler())
+	registerRoute(mux, routes.Readiness, a.ReadinessHandler())
+	registerRoute(mux, routes.Startup, a.StartupHandler())
+}
+
+// registerRoute mounts handler at pattern unless the pattern is empty.
+func registerRoute(mux *http.ServeMux, pattern string, handler http.HandlerFunc) {
+	if pattern == "" {
+		return
+	}
+
+	mux.HandleFunc(pattern, handler)
 }
 
 // marshalResponse is the single serialization seam for aggregate responses.

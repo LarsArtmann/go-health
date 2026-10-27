@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Removed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [v0.8.1] - 2026-10-27
+
+_CI-green re-cut of v0.8.0. Library content is identical to v0.8.0; the
+v0.8.0 tag's own CI run was red on the security gate, which scanned a
+machine-local tool whose dependency resolves only on the maintainer's box.
+A published tag is never moved, so this patch release freezes the fixed
+gate. Consumers need no change: prefer v0.8.1 for a green CI trail._
+
+
+### Added
+
 - `BenchmarkReadinessHandler_DrainingScaling` measures the drain fan-out at 1/2/4/8 remotes: cost is linear in remote count (~80 µs and ~14 kB per remote) because a drained hub still fetches every remote on every request, so a drain window is a load window. Read beside `BenchmarkSourceStatuses` (same fetch wave, different fold). Numbers and method: FEATURES "Performance".
 
 ### Changed
@@ -490,7 +515,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.8.1...HEAD
+[v0.8.1]: https://github.com/larsartmann/go-health/compare/v0.8.0...v0.8.1
 [v0.8.0]: https://github.com/larsartmann/go-health/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/larsartmann/go-health/compare/v0.6.1...v0.7.0
 [v0.6.1]: https://github.com/larsartmann/go-health/compare/v0.6.0...v0.6.1

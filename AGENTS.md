@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.8.0 released 2026-10-27 (alpha; the consumer-needs wave: cache-freshness primitives, recorder composition, federation per-remote visibility; `internal/merge` owns the shared worst-of fold for aggregate+federation — rank ties no longer let off/unknown remote roll-ups leak into federation's merged status — and `WithGETOnly` is removed under the zero-production-adopter path, `WithAllowedMethods()` with no arguments is the canonical GET-only spelling; gate toolchain on go 1.27.2, gosec's toolchain pinned to 1.27.1).
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.8.1 released 2026-10-27 (alpha; the consumer-needs wave: cache-freshness primitives, recorder composition, federation per-remote visibility; `internal/merge` owns the shared worst-of fold for aggregate+federation — rank ties no longer let off/unknown remote roll-ups leak into federation's merged status — and `WithGETOnly` is removed under the zero-production-adopter path, `WithAllowedMethods()` with no arguments is the canonical GET-only spelling; gate toolchain on go 1.27.2, gosec's toolchain pinned to 1.27.1).
 
 ---
 

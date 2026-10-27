@@ -194,44 +194,82 @@
                 fi
               fi
 
-              # API-list lockstep (federation): the design doc's API block is
-              # the published surface. A method added or removed without
-              # touching it is drift — SourceStatuses and Healthz were both
-              # missing from it until 2026-10-27 while shipped and tested.
-              api_doc="docs/federation-design.md"
-              api_code="$(mktemp)"
-              api_listed="$(mktemp)"
-              trap 'rm -f "$api_code" "$api_listed"' EXIT
-              for file in federation/*.go; do
-                case "$file" in
-                *_test.go) continue ;;
+              # API-surface lockstep: each design doc's fenced go block is a
+              # published surface, so a symbol added or removed without
+              # touching it is drift. Three surfaces drifted this way before
+              # the check existed (SourceStatuses and Healthz shipped, tested
+              # and absent from federation-design.md; aggregate had no block at
+              # all). The fence carries the surface tag (```go api:root) so one
+              # document can hold several blocks without them merging into one
+              # list. The code side is receiver-agnostic on purpose: pinning a
+              # receiver type would silently skip methods that hang off any new
+              # exported type.
+              api_lockstep() {
+                pkg_dir="$1"
+                api_doc="$2"
+                api_tag="$3"
+                api_code="$(mktemp)"
+                api_listed="$(mktemp)"
+                for file in "$pkg_dir"/*.go; do
+                  case "$file" in
+                  *_test.go) continue ;;
+                  esac
+                  {
+                    grep -hoE '^func (\([^)]*\) )?[A-Z][A-Za-z0-9]*' "$file" || true
+                    grep -hoE '^type [A-Z][A-Za-z0-9]*' "$file" || true
+                  }
+                done |
+                  sed -E 's/^func (\([^)]*\) )?//; s/^type //' |
+                  sort -u >"$api_code"
+                awk -v fence='```' -v tag="$api_tag" '
+                  $0 == fence "go " tag { inside = 1; next }
+                  $0 == fence { inside = 0; next }
+                  inside
+                ' "$api_doc" |
+                  grep -oE '^(func (\([^)]*\) )?|type )[A-Z][A-Za-z0-9]*' |
+                  sed -E 's/^func (\([^)]*\) )?//; s/^type //' |
+                  sort -u >"$api_listed"
+                if [ ! -s "$api_code" ]; then
+                  drift "$pkg_dir exports no symbols, so the lockstep has nothing to compare"
+                elif [ ! -s "$api_listed" ]; then
+                  drift "$api_doc has no '\`\`\`go $api_tag' API block to compare against $pkg_dir"
+                else
+                  while IFS= read -r name; do
+                    [ -n "$name" ] || continue
+                    grep -qxF "$name" "$api_listed" ||
+                      drift "$pkg_dir exports $name but $api_doc's $api_tag block does not list it"
+                  done <"$api_code"
+                  while IFS= read -r name; do
+                    [ -n "$name" ] || continue
+                    grep -qxF "$name" "$api_code" ||
+                      drift "$api_doc's $api_tag block lists $name but $pkg_dir does not export it"
+                  done <"$api_listed"
+                fi
+                rm -f "$api_code" "$api_listed"
+              }
+              api_lockstep . docs/ARCHITECTURE.md api:root
+              api_lockstep aggregate docs/ARCHITECTURE.md api:aggregate
+              api_lockstep federation docs/federation-design.md api:federation
+              # Architecture completeness: every non-test source file in the
+              # library must be named in docs/ARCHITECTURE.md, in both
+              # directions (no file without a row). The map is the only place a
+              # reader learns where a behaviour lives, so a file nobody wrote
+              # down is a file the next session rediscovers from scratch. Root
+              # files match by basename, sub-packages by path so
+              # `aggregate/aggregate.go` cannot hide behind a same-named root
+              # file. tools/ is a separate module and stays out of the map.
+              # find, not `git ls-files`: a file that is written but not yet
+              # staged is exactly the file whose map row gets forgotten, and
+              # listing tracked files made the check blind to it until the
+              # commit (verified by planting one).
+              arch_files="$(find . -name '*.go' -not -path './tools/*' -not -name '*_test.go' | sed 's|^\./||' | sort)"
+              for arch_file in $arch_files; do
+                case "$arch_file" in
+                tools/*) continue ;;
                 esac
-                grep -hoE '^func (\(p \*Prober\) )?[A-Z][A-Za-z0-9]*' "$file" || true
-              done |
-                sed -E 's/^func \(p \*Prober\) //; s/^func //' |
-                sort -u >"$api_code"
-              awk -v fence='```' '
-                $0 == fence "go" { inside = 1; next }
-                $0 == fence { inside = 0; next }
-                inside
-              ' "$api_doc" |
-                grep -oE '^(func \(p \*Prober\) |func )[A-Z][A-Za-z0-9]*' |
-                sed -E 's/^func \(p \*Prober\) //; s/^func //' |
-                sort -u >"$api_listed"
-              if [ ! -s "$api_listed" ]; then
-                drift "$api_doc has no fenced go API block to compare against federation's exported surface"
-              else
-                while IFS= read -r name; do
-                  [ -n "$name" ] || continue
-                  grep -qxF "$name" "$api_listed" ||
-                    drift "federation exports $name but $api_doc's API block does not list it"
-                done <"$api_code"
-                while IFS= read -r name; do
-                  [ -n "$name" ] || continue
-                  grep -qxF "$name" "$api_code" ||
-                    drift "$api_doc's API block lists $name but federation does not export it"
-                done <"$api_listed"
-              fi
+                grep -qF "$arch_file" docs/ARCHITECTURE.md ||
+                  drift "docs/ARCHITECTURE.md does not name the source file $arch_file"
+              done
 
               if [ "$fail" -eq 0 ]; then
                 echo "docs-drift-check: OK - README/AGENTS/CHANGELOG/FEATURES in sync with ''${latest}"

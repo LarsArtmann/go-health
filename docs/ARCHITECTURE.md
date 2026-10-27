@@ -70,3 +70,128 @@ overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars
 | Sub-packages                | one `*_test.go` family per package plus an `*_internal_test.go` where an unexported seam needs pinning                        |
 | Fuzz                        | `handlers_fuzz_test.go` (root), `aggregate/`, `checks/`, `federation/` (×3 targets), `internal/merge/` — all registered in both `fuzz` apps, parity enforced by `nix run .#fuzz-registry` |
 | Benchmarks                  | `probe_benchmark_test.go`, `probe_test.go`, `aggregate/aggregate_benchmark_test.go`, `federation/federation_benchmark_test.go` |
+
+---
+
+## Exported API surface
+
+These blocks are the published surface, and `nix run .#docs-check` compares them
+against the code in both directions: a symbol added to a package without a line
+here (or a line here without a symbol) fails the gate. Before the check existed,
+`SourceStatuses` and `Healthz` shipped, were tested, and were missing from the
+federation block for weeks. Keep every block current in the same change that
+touches the symbol.
+
+`federation`'s block lives in [federation-design.md](federation-design.md)
+because that document owns the network semantics; the check reads it there.
+
+### Root package `health`
+
+```go api:root
+type Probe struct
+type Response struct
+type Check struct
+type CheckDetail struct
+type Status string // pass | warn | fail | off
+type Routes struct
+type Option func(*config)
+type OffError struct
+type ProbeShutdowner struct
+type CheckFunc func(ctx context.Context) error
+type HealthRecorder interface
+type DetailedHealthRecorder interface
+type HealthRecorderFunc func(ctx context.Context, injector do.Injector) map[string]error
+type DetailedHealthRecorderFunc func(ctx context.Context, injector do.Injector) map[string]CheckDetail
+type HealthCheckFunc func(ctx context.Context) map[string]error
+type DetailedHealthCheckFunc func(ctx context.Context) map[string]CheckDetail
+
+// The recorder contract. Segregated on purpose: do's injector path only
+// supplies names, so a recorder that needs durations implements the detailed
+// variant and everything else keeps working.
+func (r HealthRecorder) RecordHealthCheckWithContext(ctx context.Context, injector do.Injector) map[string]error
+func (r DetailedHealthRecorder) RecordDetailedHealthCheckWithContext(ctx context.Context, injector do.Injector) map[string]CheckDetail
+func (e *OffError) Error() string
+func (s Status) Rank() int // pass-tier ordering; off never reaches a roll-up
+func (r Response) Clone() Response // deep-copies Checks; CachedResponse aliases them
+
+// Construction. WithHealthRecorder is refused on the three paths that build
+// their own recorder (NewWith*Check, NewChecks) and at Start on the injector
+// path, so a recorder is never silently dropped.
+func New(injector do.Injector, opts ...Option) *Probe
+func NewWithHealthCheck(fn HealthCheckFunc, opts ...Option) *Probe
+func NewWithDetailedCheck(fn DetailedHealthCheckFunc, opts ...Option) *Probe
+func NewWithRecorder(recorder HealthRecorder, opts ...Option) *Probe
+func NewChecks(checks map[string]CheckFunc, opts ...Option) *Probe
+func ChainRecorders(recorders ...HealthRecorder) HealthRecorder
+func (p *Probe) Validate() error
+func DefaultRoutes() Routes
+
+// Lifecycle. Shutdown is one-way: Start after it does not re-arm readiness.
+func (p *Probe) Start(ctx context.Context) error
+func (p *Probe) Shutdown()
+func (p *Probe) MarkShuttingDown()
+func (p *Probe) AsShutdowner() ProbeShutdowner
+func (p *Probe) HealthCheck(_ context.Context) error
+
+// Evaluation. CachedResponse is lock-free; its Checks map aliases the
+// published snapshot, so callers that mutate use Response.Clone.
+func (p *Probe) Evaluate(ctx context.Context) Response
+func (p *Probe) EvaluateAndCache(ctx context.Context) Response
+func (p *Probe) CachedResponse() Response
+func (p *Probe) CachedResponseFresh(maxAge time.Duration) (Response, bool)
+func (p *Probe) CacheAge() (time.Duration, bool)
+func (p *Probe) Status() Status
+func (p *Probe) Alive() bool
+func (p *Probe) Ready() bool // "not currently failing", not a startup gate
+func (p *Probe) AwaitReady(ctx context.Context) error
+func (p *Probe) StartupComplete() bool // the one-way startup latch
+func (p *Probe) RefreshInterval() time.Duration
+
+// HTTP surface.
+func (p *Probe) LivenessHandler() http.HandlerFunc
+func (p *Probe) ReadinessHandler() http.HandlerFunc
+func (p *Probe) StartupHandler() http.HandlerFunc
+func (p *Probe) Healthz() http.HandlerFunc
+func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes)
+func VersionHandler(version string) http.HandlerFunc
+func SanitizeResponse(resp Response) Response
+
+// Options.
+func WithRefreshInterval(d time.Duration) Option
+func WithTimeout(d time.Duration) Option
+func WithShutdownGracePeriod(d time.Duration) Option
+func WithLiveThrottle(d time.Duration) Option
+func WithAllowedMethods(methods ...string) Option
+func WithInstanceID(id string) Option
+func WithVersion(v string) Option
+func WithBootTime(t time.Time) Option
+func WithNowFunc(fn func() time.Time) Option
+func WithCriticalServices(names ...string) Option
+func WithCriticalService[T any]() Option
+func WithEvaluationHook(fn func(Response)) Option
+func WithHealthRecorder(r HealthRecorder) Option
+func DoServiceName[T any]() string
+func Off(detail string) *OffError
+```
+
+### Sub-package `aggregate`
+
+```go api:aggregate
+type Source struct {
+    Name  string
+    Probe Proberish // any surface with CachedResponse + StartupComplete
+}
+
+type Aggregate struct
+
+func New(sources ...Source) (*Aggregate, error)
+func (a *Aggregate) CachedResponse() health.Response
+func (a *Aggregate) SourceStatuses() map[string]health.Status
+func (a *Aggregate) RefreshInterval() time.Duration
+func (a *Aggregate) StartupComplete() bool
+func (a *Aggregate) LivenessHandler() http.HandlerFunc
+func (a *Aggregate) ReadinessHandler() http.HandlerFunc
+func (a *Aggregate) StartupHandler() http.HandlerFunc
+func (a *Aggregate) Healthz() http.HandlerFunc
+func (a *Aggregate) RegisterRoutes(mux *http.ServeMux, routes health.Routes)
+```

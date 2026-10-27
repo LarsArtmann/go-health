@@ -189,11 +189,14 @@ seconds" behavior.
 
 ## API
 
-```go
+```go api:federation
 type Remote struct {
     Name string // unique, non-empty, no "/": becomes the "name/check" prefix
     URL  string // absolute http(s) URL to a go-health JSON document
 }
+
+type Prober struct
+type Option func(*config)
 
 func New(remotes []Remote, opts ...Option) (*Prober, error)
 

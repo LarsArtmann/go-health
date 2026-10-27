@@ -6,6 +6,11 @@
 **Author:** Crush (this session) · **Predecessor reports:** [`2026-10-27_20-17_…`](2026-10-27_20-17_supplier-wave-post-release-hardening.md) (mine), [`2026-10-27_20-42_…`](2026-10-27_20-42_supplier-wave-release-executed-adoption-not-started.md) (peer's)
 **Scope:** only what this session executed. No new market research, no consumer repos touched.
 
+**See also (added 2026-10-27 22:xx):** the peer's [21:02 report](2026-10-27_21-02_distribution-shipped-consumption-zero.md)
+covers the distribution side and is materially newer on bridge state; the plan of record is
+[../planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md](../planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md),
+whose supply thesis this report's §a evidence supports.
+
 ---
 
 ## 0. The one-paragraph truth

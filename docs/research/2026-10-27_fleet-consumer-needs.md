@@ -5,6 +5,14 @@ multiply its reach · **Method:** local checkouts, `go.mod` pins, call-site
 reads, consumer docs, and the open issue tracker. Every claim below names a
 file or a command that produced it.
 
+**See also (added 2026-10-27 22:xx):** the two same-evening status
+reports that act on this research —
+[21:00 hardening/coverage](../status/2026-10-27_21-00_supplier-wave-hardening-coverage-and-gates.md)
+and [21:02 distribution vs consumption](../status/2026-10-27_21-02_distribution-shipped-consumption-zero.md)
+— plus the measured adoption state in
+[../adoption-matrix.md](../adoption-matrix.md) and the plan of record
+[../planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md](../planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md).
+
 ---
 
 ## 1. Reach: who actually depends on this library

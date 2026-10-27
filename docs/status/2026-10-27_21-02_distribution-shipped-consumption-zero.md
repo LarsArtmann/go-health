@@ -3,6 +3,7 @@
 **Created:** 2026-10-27 21:02 CET · **Repo:** `github.com/larsartmann/go-health` · **Branch:** `master` (in sync)
 **Supersedes:** [docs/status/2026-10-27_20-42_…](2026-10-27_20-42_supplier-wave-release-executed-adoption-not-started.md) (20 minutes older; §a/§b/§d below are materially different)
 **Plan of record:** [docs/planning/2026-10-27_19-18_fleet-supplier-wave-release-plan.md](../planning/2026-10-27_19-18_fleet-supplier-wave-release-plan.md) (T01–T30)
+**Successor plan (added 2026-10-27 22:xx):** [docs/planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md](../planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md) — same findings, milestones re-ranked by consumption value; see also the sibling [21:00 report](2026-10-27_21-00_supplier-wave-hardening-coverage-and-gates.md) and the measured [adoption matrix](../adoption-matrix.md).
 
 ---
 

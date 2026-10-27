@@ -12,12 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `nix run .#fuzz-registry` (also `checks.fuzz-registry`, part of `.#gates`) diffs both fuzz apps in `flake.nix` against the `Fuzz*` targets in the tree and against each other, so a new target can no longer be written and silently never fuzzed. Backed by `tools/fuzz-registry-check.sh`.
 - `docs-check` grew two drift rules: `[Unreleased]` must document something while HEAD is past the latest tag, and `docs/federation-design.md`'s fenced go API block must match federation's exported surface in both directions (it was missing `SourceStatuses` and `Healthz` while both shipped).
 - `docs/ARCHITECTURE.md` now carries the per-file source map, the sub-package contracts and the test-file layout, moved out of `AGENTS.md` to keep that file under its 220-line preflight cap.
+- `nix run .#recorder-audit` (with `docs/check-art-dupl`-style commentary in `docs/recorder-miswire-audit.md`) scans every local fleet checkout for `WithHealthRecorder` passed to a function-path constructor — the wiring that v0.8.0 rejects at `Start` but every consumer pinned below it still drops silently. 0 findings over 8,507 files.
+- Three decision records settle questions the code cannot answer by itself: [ADR-009](docs/adr/ADR-009-shutdown-is-one-way.md) (shutdown is one-way; no re-arm API), [ADR-010](docs/adr/ADR-010-freshness-is-a-primitive.md) (freshness stays a primitive; no `WithStaleAfter`), and [docs/accessor-read-cost-design.md](docs/accessor-read-cost-design.md) (`CachedResponse` + `SourceStatuses` are two measured passes; no merged accessor).
+- `docs-check` also enforces the exported API surface of the root package and `aggregate` against fenced `go api:` blocks, and that every non-test source file is named in `docs/ARCHITECTURE.md`.
 
 ### Changed
 
 - Statement coverage is now 100% for `health`, `aggregate`, `checks` and `internal/merge`, 99.5% for `federation` (99.9% total). The one remaining statement is federation's request-construction guard, unreachable for any remote `New` accepts; the reason is recorded at `fetch`.
 - New tests pin `federation.WithClient`, the truncated-body fetch path, and a concurrent drain through `federation.Healthz` (race detector plus the invariant that a drain never unlatches startup).
 - Two defensive branches became testable instead of silent coverage holes: `applyStartupFailureOverlay` (root `Healthz`) and `versionMarshalFailure` behind a `marshalVersionResponse` seam, matching the existing `marshalResponse` seam.
+- The freshness read is now measured rather than asserted: `BenchmarkCachedResponseFresh` confirms 0 B/op and 0 allocs/op, and `BenchmarkEvaluateAndCache` prices publishing at +384 B/+5 allocs (the batch deadline context, not the atomic store). Numbers in FEATURES "Performance".
 
 ### Removed
 

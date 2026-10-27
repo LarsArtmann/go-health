@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.7.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Single dependency, zero transitive deps beyond samber/do.
+> **Stability:** v0.7.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. One runtime dependency (`samber/do` v2), plus the naming helper `samber/go-type-to-string` that do itself already requires.
 
 ---
 
@@ -56,7 +56,7 @@ Splitting probes breaks this coupling:
 go get github.com/larsartmann/go-health
 ```
 
-**Requirements:** Go 1.27+. Single dependency: `github.com/samber/do/v2`.
+**Requirements:** Go 1.27+. Dependencies: `github.com/samber/do/v2` and `github.com/samber/go-type-to-string` (the helper do uses to infer service names; both are already in the module graph).
 
 ## Compatibility
 
@@ -259,7 +259,10 @@ for the unauthenticated-probe threat model and consumer hardening checklist.
 - **Flood-safe live mode** — `WithLiveThrottle(d)` coalesces live-mode request floods into one evaluation per window.
 - **Deterministic tests** — `WithNowFunc(fn)` drives uptime, timestamps, and throttle freshness from an injected clock; no sleeps.
 - **Config validation** — `Start()` validates configuration and returns an error on invalid settings (zero/negative timeout, negative refresh interval) and on `WithCriticalServices` names that never ran in the first batch (`ErrUnknownCriticalService` — a typo'd critical name would otherwise silently block the startup latch forever).
-- **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch.
+- **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch. `ChainRecorders(...)` observes one batch through several sinks and keeps durations from detailed members; `HealthRecorderFunc` adapts a closure; `NewWithRecorder(...)` builds a probe without a samber/do injector.
+- **Typed critical identity** — `WithCriticalService[T]()` marks do's type-inferred service as critical and `DoServiceName[T]()` names the same key, so a critical list cannot drift from the registration or fall out of sync with a display-name table.
+- **Cache freshness is explicit** — `CacheAge()` distinguishes "never evaluated" from "fresh pass", `CachedResponseFresh(maxAge)` implements serve-cache-or-fall-through, and `EvaluateAndCache(ctx)` refreshes the served snapshot instead of answering once and leaving the cache stale. `Response.Clone()` is the sanctioned copy before projecting synthetic rows onto a cached view.
+- **Partial route mounting** — `RegisterRoutes` skips an empty `Routes` field, so a service can expose only `/readyz` (or any subset) without mounting handlers it does not serve.
 
 ## Configuration Reference
 
@@ -269,6 +272,19 @@ Marks services as critical. If any fails its health check, readiness returns 503
 
 ```go
 health.WithCriticalServices("database", "redis")
+```
+
+### `WithCriticalService[T]()` and `DoServiceName[T]()`
+
+The typed spelling for services samber/do registered by type: `WithCriticalService[T]()` appends `DoServiceName[T]()` (the exact key do infers and reports in the batch) to the critical set. Use it instead of reconstructing do's internal name with `go-type-to-string`; the two sides read the same helper, so a changed registration type cannot silently fall out of the critical list.
+
+```go
+probe := health.New(injector,
+    health.WithCriticalService[*database.DB](),
+    health.WithCriticalServices("named-cache"), // explicitly named services stay literal
+)
+
+label := health.DoServiceName[*database.DB]() // same key, for display-name tables
 ```
 
 ### `WithVersion(v string)`
@@ -498,6 +514,14 @@ fetches keep running — the load balancer pulls the hub before the listener
 closes during graceful shutdown. Design:
 [docs/federation-design.md](docs/federation-design.md). Because it fetches
 live on every read, `RefreshInterval` is always 0 — cadence is the remotes'.
+
+Two per-remote accessors round out the hub surface: `fed.SourceStatuses()`
+returns each remote's own roll-up (unreachable and draining remotes report
+`fail`, no startup-latch movement) so a dashboard can badge per-remote cards
+without refolding `name/*` keys, and `fed.Healthz()` is the single-endpoint
+"route traffic here?" handler the probe and aggregate already expose (503
+while a latch is unset, the merged roll-up is fail, or the hub drains; `warn`
+stays 200).
 
 ## Batteries: common checks
 

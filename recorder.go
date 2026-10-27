@@ -147,4 +147,3 @@ func (f DetailedHealthRecorderFunc) RecordDetailedHealthCheckWithContext(
 ) map[string]CheckDetail {
 	return f(ctx, injector)
 }
-

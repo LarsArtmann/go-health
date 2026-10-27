@@ -431,6 +431,29 @@
                   bash tools/fleet-skew.sh "$@"
                 '';
 
+            # Fleet recorder mis-wire audit. Deliberately NOT part of `.#gates`:
+            # it reads every consumer checkout under $FLEET_ROOT, so on CI (no
+            # checkouts) it would report SKIP for all 16 repos and pass
+            # vacuously — a green gate with nothing behind it is worse than no
+            # gate. It is a maintainer command whose evidence lands in
+            # docs/recorder-miswire-audit.md.
+            recorder-audit =
+              mkApp "recorder-audit" "Audit fleet checkout for WithHealthRecorder passed to a function-path constructor"
+                [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.findutils
+                  pkgs.gawk
+                  pkgs.gnugrep
+                ]
+                ''
+                  root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+                  if [ -n "$root" ]; then
+                    cd "$root"
+                  fi
+                  bash tools/recorder-miswire-audit.sh "$@"
+                '';
+
             # The release gate. `.#gates` already covers the same commands CI
             # runs, but the v0.8.0 tag went red because the tagger ran the
             # tests and not the gates — a missing invocation, not a missing

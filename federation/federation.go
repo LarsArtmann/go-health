@@ -384,6 +384,15 @@ func (p *Prober) merge(results []fetchedRemote) health.Response {
 // mode — request construction, transport, non-200, oversized or
 // undecodable body, missing status — returns a non-ok result carrying a
 // human-readable cause; none of them panic or retry.
+//
+// The request-construction branch is unreachable for any configuration [New]
+// accepted: validation runs the same net/url parse that
+// http.NewRequestWithContext runs again here, so a URL that got through cannot
+// fail now. It stays because the constructor returns an error and dropping the
+// check would silently discard it, which matters the day validation is
+// relaxed. That is the one statement in this package the coverage gate reads as
+// uncovered; every other branch is pinned by test (transport, non-200 drain,
+// truncated body, oversized and undecodable documents).
 func (p *Prober) fetch(ctx context.Context, remote Remote) fetchResult {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()

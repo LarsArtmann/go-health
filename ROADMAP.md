@@ -115,22 +115,26 @@ How the v0.x line matures.
 
 #### Next-minor candidates (feature-driven, unscheduled)
 
-Scoped 2026-09-04 from the open idea inventory and carried forward; v0.3.0
-(federation + `NewChecks`), v0.4.0 (aggregate `Healthz()` + OpenAPI lockstep),
-v0.4.1, and v0.5.0 (checks batteries + critical-name validation +
-`VersionHandler`) shipped ahead of them, so all three remain open. All are
-additive; each carries a written design:
+The three candidates queued here all shipped: `errors.Join` in `aggregate.New`
+and `Aggregate.SourceStatuses()` (v0.6), and `federation.Prober.Healthz()`
+(v0.8.0, [docs/federation-healthz-design.md](docs/federation-healthz-design.md)).
+The supplier side of the wave is therefore closed; what is open is consumption.
 
-- ~~`errors.Join` in `aggregate.New`~~ — implemented (unreleased; v0.6
-  vehicle): reports every invalid source at once
-  ([docs/errors-join-design.md](docs/errors-join-design.md))
-- ~~`Aggregate.SourceStatuses()`~~ — implemented (unreleased; v0.6
-  vehicle): per-source roll-up accessor
-  ([docs/aggregate-per-source-visibility-design.md](docs/aggregate-per-source-visibility-design.md))
-- `federation.Prober.Healthz()` — the single-endpoint parity the aggregate
-  gained in v0.4.0; the federation `Prober` still lacks it (design accepted:
-  [docs/federation-healthz-design.md](docs/federation-healthz-design.md);
-  implementation stays in this window)
+#### Current wave — consumption, not supply (2026-10-27)
+
+The library's capability set is ahead of its fleet: `CachedResponseFresh`,
+`EvaluateAndCache`, `CacheAge`, `Response.Clone`, `ChainRecorders`,
+`ErrRecorderNotApplicable`, per-check `Since`/`DurationNanos`, `SourceStatuses`
+and the federation drain all ship and are tested, and the 2026-10-27 adoption
+sweep found **zero** consumer adopters for the freshness primitives and a
+single deep adopter (`go-health-dashboard`) for the merge surfaces
+([docs/adoption-matrix.md](docs/adoption-matrix.md)).
+
+So the next milestone is not a feature: it is releasing the two bridge modules
+(`go-appkit/health`, `cqrs-htmx/health`), re-pinning them to v0.8.1, and
+compiling the fleet against the result — the plan of record is
+[docs/planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md](docs/planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md).
+Every one of those steps needs the owner's push authority.
 
 #### v1.0 criteria draft
 
@@ -139,10 +143,10 @@ What "1.0" will mean here — none of this is promised yet:
 - **API freeze:** the JSON wire format, the three-probe contract, and the
   full public surface (options, `Response`, `Probe` methods, the aggregate
   API) carry explicit backward-compatibility promises
-- **Deprecation burn-down:** `WithGETOnly` is already removed (post-v0.6.1,
-  Unreleased — the deprecation policy's zero-production-adopter path made a
-  pre-1.0 cut possible); the `HealthRecorder` signature revisit (ADR-004)
-  lands here if at all
+- **Deprecation burn-down:** `WithGETOnly` is already removed (v0.7.0 — the
+  deprecation policy's zero-production-adopter path made a pre-1.0 cut
+  possible); the `HealthRecorder` signature revisit (ADR-004) lands here if at
+  all
 - **Toolchain floor:** go.mod ≥ 1.27 so json/v2 needs no experiment
 - **Consumer proof:** at least the known consumer
   (go-health-dashboard) running the released module without a replace
@@ -151,11 +155,12 @@ What "1.0" will mean here — none of this is promised yet:
 
 Rationale: this is a pure-Go library — no binaries, archives, or checksums
 to produce, which is the work GoReleaser automates. The manual flow
-(CHANGELOG cut → `nix run .#gates` → annotated tag → `gh release create` →
-proxy/pkg.go.dev verify) has shipped every release cleanly (v0.0.1 through
-v0.4.1). GoReleaser would add config and CI surface for zero deliverables.
-Revisit triggers: shipping a CLI binary, or a sustained cadence above ~4
-releases/year.
+(CHANGELOG cut → `nix run .#pre-tag -- vX.Y.Z` → annotated tag →
+`gh release create` → proxy/pkg.go.dev verify) has shipped every release
+(v0.0.1 through v0.8.1). `.#pre-tag` was added after the v0.8.0 tag went red:
+the gates were fine, the tagger simply did not run them. GoReleaser would add
+config and CI surface for zero deliverables. Revisit triggers: shipping a CLI
+binary, or a sustained cadence above ~4 releases/year.
 
 #### Internal architecture — seam extraction rejected 2026-09-04
 

@@ -1,6 +1,9 @@
 package health
 
-import "time"
+import (
+	"maps"
+	"time"
+)
 
 // Status is the roll-up health status of a check or the overall response.
 type Status string
@@ -145,4 +148,25 @@ type Response struct {
 	Timestamp time.Time `json:"timestamp,omitzero"`
 	// Checks maps each service name to its individual result.
 	Checks map[string]Check `json:"checks"`
+}
+
+// Clone returns an independent copy of the response, including its Checks
+// map. Values are copied as-is (Check carries only strings and times), so
+// the clone shares no mutable state with the original.
+//
+// Use it before adding or rewriting checks on a response obtained from
+// [Probe.CachedResponse]: that accessor is a lock-free read of the probe's
+// published snapshot and intentionally aliases the cached Checks map, so
+// mutating it in place races every handler marshal of the same snapshot.
+// A consumer that projects extra rows onto the cached view calls Clone
+// first. See docs/response-ownership-design.md.
+func (r Response) Clone() Response {
+	clone := r
+
+	if r.Checks != nil {
+		clone.Checks = make(map[string]Check, len(r.Checks))
+		maps.Copy(clone.Checks, r.Checks)
+	}
+
+	return clone
 }

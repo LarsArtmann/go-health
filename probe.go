@@ -94,6 +94,13 @@ type Probe struct {
 	instanceID     string
 	allowedMethods map[string]struct{}
 
+	// recorderDropped records that a WithHealthRecorder option was passed
+	// to a function-path constructor, where the explicit function owns
+	// batch execution and the recorder cannot run. Validate and Start
+	// reject that mis-wiring instead of letting it silently capture
+	// nothing.
+	recorderDropped bool
+
 	// throttleMu serializes throttled live evaluations so a request flood
 	// produces one batch per window, not one per request.
 	throttleMu sync.Mutex
@@ -119,6 +126,7 @@ type config struct {
 	nowFunc         func() time.Time
 	instanceID      string
 	allowedMethods  map[string]struct{}
+	recorderDropped bool
 }
 
 // Option configures a [Probe]. Use the With* functions to create options.
@@ -325,9 +333,12 @@ func buildConfig(opts []Option) config {
 // batches are produced by an explicit function ([NewWithHealthCheck],
 // [NewWithDetailedCheck], [NewChecks]). Such a function owns batch
 // execution, so [WithHealthRecorder] has no effect: it is cleared here,
-// once, instead of at every standalone constructor.
+// once, instead of at every standalone constructor. The drop is recorded so
+// [Probe.Validate] (and therefore [Probe.Start]) can reject the mis-wiring
+// loudly instead of silently capturing nothing.
 func buildStandaloneConfig(opts []Option) config {
 	cfg := buildConfig(opts)
+	cfg.recorderDropped = cfg.recorder != nil
 	cfg.recorder = nil
 
 	return cfg
@@ -349,6 +360,7 @@ func assemble(healthCheck healthCheckFunc, cfg config) *Probe {
 		nowFunc:         cfg.nowFunc,
 		instanceID:      cfg.instanceID,
 		allowedMethods:  cfg.allowedMethods,
+		recorderDropped: cfg.recorderDropped,
 	}
 }
 

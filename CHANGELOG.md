@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- `FuzzHealthz_CodeMatchesBody` and `FuzzSourceStatuses_Invariants` pin the two federation accessors added in v0.8.0: the single-endpoint status code must follow the body it served (503 exactly when the roll-up is fail), a drained hub must answer 503 for any remote document, and the per-remote map must stay one known status per remote, deterministic, and unrewritten by the hub's own drain. Both are registered in `.#fuzz` and `.#fuzz-long`. The SourceStatuses target found the out-of-set roll-up hole fixed in v0.8.0.
+- Benchmarks for the per-remote and single-endpoint surfaces: `BenchmarkSourceStatuses` and `BenchmarkHealthz` (federation), `BenchmarkAggregateSourceStatuses` (aggregate), and `BenchmarkReadinessHandler_DrainingScaling` at 1/2/4/8 remotes. Recorded numbers and method in FEATURES "Performance".
 
 ### Changed
 
-- Nothing yet.
+- `federation.Prober.Healthz` delegates its startup overlay to `applyStartupLatchOverlay`, which is unit-tested directly: the overlay is unreachable through the public read path (a successful fetch closes the latch before the merge, a failed one fails the roll-up), so the contract now has a pin instead of dead-looking code. Federation statement coverage 95.0% → 98.1%. No behaviour change.
 
 ### Removed
 

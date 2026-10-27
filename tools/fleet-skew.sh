@@ -8,16 +8,63 @@
 # provides GITHUB_TOKEN) at each repo's live default branch.
 #
 # Usage:
-#   fleet-skew.sh [latest-tag]     # tag defaults to the newest local tag (v-prefixed)
+#   fleet-skew.sh [--expect TAG] [--allow N] [TAG]
 #
-# Exit codes: 0 = no minor drift, 1 = at least one consumer is minor-stale.
+#   --expect TAG  compare against TAG instead of the newest local tag. The
+#                 default is machine-derived on purpose: a hand-typed
+#                 expectation is a second source of truth that goes stale the
+#                 moment a release happens. CI passes --expect because it
+#                 checks out one branch and may not carry the tags.
+#   --allow N     tolerate up to N minor-stale consumers (default 0). Use it
+#                 only to record a known backlog, never to hide new drift.
+#
+# Exit codes: 0 = no minor drift (or within --allow), 1 = too many
+# minor-stale consumers, 2 = no version to compare against.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 manifest="$here/fleet-repos.txt"
 repo_root=$(cd "$here/.." && pwd)
 
-latest="${1:-$(git -C "$repo_root" tag --list 'v*' --sort=-v:refname | head -1)}"
+expect=""
+allow=0
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+	--expect)
+		expect="${2:?--expect needs a tag argument}"
+		shift 2
+		;;
+	--expect=*)
+		expect="${1#--expect=}"
+		shift
+		;;
+	--allow)
+		allow="${2:?--allow needs a number}"
+		shift 2
+		;;
+	--allow=*)
+		allow="${1#--allow=}"
+		shift
+		;;
+	-*)
+		echo "fleet-skew: unknown flag $1 (see the usage comment at the top of tools/fleet-skew.sh)" >&2
+		exit 2
+		;;
+	*)
+		expect="$1"
+		shift
+		;;
+	esac
+done
+
+case "$allow" in
+'' | *[!0-9]*)
+	echo "fleet-skew: --allow takes a non-negative integer, got '$allow'" >&2
+	exit 2
+	;;
+esac
+
+latest="${expect:-$(git -C "$repo_root" tag --list 'v*' --sort=-v:refname | head -1)}"
 if [ -z "$latest" ]; then
 	echo "fleet-skew: no v-prefixed tags found in $repo_root" >&2
 	exit 2
@@ -65,5 +112,9 @@ while read -r repo modpath; do
 done <"$manifest"
 
 echo "---"
-echo "minor-stale: $fails, warnings: $warns"
-[ "$fails" -eq 0 ]
+echo "minor-stale: $fails, warnings: $warns (allowed: $allow)"
+if [ "$fails" -gt "$allow" ]; then
+	echo "fleet-skew: $fails consumer(s) are a minor behind $latest, above the allowed $allow" >&2
+	echo "fleet-skew: bump them (go get github.com/larsartmann/go-health@$latest) or explain the backlog in tools/fleet-repos.txt" >&2
+	exit 1
+fi

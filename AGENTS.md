@@ -23,8 +23,9 @@ Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (li
 | `nix run .#security`         | Run gosec                                                                                                                                         |
 | `nix run .#build`            | Build all packages                                                                                                                                |
 | `nix run .#openapi-lockstep` | Verify the golden wire format stays covered by `docs/openapi.yaml` (also a `checks.*` under `nix flake check`)                                    |
-| `nix run .#docs-check`       | Docs drift alarm: README/AGENTS/CHANGELOG/FEATURES in sync with the latest tag (also a `checks.*` under `nix flake check`, and part of `.#gates`) |
-| `nix fmt`                    | Format code (gofumpt, goimports)                                                                                                                  |
+| `nix run .#fuzz-registry`    | Verify both `fuzz` apps in `flake.nix` list exactly the `Fuzz*` targets in the tree (also a `checks.*`, and part of `.#gates`)                   |
+| `nix run .#docs-check`       | Docs drift alarm: README/AGENTS/CHANGELOG/FEATURES in sync with the latest tag, non-empty `[Unreleased]` past the tag, federation API block matches the exported surface (also a `checks.*`, and part of `.#gates`) |
+| `nix fmt`                    | Format code (gofumpt, gofmt, golines, nixfmt — Go and Nix only; see the dprint gotcha)                                                             |
 | `nix flake check`            | Validate flake + formatting                                                                                                                       |
 
 Uses `flake.nix` with `flake-parts` + `treefmt-nix`. One runtime dependency: `github.com/samber/do/v2 v2.1.0` (plus `github.com/samber/go-type-to-string`, the naming helper samber/do itself uses, so type-inferred service keys cannot drift).
@@ -33,49 +34,11 @@ Uses `flake.nix` with `flake-parts` + `treefmt-nix`. One runtime dependency: `gi
 
 ## Architecture
 
-Single-package library (`health`) with these source files:
-
-```
-doc.go           — Package doc comment (quick start, three-probe rationale, caching, shutdown)
-types.go         — Status enum (check level: pass/fail/warn/off; the roll-up stays pass/fail/warn), Off/OffError configured-off sentinel, Check (incl. Since, DurationNanos), CheckDetail, Response data model (incl. instance_id, timestamp omitzero) + Response.Clone (deep-copies Checks)
-probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate() (incl. ErrRecorderNotApplicable), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate (no publish), EvaluateAndCache, CachedResponse (lock-free read-only view + shutdown overlay), CacheAge/CachedResponseFresh, accessors, runHealthChecks (with panic recovery), buildChecks (Since stamping + duration carry), errorsOf/detailOf adapters
-tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.Since inside buildChecks (probe-observed, prunes absent checks)
-classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
-handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes (empty patterns skipped), Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + SanitizeResponse (UTF-8 coercion)
-accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, DetailedHealthCheckFunc, NewWithDetailedCheck, NewWithRecorder (injector-free recorder constructor, new_with_recorder.go), Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz
-checks.go        — CheckFunc + NewChecks (injector-free named-check constructor: concurrent execution, per-check duration, panic recovery, nil fail-closed, batch-deadline abandonment), runNamedChecks/runBoundedCheck executors — design: docs/named-checks-design.md
-recorder.go      — ChainRecorders (ordered, nil-skipping, detailed-duration-preserving) + HealthRecorderFunc/DetailedHealthRecorderFunc adapters; service_name.go — DoServiceName[T]/WithCriticalService[T] (do's inferred key via do's own naming helper)
-version.go       — VersionHandler: build-version endpoint (ldflags/VCS stamp as {"version":"..."}); GET-only 405 unconditionally, UTF-8-coerced, payload pre-marshaled at construction; wire shape in docs/openapi.yaml (VersionResponse)
-export_test.go   — ResetStartupLatchForTest (test builds only; public latch stays one-way)
-```
-
-Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
-`health.Response`: `Source{Name, Probe}`, `New(sources...)` (rejects empty, duplicate, slash-containing, or nil-probe
-sources — docs/aggregate-source-name-design.md), merge-on-read `CachedResponse` (N lock-free loads onto the shared
-`internal/merge` primitive), `StartupComplete` (AND of latches), the three kubelet handlers, and a standalone
-`Healthz()` handler (docs/aggregate-healthz-design.md).
-
-Sub-package `federation` (source: `federation/federation.go`) is the network sibling: it pulls N remote go-health instances
-over HTTP into one `health.Response` — same source-name contract as aggregate, merge-on-read with one parallel fetch per
-remote mapped onto the shared `internal/merge` primitive (fetch error → `FetchErr`), per-remote startup latches (advanced
-federation-side on successful fetch, never inside the merge), and one synthetic `name/reachable` FAIL check per
-unreachable/undecodable remote (never a silent freeze, never a status override). Wire input is untrusted (invalid documents refused whole); `Check.Since`/`DurationNanos` survive verbatim, scalars do not.
-`MarkShuttingDown()` adds a one-way hub-side drain (readiness 503 with `shutting_down: true`, fetches continue so bodies stay fresh; liveness/startup unaffected). `SourceStatuses()` mirrors aggregate's per-remote roll-up (unreachable/draining remotes report fail; no latch movement). `Healthz()` completes single-endpoint parity (503 while any latch is unset or the merged roll-up is fail; warn stays 200).
-Full semantics (fetch caps, dashboard-`Prober` structural assertion, API surface): docs/federation-design.md +
-docs/federation-source-statuses-design.md + docs/federation-healthz-design.md; remote names never hit `ErrUnknownCriticalService`:
-docs/federation-validation-semantics.md.
-
-Sub-package `checks` (source: `checks/checks.go`) is the batteries package: zero-dependency,
-stdlib-only `func(ctx) error` constructors — `Disk`, `Memory`, `HTTP`, `Database`, each with a
-documented sentinel error — composing with `NewChecks`, `NewWithHealthCheck`, or any recorder
-path. Resource checks are warn-by-default: criticality stays with the caller; thresholds are
-arguments, not constants. Ownership decision + constraints:
-docs/batteries-ownership-decision.md; tests use an in-process `sql.Register` fake driver.
-
-Sub-package `internal/merge` (source: `internal/merge/merge.go`) is the single home of the worst-of fold behind both
-merge-on-read packages (docs/merge-unification-design.md): `Source{Name, Response, FetchErr}` + `Responses(sources)` — worst-of
-via `Rank` with tie stability (`off`/unknown roll-ups can't leak in; order-independent), `"source/check"` namespacing, shutdown
-overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars dropped. Pure; the collapsed merge fuzz suite lives here.
+Single-package library (`health`) plus `aggregate`, `federation`, `checks` and `internal/merge`.
+The per-file map, each sub-package's contract, and the test-file layout live in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — read it before adding a file or moving a
+responsibility (moved out of this file 2026-10-27 for the 220-line cap). The decisions and the
+gotchas stay here.
 
 ### Key Design Decisions
 
@@ -148,9 +111,19 @@ go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod re
 - Benchmarks: `LivenessHandler`, `ReadinessHandler_CacheHit`, `ReadinessHandler_LiveEval`, `ReadinessHandler_RecorderPath`, `StartupHandler_Unlatched`, `StartupHandler_Contention`, `CachedResponse_ParallelReads`, `Evaluate`, `GuardOverhead`.
 - Fuzz targets: `FuzzResponseMarshalDeterministic` + `FuzzHandlerInput` + `FuzzThrottleWindowBoundary` (root; the throttle fuzz drives the window rule on a fake clock), `FuzzResponsesMergeInvariants` (internal/merge; the collapsed merge-property suite over arbitrary Source pairs — worst-of/tie stability, reachable row, namespacing, scalar drop), `FuzzAggregateMergeInvariants` (aggregate; the thin mapping harness — merged output must equal `merge.Responses` over the mapped views; source freshness modes — live/cache/throttled — derived from name parity so the corpus signature stays valid), `FuzzBatteries` (checks — pins the sentinel-or-nil error surface of the four batteries over untrusted inputs); run via `nix run .#fuzz`.
 - **Seam-swap tests must not be parallel** — tests swapping a package-global
-  seam (`marshalResponse` in both packages) mutate shared state, so they omit
-  `t.Parallel()` (marked `//nolint:paralleltest`). A parallel seam test
-  corrupts concurrent handler tests (observed: spurious 500s).
+  seam (`marshalResponse` in both packages, `marshalVersionResponse` in
+  version.go) mutate shared state, so they omit `t.Parallel()` (marked
+  `//nolint:paralleltest`). A parallel seam test corrupts concurrent handler
+  tests (observed: spurious 500s).
+- **Coverage floor (measured 2026-10-27): root 100%, aggregate/checks/merge
+  100%, federation 99.5%, total 99.9%** — the one uncovered statement is
+  federation's request-construction guard, unreachable for every remote `New`
+  accepts (rationale at `fetch`); closing it would mean deleting an error check.
+- **Defensive branches get extracted, never suppressed** — a branch reachable
+  only by a future read-path change is moved into a named function with the
+  reason in its doc comment, then pinned by an `*_internal_test.go`:
+  `applyStartupFailureOverlay` (accessors.go), `applyStartupLatchOverlay`
+  (federation/healthz.go), `versionMarshalFailure` + the marshal seam.
 
 ---
 

@@ -9,12 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- `FuzzHealthz_CodeMatchesBody` and `FuzzSourceStatuses_Invariants` pin the two federation accessors added in v0.8.0: the single-endpoint status code must follow the body it served (503 exactly when the roll-up is fail), a drained hub must answer 503 for any remote document, and the per-remote map must stay one known status per remote, deterministic, and unrewritten by the hub's own drain. Both are registered in `.#fuzz` and `.#fuzz-long`. The SourceStatuses target found the out-of-set roll-up hole fixed in v0.8.0.
-- Benchmarks for the per-remote and single-endpoint surfaces: `BenchmarkSourceStatuses` and `BenchmarkHealthz` (federation), `BenchmarkAggregateSourceStatuses` (aggregate), and `BenchmarkReadinessHandler_DrainingScaling` at 1/2/4/8 remotes. Recorded numbers and method in FEATURES "Performance".
+- `BenchmarkReadinessHandler_DrainingScaling` measures the drain fan-out at 1/2/4/8 remotes: cost is linear in remote count (~80 µs and ~14 kB per remote) because a drained hub still fetches every remote on every request, so a drain window is a load window. Read beside `BenchmarkSourceStatuses` (same fetch wave, different fold). Numbers and method: FEATURES "Performance".
 
 ### Changed
 
-- `federation.Prober.Healthz` delegates its startup overlay to `applyStartupLatchOverlay`, which is unit-tested directly: the overlay is unreachable through the public read path (a successful fetch closes the latch before the merge, a failed one fails the roll-up), so the contract now has a pin instead of dead-looking code. Federation statement coverage 95.0% → 98.1%. No behaviour change.
+- `federation.Prober.Healthz` delegates its startup overlay to `applyStartupLatchOverlay`, which is unit-tested directly. The overlay is unreachable through the public read path — a successful fetch closes its remote's latch before the merge runs, a failed one contributes a reachable fail row — so the contract was only reachable by inspection; it now has a pin, and the nil-checks-map tolerance is exercised instead of assumed. Federation statement coverage 95.0% → 98.1%. No behaviour change.
 
 ### Removed
 
@@ -22,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Nothing yet.
+- `gosec` no longer walks `tools/doanalyzerv2`: the local-only runner replaces a dependency with an absolute path that exists on no other machine, so the security gate exited 1 with zero findings while the library itself scanned clean.
+- BuildFlow's `dprint-format` step can now pass again: 17 markdown files had unpadded tables (the step's `--fix` does not rewrite them, so `nix develop -c dprint fmt` is the repair).
 
 ## [v0.8.0] - 2026-10-27
 

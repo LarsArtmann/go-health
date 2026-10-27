@@ -1,6 +1,7 @@
 package federation_test
 
 import (
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -221,3 +222,129 @@ func FuzzSourceStatuses_Invariants(f *testing.F) {
 		}
 	})
 }
+
+// FuzzHealthz_CodeMatchesBody drives the single-endpoint handler with arbitrary
+// remote documents. The status code must be a pure function of the body the
+// handler actually wrote: 503 exactly when that body's roll-up is fail, 200 for
+// pass and warn, and never any other code. Reading both off the same response
+// is the point — a future overlay that changed one without the other fails
+// here, and so does a served body that disagrees with its own transport status.
+//
+// A hub marked draining must answer 503 for every body, because the drain
+// overlay is a property of this hub rather than of any remote document.
+func FuzzHealthz_CodeMatchesBody(f *testing.F) {
+	seeds := []string{
+		`{"status":"pass","checks":{}}`,
+		`{"status":"warn","checks":{"q":{"status":"warn"}}}`,
+		`{"status":"fail","checks":{"db":{"status":"fail","error":"down"}}}`,
+		`{"status":"off","checks":{"analytics":{"status":"off"}}}`,
+		`{"status":"pass","shutting_down":true,"checks":{}}`,
+		`{"status":"bogus","checks":{}}`,
+		`not json`,
+		``,
+	}
+
+	var bodyMu sync.Mutex
+
+	body := []byte(seeds[0])
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		bodyMu.Lock()
+		payload := body
+		bodyMu.Unlock()
+
+		_, _ = w.Write(payload)
+	}))
+	defer server.Close()
+
+	remotes := []federation.Remote{{Name: "fuzz", URL: server.URL}}
+
+	prober, err := federation.New(remotes, federation.WithTimeout(time.Second))
+	if err != nil {
+		f.Fatalf("New: %v", err)
+	}
+
+	draining, err := federation.New(remotes, federation.WithTimeout(time.Second))
+	if err != nil {
+		f.Fatalf("New draining twin: %v", err)
+	}
+
+	draining.MarkShuttingDown()
+
+	for _, seed := range seeds {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, next string) {
+		bodyMu.Lock()
+		body = []byte(next)
+		bodyMu.Unlock()
+
+		assertHealthzCodeMatchesBody(t, prober.Healthz())
+
+		got := serveHealthz(t, draining.Healthz())
+		if got.code != http.StatusServiceUnavailable {
+			t.Fatalf("drained hub answered %d, want 503", got.code)
+		}
+
+		if got.status != health.StatusFail {
+			t.Fatalf("drained hub body status = %q, want fail", got.status)
+		}
+	})
+}
+
+// healthzOutcome is one served single-endpoint answer, reduced to the two
+// facts the invariant relates: the transport code and the body's roll-up.
+type healthzOutcome struct {
+	code   int
+	status health.Status
+}
+
+// serveHealthz runs the handler once and decodes what it wrote. It fails the
+// test on a body that is not a go-health response, so callers only ever reason
+// about a well-formed answer.
+func serveHealthz(t *testing.T, handler http.HandlerFunc) healthzOutcome {
+	t.Helper()
+
+	recorder := httptest.NewRecorder()
+	handler(recorder, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+
+	var decoded health.Response
+	if err := json.Unmarshal(recorder.Body.Bytes(), &decoded); err != nil {
+		t.Fatalf("healthz body is not a health response: %v (body %q)", err, recorder.Body.String())
+	}
+
+	if decoded.Status == "" {
+		t.Fatalf("healthz body has no status (body %q)", recorder.Body.String())
+	}
+
+	return healthzOutcome{code: recorder.Code, status: decoded.Status}
+}
+
+// assertHealthzCodeMatchesBody pins the pure-function contract: the code
+// follows the served roll-up, and nothing else.
+func assertHealthzCodeMatchesBody(t *testing.T, handler http.HandlerFunc) {
+	t.Helper()
+
+	got := serveHealthz(t, handler)
+
+	switch got.code {
+	case http.StatusOK:
+		if got.status == health.StatusFail {
+			t.Fatalf(
+				"healthz answered 200 with a fail body (status %q)",
+				got.status,
+			)
+		}
+	case http.StatusServiceUnavailable:
+		if got.status != health.StatusFail {
+			t.Fatalf(
+				"healthz answered 503 with status %q, want fail",
+				got.status,
+			)
+		}
+	default:
+		t.Fatalf("healthz answered %d, want 200 or 503", got.code)
+	}
+}
+

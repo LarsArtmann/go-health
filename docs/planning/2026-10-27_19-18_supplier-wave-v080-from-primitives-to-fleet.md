@@ -1,10 +1,21 @@
 # Supplier wave: v0.8.0 from primitives to fleet adoption — master plan
 
-**Date:** 2026-10-27 19:18 CET
+**Date:** 2026-10-27 19:18 CET (gate state re-verified 19:26)
 **Repo:** `~/projects/go-health` · **Base:** master `3245d27` (13 commits ahead of `origin/master`, all unreleased on top of v0.7.0)
 **Author:** Crush (this session) · **Companion report:** [`docs/status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md`](../status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md)
 **Research input:** [`docs/research/2026-10-27_fleet-consumer-needs.md`](../research/2026-10-27_fleet-consumer-needs.md)
+**Sibling plan:** [`docs/planning/2026-10-27_19-18_fleet-supplier-wave-release-plan.md`](2026-10-27_19-18_fleet-supplier-wave-release-plan.md) (peer agent, execution-order T01–T30, 155 subtasks)
 **Scope:** go-health (SDK + aggregate + federation + checks) **and** the three delivery layers that multiply it: `cqrs-htmx/health`, `go-appkit/health`, `go-health-dashboard`.
+
+> **Coordination note (read first).** Two plans exist for the same wave, written
+> at the same minute by two agents. This file is the **milestone + risk register**
+> (M01–M27, Pareto tiers, dependency graph, verification matrix). The peer file
+> is the **execution-order plan** (T01–T30, 30/60/100-min slices, owner gates
+> G1–G4). They agree on the critical path (gate → v0.8.0 → bridges → adoption).
+> **Do not execute both in parallel.** Until the owner designates a canonical
+> plan, execute the peer file's T-IDs and consult this file's trap list, risk
+> register, and verification matrix before each batch. Reconciliation of the
+> two is item one of the next session, not a reason to block the release.
 
 ---
 
@@ -29,8 +40,8 @@ Master now carries a wave of unreleased work (drain, `SourceStatuses`, `Response
 | `go test -count=1 ./...` | PASS (5/5 packages) |
 | `go vet ./...` | PASS |
 | `gofmt -l .` | PASS |
-| `golangci-lint run ./...` | **RED: 5 findings** (3× err113, 1× wsl_v5, 1× gocognit) |
-| `go test -race ./...` | NOT RUN |
+| `golangci-lint run ./...` | **RED: 1 finding** (`gocognit` in `handlers_fuzz_test.go`); the 3× err113 + 1× wsl_v5 findings from 19:18 were fixed at 19:24 |
+| `go test -race ./...` | PASS per the peer plan's 19:18 snapshot; re-run before the tag |
 | `nix run .#gates` / `.#fuzz` / `.#docs-check` / `.#openapi-lockstep` | NOT RUN |
 | BuildFlow full mode | NOT RUN |
 
@@ -176,7 +187,7 @@ Sort key: tier first, then impact (Critical > High > Med > Low), then customer v
 
 | Rank | ID | Milestone | Covers | Est. | Impact | Customer value | Depends on | Tier |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | M01 | Gate-green sweep: fix 5 lint findings, run test/race/vet/gofmt/lint | P01, P02 | 90 min | Critical | High | — | 1% |
+| 1 | M01 | Gate-green sweep: reach lint green (gocognit), run test/race/vet/gofmt/lint | P01, P02 | 90 min | Critical | High | — | 1% |
 | 2 | M04 | Cut v0.8.0: CHANGELOG cut, tag, push, proxy/GH/go-get smoke, impact line | P06, P07 | 100 min | Critical | High | M01, M02, M03 | 1% |
 | 3 | M02 | Docs truth pass before tag: research doc addendum, design statuses, federation surface, INDEX/README/FEATURES | P03, P04, P05 | 100 min | High | Med | — | 1% |
 | 4 | M03 | Decision records + migration notes: panic grading ADR, two migration snippets | P32, P33, P34 | 60 min | High | Med | — | 1% |
@@ -184,7 +195,7 @@ Sort key: tier first, then impact (Critical > High > Med > Low), then customer v
 | 6 | M06 | Bump `go-appkit/health`: pin, flip warn test, retire silent-drop godoc, suite green | P09, P62 | 90 min | Critical | High | M04 | 4% |
 | 7 | M07 | Bridge consumer smoke: company-master-data + timesheets compile/test | — (verification gate) | 60 min | High | High | M05, M06 | 4% |
 | 8 | M08 | dnsblockd: `CachedResponseFresh` + `Response.Clone`, keep staleness policy, bump pin | P15 | 90 min | High | High | M04 | 20% |
-| 9 | M09 | DiscordSync: replace readyz snapshot cache, typed criticals, bump pin | P14, P13 (partial) | 90 min | High | High | M04 | 20% |
+| 9 | M09 | DiscordSync: replace readyz snapshot cache, typed criticals, bump pin | P14 | 90 min | High | High | M04 | 20% |
 | 10 | M10 | cv: cache primitives + `Clone`, bump pin | P16 | 60 min | High | High | M04 | 20% |
 | 11 | M13 | go-taskqueue: collapse `queueProber` onto `NewChecks` + live throttle | P17 | 100 min | High | High | M04 | 20% |
 | 12 | M11 | Typed-critical sweep: CV, KeyHolderAI, nsfw-classifier, DiscordSync label table | P13 | 90 min | Med | Med | M04 | 20% |
@@ -202,7 +213,7 @@ Sort key: tier first, then impact (Critical > High > Med > Low), then customer v
 | 24 | M23 | Process: AGENTS headroom, symbol-docs gate, concurrency lessons | P47, P48, P49 | 100 min | Med | Low | — | tail |
 | 25 | M24 | Version-skew CI + post-release fleet survey | P41, P50 | 100 min | Med | Med | M04, M12 | tail |
 | 26 | M25 | Owner publishing queue: #5 close, #7 annotation, do#318, announcement | P39, P40, P54, P56 | 45 min | Low | Low | M04 | tail |
-| 27 | M26 | Blocked-decision review: coverage, BuildFlow, auditlog, doanalyzerv2, LSP | P57-P61 | 60 min | Low | Low | — | tail |
+| 27 | M26 | Blocked-decision review: coverage, BuildFlow, auditlog, doanalyzerv2, LSP | P57, P58, P59, P60, P61 | 60 min | Low | Low | — | tail |
 
 **Rollup:** 27 milestones, 2,210 estimated minutes (≈36.8 h of focused work), 14 milestones on the 80% value path (≈1,190 min, ≈19.8 h).
 
@@ -216,9 +227,9 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 
 | ID | Subtask | DoD | Min |
 | --- | --- | --- | --- |
-| M01.1 | Run lint, capture the 5 findings verbatim | Output saved in scratch notes | 5 |
-| M01.2 | Fix err113 ×3: static sentinels in `probe_cache_test.go`, `recorder_test.go` | `golangci-lint` no err113 findings | 12 |
-| M01.3 | Fix wsl_v5 at `probe_cache_test.go:171` | Finding gone | 4 |
+| M01.1 | Run lint, capture the remaining findings verbatim | Output saved in scratch notes | 5 |
+| M01.2 | Verify the peer's err113 fixes (static sentinels) still satisfy lint | No err113 findings | 5 |
+| M01.3 | Verify the wsl_v5 fix at `probe_cache_test.go:171` | Finding gone | 3 |
 | M01.4 | Fix gocognit in `handlers_fuzz_test.go` (extract helper first; nolint only with rationale) | Complexity ≤25 | 12 |
 | M01.5 | Re-run lint, fix stragglers | Exit 0 | 10 |
 | M01.6 | `go test -count=1 ./...` | 5/5 `ok` | 8 |
@@ -281,7 +292,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M05.6 | Update tests, add duration-survival test | Tests green | 12 |
 | M05.7 | `cd health && go test ./...` | Exit 0 | 10 |
 | M05.8 | Root/integration suite | Exit 0 | 12 |
-| M05.9 | CHANGELOG/AGENTS note + local commit | Commit exists | 16 |
+| M05.9 | CHANGELOG/AGENTS note | Note committed | 8 |
+| M05.10 | Local commit | Commit exists | 8 |
 
 ### M06 — Bump go-appkit/health (90 min)
 
@@ -332,7 +344,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M09.5 | Adopt `WithCriticalService` for labeled services | Critical set still matches labels | 12 |
 | M09.6 | Tests updated (cache age, fallback, labels) | Green | 12 |
 | M09.7 | `go test ./...` | Exit 0 | 12 |
-| M09.8 | CHANGELOG/AGENTS + commit | Commit exists | 14 |
+| M09.8 | CHANGELOG/AGENTS note | Note committed | 8 |
+| M09.9 | Local commit | Commit exists | 6 |
 
 ### M10 — cv adoption (60 min)
 
@@ -357,7 +370,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M11.5 | nsfw-classifier: same | Same | 10 |
 | M11.6 | nsfw tests | Green | 10 |
 | M11.7 | DiscordSync label table uses `DoServiceName` | One source of truth | 12 |
-| M11.8 | Build all four + record evidence | 4/4 exit 0 | 14 |
+| M11.8 | Build all four modules | 4/4 exit 0 | 8 |
+| M11.9 | Record evidence table | Table updated | 6 |
 
 ### M12 — Remaining consumer bumps (100 min)
 
@@ -371,7 +385,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M12.6 | go-appkit/health re-verify | Exit 0 | 8 |
 | M12.7 | go-appkit/integration re-verify | Exit 0 | 8 |
 | M12.8 | Fix/revert per-repo breakage | No red repo left | 12 |
-| M12.9 | Record evidence + commits | 4 commits exist | 20 |
+| M12.9 | Record evidence table | Table updated | 10 |
+| M12.10 | Commit four repos | 4 commits exist | 10 |
 
 ### M13 — go-taskqueue collapse (100 min)
 
@@ -457,7 +472,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M19.5 | Wire `MarkShuttingDown` into hub SIGTERM | E2E drain test | 12 |
 | M19.6 | Tests + browser/screenshot suite | Green | 12 |
 | M19.7 | Examples use `WithCriticalService` | Compiles | 12 |
-| M19.8 | CHANGELOG/commit + evidence | Commit exists | 22 |
+| M19.8 | CHANGELOG + commit | Commit exists | 12 |
+| M19.9 | Record evidence in adoption table | Evidence present | 10 |
 
 ### M20 — Dashboard-family asks (60 min)
 
@@ -480,7 +496,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M21.5 | `SanitizeResponse` → `CoerceValidUTF8` alias + deprecate | Old name works | 10 |
 | M21.6 | `Check.Since` → `StatusSince` (JSON frozen) | Wire unchanged | 12 |
 | M21.7 | Dashboard compatibility check | Compiles or documented break | 12 |
-| M21.8 | CHANGELOG breaking section + commit | Commit exists | 20 |
+| M21.8 | CHANGELOG breaking section | Section present | 10 |
+| M21.9 | Commit | Commit exists | 10 |
 
 ### M22 — Lexicon + severity design (100 min)
 
@@ -505,7 +522,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M23.5 | Implement gate script | Runs locally | 12 |
 | M23.6 | Wire into `docs-check` | Fails on undocumented symbol | 12 |
 | M23.7 | Write concurrency-lessons entry | Committed to lessons/AGENTS | 12 |
-| M23.8 | Verify + commit | Commit exists | 20 |
+| M23.8 | Verify cap, links, gate | `docs-check` green | 10 |
+| M23.9 | Commit | Commit exists | 10 |
 
 ### M24 — Fleet tooling (100 min)
 
@@ -518,7 +536,8 @@ Every subtask has a Definition of Done (DoD). Estimates are ceilings. Sums may e
 | M24.5 | Run survey | Adoption table | 12 |
 | M24.6 | Record table in research doc | Table present | 12 |
 | M24.7 | File consumer issues | Links recorded | 12 |
-| M24.8 | Commit | Commit exists | 18 |
+| M24.8 | Verify workflow/script locally | Runs clean | 10 |
+| M24.9 | Commit | Commit exists | 8 |
 
 ### M25 — Owner publishing queue (45 min)
 
@@ -636,14 +655,18 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-  A["M01 Lint green"] --> B["M04 v0.8.0"]
-  B --> C["M05 cqrs-htmx/health"]
-  B --> D["M06 go-appkit/health"]
-  C --> E["M07 bridge smoke"]
-  D --> E
-  B --> F["M08-M10 cache adoption"]
-  F --> G["M12 fleet current"]
-  B --> H["M19 dashboard parity"]
+  M01["M01 Lint green"] --> M04["M04 v0.8.0"]
+  M04 --> M05["M05 cqrs-htmx/health"]
+  M04 --> M06["M06 go-appkit/health"]
+  M05 --> M07["M07 bridge smoke"]
+  M06 --> M07
+  M04 --> M08["M08 dnsblockd"]
+  M04 --> M09["M09 DiscordSync"]
+  M04 --> M10["M10 cv"]
+  M08 --> M12["M12 fleet current"]
+  M09 --> M12
+  M10 --> M12
+  M04 --> M19["M19 dashboard parity"]
 ```
 
 ---
@@ -699,3 +722,5 @@ flowchart LR
 | Time | Milestone | Subtask | Result | Evidence |
 | --- | --- | --- | --- | --- |
 | 2026-10-27 19:18 | plan | created | Plan authored, graph + tables verified | this file |
+| 2026-10-27 19:26 | M01 (prep) | lint re-check | 1 finding remains (`gocognit`); peer fixed err113 + wsl | `golangci-lint run ./...` |
+| 2026-10-27 19:26 | coordination | peer plan detected | Two plans; this one is the risk register, peer file owns T-IDs | `docs/planning/2026-10-27_19-18_fleet-supplier-wave-release-plan.md` |

@@ -42,17 +42,7 @@ func VersionHandler(version string) http.HandlerFunc {
 
 	payload, err := json.Marshal(body, json.Deterministic(true))
 	if err != nil {
-		// Defensive: a single UTF-8-coerced string field cannot fail to
-		// marshal today. If a future field reintroduces a failure mode,
-		// the endpoint must say so loudly instead of writing nothing
-		// after a 200 — same stance as writeResponse.
-		return func(w http.ResponseWriter, _ *http.Request) {
-			http.Error(
-				w,
-				"health: failed to encode version: "+err.Error(),
-				http.StatusInternalServerError,
-			)
-		}
+		return versionMarshalFailure(err)
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -73,5 +63,21 @@ func VersionHandler(version string) http.HandlerFunc {
 		_, _ = w.Write(
 			payload,
 		) //nolint:erraudit // intentional: status already committed; a library must not log client disconnects
+	}
+}
+
+// versionMarshalFailure answers every request with a 500 naming the marshal
+// cause. Defensive: a single UTF-8-coerced string field cannot fail to
+// marshal today. If a future field reintroduces a failure mode, the endpoint
+// must say so loudly instead of writing nothing after a 200 — the same stance
+// as [writeResponse]. Extracted so the branch is pinned by test rather than
+// living as an untestable closure.
+func versionMarshalFailure(err error) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(
+			w,
+			"health: failed to encode version: "+err.Error(),
+			http.StatusInternalServerError,
+		)
 	}
 }

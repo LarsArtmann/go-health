@@ -122,3 +122,35 @@ func TestDetailedHealthRecorderFunc_PreservesDurations(t *testing.T) {
 		)
 	}
 }
+
+// TestDetailedHealthRecorderFunc_PlainViewProjectsErrors pins the
+// [health.HealthRecorder] half of the adapter. Only the detailed interface
+// carries durations, so a consumer holding the plain view must still get every
+// check's error — a projection that dropped failures would silently turn a
+// failing dependency into a passing one.
+func TestDetailedHealthRecorderFunc_PlainViewProjectsErrors(t *testing.T) {
+	t.Parallel()
+
+	var plain health.HealthRecorder = health.DetailedHealthRecorderFunc(
+		func(context.Context, do.Injector) map[string]health.CheckDetail {
+			return map[string]health.CheckDetail{
+				"db":    {Err: errRecorderDependency, Duration: time.Second},
+				"cache": {Duration: time.Millisecond},
+			}
+		},
+	)
+
+	got := plain.RecordHealthCheckWithContext(t.Context(), do.New())
+
+	if len(got) != 2 {
+		t.Fatalf("plain batch has %d checks, want 2 (one per detail)", len(got))
+	}
+
+	if !errors.Is(got["db"], errRecorderDependency) {
+		t.Errorf("db error = %v, want %v", got["db"], errRecorderDependency)
+	}
+
+	if got["cache"] != nil {
+		t.Errorf("cache error = %v, want nil", got["cache"])
+	}
+}

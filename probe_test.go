@@ -509,6 +509,35 @@ func TestStartup_CriticalServiceUnhealthy_Returns503(t *testing.T) {
 	}
 }
 
+// TestStartup_CriticalNameMissingFromBatch_DoesNotLatch covers the case
+// Start's batch validation cannot: a recorder answers with whatever it likes,
+// so a configured critical name can be absent from a later batch. Treating
+// absence as healthy would latch startup on a dependency that was never
+// checked — the exact false confidence the critical set exists to prevent.
+func TestStartup_CriticalNameMissingFromBatch_DoesNotLatch(t *testing.T) {
+	t.Parallel()
+
+	probe := health.NewWithRecorder(
+		health.HealthRecorderFunc(
+			func(context.Context, do.Injector) map[string]error {
+				return map[string]error{"cache": nil}
+			},
+		),
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
+
+	w := doRequest(t, probe.StartupHandler(), "/startupz")
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("startup with a missing critical name: want 503, got %d", w.Code)
+	}
+
+	if probe.StartupComplete() {
+		t.Error("StartupComplete should stay false while a critical name never appears")
+	}
+}
+
 func TestStartup_NoCriticalServices_ImmediatelyPasses(t *testing.T) {
 	t.Parallel()
 

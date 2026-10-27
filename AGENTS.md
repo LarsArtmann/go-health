@@ -166,6 +166,22 @@ go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod re
   output appearing is proof of nothing without `EXIT=$?`; piping through
   `tail` also eats the exit status). Every gate invocation must end with an
   explicit exit-code echo; `nix run .#gates` returning 0 is the only truth.
+- **A shared `GOCACHE` turns the security gate into a vacuous red (2026-10-27)**
+  — the host points `GOCACHE` at `/mnt/buildcache/go-build`, which other
+  sessions and ~15 language servers mutate mid-run; gosec's package load then
+  hit `reading srcfiles list: cache entry not found`, fell back to a
+  source-only pass, skipped SSA for all five packages and exited 1 with
+  `Issues: 0`. Verified fix: the same tree exits 0 with an isolated cache, so
+  `.#security` now runs gosec against a private `mktemp -d` `GOCACHE`. Any
+  future gate that loads packages is exposed to the same class — an isolated
+  cache, or the red means nothing. (Same shape as the 2026-10-11 export-data
+  vacuous red: both read as findings and were not.)
+- **`.#lint` needs headroom on a loaded host (2026-10-27)** — with
+  `run.timeout: 5m`, package loading gave up (`failed to load packages:
+  context deadline exceeded`) twice at load average >250 before any linter
+  reported anything; the same tree finished in ~9m under a 15m deadline and
+  reported exactly one real finding. `.golangci.yml` now sets 10m. A deadline
+  cannot hide a finding; it can only stop a green run from looking red.
 - **BuildFlow failed-step output is head+tail truncated — replay, don't post-mortem (2026-10-11)** — a `test-coverage` failure whose visible stream ends `ok … federation` + bare `FAIL` hid the real failing package: BuildFlow stores only ~20 head + ~20 tail lines per step (`step_outputs.command_output` in `~/.local/state/buildflow/buildflow.db`, ~1979 chars). Recipe: read the stored output with python3/sqlite3, then replay the exact invocation with the printed seed — `go test -v -coverprofile=reports/coverage.out -covermode=atomic -parallel=$(nproc) -shuffle=<seed> -timeout=10m -count=1 ./...` (coverage mode adds `-covermode=atomic -count=1` vs `.#test`; the seed makes shuffle deterministic). That night's failure was one instance of a 19-repo fleet window around the 23:15 reboot and never reproduced (exact-seed replay green on the plain and exact-coverage commands, 12/12 random-seed replays green, full mode EXIT=0 after) — transient environmental, no code change. Upstream candidate: persist full failed-step output to a file.
 - **`encoding/json/v2` does not sort map keys by default** — under v2 semantics `json.Marshal` serializes maps in random Go map order unless `json.Deterministic(true)` is passed (v1's always-sorted behavior was a compatibility default, not a v2 one). `writeResponse` opts in (handlers.go); `TestReadiness_JSONChecksAreSortedAlphabetically` guards the property. Any new marshal site must pass the option too.
 - **`encoding/json/v2` cannot marshal `time.Duration` AT ALL** — no default representation exists (go.dev/issue/71631, undecided upstream) and no struct-tag format is accepted (verified empirically on go1.26.7: `int`, `ns`, `nanoseconds`, … all rejected); the only escape is the per-call `json.FormatDurationAsNano` option, which every re-marshaling consumer would have to know to pass. That is why `Check.DurationNanos` is a plain `int64` while the in-process seam `CheckDetail.Duration` stays `time.Duration`, converted once in `buildChecks`. Pinned by `TestCheck_JSONOmitZero`. Related v2 trap: scalar `omitempty` (bool/int) is not honored — only strings and `omitzero` omit; see `TestReadinessResponse_JSONOmitEmpty`.

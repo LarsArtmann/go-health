@@ -608,7 +608,21 @@
                   # library itself scanned clean. The tool stays a local gate
                   # (tools/doanalyzerv2/run.sh); the security gate scans the
                   # library.
-                  gosec -exclude-dir=tools ./...
+                  #
+                  # Private GOCACHE, deliberately. The host points GOCACHE at a
+                  # SHARED build cache (/mnt/buildcache/go-build) that other
+                  # sessions and ~15 language servers mutate concurrently.
+                  # gosec's package load can then hit "cache entry not found",
+                  # fall back to a source-only pass, skip SSA for every package
+                  # and exit 1 with ZERO findings — the vacuous-red class this
+                  # repo has already paid for twice (2026-10-11 export data,
+                  # 2026-10-27 shared-cache race, both verified: the same tree
+                  # exits 0 with an isolated cache). A private cache costs one
+                  # cold compile of five packages and makes the gate
+                  # deterministic.
+                  gocache="$(mktemp -d)"
+                  trap 'rm -rf "$gocache"' EXIT
+                  GOCACHE="$gocache" gosec -exclude-dir=tools ./...
                 '';
 
             # Every target in the tree is listed here AND in fuzz-long, in

@@ -172,3 +172,14 @@ A panicking evaluation hook previously crashed the process (refresh-loop
 path) or broke the handler contract (live path). It now yields a 200-warn
 response carrying a visible `"evaluation-hook"` row on every affected
 surface.
+
+### Grading is one rule per surface class (2026-10-27)
+
+The `NewChecks` per-check executor recovered panics as `ErrCheckPanicked` but
+`classifier.isRecoveredPanic` matched only the batch sentinel, so a
+non-critical panicking check graded `warn` and readiness stayed 200. Both data
+collection sentinels now grade `fail` regardless of criticality; the
+observation surface (hook) keeps `warn` for the reason recorded above. The
+rule, the exception, and the migration impact are settled in
+[ADR-008](adr/ADR-008-recovered-panic-fails-closed.md), pinned by
+`TestNewChecks_NonCriticalPanicFailsClosed`.

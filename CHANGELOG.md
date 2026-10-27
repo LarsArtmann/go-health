@@ -33,6 +33,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the fix; consumers that genuinely need recorder callbacks use
   `New(injector, ...)`. Fleet scan (2026-10-27): no production call site
   passes the option to a function-path constructor.
+  **Migration:** switch the constructor to `New(injector, ...)` (recorder-path
+  with a container) or `NewWithRecorder(recorder, opts...)` (injector-free).
+  Nothing else changes: the option, the recorder interfaces, and the wire
+  format are identical, and the failure lands at boot rather than at the first
+  silent batch.
+- `federation` now refuses a document whose own roll-up `status` is outside
+  pass/warn/fail/off, exactly as it already refused an out-of-set per-check
+  status. The merged verdict was never at risk (the merge recomputes from the
+  checks), but `SourceStatuses()` reports each remote's own claim verbatim and
+  `Status.Rank` scores an unrecognized value pass-tier, so an unvalidated
+  roll-up could render as a healthy source card. Found by the new
+  `FuzzSourceStatuses_Invariants` target. **Migration:** none for go-health
+  producers (the library never emits an out-of-set status); a hand-written
+  JSON endpoint that answered e.g. `{"status":"healthy"}` now surfaces as its
+  `name/reachable` fail row — the intended loud failure.
 
 ### Removed
 
@@ -46,7 +61,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   never a warning"). `classifier.isRecoveredPanic` previously matched only the
   batch-level `ErrPanicDuringHealthCheck`. go-appkit/health pins the old warn
   behavior on v0.5.1 and must flip that pin in the same change that bumps it
-  past this release (go-health#7 finding 1).
+  past this release (go-health#7 finding 1). Decision: ADR-008.
+  **Migration:** a non-critical check that panics now rolls up `fail` (readiness
+  503) instead of `warn` (200). A panicking check is a defect at either grade,
+  but the impact widens: a pod carrying one is removed from rotation instead of
+  staying in it while reporting a warning. The `WithEvaluationHook` observer
+  keeps its older, deliberately different `warn` grading — it runs after the
+  verdict exists, so its panic cannot have corrupted the answer. Fix the check,
+  or wrap it so it returns an error instead of panicking.
 
 ## [v0.7.0] - 2026-10-11
 

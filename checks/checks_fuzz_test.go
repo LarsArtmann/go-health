@@ -45,7 +45,7 @@ func FuzzBatteries(f *testing.F) {
 	f.Cleanup(srv.Close)
 
 	f.Fuzz(
-		func(t *testing.T, path string, minFree uint64, maxAlloc uint64, httpPath string, status int, dsn string) {
+		func(t *testing.T, path string, minFree, maxAlloc uint64, httpPath string, status int, dsn string) {
 			ctx := t.Context()
 
 			assertDiskSurface(t, path, minFree, ctx)

@@ -23,7 +23,7 @@ func doc(status health.Status, checks map[string]health.Check) health.Response {
 
 // assertChecks compares the merged check set against the expectation,
 // including per-entry equality.
-func assertChecks(t *testing.T, merged map[string]health.Check, want map[string]health.Check) {
+func assertChecks(t *testing.T, merged, want map[string]health.Check) {
 	t.Helper()
 
 	if len(merged) != len(want) {

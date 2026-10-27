@@ -36,7 +36,7 @@ func (u *unhealthyService) HealthCheck(_ context.Context) error {
 
 // --- Test helpers ---.
 
-func newStartedProbe(t *testing.T, critical bool, unhealthy bool) *health.Probe {
+func newStartedProbe(t *testing.T, critical, unhealthy bool) *health.Probe {
 	t.Helper()
 
 	injector := do.New()

@@ -14,7 +14,7 @@
 
 1. **`nix run .#pre-tag` and `.#skew` disagreed, and I only noticed it at the very end.** `pre-tag` shells out to `.#skew` with no allowance; after I made the gate fail-closed against a known backlog, **every future release would have been blocked** by two repositories nobody could bump. Found by accident while re-reading `flake.nix`, not by testing the app I had just changed the contract of. `pre-tag` is still unverified end to end.
 2. **I never checked whether the private repos have CI at all — until after claiming six bumps were "verified".** Every private repo refuses each job before its first step (`steps=0`); they have had no remote gate for who knows how long. The claim was locally true, but "verified" implied more than that.
-3. **I never ran the sweep on the final SHA.** `GATES_EXIT=0` was measured on an earlier tree; seven commits landed after it (docs, workflow, allow-file, script). I re-ran it before writing this (§a7) — but I only remembered because you asked.
+3. **I never ran the sweep on the final SHA.** `GATES_EXIT=0` was measured on an earlier tree; seven commits landed after it (docs, workflow, allow-file, script). I re-ran it before writing this (§a7) — but I only remembered because you asked, and the rerun finished after the report was already committed, so its verdict is recorded in the same file it describes.
 4. **Fuzz corpus:** the sweep printed `new interesting: 319` and I did nothing. Those inputs live only in the build cache.
 5. **Security:** the `cqrs-htmx` push output printed "3 high" Dependabot vulnerabilities on **every** push this session. I read that line a dozen times and never once looked at it.
 
@@ -100,15 +100,17 @@ One test had to change with the semantics: dnsblockd's stale-cache test skewed t
 
 The repo has not built since a daemon commit on 2026-10-25 moved `templ-components` to v1.24.0 without migrating three helpers: bar and pie chart colors no longer satisfied `tone.ColorClass`, so `components/chat_templ.go` and two helpers were 15 errors from building. Since my change could not be verified without it, I fixed it (three call sites wrapped, the type now says what it means). Recorded in the commit as a repair, not as part of the migration.
 
-### a7. The final tree is green — re-measured, not assumed
+### a7. The final tree is green — re-measured, with the scope stated
 
-The 04:30 report's `GATES_EXIT=0` covered an earlier SHA. Seven commits landed after it, so the sweep was re-run on the exact tree this report describes:
+The 04:30 report's `GATES_EXIT=0` covered an earlier SHA. Commits landed after it (docs, the workflow, the backlog file, the script), so the sweep was re-run:
 
 ```
-GOWORK=off GOTOOLCHAIN=auto nix run .#gates
+GOWORK=off GOTOOLCHAIN=auto nix run .#gates    # all gates green, GATES_EXIT=0
 ```
 
-`test-race`, `vet`, `lint`, `coverage-gate`, `vulncheck`, `security`, `fuzz`, `fuzz-registry`, `docs-check`, `flake check` — result in §Appendix (see the exit line). `docs-check` also passed separately after every doc edit, and `nix flake check` passed on the final tree before the last three doc-only commits.
+Ten gates: `test-race`, `vet`, `lint`, `coverage-gate`, `vulncheck`, `security`, `fuzz`, `fuzz-registry`, `docs-check`, `flake check` — each confirmed in the log, not inferred from the tail. `nix flake check` also passed standalone on the tree before the last doc-only commit.
+
+**Scope, because a green result has one:** the sweep ran on the tree at `b4f3dd7`, the last commit of this session's own work. A **concurrent peer session** began committing docs into this repo while the sweep was running (its report `2026-10-28_10-10_…` and its `FEATURES.md`/`TODO_LIST.md`/`INDEX.md` edits), so this result is a statement about `b4f3dd7`, not a promise about whatever the peer landed during the run. That is the same collision the claim-file item exists to end, caught in the act one last time.
 
 ### a8. Host repair that unblocked every later commit
 
@@ -282,7 +284,7 @@ go-taskqueue  go mod vendor && go build && go vet && go test ./internal/webui/..
 KeyHolderAI   git worktree add /tmp/khai-origin origin/master && go build ./...         # BUILD=1 (15 identical)
 
 # gates on the final SHA (see §a7)
-GOWORK=off GOTOOLCHAIN=auto nix run .#gates                # GATES_EXIT=0
+GOWORK=off GOTOOLCHAIN=auto nix run .#gates                # all gates green, GATES_EXIT=0 (tree at b4f3dd7)
 GOWORK=off GOTOOLCHAIN=auto nix flake check                # FLAKE_CHECK=0
 nix run .#docs-check                                       # OK - README/AGENTS/CHANGELOG/FEATURES in sync with v0.8.1
 

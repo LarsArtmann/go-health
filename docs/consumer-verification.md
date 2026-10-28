@@ -8,3 +8,50 @@
 **Federation surface growth (2026-10-11, [Unreleased]):** `federation.Prober` gained `MarkShuttingDown()` (hub-side two-phase drain; issue #5). The method is purely additive on the concrete `*Prober` type — no interface narrowing, no signature change — so every fleet consumer compiles unchanged against it; the dashboard's `dashboardProber` structural assertion (which pins only the pre-existing surface) stays green by construction. Consumers that want the drain (the dashboard hub's SIGTERM path is the motivating case) must bump to the release carrying it; the wire format does not change (`shutting_down` pre-existed in the schema), so mixed-version fleets render drained hubs correctly without a coordinated bump.
 
 **Re-count and needs sweep (2026-10-27):** the direct inventory is still 15 repos, but the reach is **36 consumers of go-health-dashboard v0.12.1** through three layers: the dashboard itself, `cqrs-htmx/health` v0.7.0 (~20 apps), and `go-appkit/health` v0.5.1 (4+ repos). Version skew: 12 repos on v0.7.0; CV, cv, dnsblockd, KeyHolderAI, and both go-appkit health modules still on v0.5.1. A fifth implementation pattern is now recorded — **E: hand-rolled cache adapters** (dnsblockd, DiscordSync, cv, go-taskqueue re-implement "serve cache if fresh, else evaluate" because the primitive did not exist; see the sweep). Release-coordination rule derived from this: any option-default, grade, or wire change must ship **with** a bump of both bridges, otherwise ~24 repos inherit nothing. Authoritative needs matrix, evidence, and the supplier plan: [docs/research/2026-10-27_fleet-consumer-needs.md](research/2026-10-27_fleet-consumer-needs.md).
+
+## Evidence table — v0.8.1 fleet state (measured 2026-10-28, plan M04)
+
+The compiles and pin bumps of the v0.8.x wave happened ad hoc; this table is the
+record. Evidence levels are deliberately separated so nobody mistakes a pin read
+for a build:
+
+- **L1 pin-read** — each repo's `go.mod` (or `health/go.mod` for sub-modules) read
+  from its live default branch through the authenticated GitHub contents API by
+  `tools/fleet-skew.sh`. Proves what the repository *declares*, proves nothing
+  about whether it compiles.
+- **L2 build** — a local `go build ./...` / `go vet ./...` against the pinned
+  version.
+- **L3 suite** — a local `go test` run against the pinned version.
+
+| Repository | Module file | Pinned go-health | Evidence | Result |
+| --- | --- | --- | --- | --- |
+| go-health-dashboard | go.mod @master | v0.8.1 | L1 + L2 + L3 | `go build`/`go vet` clean; unit suite green except 7 goldens drifting on the unaudited templ-components v1.24.0 climb (UI, not go-health) |
+| CV | go.mod @master | v0.8.1 | L1 | pin aligned |
+| cv | go.mod @master | v0.8.1 | L1 | pin aligned (local lineage still unpushed, unrelated) |
+| Zlota44 | go.mod @master | v0.8.1 | L1 | pin aligned |
+| dnsblockd | go.mod @master | v0.8.1 | L1 | pin aligned |
+| library-policy | go.mod @master | v0.8.1 | L1 | pin aligned |
+| file-and-image-renamer | go.mod @master | v0.8.1 | L1 | pin aligned |
+| DiscordSync | go.mod @master | v0.8.1 | L1 + L2 + L3 | `internal/mediapipeline` and `internal/web/golden` green; `internal/web` snapshot suite red from templ-components v1.24.0 markup, not go-health |
+| KeyHolderAI | go.mod @master | v0.8.1 | L1 | pin aligned |
+| nsfw-classifier | go.mod @master | v0.8.1 | L1 | pin aligned |
+| webphone | go.mod @main | v0.8.1 | L1 | pin aligned (default branch is `main`) |
+| projects-management-automation | go.mod @master | v0.8.1 | L1 | pin aligned |
+| timesheets | go.mod @master | v0.8.1 | L1 | pin aligned |
+| cqrs-htmx | health/go.mod @master | v0.8.1 | L1 | pin aligned (bridge module) |
+| go-appkit | health/go.mod @master | v0.8.1 | L1 | pin aligned (bridge module) |
+| go-taskqueue | go.mod @master | v0.8.1 | L1 | pin aligned |
+
+Skew verdict at that moment: `minor-stale: 0 (allowed 0), warnings: 0,
+unreadable: 0` — the allowance file was deleted in `15fad10` once the backlog
+reached zero, so the gate now fails on any drift by construction.
+
+**What v0.8.x added and who can use it:** `StatusOff`, the `checks` battery,
+`VersionHandler`, `WithInstanceID` and `MarkShuttingDown` (v0.5.x) plus the
+unified merge core (v0.6.0-v0.7.0) and federation's `Healthz()`,
+`SourceStatuses()` and `MarkShuttingDown()` (v0.8.x). The dashboard is the only
+consumer that has adopted all of them: `TestFederation_HealthzCapabilityForwarded`
+proves /livez serves the merged view and answers 503 while the hub drains,
+`sourcestatus_test.go` pins federation as a `SourceStatuser`, and
+`cmd/health-hub` runs the two-phase drain (verified live: `/readyz` 200 before
+SIGTERM, 503 within 2ms after, process exit 0 two seconds later).

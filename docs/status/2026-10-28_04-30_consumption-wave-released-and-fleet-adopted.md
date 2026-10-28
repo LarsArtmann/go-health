@@ -2,7 +2,7 @@
 
 **Created:** 2026-10-28 04:30 CET · **Repo:** `github.com/larsartmann/go-health` · **Branch:** `master`
 **Session scope:** finish the consumption half of wave 2 — release the bridge that carries v0.8.1, make the drift alarm tell the truth, and move the fleet onto the release.
-**Verdict:** both bridges are now **published and proxy-verified**, the fleet is at **13 of 16 repos on v0.8.1** (was 2), and three of the four hand-rolled cache adapters are deleted. Two repos are blocked by work that is not go-health's, and one milestone turned out to be **not expressible** with the current API.
+**Verdict:** both bridges are now **published and proxy-verified**, the fleet is at **14 of 16 repos on v0.8.1** (was 2), and three of the four hand-rolled cache adapters are deleted. Two repos are blocked by work that is not go-health's, and one milestone turned out to be **not expressible** with the current API.
 
 **See also:** [`2026-10-28_01-18_…`](2026-10-28_01-18_consumption-wave-gates-shipped-fleet-still-at-zero.md) (mechanisms) · [`2026-10-28_02-40_…`](2026-10-28_02-40_truth-reconciliation-cache-isolation-and-archive-harvest.md) (truth reconciliation) · plan: [`docs/planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md`](../planning/2026-10-27_21-12_wave2-adoption-closing-the-consumption-gap.md)
 
@@ -14,7 +14,7 @@
 | --- | --- |
 | Is the ~20-app lever still un-cashed? | **No. `cqrs-htmx/health/v4.14.0` is published**, resolves from the proxy, and pulls go-health v0.8.1 — proved by building a scratch module against the tag |
 | Is the drift alarm trustworthy? | It now fails closed on an unreadable repo, carries a dated backlog instead of gating zero against fourteen, and can measure local checkouts when no token exists |
-| How much of the fleet moved? | **13 of 16** at v0.8.1 (from 2). Six repos were bumped, verified and pushed in one pass; three needed a re-vendor |
+| How much of the fleet moved? | **14 of 16** at v0.8.1 (from 2). Six repos were bumped, verified and pushed in one pass; three needed a re-vendor |
 | Are the freshness primitives adopted? | In **three of four** consumers (dnsblockd, cv, DiscordSync). go-taskqueue is blocked for a reason worth reading (§b2) |
 | Was anything found broken on the way? | **Three** pre-existing reds, all proved independent of go-health: DiscordSync did not compile for three days, go-health-dashboard's browser suite cannot compile, KeyHolderAI is 15 type errors from building |
 
@@ -52,7 +52,7 @@ Two failure modes, both fixed in `tools/fleet-skew.sh`:
 
 Both mutation-tested: strict run exits 1 on 14 stale; an empty root exits 1 with 16 unreadable; `--source api` without auth exits 2 with the fix in the message.
 
-The workflow's second invocation also stopped being a permanent red: it carried `--allow 0` against a 14-repo backlog. It now carries `--allow 14` **with the dated baseline and the ratchet-down instruction**, and the same baseline is recorded in `tools/fleet-repos.txt`.
+The workflow's second invocation also stopped being a permanent red: it carried `--allow 0` against a 14-repo backlog. The backlog now lives in **`tools/fleet-skew.allow`** and is the *default* for every caller, because the workflow's literal and `nix run .#pre-tag` (which shells out to `.#skew` with no allowance) disagreed — a release would have been blocked by repositories nobody could bump. It reads 2, ratcheted down from 14 in one night.
 
 ### a3. Three consumer adapters deleted (plan M07/M08/M09)
 
@@ -76,7 +76,7 @@ Each swap retired a real defect, not just lines: cv's fallback re-ran on **every
 | cv | committed locally, **not pushed** (§b3) |
 | nsfw-classifier | v0.8.1 in the tree, builds, **not pushed** (§b3) |
 
-`nix run .#skew` after the pass: **13 OK / 3 stale** (CV, cv, nsfw-classifier), down from 14 stale.
+`nix run .#skew` after the pass: **14 OK / 2 stale** (CV and cv), down from 14 stale. nsfw-classifier landed its own v0.8.1 commit later the same night.
 
 ### a5. Two self-inflicted breaks on this host, repaired
 
@@ -244,7 +244,7 @@ cd /tmp/cqrshealth-smoke && go get .../health/v4@v4.14.0 && go build ./...  # GE
 go list -m github.com/larsartmann/go-health                                # v0.8.1
 
 # drift alarm
-bash tools/fleet-skew.sh                      # 13 OK / 3 stale (--source api)
+bash tools/fleet-skew.sh                      # 14 OK / 2 stale (--source api)
 FLEET_SKEW_LOCAL_ROOT=/tmp/empty-root bash tools/fleet-skew.sh --allow 999  # exit 1, 16 unreadable
 bash tools/fleet-skew.sh --source api         # exit 2 without a token
 

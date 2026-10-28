@@ -22,8 +22,9 @@
 > (`projection: at #N (head #M)`, the DLQ and worker notes) would be lost
 > silently. **M19, M18, M24 and M27 have not started.**
 >
-> Fleet: **13 of 16 repos on v0.8.1** (`nix run .#skew -- --source api`); the
-> three stragglers are blocked by unrelated local work, not by go-health.
+> Fleet: **14 of 16 repos on v0.8.1** (`nix run .#skew -- --source api`); the
+> remaining two (CV, cv) are the same repository cloned twice and blocked by an
+> owner decision, not by go-health.
 > Evidence: `docs/status/2026-10-28_04-30_consumption-wave-released-and-fleet-adopted.md`.
 > Nothing below was rewritten; it is the decision record that produced the work.
 

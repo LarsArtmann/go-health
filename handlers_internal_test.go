@@ -63,9 +63,9 @@ func TestSanitizeResponse_CoercesInstanceID(t *testing.T) {
 	}{
 		{name: "instance_id", sanitized: SanitizeResponse(Response{
 			Status:     StatusPass,
-			InstanceID: invalidUTF8,
+			InstanceID: NewInstanceID(invalidUTF8),
 			Checks:     map[string]Check{},
-		}).InstanceID},
+		}).InstanceID.Get()},
 		{name: "version", sanitized: SanitizeResponse(Response{
 			Status:  StatusPass,
 			Version: invalidUTF8,
@@ -122,7 +122,7 @@ func TestWriteResponse_InvalidUTF8InstanceIDDoesNot500(t *testing.T) {
 	rec := httptest.NewRecorder()
 	writeResponse(rec, http.StatusOK, Response{
 		Status:     StatusPass,
-		InstanceID: invalidUTF8,
+		InstanceID: NewInstanceID(invalidUTF8),
 		Checks:     map[string]Check{},
 	})
 

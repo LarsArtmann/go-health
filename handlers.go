@@ -223,7 +223,7 @@ var marshalResponse = func(resp Response) ([]byte, error) {
 func SanitizeResponse(resp Response) Response {
 	resp.Status = Status(strings.ToValidUTF8(string(resp.Status), "\uFFFD"))
 	resp.Version = strings.ToValidUTF8(resp.Version, "\uFFFD")
-	resp.InstanceID = strings.ToValidUTF8(resp.InstanceID, "\uFFFD")
+	resp.InstanceID = NewInstanceID(strings.ToValidUTF8(resp.InstanceID.Get(), "\uFFFD"))
 	resp.Uptime = strings.ToValidUTF8(resp.Uptime, "\uFFFD")
 
 	if resp.Checks != nil {

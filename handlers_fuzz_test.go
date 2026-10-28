@@ -42,7 +42,7 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 		func(t *testing.T, status, checkName, checkErr, instanceID string, sinceNanos, durationNanos int64) {
 			resp := health.Response{
 				Status:     health.Status(status),
-				InstanceID: instanceID,
+				InstanceID: health.NewInstanceID(instanceID),
 				Checks: map[string]health.Check{
 					checkName: {
 						Status:        health.Status(status),
@@ -91,11 +91,11 @@ func assertResponseRoundTrip(t *testing.T, sent, decoded health.Response) {
 		t.Fatalf("status round-trip: want %q, got %q", sent.Status, decoded.Status)
 	}
 
-	if decoded.InstanceID != sent.InstanceID {
+	if decoded.InstanceID.Get() != sent.InstanceID.Get() {
 		t.Fatalf(
 			"instance_id round-trip: want %q, got %q",
-			sent.InstanceID,
-			decoded.InstanceID,
+			sent.InstanceID.Get(),
+			decoded.InstanceID.Get(),
 		)
 	}
 

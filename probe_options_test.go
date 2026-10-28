@@ -199,14 +199,14 @@ func TestWithInstanceID_AllHandlersCarryReplicaID(t *testing.T) {
 	provideHealthy(injector, "db")
 	invoke[*healthyService](t, injector, "db")
 	probe := health.New(injector,
-		health.WithInstanceID("pod-abc"),
+		health.WithInstanceID(health.NewInstanceID("pod-abc")),
 		health.WithCriticalServices("db"),
 		health.WithRefreshInterval(0),
 	)
 
 	resp := probe.Evaluate(context.Background())
-	if resp.InstanceID != "pod-abc" {
-		t.Errorf("Evaluate instance ID: want pod-abc, got %q", resp.InstanceID)
+	if resp.InstanceID.Get() != "pod-abc" {
+		t.Errorf("Evaluate instance ID: want pod-abc, got %q", resp.InstanceID.Get())
 	}
 
 	for path, handler := range map[string]http.HandlerFunc{
@@ -216,8 +216,8 @@ func TestWithInstanceID_AllHandlersCarryReplicaID(t *testing.T) {
 	} {
 		got := decodeResponse(t, doRequest(t, handler, path))
 
-		if got.InstanceID != "pod-abc" {
-			t.Errorf("%s instance ID: want pod-abc, got %q", path, got.InstanceID)
+		if got.InstanceID.Get() != "pod-abc" {
+			t.Errorf("%s instance ID: want pod-abc, got %q", path, got.InstanceID.Get())
 		}
 	}
 }

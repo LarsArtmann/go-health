@@ -83,6 +83,13 @@
             gocache="$(mktemp -d)"
             trap 'rm -rf "$gocache"' EXIT
             export GOCACHE="$gocache"
+            # golangci-lint keeps its own analysis cache under a DIFFERENT
+            # variable, which the host also points at the shared /mnt/buildcache.
+            # Left shared it emits dozens of "Failed to persist facts to cache"
+            # warnings per run (harmless but noise that hides a real one) and
+            # makes the run's speed depend on other sessions. gosec and
+            # govulncheck ignore this variable.
+            export GOLANGCI_LINT_CACHE="$gocache/lint"
           '';
 
           # OpenAPI ↔ golden-file lockstep: every wire key the golden readiness

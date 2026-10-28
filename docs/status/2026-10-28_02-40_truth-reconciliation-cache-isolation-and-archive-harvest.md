@@ -17,6 +17,7 @@
 | Is `.#lint` red because of load or code?                               | Neither — the shared `GOCACHE` was serving half-written std export data. `.#lint` now runs on a private cache (`privateGocache`) like `.#security`                            |
 | The archive rule was never applied                                     | All **26** unarchived reports read item by item: **1** fully resolved (archived), **11 clusters** of untracked residue harvested into `TODO_LIST.md`                          |
 | `/mnt/buildcache` 100% full blocking gates                             | Freed to 65 GB by other work; the _remaining_ damage is a corrupted host `GOCACHE`, documented and worked around                                                              |
+| Is `.#skew` trustworthy?                                              | It could hang forever **and** it passed while reading nothing. Both are now impossible: a 30 s per-call deadline, `unreadable` gated at 0, and a local-checkout mode that needs no API. Real reading of the fleet: **14 minor-stale, 2 in sync** |
 
 ---
 
@@ -109,7 +110,24 @@ Both were `FULLY_FUNCTIONAL` in `FEATURES.md` with no adopter signal — exactly
 
 Two runs of `nix run .#skew` were observed today, one of which printed `latest tag: v0.8.1` and then **sat alive for 55 minutes** (a peer session's `.#pre-tag`, which shells out to the same script). An earlier run of mine reported all 16 repos `unreachable` inside a rate-limit window — with `2>/dev/null` hiding the reason.
 
-`tools/fleet-skew.sh` now gives every GitHub call `timeout 30`, which degrades both shapes into the `WARN` the script already understands, and the WARN text names the three real causes (removed, renamed, rate-limited, timed out) instead of guessing one.
+`tools/fleet-skew.sh` now gives every GitHub call `timeout 30` (overridable via `FLEET_SKEW_TIMEOUT` so the path is testable), which degrades a stall into the `WARN` the script already understands, and the WARN text names the three real causes (removed, renamed, rate-limited, timed out) instead of guessing one.
+
+**Proven, not asserted:** with a fake `gh` that sleeps 30 s and `FLEET_SKEW_TIMEOUT=1`, the script now terminates in **16.0 s** for 16 repos instead of hanging, printing one honest WARN per repo.
+
+### a6b. The bigger finding under it: the gate passed when it learned nothing
+
+While proving the timeout path I ran the script with every API call failing and no `--allow`: **exit 0**, with `minor-stale: 0, warnings: 16 (allowed: 0)`. A fleet where *not one* repo could be read reported success. That is the vacuous-green class this repo has legislated against twice ("a green gate with nothing behind it is worse than no gate") reappearing inside the newest gate.
+
+A peer session rewrote the same script minutes later and solved it better than my draft guard would have: unreadable repos are now a separate `unreadable` counter gated by `--allow-unchecked` (default **0**), and `--source local` reads the fleet checkouts directly so the gate does not depend on the GitHub API at all. Verified end to end:
+
+```
+nix run .#skew                                        # source: local, exit 1
+minor-stale: 14 (allowed 0), warnings: 0, unreadable: 0 (allowed 0)
+OK    LarsArtmann/cqrs-htmx (health/go.mod): v0.8.1
+OK    LarsArtmann/go-appkit (health/go.mod): v0.8.1
+```
+
+Fourteen minor-stale consumers is the truthful reading of the fleet, and the two `OK` rows independently confirm the bridge re-pin the peer's report claims. The weekly workflow already runs `--allow 14 --allow-unchecked 0`, so the baseline is tolerated and a *new* drift, or an outage, is not.
 
 ### a7. Small truthful repairs, each verified
 
@@ -158,6 +176,8 @@ Unchanged from the peer reports and now carried in `TODO_LIST.md` rather than du
 
 **d6. I let a hung gate run for minutes before investigating.** The first `.#skew` timeout was spent waiting instead of reading `ps`. Two `ps` commands identified a 55-minute hang and a rate-limit window; the fix (a `timeout` per network call) is 6 lines. **Diagnose the hang before waiting it out.**
 
+**d7. I edited a script a peer was rewriting, and my own sweep caught the collision as a syntax error.** I added timeout handling to `tools/fleet-skew.sh` while another session was replacing the whole file with a `--source api|local|auto` model. A `nix run .#skew` launched inside that window died on `line 125: syntax error near unexpected token` — a defect that never existed in either version, only in the interval between them. Both edits survived where they were useful (the timeout; their unreadable-counter model), but I should have checked `ls -l --time-style` before touching a gate script for the second time in one night.
+
 ---
 
 ## e) WHAT WE SHOULD IMPROVE
@@ -168,6 +188,8 @@ Unchanged from the peer reports and now carried in `TODO_LIST.md` rather than du
 4. **A point-in-time report is not a backlog.** 25 of 26 reports were handoffs that were never closed. The harvest cost ~90 minutes; the alternative — reading 26 reports again next month — costs more.
 5. **The drift alarm catches absence, not error.** `docs-check` catches a missing release mention; it cannot catch `CONTRIBUTING` naming the wrong uncovered statement. Only re-derivation does.
 6. **Two writers on one branch need a claim file**, not politeness. Third session in two days with rejected edits and duplicated work.
+7. **"Unreadable" is not "healthy".** Every gate must distinguish *no data* from *good data* and fail on the first. `.#skew` did not, and would have blessed a fleet it could not see; the same audit is worth applying to `.#recorder-audit` (which has the vacuity rule written down) and to any future gate that reads an external service.
+8. **A gate's own failure modes deserve the same test discipline as code.** The timeout path and the vacuous path were both proven with a fake `gh` in under a minute; neither had ever been exercised.
 
 ---
 
@@ -185,7 +207,7 @@ The eleven archive-harvest rows live in `TODO_LIST.md` (§"Harvested from the st
 | 6  | Promote accumulated fuzz inputs into `testdata/fuzz/` in one deliberate commit                                                                                | Med      | 15m    |
 | 7  | Add a step banner + final `EXIT=` line to `tools/fuzz-registry-check.sh` (the one silent gate)                                                                | Low      | 10m    |
 | 8  | Gate: a newly exported symbol must appear in `FEATURES.md` (generalises the two new `docs-check` rules)                                                       | Low      | 1h     |
-| 9  | Re-check `.#skew` under `timeout` end to end and record the baseline again (today's runs were rate-limited)                                                   | Med      | 10m    |
+| 9  | ~~Re-check `.#skew` under `timeout`~~ — done tonight; the lingering job is to keep `--allow 14 --allow-unchecked 0` honest as the fleet shrinks | Med      | 10m    |
 | 10 | Verify the pkg.go.dev render for `v0.8.1` (never viewed; two reports flag it)                                                                                 | Low      | 5m     |
 | 11 | Design note: per-check severity override (fleet ask, untracked until tonight)                                                                                 | Low      | 2h     |
 | 12 | File the two BuildFlow upstream issues (failed-step output truncation; `dprint --fix` no-rewrite) after `verify-before-filing`                                | Low      | 1h     |
@@ -193,6 +215,8 @@ The eleven archive-harvest rows live in `TODO_LIST.md` (§"Harvested from the st
 | 14 | Re-derive the "three fuzz targets" class of claim in every doc; `CONTRIBUTING` was wrong for at least a week                                                  | Low      | 20m    |
 | 15 | Triage the disk that caused all of this (`journalctl -b -1`, SMART, `e2fsck -n /dev/sdb1`)                                                                    | Med      | 30m    |
 | 16 | Archive the next batch of fully-resolved reports once the harvested rows close — target: the 2026-10-08/09 cluster                                            | Low      | 30m    |
+| 17 | Audit `.#recorder-audit` and `.#skew` for the "unreadable vs healthy" rule (skew is done; recorder-audit only documents it)                                   | Med      | 20m    |
+| 18 | Register `.#skew` in CI's required checks, or state in CONTRIBUTING why weekly-only is enough                                                                  | Med      | 15m    |
 
 ---
 
@@ -224,4 +248,12 @@ nix develop -c dprint fmt <edited markdown>                 # 1–3 files reform
 bash -n tools/fleet-skew.sh                                 # SYNTAX_OK
 git mv docs/status/2026-10-11_19-17_… docs/status/archived/  # archived (history preserved)
 grep -r --include='*.go' WithLiveThrottle ~/projects/<16 fleet repos>   # 0 files
+
+# Prove the skew gate's own failure modes, with a fake `gh` that sleeps 30s
+env PATH="/tmp/fakebin:$PATH" FLEET_SKEW_TIMEOUT=1 bash tools/fleet-skew.sh --allow 999
+                                                            # 16.0s total (was: hung 55+ min), 16 WARNs, EXIT=0
+env PATH="/tmp/fakebin:$PATH" FLEET_SKEW_TIMEOUT=1 bash tools/fleet-skew.sh
+                                                            # EXIT=1 "all 16 repos were unreachable, so this run proves nothing"
+GOWORK=off GOTOOLCHAIN=auto nix run .#skew                  # EXIT=1, source: local
+                                                            # minor-stale 14, unreadable 0, 2 OK (both bridges v0.8.1)
 ```

@@ -99,7 +99,8 @@ type OffError struct
 type ProbeShutdowner struct
 type CheckFunc func(ctx context.Context) error
 type InstanceID = id.ID[InstanceIDBrand, string] // branded strong type (go-branded-id); zero value = unset
-type InstanceIDBrand structtype HealthRecorder interface
+type InstanceIDBrand struct
+type HealthRecorder interface
 type DetailedHealthRecorder interface
 type HealthRecorderFunc func(ctx context.Context, injector do.Injector) map[string]error
 type DetailedHealthRecorderFunc func(ctx context.Context, injector do.Injector) map[string]CheckDetail

@@ -19,6 +19,7 @@ nix run .#lint                 # Run golangci-lint
 nix run .#coverage             # Run tests with coverage report
 nix run .#coverage-gate        # Fail below the coverage floor (total + per package)
 nix run .#skew                 # Fleet consumers' go-health pins vs the newest release
+nix run .#skew -- --source local  # Same check offline / without a gh token (reads local checkouts)
 nix run .#vulncheck            # Run govulncheck
 nix run .#security             # Run gosec
 nix fmt                        # Format code (treefmt)

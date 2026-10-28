@@ -118,6 +118,12 @@ Both are recorded in `TODO_LIST.md` with the two ways out (a pass-detail channel
 
 `DoServiceName[T]()` is adopted; `WithCriticalService[T]()` is **not**, because DiscordSync's recorder renames every check key to an operator display name — the raw do key would match nothing, which is exactly the 2026-08-16 outage class. That limitation is not in the helper's godoc; recorded as a TODO row.
 
+### b5. The private half of the fleet has no CI at all
+
+Every push-triggered run in the **private** repos fails with `steps=0` — the job is refused before it starts, which is the billing/spending-limit class, not a code failure (Zlota44, dnsblockd, DiscordSync, go-taskqueue, webphone all show it; the push SHA is my commit in each case). The **public** repos (go-health, cqrs-htmx) ran normally: `go-health` master is `success` on the final commit, `cqrs-htmx` master is `success` on the PR squash.
+
+Consequence for this report: the six fleet bumps are verified **locally** (build + vet, plus race/lint/suite where noted) and cannot be verified remotely until CI billing is resolved. That is an external blocker, not a claim.
+
 ---
 
 ## c) NOT STARTED
@@ -221,6 +227,8 @@ Both are recorded in `TODO_LIST.md` with the two ways out (a pass-detail channel
 1. **Which CV clone is canonical?** `~/projects/cv` (this session's health work + a CRM replay change failing its own gate) and `~/projects/CV` (docs + testutils lineage) are both ahead of `origin/master` with no shared tip. Reuniting them is a merge only you can arbitrate, and until then CV cannot receive the v0.8.1 pin.
 2. **M06: may the green-row notes go?** go-taskqueue's passing rows currently say things like `projection: at #N (head #M)`. `NewChecks` structurally cannot carry a pass detail. Either go-health grows a pass-detail channel, or the port drops operator information — which do you want?
 3. **Should I repair the three pre-existing consumer breaks now?** DiscordSync's done (it blocked its own verified build), but KeyHolderAI's PersonaID/branded-ID migration, go-health-dashboard's chromedp v0.21 browser port, and nsfw-classifier's entangled commits are each an owner-sized job with no go-health content in them.
+
+4. **Is GitHub Actions billing the reason the private repos cannot run CI?** Every job in Zlota44, dnsblockd, DiscordSync, go-taskqueue and webphone is refused before its first step `(steps=0)`, while the public repos run normally. If that is the spending limit, the private half of the fleet has no remote gate at all and local verification is the only signal there is; if it is something else (a runner label, an org policy), the six fleet bumps are unverified remotely for a fixable reason.
 
 ---
 

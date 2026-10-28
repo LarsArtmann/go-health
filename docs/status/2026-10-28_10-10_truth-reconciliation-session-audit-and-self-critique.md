@@ -94,7 +94,9 @@ WithLiveThrottle:          0 repos
 WithShutdownGracePeriod:   0 repos
 ```
 
-Both were `FULLY_FUNCTIONAL` with no adopter signal — the state `WithGETOnly` was in before removal. `FEATURES.md` now carries the zero-adopter marker; `TODO_LIST.md` (breaking-window section) carries the deprecate-or-advertise decision. Not deleted: removal is an owner call inside a breaking window, and the marker is the honest intermediate state.
+Both were `FULLY_FUNCTIONAL` with no adopter signal — the state `WithGETOnly` was in before removal. `FEATURES.md` now carries the adopter count on both rows.
+
+**Then I got it wrong, and the correction is the useful part.** My first pass labelled both "deprecation candidate" and opened a `TODO_LIST` row asking whether to deprecate or advertise. But `docs/adoption-matrix.md` §Ghost-feature review **already contains an explicit verdict**: *keep both* — `WithLiveThrottle` as a protective default whose value is that adopters need not know it exists, `WithShutdownGracePeriod` as the opt-in behind two-phase drain — with the instruction to "document in FEATURES as protective rather than retiring". A recorded decision and my marker contradicted each other for about seven hours. Fixed at 10:15: both `FEATURES.md` rows now say **zero adopters, deliberately kept** and link the recorded verdict; the `TODO_LIST` row asking for a decision is deleted, because the decision exists.
 
 ### a6. `.#skew` could hang forever — proved, fixed, and it was worse than that
 
@@ -186,6 +188,10 @@ Everything in this list requires write access to a repository this session may n
 
 **d10. I never measured the cost I introduced.** The private `GOCACHE` makes every gate that uses it do a cold compile. I wrote "costs one cold compile" as if that were a measurement. I have no number for the added wall time in `.#lint` (or in CI), so a future maintainer cannot judge whether the determinism was worth it.
 
+**d11. I contradicted a recorded decision without reading it.** I wrote "deprecation candidate" into `FEATURES.md` and opened a decision row in `TODO_LIST.md` for `WithLiveThrottle`/`WithShutdownGracePeriod` — while `docs/adoption-matrix.md` §Ghost-feature review already said **keep both, document as protective**. Two documents, one repo, opposite verdicts, created by me in one evening. The countermeasure is trivial and I skipped it: before marking a feature's fate, grep the repo for an existing verdict. Corrected at 10:15 (both `FEATURES.md` rows + the TODO row removed).
+
+**d12. I inverted the direction of an audit finding.** My §e claimed `docs/adoption-matrix.md` was "now out of date" on the two options. It is the one document that was *right* — the stale documents were the two I had just edited. I assumed the doc I had not touched was the deficient one; that assumption is the exact opposite of the lesson I wrote three sections earlier ("read the profile, not the prose about the profile").
+
 ---
 
 ## e) WHAT WE SHOULD IMPROVE
@@ -200,8 +206,9 @@ Everything in this list requires write access to a repository this session may n
 8. **Two writers on one branch need a claim file**, not politeness — four sessions in 36 hours, three rejected-edit episodes, one duplicated sweep.
 9. **Measure what you add.** Determinism has a price; state it in seconds, not adjectives (§d10).
 10. **Verify delegated judgment, not just delegated facts.** If a sub-agent's verdict moves files, re-read the borderline cases myself.
-11. **`docs/adoption-matrix.md` is now out of date on the two zero-adopter options** — the finding belongs there as well as in `FEATURES.md`/`TODO_LIST.md`, and I put it only in two of the three. Missed for lack of a "where does an adopter count live" checklist.
-12. **`CHANGELOG.md` does not mention the `doanalyzerv2` LICENSE or the gate-isolation fix.** The `[Unreleased]` block is the release note people read; two of tonight's changes are missing from it.
+11. **Before marking a feature's fate, grep for an existing verdict.** `docs/adoption-matrix.md` §Ghost-feature review already decided both options; my marker ignored it (§d11). One `grep` would have prevented a seven-hour split brain.
+12. **Never assume the doc you did not touch is the stale one** (§d12). The document I had abstained from was the accurate one.
+13. **`CHANGELOG.md` does not mention the `doanalyzerv2` LICENSE or the gate-isolation fix.** The `[Unreleased]` block is the release note people read; two of tonight's changes are missing from it.
 
 ---
 
@@ -235,7 +242,7 @@ Tiered by impact. The eleven archive-harvest rows already live in `TODO_LIST.md`
 
 | # | Task |
 | --- | --- |
-| 13 | Add the two zero-adopter options to `docs/adoption-matrix.md` (missing) |
+| 13 | Re-read the 25 kept reports' verdicts myself — they rest on one delegated pass (§d9) |
 | 14 | Add the LICENSE + gate-isolation changes to `CHANGELOG.md` `[Unreleased]` (missing) |
 | 15 | Archive the 2026-10-08/09 cluster once its harvested rows close |
 | 16 | Commission/retire the four owed announcements (one owner ruling closes six reports) |

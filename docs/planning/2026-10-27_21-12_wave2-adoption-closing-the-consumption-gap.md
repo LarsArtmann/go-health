@@ -343,17 +343,17 @@ graph TD
 
 ## 7. Errata — stale backlog rows corrected while reading
 
-| Stale claim                                                                         | Reality (2026-10-27 21:12)                                                                                |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `TODO_LIST` "Cut v0.8.0 … READY — pushing master + tag is the owner act"            | v0.8.0 **and** v0.8.1 are tagged, pushed, proxy-served, CI-green, released. Row is obsolete.              |
-| `TODO_LIST` consumer rows "BLOCKED on the v0.8.0 cut"                               | The cut landed. They are blocked on **write authority**, not on the release.                              |
-| `TODO_LIST` "Version-skew CI script … BLOCKED on push authority"                    | Half-false: the script exists (`tools/fleet-skew.sh`) and nothing runs it; CI wiring is the missing part. |
-| `docs/status/…20-17` §b "BuildFlow 3 failures, doanalyzerv2 lint is a step-env bug" | Still true, but now has a milestone (M25) instead of a note.                                              |
-| `docs/planning/…19-18_supplier-wave` milestone checkboxes                           | Distribution milestones did execute; the plan's boxes were never ticked. This file is the successor.      |
-| `TODO_LIST` coverage figure 99.1%                                                   | 99.9% total, 100% root (measured 2026-10-27 20:5x).                                                       |
-| Peer report §b3 "both bridges pinned to v0.8.0"                                     | Now a milestone (M01) rather than a footnote — it is the cheapest correctness win on the board.           |
-| This file's §2 milestone table has **no M16 row** (M15 → M17)                        | M16 (ARCHITECTURE file-map completeness) executed anyway and is verified in §5; only the §2 row was lost.  |
-| M22 bundles "concurrent-writer preflight (T27)" as if it were a deliverable          | Not implemented as a mechanism on 2026-10-27 — it is a habit, not an artifact. Harvested into `TODO_LIST`. |
+| Stale claim                                                                         | Reality (2026-10-27 21:12)                                                                                 |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `TODO_LIST` "Cut v0.8.0 … READY — pushing master + tag is the owner act"            | v0.8.0 **and** v0.8.1 are tagged, pushed, proxy-served, CI-green, released. Row is obsolete.               |
+| `TODO_LIST` consumer rows "BLOCKED on the v0.8.0 cut"                               | The cut landed. They are blocked on **write authority**, not on the release.                               |
+| `TODO_LIST` "Version-skew CI script … BLOCKED on push authority"                    | Half-false: the script exists (`tools/fleet-skew.sh`) and nothing runs it; CI wiring is the missing part.  |
+| `docs/status/…20-17` §b "BuildFlow 3 failures, doanalyzerv2 lint is a step-env bug" | Still true, but now has a milestone (M25) instead of a note.                                               |
+| `docs/planning/…19-18_supplier-wave` milestone checkboxes                           | Distribution milestones did execute; the plan's boxes were never ticked. This file is the successor.       |
+| `TODO_LIST` coverage figure 99.1%                                                   | 99.9% total, 100% root (measured 2026-10-27 20:5x).                                                        |
+| Peer report §b3 "both bridges pinned to v0.8.0"                                     | Now a milestone (M01) rather than a footnote — it is the cheapest correctness win on the board.            |
+| This file's §2 milestone table has **no M16 row** (M15 → M17)                       | M16 (ARCHITECTURE file-map completeness) executed anyway and is verified in §5; only the §2 row was lost.  |
+| M22 bundles "concurrent-writer preflight (T27)" as if it were a deliverable         | Not implemented as a mechanism on 2026-10-27 — it is a habit, not an artifact. Harvested into `TODO_LIST`. |
 
 ---
 

@@ -67,6 +67,24 @@
               meta.description = description;
             };
 
+          # A private GOCACHE for every gate that loads packages through a
+          # THIRD-PARTY loader (golangci-lint, gosec, govulncheck). The host
+          # points GOCACHE at a SHARED build cache (/mnt/buildcache/go-build)
+          # that other sessions and ~15 language servers mutate concurrently, so
+          # a loader can read a half-written std export-data entry and fail with
+          # "could not load export data: ... no such file or directory", or with
+          # "package io is not in std" — a red carrying zero real findings
+          # (verified 2026-10-27 and again 2026-10-28: the same tree grades green
+          # with an isolated cache). Costs one cold compile and makes the gate
+          # deterministic. `go test`/`go vet` deliberately do NOT use it: the go
+          # tool treats a missing cache entry as a miss and rebuilds, while these
+          # loaders bail out instead.
+          privateGocache = ''
+            gocache="$(mktemp -d)"
+            trap 'rm -rf "$gocache"' EXIT
+            export GOCACHE="$gocache"
+          '';
+
           # OpenAPI ↔ golden-file lockstep: every wire key the golden readiness
           # response exhibits must be declared in the spec's HealthResponse /
           # Check schemas, and every status value must be one of the spec's
@@ -540,6 +558,7 @@
               mkApp "lint" "Run golangci-lint"
                 [
                   pkgs.golangci-lint
+                  pkgs.coreutils
                   # golangci-lint shells out to a `go` binary for package
                   # loading; without goPkg on PATH it falls back to the GOROOT
                   # it was compiled with (an older Go that rejects go.mod's
@@ -548,6 +567,7 @@
                   goPkg
                 ]
                 ''
+                  ${privateGocache}
                   golangci-lint run ./...
                 '';
 
@@ -560,9 +580,11 @@
               mkApp "vulncheck" "Run govulncheck vulnerability scan"
                 [
                   pkgs.govulncheck
+                  pkgs.coreutils
                   goPkg
                 ]
                 ''
+                  ${privateGocache}
                   govulncheck ./...
                 '';
 
@@ -610,20 +632,12 @@
                   # (tools/doanalyzerv2/run.sh); the security gate scans the
                   # library.
                   #
-                  # Private GOCACHE, deliberately. The host points GOCACHE at a
-                  # SHARED build cache (/mnt/buildcache/go-build) that other
-                  # sessions and ~15 language servers mutate concurrently.
-                  # gosec's package load can then hit "cache entry not found",
-                  # fall back to a source-only pass, skip SSA for every package
-                  # and exit 1 with ZERO findings — the vacuous-red class this
-                  # repo has already paid for twice (2026-10-11 export data,
-                  # 2026-10-27 shared-cache race, both verified: the same tree
-                  # exits 0 with an isolated cache). A private cache costs one
-                  # cold compile of five packages and makes the gate
-                  # deterministic.
-                  gocache="$(mktemp -d)"
-                  trap 'rm -rf "$gocache"' EXIT
-                  GOCACHE="$gocache" gosec -exclude-dir=tools ./...
+                  # Private GOCACHE, deliberately — see the shared
+                  # `privateGocache` comment above: gosec's package load was the
+                  # first gate this bit (2026-10-27), and it is the reason the
+                  # app takes the helper rather than the inherited cache.
+                  ${privateGocache}
+                  gosec -exclude-dir=tools ./...
                 '';
 
             # Every target in the tree is listed here AND in fuzz-long, in

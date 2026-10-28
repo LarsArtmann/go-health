@@ -170,16 +170,20 @@ go-design-smells checkout at `/home/lars/projects/branching-flow` (the go.mod re
   output appearing is proof of nothing without `EXIT=$?`; piping through
   `tail` also eats the exit status). Every gate invocation must end with an
   explicit exit-code echo; `nix run .#gates` returning 0 is the only truth.
-- **A shared `GOCACHE` turns the security gate into a vacuous red (2026-10-27)**
-  — the host points `GOCACHE` at `/mnt/buildcache/go-build`, which other
-  sessions and ~15 language servers mutate mid-run; gosec's package load then
-  hit `reading srcfiles list: cache entry not found`, fell back to a
-  source-only pass, skipped SSA for all five packages and exited 1 with
-  `Issues: 0`. Verified fix: the same tree exits 0 with an isolated cache, so
-  `.#security` now runs gosec against a private `mktemp -d` `GOCACHE`. Any
-  future gate that loads packages is exposed to the same class — an isolated
-  cache, or the red means nothing. (Same shape as the 2026-10-11 export-data
-  vacuous red: both read as findings and were not.)
+- **The shared `GOCACHE` fakes findings, then fakes broken code (2026-10-27/28)**
+  — the host points `GOCACHE` at `/mnt/buildcache/go-build`, mutated mid-run by
+  other sessions and ~15 language servers. First symptom: gosec's package load
+  hit `reading srcfiles list: cache entry not found`, skipped SSA for all five
+  packages and exited 1 with `Issues: 0`. After that disk hit 0 bytes free it
+  went further — `.#lint` failed with `could not load export data: … no such
+  file or directory` (2 typecheck issues, 0 findings) and a plain host-shell
+  `go build ./...` fails with `package io is not in std`. Both are cache
+  artifacts, never code: `GOCACHE=$(mktemp -d)` is green on the same tree, which
+  is why `.#security`, `.#lint` and `.#vulncheck` take the shared
+  `privateGocache` helper in `flake.nix`. `.#test`/`.#test-race`/`.#vet` are
+  immune (the go tool rebuilds on a miss; third-party loaders bail out). Treat
+  any `go` reached through PATH on this host as suspect, and never "fix" code
+  a CLI gate reports red this way — arbitrate with an isolated cache first.
 - **`.#lint` needs headroom on a loaded host (2026-10-27)** — with
   `run.timeout: 5m`, package loading gave up (`failed to load packages:
   context deadline exceeded`) twice at load average >250 before any linter

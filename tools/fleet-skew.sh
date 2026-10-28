@@ -20,7 +20,15 @@
 #
 # Exit codes: 0 = no minor drift (or within --allow), 1 = too many
 # minor-stale consumers, 2 = no version to compare against.
+#
+# Every GitHub call runs under `gh_timeout`: without one a stalled connection
+# hangs the gate forever instead of failing. Observed 2026-10-28 — a run sat
+# alive for 55 minutes after printing "latest tag", and the same run's earlier
+# attempt reported all 16 repos "unreachable" during a rate-limit window. A
+# timeout turns both shapes into the WARN this script already understands.
 set -euo pipefail
+
+gh_timeout=30
 
 here=$(cd "$(dirname "$0")" && pwd)
 manifest="$here/fleet-repos.txt"
@@ -79,15 +87,15 @@ while read -r repo modpath; do
 	[ -z "$repo" ] && continue
 	case "$repo" in \#*) continue ;; esac
 
-	branch=$(gh api "repos/$repo" --jq .default_branch 2>/dev/null) || branch=""
+	branch=$(timeout "$gh_timeout" gh api "repos/$repo" --jq .default_branch 2>/dev/null) || branch=""
 	if [ -z "$branch" ]; then
-		echo "WARN  $repo: repo unreachable (removed or renamed?)"
+		echo "WARN  $repo: repo unreachable (removed, renamed, rate-limited or timed out)"
 		warns=$((warns + 1))
 		continue
 	fi
 
 	pin=$(
-		gh api "repos/$repo/contents/$modpath?ref=$branch" --jq .content 2>/dev/null |
+		timeout "$gh_timeout" gh api "repos/$repo/contents/$modpath?ref=$branch" --jq .content 2>/dev/null |
 			base64 -d 2>/dev/null |
 			grep -oE 'github\.com/larsartmann/go-health v[0-9]+\.[0-9]+\.[0-9]+[^[:space:]]*' | head -1 |
 			grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || true

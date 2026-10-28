@@ -28,7 +28,7 @@
 # timeout turns both shapes into the WARN this script already understands.
 set -euo pipefail
 
-gh_timeout=30
+gh_timeout="${FLEET_SKEW_TIMEOUT:-30}"
 
 here=$(cd "$(dirname "$0")" && pwd)
 manifest="$here/fleet-repos.txt"

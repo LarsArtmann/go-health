@@ -91,7 +91,7 @@ type Probe struct {
 	liveThrottle   time.Duration
 	shutdownGrace  time.Duration
 	nowFunc        func() time.Time
-	instanceID     string
+	instanceID     InstanceID
 	allowedMethods map[string]struct{}
 
 	// recorderDropped records that a WithHealthRecorder option was passed
@@ -124,7 +124,7 @@ type config struct {
 	liveThrottle    time.Duration
 	shutdownGrace   time.Duration
 	nowFunc         func() time.Time
-	instanceID      string
+	instanceID      InstanceID
 	allowedMethods  map[string]struct{}
 	recorderDropped bool
 }
@@ -139,8 +139,10 @@ func WithVersion(v string) Option {
 
 // WithInstanceID sets a replica identifier included in health responses.
 // Use it when several instances serve behind one load balancer and logs or
-// dashboards must attribute a response to the pod that produced it.
-func WithInstanceID(id string) Option {
+// dashboards must attribute a response to the pod that produced it. Wrap a
+// raw string with [NewInstanceID]; the zero [InstanceID] leaves instance_id
+// unset (omitted from JSON).
+func WithInstanceID(id InstanceID) Option {
 	return func(c *config) { c.instanceID = id }
 }
 

@@ -3,6 +3,8 @@ package health
 import (
 	"maps"
 	"time"
+
+	id "github.com/larsartmann/go-branded-id"
 )
 
 // Status is the roll-up health status of a check or the overall response.
@@ -122,6 +124,29 @@ type CheckDetail struct {
 	Duration time.Duration
 }
 
+// InstanceIDBrand brands replica identifiers ([InstanceID]) so they cannot be
+// confused with plain strings or other identifier types at compile time.
+type InstanceIDBrand struct{}
+
+// Name implements [id.BrandNamer] so debug output is self-describing:
+// a formatted [InstanceID] reads "InstanceID:pod-abc", not a bare string.
+func (InstanceIDBrand) Name() string { return "InstanceID" }
+
+// InstanceID identifies one replica behind a load balancer (see
+// [Response.InstanceID]). It is a branded strong type
+// (github.com/larsartmann/go-branded-id): a plain string is not assignable
+// to it and vice versa, so replica identifiers cannot silently mix with
+// versions, service names, or any other string. The zero value means
+// "unset" and is omitted from JSON, keeping the wire format identical to
+// the string-typed era. Wrap raw text with [NewInstanceID]; read it back
+// with [InstanceID.Get].
+type InstanceID = id.ID[InstanceIDBrand, string]
+
+// NewInstanceID wraps a raw replica identifier string into an [InstanceID].
+// An empty string yields the zero [InstanceID] ("unset"), which is omitted
+// from JSON responses.
+func NewInstanceID(raw string) InstanceID { return id.NewID[InstanceIDBrand](raw) }
+
 // Response is the aggregate health-check response served by all probe handlers.
 type Response struct {
 	// Status is the overall roll-up: fail if any critical service is down
@@ -131,8 +156,10 @@ type Response struct {
 	// Version is the application version, if configured.
 	Version string `json:"version,omitempty"`
 	// InstanceID identifies this replica when multiple instances serve behind
-	// one load balancer, if configured via [WithInstanceID].
-	InstanceID string `json:"instance_id,omitempty"`
+	// one load balancer, if configured via [WithInstanceID]. The zero value
+	// (unset) is omitted from JSON: omitzero consults the strong type's
+	// IsZero, so the wire shape is unchanged from the string-typed era.
+	InstanceID InstanceID `json:"instance_id,omitzero"`
 	// Uptime is human-readable duration since boot.
 	Uptime string `json:"uptime,omitempty"`
 	// ShuttingDown is true when the probe has been marked for shutdown.

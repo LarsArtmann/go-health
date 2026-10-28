@@ -1,6 +1,6 @@
 module github.com/larsartmann/go-health/tools/doanalyzerv2
 
-go 1.27
+go 1.27.1
 
 require github.com/larsartmann/go-design-smells v0.0.0
 

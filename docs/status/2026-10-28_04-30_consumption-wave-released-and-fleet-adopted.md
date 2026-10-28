@@ -39,6 +39,8 @@ go list -m github.com/larsartmann/go-health
 github.com/larsartmann/go-health v0.8.1
 ```
 
+The release also unblocked the open documentation PR: with the train aligned, `#37` went from `UNSTABLE` to **`CLEAN`** and was squashed into master (`7faa7277`). Its content is the corrected recorder note in `health/README.md` (the option is refused at `Start`, not ignored), the round-43 status report, the corpus-baseline bump that report required, and the forgejo architecture-gate workflow. Getting it green needed the corpus ratchet: the report grew `docs/` by 140 lines and the gate refuses undeclared growth.
+
 The tag then made the repo's **own** consumers lag (the train gate named `examples/samber-do-demo` and `integration_test` as a minor behind a tag this repo just published), so both were swept to v4.14.0 and master was pushed again. `--strict-lag 0` green with a refreshed cache.
 
 ### a2. The drift alarm no longer lies about what it cannot see
@@ -80,6 +82,14 @@ Each swap retired a real defect, not just lines: cv's fallback re-ran on **every
 
 - **The golangci-lint cache was corrupt** (9.3 GB, entries missing: `failed to persist facts to cache ... no such file or directory`). `golangci-lint cache clean` needed three attempts — the first two died on `directory not empty` because another process was writing mid-clean. Every module lints clean standalone, which is what proved the failure was cache-shaped, not code-shaped.
 - **`integration_test` in cqrs-htmx called `health.RecorderChain`**, the function the same module deprecates. staticcheck flagged it on every lint run. Migrated to `gohealth.ChainRecorders` and **added the property that motivated the deprecation**: the chain must satisfy `DetailedHealthRecorder`, so projection durations cannot silently vanish again.
+
+### a6. The final tree is green end to end
+
+```
+GOWORK=off GOTOOLCHAIN=auto nix run .#gates   # GATES_EXIT=0
+```
+
+Ten gates, each confirmed in the log rather than inferred from the tail: `test-race`, `vet`, `lint` (0 issues), `coverage-gate` (every package and the total above their floors), `vulncheck` (no vulnerabilities), `security`, `fuzz` (9 targets PASS), `fuzz-registry` (9 registered in both apps), `docs-check` (README/AGENTS/CHANGELOG/FEATURES in sync with v0.8.1) and `flake check` (`all checks passed`). The sweep covers this session's `TODO_LIST.md` rewrite and the new report, not just the code.
 
 ---
 

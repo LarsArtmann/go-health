@@ -10,14 +10,14 @@
 
 ## 0. TL;DR
 
-| Open question at 00:20                                                 | Answer at 02:40                                                                                                                                                               |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Three gates never ran (`.#fuzz`, `.#fuzz-registry`, `nix flake check`) | All three ran and passed; the whole sweep then ran green: **`GATES_EXIT=0`**                                                                                                  |
-| Federation is 99.3% or 99.5%?                                          | Both, and neither is a regression: **the same single uncovered statement** counts as 147/148 under go1.27.3 and 206/207 under go1.27.0. Instrumentation granularity, not code |
-| Is `.#lint` red because of load or code?                               | Neither — the shared `GOCACHE` was serving half-written std export data. `.#lint` now runs on a private cache (`privateGocache`) like `.#security`                            |
-| The archive rule was never applied                                     | All **26** unarchived reports read item by item: **1** fully resolved (archived), **11 clusters** of untracked residue harvested into `TODO_LIST.md`                          |
-| `/mnt/buildcache` 100% full blocking gates                             | Freed to 65 GB by other work; the _remaining_ damage is a corrupted host `GOCACHE`, documented and worked around                                                              |
-| Is `.#skew` trustworthy?                                              | It could hang forever **and** it passed while reading nothing. Both are now impossible: a 30 s per-call deadline, `unreadable` gated at 0, and a local-checkout mode that needs no API. Real reading of the fleet: **14 minor-stale, 2 in sync** |
+| Open question at 00:20                                                 | Answer at 02:40                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Three gates never ran (`.#fuzz`, `.#fuzz-registry`, `nix flake check`) | All three ran and passed; the whole sweep then ran green: **`GATES_EXIT=0`**                                                                                                                                                                     |
+| Federation is 99.3% or 99.5%?                                          | Both, and neither is a regression: **the same single uncovered statement** counts as 147/148 under go1.27.3 and 206/207 under go1.27.0. Instrumentation granularity, not code                                                                    |
+| Is `.#lint` red because of load or code?                               | Neither — the shared `GOCACHE` was serving half-written std export data. `.#lint` now runs on a private cache (`privateGocache`) like `.#security`                                                                                               |
+| The archive rule was never applied                                     | All **26** unarchived reports read item by item: **1** fully resolved (archived), **11 clusters** of untracked residue harvested into `TODO_LIST.md`                                                                                             |
+| `/mnt/buildcache` 100% full blocking gates                             | Freed to 65 GB by other work; the _remaining_ damage is a corrupted host `GOCACHE`, documented and worked around                                                                                                                                 |
+| Is `.#skew` trustworthy?                                               | It could hang forever **and** it passed while reading nothing. Both are now impossible: a 30 s per-call deadline, `unreadable` gated at 0, and a local-checkout mode that needs no API. Real reading of the fleet: **14 minor-stale, 2 in sync** |
 
 ---
 
@@ -29,6 +29,8 @@
 GOWORK=off GOTOOLCHAIN=auto nix run .#gates > /tmp/gates5.log 2>&1
 echo "GATES_EXIT=$?" >> /tmp/gates5.log      # GATES_EXIT=0
 ```
+
+Run **twice**, because the tree moved under the first one (peer commits, see §d3): sweep 1 spanned `053c567`→`78d7727`, sweep 2 launched at `b3d8cbe` and also ended `GATES_EXIT=0` with `all gates green`. Both wrote the exit code into the log file rather than to a pipeline's stdout — the mistake this repo already has a bullet about (§d1).
 
 Every gate confirmed individually in the log rather than inferred from the tail:
 
@@ -85,6 +87,8 @@ time/sys_unix.go:12:2: package syscall is not in std
 
 while `GOCACHE=$(mktemp -d) go build ./...` → **exit 0** and `nix develop -c go build ./...` → **exit 0**. The host `GOROOT` is itself a module-cache toolchain (`/mnt/buildcache/go-mod/golang.org/toolchain@v0.0.1-go1.27.0…`), whose std is fine — the half-written _cache_ is the whole problem. Recorded as one consolidated AGENTS gotcha; the previous two-symptom bullet was merged into it to stay under the 220-line cap (file at 219).
 
+The same isolation now covers golangci-lint's **separate** analysis cache: `GOLANGCI_LINT_CACHE` also points at `/mnt/buildcache`, which produced dozens of `Failed to persist facts to cache` warnings per run. After redirecting it into the private cache: **0** such warnings, `0 issues.`, exit 0 — the only line left in the output is the documented `erraudit` `nolint_filter` noise.
+
 ### a4. The archive rule, applied to all 26 reports
 
 `docs/INDEX.md` defines the rule as resolution-based ("fully resolved reports move to `docs/status/archived/`"), so every unarchived report was read and every claimed-open item was checked against `TODO_LIST.md`/`ROADMAP.md`.
@@ -116,7 +120,7 @@ Two runs of `nix run .#skew` were observed today, one of which printed `latest t
 
 ### a6b. The bigger finding under it: the gate passed when it learned nothing
 
-While proving the timeout path I ran the script with every API call failing and no `--allow`: **exit 0**, with `minor-stale: 0, warnings: 16 (allowed: 0)`. A fleet where *not one* repo could be read reported success. That is the vacuous-green class this repo has legislated against twice ("a green gate with nothing behind it is worse than no gate") reappearing inside the newest gate.
+While proving the timeout path I ran the script with every API call failing and no `--allow`: **exit 0**, with `minor-stale: 0, warnings: 16 (allowed: 0)`. A fleet where _not one_ repo could be read reported success. That is the vacuous-green class this repo has legislated against twice ("a green gate with nothing behind it is worse than no gate") reappearing inside the newest gate.
 
 A peer session rewrote the same script minutes later and solved it better than my draft guard would have: unreadable repos are now a separate `unreadable` counter gated by `--allow-unchecked` (default **0**), and `--source local` reads the fleet checkouts directly so the gate does not depend on the GitHub API at all. Verified end to end:
 
@@ -127,7 +131,7 @@ OK    LarsArtmann/cqrs-htmx (health/go.mod): v0.8.1
 OK    LarsArtmann/go-appkit (health/go.mod): v0.8.1
 ```
 
-Fourteen minor-stale consumers is the truthful reading of the fleet, and the two `OK` rows independently confirm the bridge re-pin the peer's report claims. The weekly workflow already runs `--allow 14 --allow-unchecked 0`, so the baseline is tolerated and a *new* drift, or an outage, is not.
+Fourteen minor-stale consumers is the truthful reading of the fleet, and the two `OK` rows independently confirm the bridge re-pin the peer's report claims. The weekly workflow already runs `--allow 14 --allow-unchecked 0`, so the baseline is tolerated and a _new_ drift, or an outage, is not.
 
 ### a7. Small truthful repairs, each verified
 
@@ -188,7 +192,7 @@ Unchanged from the peer reports and now carried in `TODO_LIST.md` rather than du
 4. **A point-in-time report is not a backlog.** 25 of 26 reports were handoffs that were never closed. The harvest cost ~90 minutes; the alternative — reading 26 reports again next month — costs more.
 5. **The drift alarm catches absence, not error.** `docs-check` catches a missing release mention; it cannot catch `CONTRIBUTING` naming the wrong uncovered statement. Only re-derivation does.
 6. **Two writers on one branch need a claim file**, not politeness. Third session in two days with rejected edits and duplicated work.
-7. **"Unreadable" is not "healthy".** Every gate must distinguish *no data* from *good data* and fail on the first. `.#skew` did not, and would have blessed a fleet it could not see; the same audit is worth applying to `.#recorder-audit` (which has the vacuity rule written down) and to any future gate that reads an external service.
+7. **"Unreadable" is not "healthy".** Every gate must distinguish _no data_ from _good data_ and fail on the first. `.#skew` did not, and would have blessed a fleet it could not see; the same audit is worth applying to `.#recorder-audit` (which has the vacuity rule written down) and to any future gate that reads an external service.
 8. **A gate's own failure modes deserve the same test discipline as code.** The timeout path and the vacuous path were both proven with a fake `gh` in under a minute; neither had ever been exercised.
 
 ---
@@ -207,7 +211,7 @@ The eleven archive-harvest rows live in `TODO_LIST.md` (§"Harvested from the st
 | 6  | Promote accumulated fuzz inputs into `testdata/fuzz/` in one deliberate commit                                                                                | Med      | 15m    |
 | 7  | Add a step banner + final `EXIT=` line to `tools/fuzz-registry-check.sh` (the one silent gate)                                                                | Low      | 10m    |
 | 8  | Gate: a newly exported symbol must appear in `FEATURES.md` (generalises the two new `docs-check` rules)                                                       | Low      | 1h     |
-| 9  | ~~Re-check `.#skew` under `timeout`~~ — done tonight; the lingering job is to keep `--allow 14 --allow-unchecked 0` honest as the fleet shrinks | Med      | 10m    |
+| 9  | ~~Re-check `.#skew` under `timeout`~~ — done tonight; the lingering job is to keep `--allow 14 --allow-unchecked 0` honest as the fleet shrinks               | Med      | 10m    |
 | 10 | Verify the pkg.go.dev render for `v0.8.1` (never viewed; two reports flag it)                                                                                 | Low      | 5m     |
 | 11 | Design note: per-check severity override (fleet ask, untracked until tonight)                                                                                 | Low      | 2h     |
 | 12 | File the two BuildFlow upstream issues (failed-step output truncation; `dprint --fix` no-rewrite) after `verify-before-filing`                                | Low      | 1h     |
@@ -216,7 +220,7 @@ The eleven archive-harvest rows live in `TODO_LIST.md` (§"Harvested from the st
 | 15 | Triage the disk that caused all of this (`journalctl -b -1`, SMART, `e2fsck -n /dev/sdb1`)                                                                    | Med      | 30m    |
 | 16 | Archive the next batch of fully-resolved reports once the harvested rows close — target: the 2026-10-08/09 cluster                                            | Low      | 30m    |
 | 17 | Audit `.#recorder-audit` and `.#skew` for the "unreadable vs healthy" rule (skew is done; recorder-audit only documents it)                                   | Med      | 20m    |
-| 18 | Register `.#skew` in CI's required checks, or state in CONTRIBUTING why weekly-only is enough                                                                  | Med      | 15m    |
+| 18 | Register `.#skew` in CI's required checks, or state in CONTRIBUTING why weekly-only is enough                                                                 | Med      | 15m    |
 
 ---
 

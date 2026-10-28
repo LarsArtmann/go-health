@@ -12,12 +12,12 @@
 #     checked by hand on 2026-10-09 and carried no pin)
 # PMA and doadapter aliases resolve to projects-management-automation.
 #
-# Baseline (2026-10-28, measured with --source local because gh had no valid
-# token): 14 of 16 are a minor behind v0.8.1 — go-health-dashboard, CV, cv,
-# Zlota44, dnsblockd, library-policy, file-and-image-renamer, DiscordSync,
-# KeyHolderAI, nsfw-classifier, webphone, projects-management-automation,
-# timesheets, go-taskqueue. Current: cqrs-htmx and go-appkit (both bridges).
-# .github/workflows/skew.yml carries this as --allow 14; ratchet it DOWN as the
+# Baseline (2026-10-28, measured twice: --source local while gh had no token,
+# then --source api after the fleet wave). Morning: 14 of 16 a minor behind
+# v0.8.1. Now: 3 remain -- CV, cv (two clones of the same repo, each ahead of
+# origin with no shared tip) and nsfw-classifier (29 local commits entangled
+# with peer work). Everything else is aligned.
+# .github/workflows/skew.yml carries this as --allow 3; ratchet it DOWN as the
 # rows above close, never up.
 LarsArtmann/go-health-dashboard go.mod
 LarsArtmann/CV go.mod

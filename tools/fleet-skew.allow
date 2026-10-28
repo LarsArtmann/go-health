@@ -1,0 +1,20 @@
+# Recorded fleet-skew backlog: how many consumers may be a minor behind the
+# newest go-health release before the check fails.
+#
+# This file exists so the backlog is written down ONCE. `tools/fleet-skew.sh`
+# reads it when `--allow` is not passed, which is how `nix run .#pre-tag` (and
+# any other caller that just runs `.#skew`) inherits the same number the weekly
+# CI job uses instead of gating zero against a known backlog.
+#
+# RULES
+#   - Ratchet DOWN as repos align. Raising it requires a dated line here that
+#     says which repo is newly stale and why nobody could bump it.
+#   - Never treat this as a tolerance. A new stale repo is drift; once the
+#     backlog is zero, delete this file (the script then defaults to 0).
+#
+# MEASURED 2026-10-28 (`nix run .#skew -- --source api`): 3 of 16.
+#   - CV and cv: two clones of the same repository, each ahead of origin with
+#     no shared tip -- an owner decision, not a bump.
+#   - nsfw-classifier: 29 local commits entangled with peer work.
+# Morning value the same day was 14; the fleet wave closed 11.
+3

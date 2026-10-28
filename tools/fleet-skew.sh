@@ -23,7 +23,10 @@
 #                      expectation is a second source of truth that goes stale
 #                      the moment a release happens. CI passes --expect because
 #                      it checks out one branch and may not carry the tags.
-#   --allow N          tolerate up to N minor-stale consumers (default 0). Use it
+#   --allow N          tolerate up to N minor-stale consumers. Default: the number
+#                      in tools/fleet-skew.allow (0 when that file is absent), so
+#                      the backlog is recorded ONCE and every caller (/pre-tag,
+#                      CI, a human) inherits it instead of gating zero. Use it
 #                      only to record a known backlog, never to hide new drift.
 #   --allow-unchecked N
 #                      tolerate up to N consumers whose pin could not be read
@@ -52,7 +55,7 @@ manifest="$here/fleet-repos.txt"
 repo_root=$(cd "$here/.." && pwd)
 
 expect=""
-allow=0
+allow=""
 allow_unchecked=0
 source="auto"
 while [ "$#" -gt 0 ]; do
@@ -99,6 +102,16 @@ while [ "$#" -gt 0 ]; do
 		;;
 	esac
 done
+
+if [ -z "$allow" ]; then
+	allow=0
+	allow_file="$here/fleet-skew.allow"
+	if [ -f "$allow_file" ]; then
+		allow=$(sed -n -E 's/^([0-9]+)[[:space:]]*$/\1/p' "$allow_file" | head -1)
+		allow="${allow:-0}"
+		echo "backlog: $allow minor-stale consumer(s) allowed (tools/fleet-skew.allow)"
+	fi
+fi
 
 for pair in "allow:$allow" "allow_unchecked:$allow_unchecked"; do
 	name="${pair%%:*}"

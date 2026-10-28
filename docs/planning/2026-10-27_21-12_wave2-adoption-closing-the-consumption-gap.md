@@ -4,19 +4,28 @@
 **Supersedes as the actionable plan:** `2026-10-27_19-18_supplier-wave-v080-from-primitives-to-fleet.md` (its distribution half is shipped) and `2026-10-27_19-18_fleet-supplier-wave-release-plan.md` (T01–T30; its executed rows are corrected in §7 Errata).
 **Inputs read before ranking:** `TODO_LIST.md`, `ROADMAP.md`, `FEATURES.md`, `docs/status/2026-10-27_21-02_distribution-shipped-consumption-zero.md` (peer, newest), `docs/status/2026-10-27_21-00_…` (mine), `docs/research/2026-10-27_fleet-consumer-needs.md`, `docs/consumer-verification.md`, `docs/adoption-matrix.md`, `CHANGELOG.md`, current code + `flake.nix`.
 
-> **Execution status (added 2026-10-28 01:30, reconciled against the peer report
-> `docs/status/2026-10-28_01-18_…`):** the SELF-marked half of this plan is
-> finished — **M05, M10–M17, M20–M23, M25, M26**, evidence in
-> `docs/status/2026-10-27_23-42_…` and `2026-10-28_01-18_…` plus the
-> `[Unreleased]` changelog block — and `TODO_LIST.md` now carries the harvest
-> instead of this file. Of the OWNER/UPSTREAM half: **M02 is done** (go-appkit's
-> exec bit fixed, `health/v0.3.0` pushed and resolved from a foreign module) and
-> **M01 is done for go-appkit, half for cqrs-htmx** (both bridges now pin
-> v0.8.1; only the tag is missing). **M03 is blocked on `cqrs-htmx`'s own
-> `go-retry` train lag**, and **M04, M06–M09, M18, M19, M24, M27 have not
-> started** — each needs write access to a repository this session may not
-> touch. Nothing below was rewritten; it is the decision record that produced
-> the work.
+> **Execution status (2026-10-28 04:30) — the OWNER half is now mostly done.**
+> The SELF half finished earlier (**M05, M10–M17, M20–M23, M25**; **M26** is
+> partial — its fix belongs in `crush-config`). Since then, with push authority
+> available: **M01 and M02 are complete**, **M03 is COMPLETE** (`health/v4.14.0`
+> cut, pushed, resolved from a scratch module, and it pulls go-health v0.8.1;
+> PR #37 went CLEAN and was squashed), **M07, M08 and M09 are complete** (three
+> hand-rolled cache adapters deleted, plus one repo's duplicate type-name
+> helper), and **M04 is partial** — the compiles happened (six consumers
+> build-verified and pushed, both bridges tag-verified from a foreign module)
+> but the published evidence table is still missing.
+>
+> **M06 is BLOCKED by the API, not by time.** `WithRefreshInterval(0)` +
+> `WithLiveThrottle` cannot feed go-health-dashboard: `CachedResponse` stays
+> empty in live mode (the throttle covers only the handlers), and `Check` has
+> no pass-detail field, so go-taskqueue's informative green rows
+> (`projection: at #N (head #M)`, the DLQ and worker notes) would be lost
+> silently. **M19, M18, M24 and M27 have not started.**
+>
+> Fleet: **13 of 16 repos on v0.8.1** (`nix run .#skew -- --source api`); the
+> three stragglers are blocked by unrelated local work, not by go-health.
+> Evidence: `docs/status/2026-10-28_04-30_consumption-wave-released-and-fleet-adopted.md`.
+> Nothing below was rewritten; it is the decision record that produced the work.
 
 ---
 

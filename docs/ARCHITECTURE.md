@@ -15,7 +15,7 @@ Single-package library (`health`) with these source files:
 
 ```
 doc.go           — Package doc comment (quick start, three-probe rationale, caching, shutdown)
-types.go         — Status enum (check level: pass/fail/warn/off; the roll-up stays pass/fail/warn), Off/OffError configured-off sentinel, Check (incl. Since, DurationNanos), CheckDetail, Response data model (incl. instance_id, timestamp omitzero) + Response.Clone (deep-copies Checks)
+types.go         — Status enum (check level: pass/fail/warn/off; the roll-up stays pass/fail/warn), Off/OffError configured-off sentinel, Check (incl. Since, DurationNanos), CheckDetail, InstanceID strong type (id.ID[InstanceIDBrand, string] via go-branded-id) + InstanceIDBrand + NewInstanceID, Response data model (incl. instance_id, timestamp omitzero) + Response.Clone (deep-copies Checks)
 probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate() (incl. ErrRecorderNotApplicable), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate (no publish), EvaluateAndCache, CachedResponse (lock-free read-only view + shutdown overlay), CacheAge/CachedResponseFresh, accessors, runHealthChecks (with panic recovery), buildChecks (Since stamping + duration carry), errorsOf/detailOf adapters
 tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.Since inside buildChecks (probe-observed, prunes absent checks)
 classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free

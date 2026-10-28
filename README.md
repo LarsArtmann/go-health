@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.8.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. One runtime dependency (`samber/do` v2), plus the naming helper `samber/go-type-to-string` that do itself already requires.
+> **Stability:** v0.8.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. Two runtime dependencies: `samber/do` v2 (service health checks) and `go-branded-id` (the strong `InstanceID` type), plus the naming helper `samber/go-type-to-string` that do itself already requires.
 
 ---
 
@@ -326,9 +326,18 @@ Method-set guard for the handlers: the listed methods are accepted alongside GET
 health.WithAllowedMethods(http.MethodHead) // kubelet GET + LB HEAD both pass
 ```
 
-### `WithInstanceID(id string)`
+### `WithInstanceID(id InstanceID)`
 
 Sets a replica identifier echoed in every response as `instance_id`. Use it when several instances serve behind one load balancer and dashboards must attribute a response to the pod that produced it.
+
+Replica identifiers are a strong type, not a bare string: wrap raw text with `health.NewInstanceID` so identifiers cannot be confused with other strings at compile time. The zero value (empty string) leaves `instance_id` unset.
+
+```go
+hostname, _ := os.Hostname()
+health.WithInstanceID(health.NewInstanceID(hostname))
+```
+
+Read it back with `resp.InstanceID.Get()`.
 
 ### `WithEvaluationHook(fn func(Response))`
 

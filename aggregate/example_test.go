@@ -136,7 +136,7 @@ func ExampleNew_scalarsDropped() {
 	merged := agg.CachedResponse()
 
 	fmt.Println(merged.Status)
-	fmt.Println(merged.InstanceID == "" && merged.Version == "")
+	fmt.Println(merged.InstanceID.IsZero() && merged.Version == "")
 	fmt.Println(merged.Checks["worker/queue"].Status, merged.Checks["worker/queue"].Error)
 
 	// Output:

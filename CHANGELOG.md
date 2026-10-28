@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `health.InstanceID`, a branded strong type for replica identifiers (`github.com/larsartmann/go-branded-id` v0.7.0, now a direct dependency), with the `health.NewInstanceID(string)` constructor: `WithInstanceID("pod-abc")` no longer compiles — a replica identifier cannot be confused with any other string at compile time.
 - `nix run .#fuzz-registry` (also `checks.fuzz-registry`, part of `.#gates`) diffs both fuzz apps in `flake.nix` against the `Fuzz*` targets in the tree and against each other, so a new target can no longer be written and silently never fuzzed. Backed by `tools/fuzz-registry-check.sh`.
 - `docs-check` grew two drift rules: `[Unreleased]` must document something while HEAD is past the latest tag, and `docs/federation-design.md`'s fenced go API block must match federation's exported surface in both directions (it was missing `SourceStatuses` and `Healthz` while both shipped).
 - `docs/ARCHITECTURE.md` now carries the per-file source map, the sub-package contracts and the test-file layout, moved out of `AGENTS.md` to keep that file under its 220-line preflight cap.
@@ -18,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Breaking:** `Response.InstanceID` is now `health.InstanceID` (was `string`), and `WithInstanceID` takes a `health.InstanceID`. The wire format is unchanged: the zero value stays omitted (`instance_id,omitzero` consults the strong type's `IsZero`), and a set identifier marshals as the same plain JSON string — verified under both `encoding/json` and `encoding/json/v2`, so dashboards and federation remotes need no changes. Migrate producers:
+  ```go
+  // before
+  health.WithInstanceID("pod-abc")
+  // after
+  health.WithInstanceID(health.NewInstanceID("pod-abc"))
+  ```
+  Readers: `resp.InstanceID.Get()` returns the raw identifier; the zero value (`resp.InstanceID.IsZero()`) means unset.
 - Statement coverage is now 100% for `health`, `aggregate`, `checks` and `internal/merge`, 99.3% for `federation` (99.9% total). The one remaining statement is federation's request-construction guard, unreachable for any remote `New` accepts; the reason is recorded at `fetch`. The federation figure is toolchain-relative: the dev shell's go1.27.3 instruments it as 148 blocks, a host go1.27.0 as 207, so the same source reads 99.5% there.
 - New tests pin `federation.WithClient`, the truncated-body fetch path, and a concurrent drain through `federation.Healthz` (race detector plus the invariant that a drain never unlatches startup).
 - Two defensive branches became testable instead of silent coverage holes: `applyStartupFailureOverlay` (root `Healthz`) and `versionMarshalFailure` behind a `marshalVersionResponse` seam, matching the existing `marshalResponse` seam.

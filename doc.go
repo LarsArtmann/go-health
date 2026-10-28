@@ -139,7 +139,9 @@
 //
 // [WithInstanceID] stamps every response with a replica identifier
 // (instance_id) so dashboards can attribute responses to the pod that
-// produced them behind a shared load balancer.
+// produced them behind a shared load balancer. Identifiers are the strong
+// [InstanceID] type — wrap raw text with [NewInstanceID]; the zero value
+// leaves instance_id unset (omitted from JSON).
 //
 // # Build Version
 //

@@ -4,14 +4,19 @@
 **Supersedes as the actionable plan:** `2026-10-27_19-18_supplier-wave-v080-from-primitives-to-fleet.md` (its distribution half is shipped) and `2026-10-27_19-18_fleet-supplier-wave-release-plan.md` (T01–T30; its executed rows are corrected in §7 Errata).
 **Inputs read before ranking:** `TODO_LIST.md`, `ROADMAP.md`, `FEATURES.md`, `docs/status/2026-10-27_21-02_distribution-shipped-consumption-zero.md` (peer, newest), `docs/status/2026-10-27_21-00_…` (mine), `docs/research/2026-10-27_fleet-consumer-needs.md`, `docs/consumer-verification.md`, `docs/adoption-matrix.md`, `CHANGELOG.md`, current code + `flake.nix`.
 
-> **Execution status (added 2026-10-28 01:0x):** the SELF-marked half of this
-> plan is finished and verified — **M05, M10–M17, M20–M23, M25, M26** are done
-> (evidence: `docs/status/2026-10-27_23-42_…` plus the `[Unreleased]` changelog
-> block), and `TODO_LIST.md` now carries the harvest instead of this file. The
-> OWNER/UPSTREAM half — **M01–M04, M06–M09, M18, M19, M24, M27** — has not
-> started: every one of them needs push authority to a repository this session
-> may not write, so re-reading this plan should start there, not at M05. Nothing
-> below was rewritten; it is the decision record that produced the work.
+> **Execution status (added 2026-10-28 01:30, reconciled against the peer report
+> `docs/status/2026-10-28_01-18_…`):** the SELF-marked half of this plan is
+> finished — **M05, M10–M17, M20–M23, M25, M26**, evidence in
+> `docs/status/2026-10-27_23-42_…` and `2026-10-28_01-18_…` plus the
+> `[Unreleased]` changelog block — and `TODO_LIST.md` now carries the harvest
+> instead of this file. Of the OWNER/UPSTREAM half: **M02 is done** (go-appkit's
+> exec bit fixed, `health/v0.3.0` pushed and resolved from a foreign module) and
+> **M01 is done for go-appkit, half for cqrs-htmx** (both bridges now pin
+> v0.8.1; only the tag is missing). **M03 is blocked on `cqrs-htmx`'s own
+> `go-retry` train lag**, and **M04, M06–M09, M18, M19, M24, M27 have not
+> started** — each needs write access to a repository this session may not
+> touch. Nothing below was rewritten; it is the decision record that produced
+> the work.
 
 ---
 

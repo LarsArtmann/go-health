@@ -5,19 +5,20 @@
 **Scope:** finish the repo-local residue after the wave-2 self-authorised batch — run the gates that never ran, settle the 99.3-vs-99.5 coverage discrepancy, apply the archive rule to all 26 reports, and independently verify the tree end to end.
 **Verdict:** the tree is green (`GATES_EXIT=0` twice, ten gates plus `nix flake check`), the coverage "regression" was a **toolchain artifact**, three of the night's reds were **the shared build cache lying**, and the honest cost is that I moved one report out of 26 into `archived/` — the other 25 had residue that lived nowhere, which is now 11 tracked rows instead of 25 untracked reports.
 **Superseded within the hour (correctly):** the `--allow 14` backlog I reported at 02:40 now lives once in `tools/fleet-skew.allow` (`280eaff`), which is better than what I described. See §d8.
+**See also:** [`2026-10-28_01-18_…`](2026-10-28_01-18_consumption-wave-gates-shipped-fleet-still-at-zero.md) (peer, mechanism half) · [`2026-10-28_02-02_…`](2026-10-28_02-02_instanceid-strong-type-adoption-and-gates-sweep.md) (peer, strong `InstanceID`) · [`2026-10-28_02-40_…`](2026-10-28_02-40_truth-reconciliation-cache-isolation-and-archive-harvest.md) (this session's first report) · [`2026-10-28_04-30_…`](2026-10-28_04-30_consumption-wave-released-and-fleet-adopted.md) (peer, the released tag and the adopted fleet)
 
 ---
 
 ## 0. TL;DR
 
-| Question at session start | Answer now | How it was proven |
-| --- | --- | --- |
-| Three gates never ran | `.#fuzz`, `.#fuzz-registry`, `nix flake check` → all `EXIT=0` (9 fuzz targets) | exit codes in logs, not `tail` |
-| Is the tree green end to end? | Yes, **twice**: `GATES_EXIT=0` at `053c567`→`78d7727`, then at `b3d8cbe` | `nix run .#gates > log 2>&1; echo EXIT=$? >> log` |
-| Federation 99.3% or 99.5%? | Both — **same single uncovered statement**, different instrumentation | profile diff: 147/148 (go1.27.3) vs 206/207 (go1.27.0) |
-| Why was `.#lint` red? | Corrupted shared `GOCACHE`, not code and not load | same tree + `GOCACHE=$(mktemp -d)` → green |
-| Was the archive rule ever applied? | 26 reports read item by item: **1** archivable, **25** carrying untracked residue | 11 rows harvested into `TODO_LIST.md` |
-| Is `.#skew` trustworthy? | It could hang (55 min observed) **and** pass while reading nothing (16/16 unreachable → exit 0) | proved both with a fake `gh`; peer's `unreadable` model now closes it |
+| Question at session start          | Answer now                                                                                      | How it was proven                                                     |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Three gates never ran              | `.#fuzz`, `.#fuzz-registry`, `nix flake check` → all `EXIT=0` (9 fuzz targets)                  | exit codes in logs, not `tail`                                        |
+| Is the tree green end to end?      | Yes, **twice**: `GATES_EXIT=0` at `053c567`→`78d7727`, then at `b3d8cbe`                        | `nix run .#gates > log 2>&1; echo EXIT=$? >> log`                     |
+| Federation 99.3% or 99.5%?         | Both — **same single uncovered statement**, different instrumentation                           | profile diff: 147/148 (go1.27.3) vs 206/207 (go1.27.0)                |
+| Why was `.#lint` red?              | Corrupted shared `GOCACHE`, not code and not load                                               | same tree + `GOCACHE=$(mktemp -d)` → green                            |
+| Was the archive rule ever applied? | 26 reports read item by item: **1** archivable, **25** carrying untracked residue               | 11 rows harvested into `TODO_LIST.md`                                 |
+| Is `.#skew` trustworthy?           | It could hang (55 min observed) **and** pass while reading nothing (16/16 unreachable → exit 0) | proved both with a fake `gh`; peer's `unreadable` model now closes it |
 
 ---
 
@@ -35,31 +36,31 @@ GOWORK=off GOTOOLCHAIN=auto nix run .#gates > /tmp/gates6.log 2>&1; echo "GATES_
 
 Both sweeps ended `GATES_EXIT=0` / `all gates green`. Every gate was confirmed from its own line in the log, never inferred from the tail:
 
-| Gate | Evidence |
-| --- | --- |
-| `test-race` | five `ok` lines under the race detector |
-| `vet` | silent success |
-| `lint` | `0 issues.` |
-| `coverage-gate` | `every package and the total meet their floor` |
-| `vulncheck` | `No vulnerabilities found.` |
-| `security` | `Issues : 0`, full SSA across all five packages |
-| `fuzz` | all 9 targets `PASS` (root ~1.1M execs, merge ~1.0M, federation ×3) |
-| `fuzz-registry` | `OK - 9 targets` |
-| `docs-check` | `in sync with v0.8.1` |
-| `flake check` | `all checks passed!` |
+| Gate            | Evidence                                                            |
+| --------------- | ------------------------------------------------------------------- |
+| `test-race`     | five `ok` lines under the race detector                             |
+| `vet`           | silent success                                                      |
+| `lint`          | `0 issues.`                                                         |
+| `coverage-gate` | `every package and the total meet their floor`                      |
+| `vulncheck`     | `No vulnerabilities found.`                                         |
+| `security`      | `Issues : 0`, full SSA across all five packages                     |
+| `fuzz`          | all 9 targets `PASS` (root ~1.1M execs, merge ~1.0M, federation ×3) |
+| `fuzz-registry` | `OK - 9 targets`                                                    |
+| `docs-check`    | `in sync with v0.8.1`                                               |
+| `flake check`   | `all checks passed!`                                                |
 
 A second sweep was run because the first spanned peer commits — a single green on a moving tree is not evidence of anything.
 
 ### a2. The coverage discrepancy: a toolchain artifact, and a documentation error underneath it
 
-| Toolchain | Federation blocks | Hit | Reported |
-| --- | --- | --- | --- |
-| go1.27.3 (dev shell, `.#coverage-gate`) | 148 | 147 | **99.3%** |
-| go1.27.0 (host shell) | 207 | 206 | **99.5%** |
+| Toolchain                               | Federation blocks | Hit | Reported  |
+| --------------------------------------- | ----------------- | --- | --------- |
+| go1.27.3 (dev shell, `.#coverage-gate`) | 148               | 147 | **99.3%** |
+| go1.27.0 (host shell)                   | 207               | 206 | **99.5%** |
 
 `grep -v '^mode:' <profile> | awk '$3==0'` returns exactly one row under both: `federation/federation.go:403.3,404.1` — `fetch`'s request-construction guard, unreachable for any remote `New` accepts. Nothing else differs.
 
-The real defect was the prose, in six places — and one was wrong about *which* statement is uncovered:
+The real defect was the prose, in six places — and one was wrong about _which_ statement is uncovered:
 
 - **`CONTRIBUTING.md` named the wrong statement** ("the defensive nil-`Checks` guard in `Healthz`"). It is `fetch`'s request-construction branch. Fixed with the toolchain explanation inline.
 - `AGENTS.md`, `CHANGELOG.md`, `tools/coverage-gate.sh`, `flake.nix`, `.github/workflows/ci.yml` each carried a bare `99.5%` that reads as a regression the moment someone runs the gate. Each now states the gate's number **and** why a host run prints something else.
@@ -73,7 +74,7 @@ could not import internal/runtime/sys (-: could not load export data:
 open /mnt/buildcache/go-build/04/04c8…-d: no such file or directory)
 ```
 
-`GOCACHE=$(mktemp -d)` builds the same tree green ⇒ structural fix, not a re-run. `flake.nix` gained one `privateGocache` helper, now used by `.#lint`, `.#vulncheck` and `.#security`, which also redirects **`GOLANGCI_LINT_CACHE`** (a *different* variable the host also points at `/mnt/buildcache`; it was emitting dozens of `Failed to persist facts to cache` warnings per run). After: `0 issues.`, **0** persist warnings, exit 0.
+`GOCACHE=$(mktemp -d)` builds the same tree green ⇒ structural fix, not a re-run. `flake.nix` gained one `privateGocache` helper, now used by `.#lint`, `.#vulncheck` and `.#security`, which also redirects **`GOLANGCI_LINT_CACHE`** (a _different_ variable the host also points at `/mnt/buildcache`; it was emitting dozens of `Failed to persist facts to cache` warnings per run). After: `0 issues.`, **0** persist warnings, exit 0.
 
 Deeper: a plain host-shell `go build ./...` now fails with `package internal/runtime/exithook is not in std` / `package syscall is not in std`, while `GOCACHE=$(mktemp -d) go build ./...` and `nix develop -c go build ./...` both exit 0. The host `GOROOT` is itself a module-cache toolchain whose std is intact — the half-written cache is the entire problem. Recorded as one consolidated AGENTS gotcha (merged with the earlier vacuous-red bullet to stay under the 220-line cap; file at **219**).
 
@@ -96,7 +97,7 @@ WithShutdownGracePeriod:   0 repos
 
 Both were `FULLY_FUNCTIONAL` with no adopter signal — the state `WithGETOnly` was in before removal. `FEATURES.md` now carries the adopter count on both rows.
 
-**Then I got it wrong, and the correction is the useful part.** My first pass labelled both "deprecation candidate" and opened a `TODO_LIST` row asking whether to deprecate or advertise. But `docs/adoption-matrix.md` §Ghost-feature review **already contains an explicit verdict**: *keep both* — `WithLiveThrottle` as a protective default whose value is that adopters need not know it exists, `WithShutdownGracePeriod` as the opt-in behind two-phase drain — with the instruction to "document in FEATURES as protective rather than retiring". A recorded decision and my marker contradicted each other for about seven hours. Fixed at 10:15: both `FEATURES.md` rows now say **zero adopters, deliberately kept** and link the recorded verdict; the `TODO_LIST` row asking for a decision is deleted, because the decision exists.
+**Then I got it wrong, and the correction is the useful part.** My first pass labelled both "deprecation candidate" and opened a `TODO_LIST` row asking whether to deprecate or advertise. But `docs/adoption-matrix.md` §Ghost-feature review **already contains an explicit verdict**: _keep both_ — `WithLiveThrottle` as a protective default whose value is that adopters need not know it exists, `WithShutdownGracePeriod` as the opt-in behind two-phase drain — with the instruction to "document in FEATURES as protective rather than retiring". A recorded decision and my marker contradicted each other for about seven hours. Fixed at 10:15: both `FEATURES.md` rows now say **zero adopters, deliberately kept** and link the recorded verdict; the `TODO_LIST` row asking for a decision is deleted, because the decision exists.
 
 ### a6. `.#skew` could hang forever — proved, fixed, and it was worse than that
 
@@ -117,12 +118,12 @@ OK    LarsArtmann/go-appkit (health/go.mod): v0.8.1
 
 ### a7. Small truthful repairs
 
-| Repair | Why it was wrong |
-| --- | --- |
-| `tools/doanalyzerv2/LICENSE` (copy of root MIT) | nested module shipped with no license file; per-module license checks had nothing to read |
-| `CONTRIBUTING.md` fuzzing bullet | claimed "all three targets"; the tree has **nine**, and `fuzz-registry` exists to keep that list honest |
-| Plan doc execution banner + 2 errata rows | plan said nothing about what had executed; its §2 table has **no M16 row** though §5 verifies M16; M22 lists "concurrent-writer preflight (T27)" as if it were a deliverable when it is a habit |
-| Plan banner reconciled with the peer report | my first draft claimed M01–M04 had not started; the peer had already pushed `go-appkit/health` v0.3.0 and re-pinned both bridges |
+| Repair                                          | Why it was wrong                                                                                                                                                                                |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tools/doanalyzerv2/LICENSE` (copy of root MIT) | nested module shipped with no license file; per-module license checks had nothing to read                                                                                                       |
+| `CONTRIBUTING.md` fuzzing bullet                | claimed "all three targets"; the tree has **nine**, and `fuzz-registry` exists to keep that list honest                                                                                         |
+| Plan doc execution banner + 2 errata rows       | plan said nothing about what had executed; its §2 table has **no M16 row** though §5 verifies M16; M22 lists "concurrent-writer preflight (T27)" as if it were a deliverable when it is a habit |
+| Plan banner reconciled with the peer report     | my first draft claimed M01–M04 had not started; the peer had already pushed `go-appkit/health` v0.3.0 and re-pinned both bridges                                                                |
 
 ---
 
@@ -134,7 +135,7 @@ I set out to apply the rule and I did — but the naive expectation was "many ar
 
 ### b2. M26 (golangci LSP) — evidence improved, fix still outside this repo
 
-The strongest explanation yet: the panel's false diagnostics come from a host whose `go` now fails with `package io is not in std`, and every `golangci-lint-langserver` invokes that `go`. Not proven to be *the* cause, so the disable/repair decision stays open and stays in `crush-config` (read-only from here).
+The strongest explanation yet: the panel's false diagnostics come from a host whose `go` now fails with `package io is not in std`, and every `golangci-lint-langserver` invokes that `go`. Not proven to be _the_ cause, so the disable/repair decision stays open and stays in `crush-config` (read-only from here).
 
 ### b3. Vacuous-gate discipline — applied to `.#skew`, only recommended elsewhere
 
@@ -154,15 +155,15 @@ I described the workflow's gating invocation from a grep. Within the hour the ba
 
 Everything in this list requires write access to a repository this session may not touch, or is a decision I cannot make alone. None of it was attempted:
 
-| Item | Why not started |
-| --- | --- |
-| Fleet adoption (`M06`–`M09`, `M19`), evidence table (`M04`), announcement batch (`M18`) | no push authority; peers later reported the adoption wave from their side (`docs/status/2026-10-28_04-30_…`) |
-| The two BuildFlow upstream filings (`M24`) | needs `verify-before-filing` at source level; harness is mine, the filing is not |
-| Breaking-window renames (`M27`) | owner go/no-go never given |
-| Claim-file protocol | needs an owner ruling on who owns the repo when two sessions write |
-| `go clean -cache` on the corrupted shared cache | shared with every session on this host |
-| Disk / USB-SSD health triage | needs `journalctl -b -1`, SMART, `e2fsck -n` — all outside a repo session |
-| pkg.go.dev render check, per-check severity design note, "new symbol in FEATURES" gate, fuzz-registry banner | queued in `TODO_LIST`, each small, none touched |
+| Item                                                                                                         | Why not started                                                                                              |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Fleet adoption (`M06`–`M09`, `M19`), evidence table (`M04`), announcement batch (`M18`)                      | no push authority; peers later reported the adoption wave from their side (`docs/status/2026-10-28_04-30_…`) |
+| The two BuildFlow upstream filings (`M24`)                                                                   | needs `verify-before-filing` at source level; harness is mine, the filing is not                             |
+| Breaking-window renames (`M27`)                                                                              | owner go/no-go never given                                                                                   |
+| Claim-file protocol                                                                                          | needs an owner ruling on who owns the repo when two sessions write                                           |
+| `go clean -cache` on the corrupted shared cache                                                              | shared with every session on this host                                                                       |
+| Disk / USB-SSD health triage                                                                                 | needs `journalctl -b -1`, SMART, `e2fsck -n` — all outside a repo session                                    |
+| pkg.go.dev render check, per-check severity design note, "new symbol in FEATURES" gate, fuzz-registry banner | queued in `TODO_LIST`, each small, none touched                                                              |
 
 ---
 
@@ -182,15 +183,15 @@ Everything in this list requires write access to a repository this session may n
 
 **d7. I edited a gate script a peer was rewriting, and my own run caught the collision.** `nix run .#skew` inside that window died on `line 125: syntax error near unexpected token` — a defect that existed in neither version, only in the interval between them. Both edits survived where useful, but I never checked the file's mtime before touching it.
 
-**d8. I asserted a caller's arguments from a stale grep.** In the 02:40 report I wrote "the weekly workflow already runs `--allow 14 --allow-unchecked 0`". I had greped `skew.yml` minutes earlier; by the time the report was read, the backlog had moved into `tools/fleet-skew.allow` and the number no longer lives at that call site. The claim was not wrong, it was **perishable** — and I presented it as durable. Correct habit: quote the file *and* the commit, or quote neither.
+**d8. I asserted a caller's arguments from a stale grep.** In the 02:40 report I wrote "the weekly workflow already runs `--allow 14 --allow-unchecked 0`". I had greped `skew.yml` minutes earlier; by the time the report was read, the backlog had moved into `tools/fleet-skew.allow` and the number no longer lives at that call site. The claim was not wrong, it was **perishable** — and I presented it as durable. Correct habit: quote the file _and_ the commit, or quote neither.
 
-**d9. I took a sub-agent's reading of 23 reports on trust.** The archive audit was delegated; I spot-checked three of its claims (missing LICENSE, missing `v0.7.0` announcement, `README` has no research link) and accepted the rest. A decision to move files into `archived/` rested on an unverified read. Only one file actually moved, and I re-read that one — but the *verdicts* on the other 25 are one-pass.
+**d9. I took a sub-agent's reading of 23 reports on trust.** The archive audit was delegated; I spot-checked three of its claims (missing LICENSE, missing `v0.7.0` announcement, `README` has no research link) and accepted the rest. A decision to move files into `archived/` rested on an unverified read. Only one file actually moved, and I re-read that one — but the _verdicts_ on the other 25 are one-pass.
 
 **d10. I never measured the cost I introduced.** The private `GOCACHE` makes every gate that uses it do a cold compile. I wrote "costs one cold compile" as if that were a measurement. I have no number for the added wall time in `.#lint` (or in CI), so a future maintainer cannot judge whether the determinism was worth it.
 
 **d11. I contradicted a recorded decision without reading it.** I wrote "deprecation candidate" into `FEATURES.md` and opened a decision row in `TODO_LIST.md` for `WithLiveThrottle`/`WithShutdownGracePeriod` — while `docs/adoption-matrix.md` §Ghost-feature review already said **keep both, document as protective**. Two documents, one repo, opposite verdicts, created by me in one evening. The countermeasure is trivial and I skipped it: before marking a feature's fate, grep the repo for an existing verdict. Corrected at 10:15 (both `FEATURES.md` rows + the TODO row removed).
 
-**d12. I inverted the direction of an audit finding.** My §e claimed `docs/adoption-matrix.md` was "now out of date" on the two options. It is the one document that was *right* — the stale documents were the two I had just edited. I assumed the doc I had not touched was the deficient one; that assumption is the exact opposite of the lesson I wrote three sections earlier ("read the profile, not the prose about the profile").
+**d12. I inverted the direction of an audit finding.** My §e claimed `docs/adoption-matrix.md` was "now out of date" on the two options. It is the one document that was _right_ — the stale documents were the two I had just edited. I assumed the doc I had not touched was the deficient one; that assumption is the exact opposite of the lesson I wrote three sections earlier ("read the profile, not the prose about the profile").
 
 ---
 
@@ -218,88 +219,88 @@ Tiered by impact. The eleven archive-harvest rows already live in `TODO_LIST.md`
 
 ### Tier 1 — unblocks everyone (do first)
 
-| # | Task | Why now |
-| --- | --- | --- |
-| 1 | Repair the corrupted host `GOCACHE` (`go clean -cache`, owner approval needed) | `go` on PATH cannot compile anything; every agent re-diagnoses it as broken code |
-| 2 | Land the concurrent-writer claim protocol | 4 sessions / 36 h, 3 rejected-edit episodes, 1 duplicated sweep, 1 phantom syntax error |
-| 3 | Push `master` and reconcile with origin | unpushed work is invisible work |
-| 4 | Decide `WithLiveThrottle` + `WithShutdownGracePeriod` (0/16 adopters) | two public options nobody uses; every session re-asks |
-| 5 | Measure the private-cache cost (cold vs warm `.#lint`, local and in CI) | the determinism I added is unpriced |
+| # | Task                                                                           | Why now                                                                                 |
+| - | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| 1 | Repair the corrupted host `GOCACHE` (`go clean -cache`, owner approval needed) | `go` on PATH cannot compile anything; every agent re-diagnoses it as broken code        |
+| 2 | Land the concurrent-writer claim protocol                                      | 4 sessions / 36 h, 3 rejected-edit episodes, 1 duplicated sweep, 1 phantom syntax error |
+| 3 | Push `master` and reconcile with origin                                        | unpushed work is invisible work                                                         |
+| 4 | Decide `WithLiveThrottle` + `WithShutdownGracePeriod` (0/16 adopters)          | two public options nobody uses; every session re-asks                                   |
+| 5 | Measure the private-cache cost (cold vs warm `.#lint`, local and in CI)        | the determinism I added is unpriced                                                     |
 
 ### Tier 2 — make the gates trustworthy
 
-| # | Task |
-| --- | --- |
-| 6 | Audit every gate for "unreadable reads as healthy" (`.#recorder-audit`, `.#docs-check`, `.#coverage-gate` against an empty profile) |
-| 7 | Prove each gate fails on a planted defect — one mutation per gate, recorded |
-| 8 | Add a step banner and a final `EXIT=` line to `tools/fuzz-registry-check.sh` (the one silent gate) |
-| 9 | Add a docs gate for "a newly exported symbol appears in `FEATURES.md`" |
-| 10 | Assert coverage-gate's *numeric* line in CI output, not just the pass/fail sentence |
-| 11 | Add `treefmt`'s coverage of `tools/*.sh` (shellcheck) or state that shell is unformatted by design |
-| 12 | Give `.#gates` a machine-readable summary (one line per gate + final exit) |
+| #  | Task                                                                                                                                |
+| -- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 6  | Audit every gate for "unreadable reads as healthy" (`.#recorder-audit`, `.#docs-check`, `.#coverage-gate` against an empty profile) |
+| 7  | Prove each gate fails on a planted defect — one mutation per gate, recorded                                                         |
+| 8  | Add a step banner and a final `EXIT=` line to `tools/fuzz-registry-check.sh` (the one silent gate)                                  |
+| 9  | Add a docs gate for "a newly exported symbol appears in `FEATURES.md`"                                                              |
+| 10 | Assert coverage-gate's _numeric_ line in CI output, not just the pass/fail sentence                                                 |
+| 11 | Add `treefmt`'s coverage of `tools/*.sh` (shellcheck) or state that shell is unformatted by design                                  |
+| 12 | Give `.#gates` a machine-readable summary (one line per gate + final exit)                                                          |
 
 ### Tier 3 — finish the paper trail
 
-| # | Task |
-| --- | --- |
-| 13 | Re-read the 25 kept reports' verdicts myself — they rest on one delegated pass (§d9) |
-| 14 | Add the LICENSE + gate-isolation changes to `CHANGELOG.md` `[Unreleased]` (missing) |
-| 15 | Archive the 2026-10-08/09 cluster once its harvested rows close |
-| 16 | Commission/retire the four owed announcements (one owner ruling closes six reports) |
-| 17 | Transfer the `syserr` proposal to go-error-family's TODO_LIST |
+| #  | Task                                                                                                                |
+| -- | ------------------------------------------------------------------------------------------------------------------- |
+| 13 | Re-read the 25 kept reports' verdicts myself — they rest on one delegated pass (§d9)                                |
+| 14 | Add the LICENSE + gate-isolation changes to `CHANGELOG.md` `[Unreleased]` (missing)                                 |
+| 15 | Archive the 2026-10-08/09 cluster once its harvested rows close                                                     |
+| 16 | Commission/retire the four owed announcements (one owner ruling closes six reports)                                 |
+| 17 | Transfer the `syserr` proposal to go-error-family's TODO_LIST                                                       |
 | 18 | Record the four cross-repo defects (CM-data red test, gopls phantom `undefined: reflect`, + the two now-fixed ones) |
-| 19 | Verify the pkg.go.dev render for `v0.8.1` |
-| 20 | Re-derive every "fuzz target count" / "dependency count" claim in docs (`CONTRIBUTING` was wrong for a week) |
+| 19 | Verify the pkg.go.dev render for `v0.8.1`                                                                           |
+| 20 | Re-derive every "fuzz target count" / "dependency count" claim in docs (`CONTRIBUTING` was wrong for a week)        |
 
 ### Tier 4 — product work
 
-| # | Task |
-| --- | --- |
-| 21 | Promote accumulated fuzz inputs into `testdata/fuzz/` in one deliberate commit |
-| 22 | Design note: per-check severity override (fleet ask from PMA/go-taskqueue) |
-| 23 | Decide `SanitizeResponse` → `CoerceValidUTF8` alias (A22 step 3) |
-| 24 | Decide `Check.Since` → `StatusSince` field rename (A22 step 4, JSON frozen) |
-| 25 | `WithCriticalServices(...string)` → typed service-name cut (A22 step 1–2) |
-| 26 | `Probe`/`Prober`/`Source`/`Remote` lexicon reconciliation (A22, deferred) |
+| #  | Task                                                                                       |
+| -- | ------------------------------------------------------------------------------------------ |
+| 21 | Promote accumulated fuzz inputs into `testdata/fuzz/` in one deliberate commit             |
+| 22 | Design note: per-check severity override (fleet ask from PMA/go-taskqueue)                 |
+| 23 | Decide `SanitizeResponse` → `CoerceValidUTF8` alias (A22 step 3)                           |
+| 24 | Decide `Check.Since` → `StatusSince` field rename (A22 step 4, JSON frozen)                |
+| 25 | `WithCriticalServices(...string)` → typed service-name cut (A22 step 1–2)                  |
+| 26 | `Probe`/`Prober`/`Source`/`Remote` lexicon reconciliation (A22, deferred)                  |
 | 27 | Re-check whether `WithShutdownGracePeriod` becomes redundant once the drain API is adopted |
 
 ### Tier 5 — fleet / upstream (needs authority)
 
-| # | Task |
-| --- | --- |
-| 28 | Tag `cqrs-htmx/health` (pin is already v0.8.1; only the tag is missing) |
-| 29 | Compile the 2 bridges + 5 consumers and publish the evidence table (`M04`) |
-| 30 | Adopt `CachedResponseFresh`/`EvaluateAndCache` in the four repos with hand-rolled caches |
-| 31 | go-taskqueue → `NewChecks`; dnsblockd → `CacheAge` + `Clone`; CM-data → `checks.Disk` |
-| 32 | Drive the 14 minor-stale consumers down; keep `tools/fleet-skew.allow` honest as it shrinks |
-| 33 | File the two BuildFlow upstream issues (failed-step output truncation; `dprint --fix` no-rewrite) |
-| 34 | Report the `dprint` wasm-network requirement upstream (treefmt cannot own markdown here) |
-| 35 | Register `.#skew` in CI required checks, or document why weekly-only is enough |
+| #  | Task                                                                                                  |
+| -- | ----------------------------------------------------------------------------------------------------- |
+| 28 | Tag `cqrs-htmx/health` (pin is already v0.8.1; only the tag is missing)                               |
+| 29 | Compile the 2 bridges + 5 consumers and publish the evidence table (`M04`)                            |
+| 30 | Adopt `CachedResponseFresh`/`EvaluateAndCache` in the four repos with hand-rolled caches              |
+| 31 | go-taskqueue → `NewChecks`; dnsblockd → `CacheAge` + `Clone`; CM-data → `checks.Disk`                 |
+| 32 | Drive the 14 minor-stale consumers down; keep `tools/fleet-skew.allow` honest as it shrinks           |
+| 33 | File the two BuildFlow upstream issues (failed-step output truncation; `dprint --fix` no-rewrite)     |
+| 34 | Report the `dprint` wasm-network requirement upstream (treefmt cannot own markdown here)              |
+| 35 | Register `.#skew` in CI required checks, or document why weekly-only is enough                        |
 | 36 | Verify the private `go-appkit/flightrecorderhealth` and `integration` modules (both still pin v0.5.1) |
 
 ### Tier 6 — environment hygiene
 
-| # | Task |
-| --- | --- |
-| 37 | Triage the disk: `journalctl -b -1`, SMART, `e2fsck -n /dev/sdb1` |
-| 38 | Add a preflight that refuses to run gates when `df /mnt/buildcache` is above 95% |
-| 39 | Make every gate app `mktemp`-cache by default (not per-app opt-in) |
+| #  | Task                                                                                                        |
+| -- | ----------------------------------------------------------------------------------------------------------- |
+| 37 | Triage the disk: `journalctl -b -1`, SMART, `e2fsck -n /dev/sdb1`                                           |
+| 38 | Add a preflight that refuses to run gates when `df /mnt/buildcache` is above 95%                            |
+| 39 | Make every gate app `mktemp`-cache by default (not per-app opt-in)                                          |
 | 40 | Document the exact host symptom set (`package io is not in std`, `could not load export data`) in one place |
-| 41 | Decide whether `GOTOOLCHAIN=auto` is still required for BuildFlow (unproven since 2026-10-11) |
-| 42 | Normalize `tools/doanalyzerv2`'s `go 1.27.1` directive once samber-linter releases past v0.4.0 |
-| 43 | Retire the `tools/bin` wrappers once the toolchain graph settles |
-| 44 | Check the 42 stdlib govulncheck warnings noted 2026-10-11 (never triaged) |
+| 41 | Decide whether `GOTOOLCHAIN=auto` is still required for BuildFlow (unproven since 2026-10-11)               |
+| 42 | Normalize `tools/doanalyzerv2`'s `go 1.27.1` directive once samber-linter releases past v0.4.0              |
+| 43 | Retire the `tools/bin` wrappers once the toolchain graph settles                                            |
+| 44 | Check the 42 stdlib govulncheck warnings noted 2026-10-11 (never triaged)                                   |
 
 ### Tier 7 — process
 
-| # | Task |
-| --- | --- |
+| #  | Task                                                                                     |
+| -- | ---------------------------------------------------------------------------------------- |
 | 45 | A one-page "how to verify this repo" runbook (gates, what each proves, what each cannot) |
-| 46 | A rule that any status claim quoting a config value includes the commit it was read at |
-| 47 | A "where does an adopter count live" checklist (FEATURES + adoption-matrix + TODO_LIST) |
+| 46 | A rule that any status claim quoting a config value includes the commit it was read at   |
+| 47 | A "where does an adopter count live" checklist (FEATURES + adoption-matrix + TODO_LIST)  |
 | 48 | Re-read the 25 kept reports' verdicts myself (they currently rest on one delegated pass) |
-| 49 | Decide the fate of the two superseded 2026-10-27 plans vs the 21:12 plan of record |
-| 50 | Add exit-code-appending to a shared helper so the `head`/`tail` trap cannot recur |
+| 49 | Decide the fate of the two superseded 2026-10-27 plans vs the 21:12 plan of record       |
+| 50 | Add exit-code-appending to a shared helper so the `head`/`tail` trap cannot recur        |
 
 ---
 

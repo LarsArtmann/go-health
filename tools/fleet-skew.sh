@@ -82,15 +82,19 @@ latest_minor=$(echo "$latest" | sed -E 's/^v([0-9]+)\.([0-9]+).*/\1.\2/')
 echo "latest tag: $latest (minor $latest_minor)"
 fails=0
 warns=0
+unreachable=0
+checked=0
 
 while read -r repo modpath; do
 	[ -z "$repo" ] && continue
 	case "$repo" in \#*) continue ;; esac
+	checked=$((checked + 1))
 
 	branch=$(timeout "$gh_timeout" gh api "repos/$repo" --jq .default_branch 2>/dev/null) || branch=""
 	if [ -z "$branch" ]; then
 		echo "WARN  $repo: repo unreachable (removed, renamed, rate-limited or timed out)"
 		warns=$((warns + 1))
+		unreachable=$((unreachable + 1))
 		continue
 	fi
 
@@ -121,6 +125,17 @@ done <"$manifest"
 
 echo "---"
 echo "minor-stale: $fails, warnings: $warns (allowed: $allow)"
+# Vacuous-run guard: "repo unreachable" means the API told us NOTHING, which is
+# not the same observation as "no go-health pin found" (that one is real data
+# about a repo that dropped the dependency). When every single repo is
+# unreachable — an expired token, a rate-limit window, no network — the table
+# above is empty and the gate would pass while proving nothing. Observed
+# 2026-10-28: a run reported all 16 unreachable and still exited 0.
+if [ "$checked" -gt 0 ] && [ "$unreachable" -eq "$checked" ]; then
+	echo "fleet-skew: all $checked repos were unreachable, so this run proves nothing" >&2
+	echo "fleet-skew: check 'gh auth status' / the rate limit, then re-run; do not read this as a clean fleet" >&2
+	exit 1
+fi
 if [ "$fails" -gt "$allow" ]; then
 	echo "fleet-skew: $fails consumer(s) are a minor behind $latest, above the allowed $allow" >&2
 	echo "fleet-skew: bump them (go get github.com/larsartmann/go-health@$latest) or explain the backlog in tools/fleet-repos.txt" >&2

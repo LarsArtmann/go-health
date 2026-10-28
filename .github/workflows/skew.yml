@@ -50,16 +50,14 @@ jobs:
         # Two invocations: the first prints every row so the job log is the
         # evidence, the second decides the exit code.
         #
-        # --allow is the RECORDED BACKLOG, not a tolerance: 3 consumers are a
-        # minor behind v0.8.1 on 2026-10-28 (from 14 that morning — the fleet
-        # wave closed 11 of them). Ratchet it DOWN as repos get bumped, never
-        # up. A gate pinned to zero against a known backlog is a red job
-        # nobody reads; a gate that hides the backlog is a green job nobody
-        # needs.
+        # The allowed backlog lives in tools/fleet-skew.allow, not here, so
+        # this job and `nix run .#pre-tag` (which shells out to .#skew) cannot
+        # disagree about it. 2 as of 2026-10-28 (from 14 that morning); ratchet
+        # it DOWN there as repos align, never up.
         #
-        # --allow-unchecked stays 0 in CI on purpose: an unreadable repo (token
-        # scope, rename, rate limit) must fail, because "could not read" and
-        # "up to date" are indistinguishable in a green summary.
+        # --allow-unchecked stays 0: an unreadable repo (token scope, rename,
+        # rate limit) must fail, because "could not read" and "up to date" are
+        # indistinguishable in a green summary.
         run: |
           nix run .#skew -- --allow 999 || true
-          nix run .#skew -- --allow 3 --allow-unchecked 0
+          nix run .#skew -- --allow-unchecked 0

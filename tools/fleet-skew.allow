@@ -12,9 +12,10 @@
 #   - Never treat this as a tolerance. A new stale repo is drift; once the
 #     backlog is zero, delete this file (the script then defaults to 0).
 #
-# MEASURED 2026-10-28 (`nix run .#skew -- --source api`): 3 of 16.
+# MEASURED 2026-10-28 (`nix run .#skew -- --source api`): 2 of 16.
 #   - CV and cv: two clones of the same repository, each ahead of origin with
-#     no shared tip -- an owner decision, not a bump.
-#   - nsfw-classifier: 29 local commits entangled with peer work.
-# Morning value the same day was 14; the fleet wave closed 11.
-3
+#     no shared tip -- an owner decision, not a bump. Both would be straight
+#     bumps once one lineage is canonical.
+# Morning value the same day was 14; the fleet wave closed 12 (nsfw-classifier
+# landed its own commit later the same night).
+2

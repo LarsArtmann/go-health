@@ -40,7 +40,7 @@ func newPrimedSource(
 	probe := health.NewWithHealthCheck(results,
 		health.WithRefreshInterval(0),
 		health.WithLiveThrottle(time.Hour),
-		health.WithInstanceID(instanceID),
+		health.WithInstanceID(health.NewInstanceID(instanceID)),
 		health.WithNowFunc(goldenClock),
 	)
 

@@ -64,7 +64,7 @@ func newFuzzSource(t *testing.T, spec fuzzSourceSpec) *health.Probe {
 
 	options := []health.Option{
 		health.WithRefreshInterval(spec.refreshInterval),
-		health.WithInstanceID(spec.instanceID),
+		health.WithInstanceID(health.NewInstanceID(spec.instanceID)),
 	}
 
 	if spec.liveThrottle > 0 {

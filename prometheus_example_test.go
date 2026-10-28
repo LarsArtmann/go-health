@@ -77,7 +77,7 @@ func ExampleWithEvaluationHook_metrics() {
 	var latest health.Response
 
 	probe := health.New(injector,
-		health.WithInstanceID(os.Getenv("POD_NAME")),
+		health.WithInstanceID(health.NewInstanceID(os.Getenv("POD_NAME"))),
 		health.WithCriticalServices("database"),
 		health.WithEvaluationHook(func(resp health.Response) { latest = resp }),
 	)

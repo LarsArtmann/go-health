@@ -471,7 +471,7 @@ func TestCachedResponse_NeverStartedSource(t *testing.T) {
 	// property under test is "the ghost adds nothing", not "the batch is
 	// instant".
 	if merged.ShuttingDown || merged.TotalLatencyMs != started.CachedResponse().TotalLatencyMs ||
-		merged.InstanceID != "" || merged.Version != "" {
+		!merged.InstanceID.IsZero() || merged.Version != "" {
 		t.Errorf("unexpected merged scalars: %+v", merged)
 	}
 

@@ -126,7 +126,7 @@ func assertMergedMatches(t *testing.T, merged health.Response, want foldExpectat
 
 	assertChecks(t, merged.Checks, want.checks)
 
-	if merged.Version != "" || merged.InstanceID != "" || merged.Uptime != "" ||
+	if merged.Version != "" || !merged.InstanceID.IsZero() || merged.Uptime != "" ||
 		!merged.Timestamp.IsZero() {
 		t.Errorf("per-process scalars survived the merge: %+v", merged)
 	}

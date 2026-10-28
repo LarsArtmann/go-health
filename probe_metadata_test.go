@@ -396,7 +396,7 @@ func TestReadinessHandler_DetailedCheckWirePayload(t *testing.T) {
 		}
 	},
 		health.WithCriticalServices("db"),
-		health.WithInstanceID("pod-1"),
+		health.WithInstanceID(health.NewInstanceID("pod-1")),
 		health.WithRefreshInterval(0),
 		health.WithNowFunc(func() time.Time { return epoch }),
 	)

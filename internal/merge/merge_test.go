@@ -14,7 +14,7 @@ func doc(status health.Status, checks map[string]health.Check) health.Response {
 	return health.Response{
 		Status:     status,
 		Version:    "1.2.3",
-		InstanceID: "pod-1",
+		InstanceID: health.NewInstanceID("pod-1"),
 		Uptime:     "4h",
 		Timestamp:  time.Date(2026, 10, 11, 12, 0, 0, 0, time.UTC),
 		Checks:     checks,
@@ -275,7 +275,7 @@ func TestResponses_Table(t *testing.T) {
 
 			assertChecks(t, merged.Checks, testCase.wantChecks)
 
-			if merged.Version != "" || merged.InstanceID != "" || merged.Uptime != "" ||
+			if merged.Version != "" || !merged.InstanceID.IsZero() || merged.Uptime != "" ||
 				!merged.Timestamp.IsZero() {
 				t.Errorf("per-process scalars survived the merge: %+v", merged)
 			}

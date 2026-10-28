@@ -101,7 +101,7 @@ func ExampleNew_scalarsDropped() {
 	},
 		health.WithRefreshInterval(0),
 		health.WithLiveThrottle(time.Hour),
-		health.WithInstanceID("pod-abc"),
+		health.WithInstanceID(health.NewInstanceID("pod-abc")),
 		health.WithVersion("1.2.3"),
 	)
 

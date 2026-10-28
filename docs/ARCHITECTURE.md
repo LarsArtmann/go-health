@@ -98,7 +98,8 @@ type Option func(*config)
 type OffError struct
 type ProbeShutdowner struct
 type CheckFunc func(ctx context.Context) error
-type HealthRecorder interface
+type InstanceID = id.ID[InstanceIDBrand, string] // branded strong type (go-branded-id); zero value = unset
+type InstanceIDBrand structtype HealthRecorder interface
 type DetailedHealthRecorder interface
 type HealthRecorderFunc func(ctx context.Context, injector do.Injector) map[string]error
 type DetailedHealthRecorderFunc func(ctx context.Context, injector do.Injector) map[string]CheckDetail
@@ -113,6 +114,7 @@ func (r DetailedHealthRecorder) RecordDetailedHealthCheckWithContext(ctx context
 func (e *OffError) Error() string
 func (s Status) Rank() int // pass-tier ordering; off never reaches a roll-up
 func (r Response) Clone() Response // deep-copies Checks; CachedResponse aliases them
+func (b InstanceIDBrand) Name() string // brand namer: debug-visible "InstanceID:<value>"
 
 // Construction. WithHealthRecorder is refused on the three paths that build
 // their own recorder (NewWith*Check, NewChecks) and at Start on the injector
@@ -155,6 +157,7 @@ func (p *Probe) Healthz() http.HandlerFunc
 func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes)
 func VersionHandler(version string) http.HandlerFunc
 func SanitizeResponse(resp Response) Response
+func NewInstanceID(raw string) InstanceID // wraps a raw replica identifier; empty string = unset
 
 // Options.
 func WithRefreshInterval(d time.Duration) Option
@@ -162,7 +165,7 @@ func WithTimeout(d time.Duration) Option
 func WithShutdownGracePeriod(d time.Duration) Option
 func WithLiveThrottle(d time.Duration) Option
 func WithAllowedMethods(methods ...string) Option
-func WithInstanceID(id string) Option
+func WithInstanceID(id InstanceID) Option
 func WithVersion(v string) Option
 func WithBootTime(t time.Time) Option
 func WithNowFunc(fn func() time.Time) Option

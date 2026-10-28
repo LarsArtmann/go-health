@@ -513,7 +513,8 @@ func TestCachedResponse_ScalarsDoNotSurviveMerge(t *testing.T) {
 
 	got := fed.CachedResponse()
 
-	if got.Version != "" || !got.InstanceID.IsZero() || got.Uptime != "" || !got.Timestamp.IsZero() {
+	if got.Version != "" || !got.InstanceID.IsZero() || got.Uptime != "" ||
+		!got.Timestamp.IsZero() {
 		t.Errorf(
 			"per-process scalars must not survive the merge: got version=%q instance=%q uptime=%q timestamp=%v",
 			got.Version,

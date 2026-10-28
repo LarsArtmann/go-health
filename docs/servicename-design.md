@@ -111,3 +111,27 @@ deliberately not attempted.
 | go-appkit           | `cd health && go test ./...`                       | module green            |
 | cqrs-htmx           | `cd health && go test ./...`                       | module green            |
 | go-health-dashboard | `nix run .#test` incl. browser/screenshot suite    | full green              |
+
+## Addendum (2026-10-28): InstanceID typed now, ServiceName still open
+
+The owner ran the strong-ID linter over the tree and directed adoption of
+`go-branded-id` for instance identity: `Response.InstanceID` and
+`WithInstanceID` now carry `health.InstanceID = id.ID[InstanceIDBrand,
+string]` with the `NewInstanceID(string)` constructor (v0.9.0-breaking,
+wire-verified: `omitzero` + the type's `IsZero` keep the unset field
+omitted, and a set identifier marshals as the same plain JSON string under
+both marshalers). This resolves the "possibly `type InstanceID string`
+alongside" half of the typed-identity question for instance identity —
+note the shipped shape is the library's branded `id.ID`, not a bare
+defined string type: the owner explicitly named `go-branded-id`, which
+also retires this document's single-dependency objection (it is now the
+second direct dependency).
+
+The `ServiceName` half of this design remains DESIGN ONLY, unchanged, and
+still staged for the v0.6 window. If/when it lands, revisit whether it
+should also be `id.ID[ServiceNameBrand, string]` for consistency with
+`InstanceID` (this document's Option A recommended the bare defined type;
+the owner's go-branded-id directive supersedes that recommendation as
+repo policy). The 2026-10-11 status report's STRONG_ID deferral is
+superseded by this addendum — do not re-litigate the instance-identity
+question; the ServiceName question is the only one still open.

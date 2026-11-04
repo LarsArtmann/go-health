@@ -9,11 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- `health.Routes` gained a `Version` field: `RegisterRoutes` mounts the build-version endpoint ([`VersionHandler`](docs/ARCHITECTURE.md)) when it is set, so the conventional `GET /version` endpoint stops being a hand-registered handler on every fleet consumer (issue #9). The root probe serves its own `WithVersion` stamp; `aggregate` and `federation` carry no build identity, so their mounts answer `{"version":""}` — leave the field empty and wire `VersionHandler` yourself if the hosting process has a stamp. `DefaultRoutes()` leaves the field empty: the version endpoint stays opt-in.
+- Nothing yet.
 
 ### Changed
 
-- **Behavior:** `DefaultRoutes()` now returns method-qualified patterns (`GET /healthz`, `GET /readyz`, `GET /startupz`). Kubelet probes are always GET, and the method prefix keeps `RegisterRoutes` from panicking at registration against common `ServeMux` shapes such as a `GET /{slug}` page route (a bare `/healthz` matches more methods but a less specific path, which Go reports as a registration-time panic) (issue #8). Mounting and serving GET probes is unchanged; code that reads `DefaultRoutes()` fields as request paths must switch to the literal paths (or strip the method prefix).
+- Nothing yet.
+
+### Removed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [v0.10.0] - 2026-11-04
+
+_Routes release: `DefaultRoutes()` mounts the build-version endpoint by
+default and all default patterns are method-qualified, so registration can
+no longer conflict with common page-router shapes — and a version endpoint
+that would answer an empty version can no longer exist at all. Breaking
+behavior change (0.x minor): probes registering `DefaultRoutes()` must carry
+a `WithVersion` stamp (registration panics otherwise), and consumers that
+hand-wire `/version` must drop that line to avoid double registration._
+
+### Added
+
+- `health.Routes` gained a `Version` field: `Probe.RegisterRoutes` mounts the build-version endpoint (`VersionHandler`, serving the probe's `WithVersion` stamp) at the given pattern, so the conventional `GET /version` endpoint stops being a hand-registered handler on every fleet consumer (issue #9). `DefaultRoutes()` mounts it at `GET /version` by default; an explicit empty field keeps `/version` unmounted for consumers that wire their own handler. `aggregate` and `federation` carry no build identity and ignore the field entirely — an endpoint that cannot answer truthfully must not exist; wire `VersionHandler` yourself if you stamp those processes.
+
+### Changed
+
+- **Breaking:** `DefaultRoutes()` now returns method-qualified patterns (`GET /healthz`, `GET /readyz`, `GET /startupz`, `GET /version`). Kubelet probes are always GET, and the method prefix keeps `RegisterRoutes` from panicking at registration against common `ServeMux` shapes such as a `GET /{slug}` page route (a bare `/healthz` matches more methods but a less specific path, which Go reports as a registration-time panic) (issue #8). Mounting and serving GET probes is unchanged; code that reads `DefaultRoutes()` fields as request paths must switch to the literal paths (or strip the method prefix).
+- **Breaking:** `Probe.RegisterRoutes` panics when `Routes.Version` is set on a probe without a `WithVersion` stamp (owner directive, 2026-11-04: empty version hard-fails instead of warning). The panic fires at registration — boot time, before the first request — and names both remedies: stamp the build (ldflags/VCS recipe in the README) or leave `Routes.Version` empty. Previously an unstamped mount silently answered `{"version":""}`.
 - Internal file layout: the twelve files that had outgrown the 350-line file-size budget were split along their existing concern seams (probe.go → probe.go/options.go/lifecycle.go/evaluation.go/cache.go/errors.go; federation.go → federation.go/fetch.go/handlers.go; aggregate.go → aggregate.go/handlers.go; the oversized test files split per topic, e.g. probe_test.go → themed probe_*/handlers_* files). Zero exported-API or wire-format changes; every moved symbol kept its doc comment verbatim, and the docs/ARCHITECTURE.md map rows were updated in the same change.
 
 ### Removed
@@ -585,7 +612,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.10.0...HEAD
+[v0.10.0]: https://github.com/larsartmann/go-health/compare/v0.9.0...v0.10.0
 [v0.9.0]: https://github.com/larsartmann/go-health/compare/v0.8.1...v0.9.0
 [v0.8.1]: https://github.com/larsartmann/go-health/compare/v0.8.0...v0.8.1
 [v0.8.0]: https://github.com/larsartmann/go-health/compare/v0.7.0...v0.8.0

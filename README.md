@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.9.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Two runtime dependencies: `samber/do` v2 (service health checks) and `go-branded-id` (the strong `InstanceID` type), plus the naming helper `samber/go-type-to-string` that do itself already requires.
+> **Stability:** v0.10.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Two runtime dependencies: `samber/do` v2 (service health checks) and `go-branded-id` (the strong `InstanceID` type), plus the naming helper `samber/go-type-to-string` that do itself already requires.
 
 ---
 
@@ -206,15 +206,15 @@ setups have one-function upgrade paths.
 
 Match the consumer to the probe. Each answers a different question, so pointing the wrong one at the wrong consumer is the most common misconfiguration in this library (a load balancer on `/healthz` never drains a broken instance; liveness on `/readyz` restarts pods over dependency blips).
 
-| Consumer                            | Point it at            | Behavior                                                                                                                               |
-| ----------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| kubelet `livenessProbe`             | `/healthz`             | Always 200 while the process runs; zero dependency checks                                                                              |
-| kubelet `readinessProbe`            | `/readyz`              | 503 on critical failure; 200 (`warn`) for non-critical failures                                                                        |
-| kubelet `startupProbe`              | `/startupz`            | 503 until every critical service passed once, then latches to 200 forever                                                              |
-| external load balancer / single URL | `Probe.Healthz()`      | 503 while booting, failing, or draining; 200 otherwise                                                                                 |
-| dashboard or a human debugging      | `/readyz`              | Full per-check body, including `since` and `duration_ns`                                                                               |
+| Consumer                            | Point it at            | Behavior                                                                                                                                                          |
+| ----------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| kubelet `livenessProbe`             | `/healthz`             | Always 200 while the process runs; zero dependency checks                                                                                                         |
+| kubelet `readinessProbe`            | `/readyz`              | 503 on critical failure; 200 (`warn`) for non-critical failures                                                                                                   |
+| kubelet `startupProbe`              | `/startupz`            | 503 until every critical service passed once, then latches to 200 forever                                                                                         |
+| external load balancer / single URL | `Probe.Healthz()`      | 503 while booting, failing, or draining; 200 otherwise                                                                                                            |
+| dashboard or a human debugging      | `/readyz`              | Full per-check body, including `since` and `duration_ns`                                                                                                          |
 | scripts / deploy tooling            | `/version`             | Build stamp as `{"version":"..."}` — mounted by `DefaultRoutes()` (stamp via `WithVersion`, registration panics otherwise) or wired manually; GET-only, never 503 |
-| in-process code, middleware, tests  | `Status()` / `Ready()` | Cached roll-up read; never triggers a dependency check                                                                                 |
+| in-process code, middleware, tests  | `Status()` / `Ready()` | Cached roll-up read; never triggers a dependency check                                                                                                            |
 
 ### Which constructor should I use?
 

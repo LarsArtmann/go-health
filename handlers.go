@@ -157,9 +157,11 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 // Routes.Version empty to stay unmounted.
 func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes) {
 	if routes.Version != "" && p.version == "" {
-		panic("health: Routes.Version mounts the build-version endpoint, but the probe has no build stamp — " +
-			"call WithVersion(...) at construction (ldflags/VCS recipe in the README), " +
-			"or leave Routes.Version empty to keep /version unmounted")
+		panic(
+			"health: Routes.Version mounts the build-version endpoint, but the probe has no build stamp — " +
+				"call WithVersion(...) at construction (ldflags/VCS recipe in the README), " +
+				"or leave Routes.Version empty to keep /version unmounted",
+		)
 	}
 
 	registerRoute(mux, routes.Liveness, p.LivenessHandler())

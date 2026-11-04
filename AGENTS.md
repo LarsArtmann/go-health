@@ -2,7 +2,7 @@
 
 Standalone Kubernetes health-probe SDK for samber/do v2. Three-probe pattern (liveness, readiness, startup) with critical/non-critical classification, background caching, and shutdown awareness.
 
-**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.9.0 released 2026-11-04 (alpha; instance identity is the branded `health.InstanceID` (go-branded-id v0.7.0), `Check.StatusSince` (wire `since`) replaced `Check.Since`, `CoerceValidUTF8` replaced the deprecated `SanitizeResponse`, the httputil integration is machine-proved against the published release in CI, the fuzz corpus is promoted into the repo, and the FEATURES/api/file-map drift gates hold the docs in lockstep).
+**Module**: `github.com/larsartmann/go-health` · **Packages**: `health`, `health/aggregate`, `health/federation`, `health/checks` · **Go**: 1.27 · **Status**: v0.10.0 released 2026-11-04 (alpha; instance identity is the branded `health.InstanceID` (go-branded-id v0.7.0), `Check.StatusSince` (wire `since`) replaced `Check.Since`, `CoerceValidUTF8` replaced the deprecated `SanitizeResponse`, `DefaultRoutes()` is method-qualified and mounts `GET /version` with registration panicking on an unstamped probe (owner directive: empty version hard-fails; aggregate/federation ignore `Routes.Version`), the httputil integration is machine-proved against the published release in CI, the fuzz corpus is promoted into the repo, and the FEATURES/api/file-map drift gates hold the docs in lockstep).
 
 ---
 

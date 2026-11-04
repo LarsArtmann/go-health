@@ -50,8 +50,8 @@ func TestWithEvaluationHook_PanicRecovered_DegradesToWarn(t *testing.T) {
 		t.Errorf("evaluation-hook error should carry sentinel and panic value, got %q", row.Error)
 	}
 
-	if row.Since != (time.Time{}) {
-		t.Errorf("synthetic row must never carry Since, got %v", row.Since)
+	if row.StatusSince != (time.Time{}) {
+		t.Errorf("synthetic row must never carry StatusSince, got %v", row.StatusSince)
 	}
 
 	if row.DurationNanos != 0 {

@@ -258,7 +258,7 @@ func BenchmarkGuardOverhead_AllowHeader(b *testing.B) {
 
 // BenchmarkEvaluate_Scaling measures the full in-process evaluation: the
 // health-check batch (a fresh map per call), Check construction, the
-// transition tracker's per-batch Since stamp, and classification. It
+// transition tracker's per-batch StatusSince stamp, and classification. It
 // complements BenchmarkEvaluate, which measures two injector-backed services;
 // this one scales check count with an injector-free probe to expose the
 // tracker's per-batch map pass.
@@ -293,11 +293,11 @@ func BenchmarkEvaluate_Scaling(b *testing.B) {
 	}
 }
 
-// BenchmarkEvaluate_TrackerDelta isolates the Since transition tracker's
+// BenchmarkEvaluate_TrackerDelta isolates the StatusSince transition tracker's
 // marginal cost on a full evaluation: the same eight-service steady-state
 // evaluation run A/B — tracker stamping disabled vs enabled (via
 // SetTrackerDisabledForTest, a test-build-only seam; production always
-// stamps). The delta answers "what did per-check Since add?" for the issue #2
+// stamps). The delta answers "what did per-check StatusSince add?" for the issue #2
 // metadata fields; recorded baselines live in FEATURES.md "Performance".
 func BenchmarkEvaluate_TrackerDelta(b *testing.B) {
 	results := make(map[string]error, 8)

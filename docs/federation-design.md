@@ -72,7 +72,7 @@ upgrade. The pull cost is bounded by the hub's read cadence.
 
 | Input                                                               | Contribution                                                                                                                                     |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Remote answers with a valid response                                | Its overall `Status` feeds worst-of; its checks land as `name/check`; `Since`/`DurationNanos` are preserved verbatim; `ShuttingDown` is OR-ed in |
+| Remote answers with a valid response                                | Its overall `Status` feeds worst-of; its checks land as `name/check`; `StatusSince`/`DurationNanos` are preserved verbatim; `ShuttingDown` is OR-ed in |
 | Remote fails (network, timeout, non-200, undecodable, empty status) | One synthetic check `name/reachable` with status `fail` and the cause as `Error`; contributes overall `fail`; its cached/last state is NOT used  |
 | Any remote `ShuttingDown`                                           | Overall status forced to `fail`, mirroring `aggregate` (and `Probe`) semantics                                                                   |
 
@@ -87,9 +87,9 @@ observation). Keying the mechanism on the fetch outcome — not on
 aggregate internals — also means it works identically for single-remote
 configurations.
 
-### `Since` survives federation
+### `StatusSince` survives federation
 
-`Check.Since` is probe-observed on the remote and carried through the
+`Check.StatusSince` is probe-observed on the remote and carried through the
 JSON document unchanged. A federated check's "since 6h" is as truthful
 as a local one's, which keeps the dashboard's since-age and evidence
 surfaces meaningful across federation. This is the quiet payoff of
@@ -265,7 +265,7 @@ body drain on non-200 responses for connection reuse.
 - **Federation as synthetic checks on a regular `Probe`**
   (`NewWithHealthCheck` mapping each remote to `map[string]error`).
   Simplest possible API, but it discards per-check detail: the hub would
-  show "nas: fail" instead of which of nas's checks failed, and `Since`
+  show "nas: fail" instead of which of nas's checks failed, and `StatusSince`
   would be hub-observed (reset on hub restart) instead of probe-observed.
   The full-document merge costs little more and loses nothing.
 - **SSE/streaming from remotes.** A second protocol surface (the

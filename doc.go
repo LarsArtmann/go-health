@@ -107,7 +107,7 @@
 //
 // # Per-Check Metadata
 //
-// Every check reports Since — when the probe first observed its current
+// Every check reports StatusSince — when the probe first observed its current
 // status ("failing since 14:02"), carried forward while the status holds and
 // restarted on every change. Checks whose executor reports timing (via
 // [NewWithDetailedCheck] or a [DetailedHealthRecorder]) also carry

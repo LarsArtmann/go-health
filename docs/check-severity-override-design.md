@@ -69,7 +69,7 @@ func WithInformational(names ...string) Option
   the fail-closed panic rule (issue #7 finding 1) is a statement about
   process health, not dependency criticality, and must not be overridable by
   configuration.
-- **Since/Duration:** unaffected; informational rows are normal rows in
+- **StatusSince/Duration:** unaffected; informational rows are normal rows in
   every other respect.
 
 ### Why not the general `WithCheckSeverity(name, tier)`?

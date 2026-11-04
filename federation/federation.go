@@ -24,7 +24,7 @@
 // status, undecodable body, or a document without a status) contributes
 // one synthetic "name/reachable" fail check carrying the cause, so a
 // dark remote is visible on the merged surface instead of silently
-// frozen at its last state. Check.Since is probe-observed on the remote
+// frozen at its last state. Check.StatusSince is probe-observed on the remote
 // and survives the merge verbatim, keeping "since when" truthful end to
 // end. See docs/federation-design.md for the full design.
 //

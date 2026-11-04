@@ -144,7 +144,7 @@ Mechanics:
    `"evaluation-hook"` row (`StatusWarn`, error wrapping the sentinel plus
    the panic value) to the pristine response and raises the roll-up via
    `Rank`: `fail` stays `fail`, `pass`/`warn` become `warn`.
-3. The synthetic row never carries `Since` or `DurationNanos` (synthetic rows
+3. The synthetic row never carries `StatusSince` or `DurationNanos` (synthetic rows
    never do — same as liveness's empty set and Healthz's startup entry), is
    never in the critical set, and never affects the startup latch.
 4. The sentinel is matchable with `errors.Is` at internal sites and tests;
@@ -159,7 +159,7 @@ Mechanics:
   aggregate/federation consumers see the degraded row and propagate worst-of
   (warn) naturally — no merge changes needed.
 - Self-healing: a fixed hook drops the row on the next evaluation; the
-  transition tracker is not involved (no `Since` to carry).
+  transition tracker is not involved (no `StatusSince` to carry).
 - Wire format: additive row on the panic path only; frozen fields unchanged.
 - Scope amendment to the rule above: "a recovered panic never maps to `warn`"
   binds the data-collection surface (`runHealthChecks`). The observation

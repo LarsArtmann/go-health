@@ -1,4 +1,4 @@
-# Per-Check Since/Duration Metadata — design note
+# Per-Check StatusSince/Duration Metadata — design note
 
 > Decided: 2026-09-15 · Status: DECIDED · Closes: [issue #2](https://github.com/LarsArtmann/go-health/issues/2)
 
@@ -25,9 +25,9 @@ type Check struct {
     Status Status `json:"status"`
     Error  string `json:"error,omitempty"`
 
-    // Since is when the probe first observed this check in its current
+    // StatusSince is when the probe first observed this check in its current
     // status. Zero (and omitted from JSON) when unknown.
-    Since time.Time `json:"since,omitzero"`
+    StatusSince time.Time `json:"since,omitzero"`
     // DurationNanos is how long the most recent execution of this check
     // took, in nanoseconds. Zero (and omitted from JSON) when the
     // executor did not report it.
@@ -38,18 +38,18 @@ type Check struct {
 (Exact Go declarations in [types.go](../types.go); the sketch above is the
 contract.)
 
-### Field 1: `Since` — probe-observed transition time
+### Field 1: `StatusSince` — probe-observed transition time
 
 **Semantics:** the time of the first batch that reported the check in its
 _current_ status, as observed by this probe. While the status is unchanged,
-every response carries the same `Since`; the moment a batch reports a
-different status, `Since` restarts at that batch's clock.
+every response carries the same `StatusSince`; the moment a batch reports a
+different status, `StatusSince` restarts at that batch's clock.
 
 **Mechanics:** a `transitionTracker` (mutex-guarded map of
 `name → {status, firstSeen}`) is stamped inside `buildChecks`, so every batch
 the probe builds — background refresh, throttled/live readiness, startup
 evaluations — observes and updates it. Checks absent from a batch are pruned;
-if one returns, its `Since` restarts (the gap was unobserved). `Since` uses
+if one returns, its `StatusSince` restarts (the gap was unobserved). `StatusSince` uses
 the `WithNowFunc` clock seam, so tests get deterministic transitions.
 
 **What it honestly is not:**
@@ -58,7 +58,7 @@ the `WithNowFunc` clock seam, so tests get deterministic transitions.
   timestamp, and no service knows its own roll-up status (critical vs
   non-critical grading happens in the probe). One source of truth: the probe.
 - _Not restart-surviving._ The tracker is in-process memory. After a process
-  restart, `Since` is the restart-time observation. This is still strictly
+  restart, `StatusSince` is the restart-time observation. This is still strictly
   better than the dashboard's sampling clock, which also resets — but on the
   _dashboard's_ restarts, not the checked service's.
 - _Not serialized across concurrent batches._ Overlapping evaluations (refresh
@@ -96,7 +96,7 @@ type CheckDetail struct {
 
 The probe still owns classification: `CheckDetail.Err` is graded by the
 critical set exactly like plain results; a detailed source cannot set its own
-`Status`, `Since`, or `Error` text.
+`Status`, `StatusSince`, or `Error` text.
 
 On the raw-injector path `Duration` stays zero (unknown). If samber/do ever
 exposes richer batch results, that path can populate it without a wire change.
@@ -142,7 +142,7 @@ to "unknown". Consumers format for display; the wire stays lossless.
 
 ## Rejected alternatives
 
-- **Service-reported `Since`** — no service knows its graded status, and the
+- **Service-reported `StatusSince`** — no service knows its graded status, and the
   probe already observes every batch; two clocks for one fact would drift.
 - **Batch duration copied onto every check** — a lie; the batch includes fan-out
   wait, and all checks would show the same number.
@@ -151,7 +151,7 @@ to "unknown". Consumers format for display; the wire stays lossless.
   `HealthCheckNamedWithContext`, forking do's pool/timeout/scope semantics.
   Rejected for the same class of reason as the panic-recovery split: go-health
   must not silently re-implement samber/do's execution model.
-- **`Since`/`DurationNanos` pointers** — `omitzero` achieves strict absence
+- **`StatusSince`/`DurationNanos` pointers** — `omitzero` achieves strict absence
   without nil-handling spreading to every consumer.
 - **`time.Duration` on the wire** — jsonv2 has no marshalable default (or
   tag-format) representation for it; every consumer re-marshaling a payload

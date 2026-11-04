@@ -31,7 +31,7 @@ var sourceKeys = []string{"pass", "warn", "fail", "shutdown", "ghost"}
 // newStateProbe builds a primed probe in a chosen cached state. It primes via
 // a readiness request under a one-hour live throttle (the same pattern as
 // newPrimedSource) so CachedResponse reads a populated atomic cache. The
-// golden clock keeps Since deterministic across fixtures.
+// golden clock keeps StatusSince deterministic across fixtures.
 func newStateProbe(
 	t *testing.T,
 	results map[string]error,

@@ -56,5 +56,5 @@ resp := probe.CachedResponse().Clone()
 resp.Checks["evaluation-stale"] = health.Check{Status: health.StatusFail, …}
 ```
 
-Synthetic rows keep caller-observed `Since` and zero `DurationNanos` — see
+Synthetic rows keep caller-observed `StatusSince` and zero `DurationNanos` — see
 `docs/synthetic-check-overlay.md` for the four composition rules.

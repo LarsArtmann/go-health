@@ -15,9 +15,9 @@ Single-package library (`health`) with these source files:
 
 ```
 doc.go           — Package doc comment (quick start, three-probe rationale, caching, shutdown)
-types.go         — Status enum (check level: pass/fail/warn/off; the roll-up stays pass/fail/warn), Off/OffError configured-off sentinel, Check (incl. Since, DurationNanos), CheckDetail, InstanceID strong type (id.ID[InstanceIDBrand, string] via go-branded-id) + InstanceIDBrand + NewInstanceID, Response data model (incl. instance_id, timestamp omitzero) + Response.Clone (deep-copies Checks)
-probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate() (incl. ErrRecorderNotApplicable), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate (no publish), EvaluateAndCache, CachedResponse (lock-free read-only view + shutdown overlay), CacheAge/CachedResponseFresh, accessors, runHealthChecks (with panic recovery), buildChecks (Since stamping + duration carry), errorsOf/detailOf adapters
-tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.Since inside buildChecks (probe-observed, prunes absent checks)
+types.go         — Status enum (check level: pass/fail/warn/off; the roll-up stays pass/fail/warn), Off/OffError configured-off sentinel, Check (incl. StatusSince, DurationNanos), CheckDetail, InstanceID strong type (id.ID[InstanceIDBrand, string] via go-branded-id) + InstanceIDBrand + NewInstanceID, Response data model (incl. instance_id, timestamp omitzero) + Response.Clone (deep-copies Checks)
+probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate() (incl. ErrRecorderNotApplicable), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate (no publish), EvaluateAndCache, CachedResponse (lock-free read-only view + shutdown overlay), CacheAge/CachedResponseFresh, accessors, runHealthChecks (with panic recovery), buildChecks (StatusSince stamping + duration carry), errorsOf/detailOf adapters
+tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.StatusSince inside buildChecks (probe-observed, prunes absent checks)
 classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
 handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes (empty patterns skipped), Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + CoerceValidUTF8 (UTF-8 coercion; SanitizeResponse deprecated alias), marshalResponse (test seam)
 accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, DetailedHealthCheckFunc, NewWithDetailedCheck, NewWithRecorder (injector-free recorder constructor, new_with_recorder.go), Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz + applyStartupFailureOverlay (shared overlay shape with aggregate/federation)
@@ -38,7 +38,7 @@ N remote go-health instances over HTTP into one `health.Response` — same sourc
 with one parallel fetch per remote mapped onto the shared `internal/merge` primitive (fetch error → `FetchErr`), per-remote
 startup latches (advanced federation-side on successful fetch, never inside the merge), and one synthetic
 `name/reachable` FAIL check per unreachable/undecodable remote (never a silent freeze, never a status override). Wire input
-is untrusted (invalid documents refused whole); `Check.Since`/`DurationNanos` survive verbatim, scalars do not.
+is untrusted (invalid documents refused whole); `Check.StatusSince`/`DurationNanos` survive verbatim, scalars do not.
 `WithClient(*http.Client)` is the transport escape hatch (pooling, TLS, proxy); `MarkShuttingDown()` adds a one-way hub-side
 drain (readiness 503 with `shutting_down: true`, fetches continue so bodies stay fresh; liveness/startup unaffected).
 `SourceStatuses()` mirrors aggregate's per-remote roll-up (unreachable/draining remotes report fail; no latch movement).

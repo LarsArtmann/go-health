@@ -976,7 +976,7 @@ func (p *Probe) evaluateStartup(results map[string]error) bool {
 // functional" from "take this pod out of rotation"; an [*OffError] marks the
 // check StatusOff with its Detail text in Error ("deliberately not
 // configured" — visible, never a verdict). Executor-reported
-// durations are carried through, and every check is stamped with Since —
+// durations are carried through, and every check is stamped with StatusSince —
 // when the probe first observed its current status — via the transition
 // tracker.
 func (p *Probe) buildChecks(details map[string]CheckDetail) map[string]Check {

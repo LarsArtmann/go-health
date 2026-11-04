@@ -8,9 +8,9 @@ dnsblockd (`internal/server/health.go`, `degradeStaleHealth`) constructs
 `health.Check` values **by hand** and injects them into a cloned
 `CachedResponse` before serving: when the cached response is older than 15s
 (a wedged background evaluation), the endpoint flips to fail with a
-synthetic `database` check carrying `Since: now` and `DurationNanos: 0`.
+synthetic `database` check carrying `StatusSince: now` and `DurationNanos: 0`.
 
-This bypasses the probe-observed `transitionTracker` (the synthetic `Since`
+This bypasses the probe-observed `transitionTracker` (the synthetic `StatusSince`
 is caller-observed, not probe-observed) and writes into a map the probe
 considers immutable. It is nevertheless **correct composition**, because:
 
@@ -27,7 +27,7 @@ considers immutable. It is nevertheless **correct composition**, because:
 
 1. **Clone before write** — `CachedResponse()` returns a shallow copy; its
    `Checks` map aliases probe state.
-2. **Own your `Since`** — a synthetic check's `Since` is the moment you
+2. **Own your `StatusSince`** — a synthetic check's `StatusSince` is the moment you
    observed the condition, not the probe's transition time; do not fake
    tracker-consistent values.
 3. **Fail loudly, name plainly** — surface the synthetic verdict under a

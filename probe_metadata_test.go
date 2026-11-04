@@ -16,10 +16,10 @@ import (
 	"github.com/samber/do/v2"
 )
 
-// --- Check.Since (probe-observed status transitions) ---.
+// --- Check.StatusSince (probe-observed status transitions) ---.
 
 // TestEvaluate_SinceStampedOnFirstObservation pins the first-observation
-// semantics: a check's Since is the clock of the first batch that reported
+// semantics: a check's StatusSince is the clock of the first batch that reported
 // its current status, not a per-batch timestamp.
 func TestEvaluate_SinceStampedOnFirstObservation(t *testing.T) {
 	t.Parallel()
@@ -36,13 +36,13 @@ func TestEvaluate_SinceStampedOnFirstObservation(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if got := resp.Checks["db"].Since; !got.Equal(epoch) {
-		t.Errorf("first observation Since: want %v, got %v", epoch, got)
+	if got := resp.Checks["db"].StatusSince; !got.Equal(epoch) {
+		t.Errorf("first observation StatusSince: want %v, got %v", epoch, got)
 	}
 }
 
 // TestEvaluate_SinceCarriedWhileStatusUnchanged verifies the carry-forward:
-// once a status holds across batches, Since keeps pointing at the batch that
+// once a status holds across batches, StatusSince keeps pointing at the batch that
 // started it, no matter how far the clock advances.
 func TestEvaluate_SinceCarriedWhileStatusUnchanged(t *testing.T) {
 	t.Parallel()
@@ -66,13 +66,13 @@ func TestEvaluate_SinceCarriedWhileStatusUnchanged(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if got := resp.Checks["db"].Since; !got.Equal(epoch) {
-		t.Errorf("carried Since: want %v, got %v", epoch, got)
+	if got := resp.Checks["db"].StatusSince; !got.Equal(epoch) {
+		t.Errorf("carried StatusSince: want %v, got %v", epoch, got)
 	}
 }
 
 // TestEvaluate_SinceRestartsOnStatusChange covers both transition
-// directions: pass→fail moves Since to the failing batch's clock, and the
+// directions: pass→fail moves StatusSince to the failing batch's clock, and the
 // later fail→pass recovery moves it again.
 func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 	t.Parallel()
@@ -94,8 +94,8 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 		health.WithRefreshInterval(0),
 	)
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(epoch) {
-		t.Fatalf("initial Since: want %v, got %v", epoch, got)
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(epoch) {
+		t.Fatalf("initial StatusSince: want %v, got %v", epoch, got)
 	}
 
 	failingAt := epoch.Add(2 * time.Hour)
@@ -104,14 +104,14 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 
 	healthy = false
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(failingAt) {
-		t.Fatalf("Since after pass→fail: want %v, got %v", failingAt, got)
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(failingAt) {
+		t.Fatalf("StatusSince after pass→fail: want %v, got %v", failingAt, got)
 	}
 
 	clock.Advance(30 * time.Minute)
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(failingAt) {
-		t.Fatalf("Since while still failing: want %v, got %v", failingAt, got)
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(failingAt) {
+		t.Fatalf("StatusSince while still failing: want %v, got %v", failingAt, got)
 	}
 
 	clock.Advance(5 * time.Minute)
@@ -120,13 +120,13 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 
 	recoveredAt := failingAt.Add(35 * time.Minute)
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(recoveredAt) {
-		t.Fatalf("Since after fail→pass: want %v, got %v", recoveredAt, got)
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(recoveredAt) {
+		t.Fatalf("StatusSince after fail→pass: want %v, got %v", recoveredAt, got)
 	}
 }
 
 // TestEvaluate_SinceRestartsWhenCheckReappears pins the pruning rule: a check
-// absent from a batch is forgotten, so when it returns its Since restarts —
+// absent from a batch is forgotten, so when it returns its StatusSince restarts —
 // the gap was unobserved, and carrying the old stamp would lie.
 func TestEvaluate_SinceRestartsWhenCheckReappears(t *testing.T) {
 	t.Parallel()
@@ -162,14 +162,14 @@ func TestEvaluate_SinceRestartsWhenCheckReappears(t *testing.T) {
 	resp := probe.Evaluate(context.Background())
 
 	want := epoch.Add(2 * time.Hour)
-	if got := resp.Checks["cache"].Since; !got.Equal(want) {
-		t.Errorf("reappearing check Since: want %v (restart, gap unobserved), got %v", want, got)
+	if got := resp.Checks["cache"].StatusSince; !got.Equal(want) {
+		t.Errorf("reappearing check StatusSince: want %v (restart, gap unobserved), got %v", want, got)
 	}
 }
 
-// TestEvaluate_SinceTrackedAcrossErrorTextChanges pins that Since follows the
+// TestEvaluate_SinceTrackedAcrossErrorTextChanges pins that StatusSince follows the
 // STATUS, not the error message: a changing failure reason with the same
-// graded status keeps the original Since.
+// graded status keeps the original StatusSince.
 func TestEvaluate_SinceTrackedAcrossErrorTextChanges(t *testing.T) {
 	t.Parallel()
 
@@ -188,8 +188,8 @@ func TestEvaluate_SinceTrackedAcrossErrorTextChanges(t *testing.T) {
 
 	reason = "dns lookup failed"
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(epoch) {
-		t.Errorf("Since drifted without a status change: want %v, got %v", epoch, got)
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(epoch) {
+		t.Errorf("StatusSince drifted without a status change: want %v, got %v", epoch, got)
 	}
 
 	if resp.Checks["db"].Status != health.StatusWarn {
@@ -197,7 +197,7 @@ func TestEvaluate_SinceTrackedAcrossErrorTextChanges(t *testing.T) {
 	}
 }
 
-// TestHandlers_SinceZeroOnSyntheticAndEmptyChecks pins the zero-Since
+// TestHandlers_SinceZeroOnSyntheticAndEmptyChecks pins the zero-StatusSince
 // surfaces: liveness (empty checks), the never-started cached view, and the
 // Healthz synthetic startup entry never claim a transition time.
 func TestHandlers_SinceZeroOnSyntheticAndEmptyChecks(t *testing.T) {
@@ -220,17 +220,17 @@ func TestHandlers_SinceZeroOnSyntheticAndEmptyChecks(t *testing.T) {
 	}
 
 	// Healthz before any startup evaluation injects the synthetic startup
-	// check; it must not carry a Since.
+	// check; it must not carry a StatusSince.
 	rec = doRequest(t, probe.Healthz(), "/healthz")
 	startup := decodeResponse(t, rec).Checks["startup"]
 
-	if !startup.Since.IsZero() {
-		t.Errorf("synthetic startup check Since: want zero, got %v", startup.Since)
+	if !startup.StatusSince.IsZero() {
+		t.Errorf("synthetic startup check StatusSince: want zero, got %v", startup.StatusSince)
 	}
 }
 
 // TestStartupHandler_SinceStampedOnStartupEvaluations verifies the startup
-// path participates in transition tracking: its batches stamp Since, and a
+// path participates in transition tracking: its batches stamp StatusSince, and a
 // later readiness evaluation carries the stamp forward.
 func TestStartupHandler_SinceStampedOnStartupEvaluations(t *testing.T) {
 	t.Parallel()
@@ -252,15 +252,15 @@ func TestStartupHandler_SinceStampedOnStartupEvaluations(t *testing.T) {
 	}
 
 	resp := decodeResponse(t, rec)
-	if got := resp.Checks["db"].Since; !got.Equal(epoch) {
-		t.Fatalf("startup-evaluated check Since: want %v, got %v", epoch, got)
+	if got := resp.Checks["db"].StatusSince; !got.Equal(epoch) {
+		t.Fatalf("startup-evaluated check StatusSince: want %v, got %v", epoch, got)
 	}
 
 	clock.Advance(9 * time.Minute)
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.Equal(epoch) {
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(epoch) {
 		t.Errorf(
-			"readiness must carry Since stamped by the startup batch: want %v, got %v",
+			"readiness must carry StatusSince stamped by the startup batch: want %v, got %v",
 			epoch,
 			got,
 		)
@@ -311,8 +311,8 @@ func TestEvaluate_ConcurrentBatchesAreRaceFree(t *testing.T) {
 	wg.Wait()
 
 	resp := probe.Evaluate(context.Background())
-	if got := resp.Checks["db"].Since; !got.After(epoch.Add(-time.Second)) {
-		t.Errorf("stamped Since should be an observation clock, got %v", got)
+	if got := resp.Checks["db"].StatusSince; !got.After(epoch.Add(-time.Second)) {
+		t.Errorf("stamped StatusSince should be an observation clock, got %v", got)
 	}
 }
 
@@ -329,8 +329,8 @@ func TestEvaluate_TrackerDisabledLeavesSinceZero(t *testing.T) {
 
 	probe.SetTrackerDisabledForTest(true)
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].Since; !got.IsZero() {
-		t.Errorf("Since = %v, want the zero time while the tracker is disabled", got)
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.IsZero() {
+		t.Errorf("StatusSince = %v, want the zero time while the tracker is disabled", got)
 	}
 }
 
@@ -505,7 +505,7 @@ func TestWithHealthRecorder_PlainRecorderDurationsStayZero(t *testing.T) {
 // --- Wire format (omitzero absence) ---.
 
 // TestCheck_JSONOmitZero pins the issue #2 open question: under jsonv2,
-// omitzero gives strict absence for both fields — zero Since and zero
+// omitzero gives strict absence for both fields — zero StatusSince and zero
 // duration disappear instead of marshaling as "0001-01-01T00:00:00Z" / 0.
 // Duration is a plain int64 (nanoseconds) because jsonv2 cannot marshal
 // time.Duration at all without per-call options (verified:
@@ -529,7 +529,7 @@ func TestCheck_JSONOmitZero(t *testing.T) {
 	payload, err = json.Marshal(health.Check{
 		Status:        health.StatusFail,
 		Error:         "down",
-		Since:         stamped,
+		StatusSince:         stamped,
 		DurationNanos: (1500 * time.Microsecond).Nanoseconds(),
 	}, json.Deterministic(true))
 	if err != nil {

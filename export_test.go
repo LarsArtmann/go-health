@@ -7,7 +7,7 @@ func (p *Probe) ResetStartupLatchForTest() {
 	p.startupPassed.Store(false)
 }
 
-// SetTrackerDisabledForTest toggles the transition tracker's Since stamping
+// SetTrackerDisabledForTest toggles the transition tracker's StatusSince stamping
 // so benchmarks can measure its marginal cost (A/B within one binary). The
 // flag is never set outside test builds; production always stamps.
 func (p *Probe) SetTrackerDisabledForTest(disabled bool) {

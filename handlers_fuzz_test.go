@@ -17,7 +17,7 @@ import (
 // production marshal path. Invariants under any input: no panic, two
 // consecutive marshals are byte-identical (Deterministic), and the payload
 // round-trips status, instance_id, and check entries intact — including the
-// per-check metadata (Since as nanoseconds-since-Unix-epoch, DurationNanos).
+// per-check metadata (StatusSince as nanoseconds-since-Unix-epoch, DurationNanos).
 func FuzzResponseMarshalDeterministic(f *testing.F) {
 	f.Add("pass", "db", "", "", int64(0), int64(0))
 	f.Add("warn", "cache", "connection refused", "pod-1", int64(0), int64(0))
@@ -47,7 +47,7 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 					checkName: {
 						Status:        health.Status(status),
 						Error:         checkErr,
-						Since:         time.Unix(0, sinceNanos).UTC(),
+						StatusSince:         time.Unix(0, sinceNanos).UTC(),
 						DurationNanos: durationNanos,
 					},
 				},
@@ -83,7 +83,7 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 
 // assertResponseRoundTrip checks that decoded carries every field of sent
 // through the wire intact: the roll-up status, the instance id, and each
-// check's name, status, error, Since, and DurationNanos.
+// check's name, status, error, StatusSince, and DurationNanos.
 func assertResponseRoundTrip(t *testing.T, sent, decoded health.Response) {
 	t.Helper()
 
@@ -114,8 +114,8 @@ func assertResponseRoundTrip(t *testing.T, sent, decoded health.Response) {
 			t.Fatalf("check error round-trip: want %q, got %q", wantCheck.Error, check.Error)
 		}
 
-		if !check.Since.Equal(wantCheck.Since) {
-			t.Fatalf("check since round-trip: want %v, got %v", wantCheck.Since, check.Since)
+		if !check.StatusSince.Equal(wantCheck.StatusSince) {
+			t.Fatalf("check since round-trip: want %v, got %v", wantCheck.StatusSince, check.StatusSince)
 		}
 
 		if check.DurationNanos != wantCheck.DurationNanos {

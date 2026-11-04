@@ -17,11 +17,11 @@ type trackedStatus struct {
 // 14:02"). It observes every batch the probe builds — background refreshes,
 // throttled and live evaluations, startup probes — via stamp.
 //
-// Since is probe-observed time, not service-reported: it is stamped from the
+// StatusSince is probe-observed time, not service-reported: it is stamped from the
 // probe's clock (see WithNowFunc) on the first batch reporting the current
 // status, so it resets when the status changes and never predates the
 // process. Checks absent from a batch are pruned; a returning check restarts
-// its Since because the gap was unobserved.
+// its StatusSince because the gap was unobserved.
 //
 // The zero value is ready to use. Safe for concurrent use: stamping
 // serializes on a mutex, which is fine because it runs once per batch (the
@@ -37,7 +37,7 @@ type transitionTracker struct {
 	disabled bool
 }
 
-// stamp fills every check's Since field in place: a check whose status is
+// stamp fills every check's StatusSince field in place: a check whose status is
 // unchanged keeps its first-seen time; a new or changed status is stamped
 // now; names absent from checks are forgotten. now comes from the probe's
 // clock seam so tests get deterministic transitions.
@@ -58,7 +58,7 @@ func (t *transitionTracker) stamp(checks map[string]Check, now time.Time) {
 		}
 
 		next[name] = track
-		check.Since = track.since
+		check.StatusSince = track.since
 		checks[name] = check
 	}
 

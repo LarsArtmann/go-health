@@ -211,7 +211,7 @@ func ExampleNewWithHealthCheck() {
 // ExampleNewWithDetailedCheck shows the metadata-rich check function: each
 // report carries its execution duration (surfaced as Check.DurationNanos),
 // while classification stays with the probe. Combined with the automatic
-// Check.Since transition tracking, dashboards can answer "failing since
+// Check.StatusSince transition tracking, dashboards can answer "failing since
 // when?" and "how slow is it?" without instrumenting every dependency.
 func ExampleNewWithDetailedCheck() {
 	probe := health.NewWithDetailedCheck(func(ctx context.Context) map[string]health.CheckDetail {
@@ -229,7 +229,7 @@ func ExampleNewWithDetailedCheck() {
 	resp := probe.Evaluate(context.Background())
 
 	fmt.Println("status:", resp.Status)
-	fmt.Println("database since set:", !resp.Checks["database"].Since.IsZero())
+	fmt.Println("database since set:", !resp.Checks["database"].StatusSince.IsZero())
 	fmt.Println("database timed:", resp.Checks["database"].DurationNanos > 0)
 
 	// Output:

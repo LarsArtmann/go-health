@@ -100,8 +100,8 @@ func TestOff_OffCheckIsVisibleNeverVerdict(t *testing.T) {
 		t.Errorf("db error: want detail verbatim %q, got %q", offDetail, dbCheck.Error)
 	}
 
-	if dbCheck.Since.IsZero() {
-		t.Error("off check must carry probe-observed Since like any other status")
+	if dbCheck.StatusSince.IsZero() {
+		t.Error("off check must carry probe-observed StatusSince like any other status")
 	}
 }
 

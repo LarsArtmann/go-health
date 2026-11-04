@@ -62,7 +62,7 @@ half — nothing here decides what staleness means.
   drain are independent axes.
 - Publishing in `EvaluateAndCache` races a refresh tick the same way two
   ticks would — both are truthful evaluations and the last store wins; the
-  transition tracker already serializes `Since` stamping.
+  transition tracker already serializes `StatusSince` stamping.
 
 ## Tests
 

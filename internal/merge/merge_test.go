@@ -283,7 +283,7 @@ func TestResponses_Table(t *testing.T) {
 	}
 }
 
-// TestResponses_MetadataSurvivesVerbatim pins that a source check's Since
+// TestResponses_MetadataSurvivesVerbatim pins that a source check's StatusSince
 // and DurationNanos carry through the merge untouched: the probe-observed
 // "since when" and the executor-reported duration must stay truthful end to
 // end.
@@ -294,7 +294,7 @@ func TestResponses_MetadataSurvivesVerbatim(t *testing.T) {
 	want := health.Check{
 		Status:        health.StatusWarn,
 		Error:         "degraded",
-		Since:         since,
+		StatusSince:         since,
 		DurationNanos: 42,
 	}
 

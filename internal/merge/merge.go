@@ -43,7 +43,7 @@ type Source struct {
 // roll-up stays within the frozen pass/warn/fail enum regardless of source
 // order. Any source shutting down forces the merged fail. Every check key is
 // namespaced "source/check" and carries the source's own check value,
-// including Since and DurationNanos. TotalLatencyMs is the maximum across
+// including StatusSince and DurationNanos. TotalLatencyMs is the maximum across
 // successful sources. Per-process scalars (Version, Uptime, InstanceID,
 // Timestamp) never survive: they are per-process and would lie in a merged
 // view. Folding zero sources yields the pass response with no checks; the

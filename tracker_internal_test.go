@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// BenchmarkTransitionTrackerStamp isolates the Since-stamping cost that every
+// BenchmarkTransitionTrackerStamp isolates the StatusSince-stamping cost that every
 // evaluation batch pays inside buildChecks: a fresh tracked map plus one
 // mutex-guarded pass over the checks. Measured warm (statuses hold across
 // iterations), which is the common case — transitions themselves are rare and

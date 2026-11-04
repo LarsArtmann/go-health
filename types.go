@@ -53,7 +53,7 @@ type Check struct {
 	// off check (StatusOff) it carries the configuration detail — usually
 	// the enable recipe — instead of a failure.
 	Error string `json:"error,omitempty"`
-	// Since is when this check entered its current status, as observed by
+	// StatusSince is when this check entered its current status, as observed by
 	// the probe: the time of the first batch that reported the current
 	// value, carried forward unchanged while the status holds. It is
 	// stamped on every evaluation path (background refresh, live requests,
@@ -62,7 +62,7 @@ type Check struct {
 	// and omitted from JSON via omitzero — when unknown (checks the probe
 	// never built, e.g. liveness's empty set or Healthz's synthetic
 	// startup entry). See docs/check-metadata-design.md.
-	Since time.Time `json:"since,omitzero"`
+	StatusSince time.Time `json:"since,omitzero"`
 	// DurationNanos is how long the most recent execution of this check
 	// took, in nanoseconds, as reported by its executor. Zero — and omitted
 	// from JSON via omitzero — when the executor does not report timing: the
@@ -112,8 +112,8 @@ func Off(detail string) *OffError {
 // input accepted by [NewWithDetailedCheck] and [DetailedHealthRecorder].
 // The probe still owns classification: Err is graded against the critical set
 // exactly like a plain map[string]error result (an [*OffError] grades to
-// [StatusOff] regardless of criticality), and Since is probe-observed,
-// so a detail cannot influence Status, Error text, or Since.
+// [StatusOff] regardless of criticality), and StatusSince is probe-observed,
+// so a detail cannot influence Status, Error text, or StatusSince.
 type CheckDetail struct {
 	// Err is the check outcome: nil means the service is healthy. Non-nil
 	// errors are graded (critical → fail, non-critical → warn) and their

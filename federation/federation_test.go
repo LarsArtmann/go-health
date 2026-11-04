@@ -205,7 +205,7 @@ func TestNew_Validation(t *testing.T) {
 // test: a real go-health probe (injector-free constructor) runs with a
 // background refresh loop and serves its readiness handler over HTTP,
 // and a federated view over it reports the probe's checks namespaced,
-// statuses preserved, and the probe-observed Since intact.
+// statuses preserved, and the probe-observed StatusSince intact.
 func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 	t.Parallel()
 
@@ -261,11 +261,11 @@ func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 		t.Errorf("core/queue: want warn with cause, got %+v", queue)
 	}
 
-	if !postgres.Since.Equal(before.Checks["postgres"].Since) || postgres.Since.IsZero() {
+	if !postgres.StatusSince.Equal(before.Checks["postgres"].StatusSince) || postgres.StatusSince.IsZero() {
 		t.Errorf(
-			"Since must survive federation verbatim: remote %v, federated %v",
-			before.Checks["postgres"].Since,
-			postgres.Since,
+			"StatusSince must survive federation verbatim: remote %v, federated %v",
+			before.Checks["postgres"].StatusSince,
+			postgres.StatusSince,
 		)
 	}
 }
@@ -552,8 +552,8 @@ func TestCachedResponse_WireFieldsDecode(t *testing.T) {
 	}
 
 	wantSince := time.Date(2026, 9, 18, 8, 0, 0, 0, time.UTC)
-	if !dbCheck.Since.Equal(wantSince) {
-		t.Errorf("since: want %v, got %v", wantSince, dbCheck.Since)
+	if !dbCheck.StatusSince.Equal(wantSince) {
+		t.Errorf("since: want %v, got %v", wantSince, dbCheck.StatusSince)
 	}
 
 	if dbCheck.DurationNanos != 1500 {

@@ -74,7 +74,10 @@ func TestRegisterRoutes_MountsVersionEndpoint(t *testing.T) {
 	agg.RegisterRoutes(defaults, health.DefaultRoutes())
 
 	rec = httptest.NewRecorder()
-	defaults.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/version", nil))
+	defaults.ServeHTTP(
+		rec,
+		httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/version", nil),
+	)
 
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("GET /version with DefaultRoutes: want 404 (not mounted), got %d", rec.Code)

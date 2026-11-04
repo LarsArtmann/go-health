@@ -10,21 +10,21 @@ output: 12 `go-file-too-large` findings, a 3-row regression verdict, and 2 prefl
 
 **Verified with fresh commands (this session):**
 
-| Claim | Command / artifact | Result |
-| --- | --- | --- |
-| Zero file-size findings | `buildflow -s file-size-check --format finding` (18:38) | `findings: []`, step 2ms |
-| No Go file over 350 lines | `find … -name '*.go' \| xargs wc -l \| awk '$1 > 350'` | empty |
-| Build + vet clean | `GOWORK=off go build ./... && go vet ./...` | green (multiple runs, last 19:16) |
-| Full suite green | `GOWORK=off go test -count=1 ./...` | all 5 packages ok |
-| Race suite green | `GOWORK=off go test -race -count=1 ./...` | all 5 packages ok (18:33 **and** 19:16 post-rename) |
-| Coverage floors hold | `go test -coverprofile` + `go tool cover -func` | root 100.0%, aggregate 100.0%, checks 100.0%, merge 100.0%, federation 99.5% (the documented unreachable request-construction guard; toolchain-relative), total 99.0% incl. the 0% draft module |
-| Gates sweep | `nix run .#gates` | **all gates green, EXIT=0** (finished ~19:05) |
-| Docs / fuzz / openapi gates | `.#docs-check`, `.#fuzz-registry`, `.#openapi-lockstep` | all OK (18:35) |
-| Arch file-name lockstep | gate's own `find` loop replayed manually | no `MISSING:` rows — every new source file named in docs/ARCHITECTURE.md |
-| Formatter pipeline | `buildflow format` (18:56, clean rerun) | 61 success, 0 failed, 0 skipped |
-| Structure linter | `buildflow -s go-structure-linter --format finding` (19:00) | `total: 0` after two fixes |
-| Regression verdict provenance | `buildflow timings --regressions` (18:15) | all 3 rows marked `!` — "cross a BuildFlow version change … only partly comparable" |
-| Final tree state | `git status` (19:15) | exactly 5 mutations: `.gitignore`, `AGENTS.md`, `docs/ARCHITECTURE.md`, `D docs/drafts/finding1_repro/finding1_repro` (untracked-from-index), `R probe_fixtures_test.go → probe_helpers_test.go` |
+| Claim                         | Command / artifact                                          | Result                                                                                                                                                                                           |
+| ----------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Zero file-size findings       | `buildflow -s file-size-check --format finding` (18:38)     | `findings: []`, step 2ms                                                                                                                                                                         |
+| No Go file over 350 lines     | `find … -name '*.go' \| xargs wc -l \| awk '$1 > 350'`      | empty                                                                                                                                                                                            |
+| Build + vet clean             | `GOWORK=off go build ./... && go vet ./...`                 | green (multiple runs, last 19:16)                                                                                                                                                                |
+| Full suite green              | `GOWORK=off go test -count=1 ./...`                         | all 5 packages ok                                                                                                                                                                                |
+| Race suite green              | `GOWORK=off go test -race -count=1 ./...`                   | all 5 packages ok (18:33 **and** 19:16 post-rename)                                                                                                                                              |
+| Coverage floors hold          | `go test -coverprofile` + `go tool cover -func`             | root 100.0%, aggregate 100.0%, checks 100.0%, merge 100.0%, federation 99.5% (the documented unreachable request-construction guard; toolchain-relative), total 99.0% incl. the 0% draft module  |
+| Gates sweep                   | `nix run .#gates`                                           | **all gates green, EXIT=0** (finished ~19:05)                                                                                                                                                    |
+| Docs / fuzz / openapi gates   | `.#docs-check`, `.#fuzz-registry`, `.#openapi-lockstep`     | all OK (18:35)                                                                                                                                                                                   |
+| Arch file-name lockstep       | gate's own `find` loop replayed manually                    | no `MISSING:` rows — every new source file named in docs/ARCHITECTURE.md                                                                                                                         |
+| Formatter pipeline            | `buildflow format` (18:56, clean rerun)                     | 61 success, 0 failed, 0 skipped                                                                                                                                                                  |
+| Structure linter              | `buildflow -s go-structure-linter --format finding` (19:00) | `total: 0` after two fixes                                                                                                                                                                       |
+| Regression verdict provenance | `buildflow timings --regressions` (18:15)                   | all 3 rows marked `!` — "cross a BuildFlow version change … only partly comparable"                                                                                                              |
+| Final tree state              | `git status` (19:15)                                        | exactly 5 mutations: `.gitignore`, `AGENTS.md`, `docs/ARCHITECTURE.md`, `D docs/drafts/finding1_repro/finding1_repro` (untracked-from-index), `R probe_fixtures_test.go → probe_helpers_test.go` |
 
 **NOT verified / honest gaps:**
 
@@ -99,7 +99,7 @@ output: 12 `go-file-too-large` findings, a 3-row regression verdict, and 2 prefl
 17. **Regression verdict triaged to root cause**: `buildflow timings --regressions` itself flags all
     three rows with `!` — they cross the BuildFlow binary-version boundary; the baselines
     (file-size-check 1ms over N=33, golangci-lint 1.4s over N=48 — implausibly fast for real runs of
-    either) are pre-upgrade artifacts, and the current run's 2.8ms warm file-size-check is *faster*
+    either) are pre-upgrade artifacts, and the current run's 2.8ms warm file-size-check is _faster_
     than its own cold 533ms first pass. Documented as expected noise, not a code regression.
 18. **Concurrent-session collision avoided**: detected another crush session running full-mode buildflow
     (example-chat) holding the state DB; waited instead of fighting it; re-ran cleanly after.
@@ -172,58 +172,58 @@ output: 12 `go-file-too-large` findings, a 3-row regression verdict, and 2 prefl
 
 ## f) NEXT 50 (brainstorm, sorted by impact; most are ROADMAP fuel, not commitments)
 
-| # | Task | Where |
-| --- | --- | --- |
-| 1 | Rerun `nix run .#gates` on the final tree (closes the only verification gap) | go-health |
-| 2 | Rerun `nix run .#lint` standalone post-rename | go-health |
-| 3 | Rerun `.#docs-check` post-ARCHITECTURE.md edit | go-health |
-| 4 | HARVEST this report's (f) into TODO_LIST.md / ROADMAP.md | go-health |
-| 5 | Owner decision: does the 350-line cap bind test files? | owner |
-| 6 | Encode the decision as a `.buildflow.yml` budget/policy note | go-health |
-| 7 | BuildFlow: fix `docs-gates/pkg/provider@v0.0.0` require so HEAD builds | BuildFlow |
-| 8 | BuildFlow: rebuild binary + `nix run .#reinstall` (clears freshness warning) | BuildFlow |
-| 9 | BuildFlow: carry the `!` comparability caveat into the end-of-run regression banner | BuildFlow |
-| 10 | BuildFlow: fix go-structure-linter testdata-directory rule firing on `_test.go` names | BuildFlow |
-| 11 | BuildFlow: SQLITE_BUSY retry/backoff for the shared state DB | BuildFlow |
-| 12 | BuildFlow: investigate the 1ms file-size-check baseline (cache-hit era?) | BuildFlow |
-| 13 | Re-run `tools/doanalyzerv2` over the split layout | go-health |
-| 14 | Write ADR-011: file layout — one concern per file, 350-line ceiling | go-health |
-| 15 | Sweep docs/ design notes for stale file pointers to moved symbols (`probe.go` mentions) | go-health |
-| 16 | Confirm `buildflow doctor` no longer warns on formatter fingerprint drift | go-health |
-| 17 | Cross-session: document the "concurrent buildflow holds the state DB" symptom in AGENTS.md | go-health |
-| 18 | Reconcile AGENTS.md "Testing Patterns" benchmarks bullet with the new layout | go-health |
-| 19 | Verify AGENTS.md seam-swap bullet's file references still accurate post-split | go-health |
-| 20 | Decide release vehicle for the split entry: ship with next v0.9.1 or hold | go-health |
-| 21 | Run `nix run .#ci-emulation` post-split (stripped-PATH sweep) | go-health |
-| 22 | Run weekly `nix run .#fuzz-long` budget post-split (corpus survived — signature unchanged) | go-health |
-| 23 | Rerun `.#vulncheck` + `.#security` on final tree (cheap, inside gates already) | go-health |
-| 24 | Verify daemon pushed the split commits to origin/master | go-health |
-| 25 | Add session-start tracked-binary hygiene scan to the fleet preflight (BuildFlow provider?) | BuildFlow |
-| 26 | Decide the fate of the on-disk `finding1_repro` binary (delete or move under tools/) | go-health |
-| 27 | Annotate older status reports that name the old file layout (docs-health ANNOTATE) | go-health |
-| 28 | Update docs/INDEX.md row for this status report | go-health |
-| 29 | Soft tripwire: consider warning (not failing) at >300 lines to catch growth early | go-health |
-| 30 | Confirm fuzz corpus still loads post-split (`nix run .#fuzz` short budget) | go-health |
-| 31 | Check `handlers_internal_test.go` / `handlers_json_test.go` still map to the right seams | go-health |
-| 32 | Verify ARCHITECTURE.md handlers.go row mentions the startup latch ownership | go-health |
-| 33 | Consider goimports in treefmt (kills the hand-composed-import failure class fleet-wide) | crush-config/BuildFlow |
-| 34 | Benchmark sanity: rerun GuardOverhead post-rename (split moved it to handlers_benchmark_test.go) | go-health |
-| 35 | Check no orphaned helper comments reference old file names ("--- P25 ---" banners) | go-health |
-| 36 | Cross-check 16c098c's 50-item queue for items invalidated/duplicated by this split | go-health |
-| 37 | CHANGELOG: decide whether the layout split deserves a FEATURES.md mention (no — internal) | go-health |
-| 38 | Confirm `.buildflow.yml` still loads warning-free (unknown-key check) | go-health |
-| 39 | Consider recording the SQLITE_BUSY signature + wait strategy as a lessons.md candidate | crush-config |
-| 40 | Measure whether the split changed evaluation hot-path performance (benchmarks moved, not code) | go-health |
-| 41 | Consider moving `BenchmarkEvaluate_TrackerDelta` docs pointer (references export_test seam) | go-health |
-| 42 | Review whether `probe_start_test.go` vs `probe_lifecycle_test.go` naming is confusing | go-health |
-| 43 | Check remaining near-cap files for proactive splits (largest now: probe_test.go 251) | go-health |
-| 44 | Add the split pattern to lessons.md? (split-along-existing-seams, verbatim doc comments) | crush-config |
-| 45 | Verify `.gitignore` buildflow-managed block regenerated cleanly after manual append | go-health |
-| 46 | Consider git hook or CI grep for tracked files >1MB (prevents the 08:29 class fleet-wide) | BuildFlow |
-| 47 | Decide whether `errors.go` pattern should be replicated in aggregate/federation packages | go-health |
-| 48 | Re-check the `interop` gate after any go.mod-affecting change (none this session — skipped) | go-health |
-| 49 | Keep an eye on BuildFlow fleet queues referencing go-health file names (fleet-skew.sh) | go-health |
-| 50 | Close the loop on the two BuildFlow upstream items (7, 9): fixed, filed, or documented | BuildFlow |
+| #  | Task                                                                                             | Where                  |
+| -- | ------------------------------------------------------------------------------------------------ | ---------------------- |
+| 1  | Rerun `nix run .#gates` on the final tree (closes the only verification gap)                     | go-health              |
+| 2  | Rerun `nix run .#lint` standalone post-rename                                                    | go-health              |
+| 3  | Rerun `.#docs-check` post-ARCHITECTURE.md edit                                                   | go-health              |
+| 4  | HARVEST this report's (f) into TODO_LIST.md / ROADMAP.md                                         | go-health              |
+| 5  | Owner decision: does the 350-line cap bind test files?                                           | owner                  |
+| 6  | Encode the decision as a `.buildflow.yml` budget/policy note                                     | go-health              |
+| 7  | BuildFlow: fix `docs-gates/pkg/provider@v0.0.0` require so HEAD builds                           | BuildFlow              |
+| 8  | BuildFlow: rebuild binary + `nix run .#reinstall` (clears freshness warning)                     | BuildFlow              |
+| 9  | BuildFlow: carry the `!` comparability caveat into the end-of-run regression banner              | BuildFlow              |
+| 10 | BuildFlow: fix go-structure-linter testdata-directory rule firing on `_test.go` names            | BuildFlow              |
+| 11 | BuildFlow: SQLITE_BUSY retry/backoff for the shared state DB                                     | BuildFlow              |
+| 12 | BuildFlow: investigate the 1ms file-size-check baseline (cache-hit era?)                         | BuildFlow              |
+| 13 | Re-run `tools/doanalyzerv2` over the split layout                                                | go-health              |
+| 14 | Write ADR-011: file layout — one concern per file, 350-line ceiling                              | go-health              |
+| 15 | Sweep docs/ design notes for stale file pointers to moved symbols (`probe.go` mentions)          | go-health              |
+| 16 | Confirm `buildflow doctor` no longer warns on formatter fingerprint drift                        | go-health              |
+| 17 | Cross-session: document the "concurrent buildflow holds the state DB" symptom in AGENTS.md       | go-health              |
+| 18 | Reconcile AGENTS.md "Testing Patterns" benchmarks bullet with the new layout                     | go-health              |
+| 19 | Verify AGENTS.md seam-swap bullet's file references still accurate post-split                    | go-health              |
+| 20 | Decide release vehicle for the split entry: ship with next v0.9.1 or hold                        | go-health              |
+| 21 | Run `nix run .#ci-emulation` post-split (stripped-PATH sweep)                                    | go-health              |
+| 22 | Run weekly `nix run .#fuzz-long` budget post-split (corpus survived — signature unchanged)       | go-health              |
+| 23 | Rerun `.#vulncheck` + `.#security` on final tree (cheap, inside gates already)                   | go-health              |
+| 24 | Verify daemon pushed the split commits to origin/master                                          | go-health              |
+| 25 | Add session-start tracked-binary hygiene scan to the fleet preflight (BuildFlow provider?)       | BuildFlow              |
+| 26 | Decide the fate of the on-disk `finding1_repro` binary (delete or move under tools/)             | go-health              |
+| 27 | Annotate older status reports that name the old file layout (docs-health ANNOTATE)               | go-health              |
+| 28 | Update docs/INDEX.md row for this status report                                                  | go-health              |
+| 29 | Soft tripwire: consider warning (not failing) at >300 lines to catch growth early                | go-health              |
+| 30 | Confirm fuzz corpus still loads post-split (`nix run .#fuzz` short budget)                       | go-health              |
+| 31 | Check `handlers_internal_test.go` / `handlers_json_test.go` still map to the right seams         | go-health              |
+| 32 | Verify ARCHITECTURE.md handlers.go row mentions the startup latch ownership                      | go-health              |
+| 33 | Consider goimports in treefmt (kills the hand-composed-import failure class fleet-wide)          | crush-config/BuildFlow |
+| 34 | Benchmark sanity: rerun GuardOverhead post-rename (split moved it to handlers_benchmark_test.go) | go-health              |
+| 35 | Check no orphaned helper comments reference old file names ("--- P25 ---" banners)               | go-health              |
+| 36 | Cross-check 16c098c's 50-item queue for items invalidated/duplicated by this split               | go-health              |
+| 37 | CHANGELOG: decide whether the layout split deserves a FEATURES.md mention (no — internal)        | go-health              |
+| 38 | Confirm `.buildflow.yml` still loads warning-free (unknown-key check)                            | go-health              |
+| 39 | Consider recording the SQLITE_BUSY signature + wait strategy as a lessons.md candidate           | crush-config           |
+| 40 | Measure whether the split changed evaluation hot-path performance (benchmarks moved, not code)   | go-health              |
+| 41 | Consider moving `BenchmarkEvaluate_TrackerDelta` docs pointer (references export_test seam)      | go-health              |
+| 42 | Review whether `probe_start_test.go` vs `probe_lifecycle_test.go` naming is confusing            | go-health              |
+| 43 | Check remaining near-cap files for proactive splits (largest now: probe_test.go 251)             | go-health              |
+| 44 | Add the split pattern to lessons.md? (split-along-existing-seams, verbatim doc comments)         | crush-config           |
+| 45 | Verify `.gitignore` buildflow-managed block regenerated cleanly after manual append              | go-health              |
+| 46 | Consider git hook or CI grep for tracked files >1MB (prevents the 08:29 class fleet-wide)        | BuildFlow              |
+| 47 | Decide whether `errors.go` pattern should be replicated in aggregate/federation packages         | go-health              |
+| 48 | Re-check the `interop` gate after any go.mod-affecting change (none this session — skipped)      | go-health              |
+| 49 | Keep an eye on BuildFlow fleet queues referencing go-health file names (fleet-skew.sh)           | go-health              |
+| 50 | Close the loop on the two BuildFlow upstream items (7, 9): fixed, filed, or documented           | BuildFlow              |
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF (max 3)
 

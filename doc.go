@@ -152,6 +152,9 @@
 //
 //	mux.HandleFunc("/version", health.VersionHandler(buildVersion))
 //
+// or set Routes.Version when calling [Probe.RegisterRoutes]; the probe
+// serves its own [WithVersion] stamp.
+//
 // # Why Three Probes?
 //
 // A single /health endpoint conflates "process alive" with "dependencies

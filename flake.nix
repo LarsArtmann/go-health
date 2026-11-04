@@ -105,6 +105,7 @@
             runtimeInputs = [
               pkgs.yq-go
               pkgs.jq
+              pkgs.coreutils
             ];
             text = ''
               spec="$(mktemp)"
@@ -472,6 +473,9 @@
                   pkgs.bash
                   pkgs.gawk
                   pkgs.coreutils
+                  pkgs.git
+                  pkgs.gnugrep
+                  pkgs.gnused
                 ]
                 ''
                   root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
@@ -519,6 +523,7 @@
                   pkgs.findutils
                   pkgs.gawk
                   pkgs.gnugrep
+                  pkgs.gnused
                 ]
                 ''
                   root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
@@ -669,6 +674,7 @@
               mkApp "security" "Run gosec security scan"
                 [
                   pkgs.gosec
+                  pkgs.coreutils
                   gosecGo
                 ]
                 ''

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - ci-emulation caught the fuzz-registry check running on borrowed tools: the registry script needs `gawk` for the parse and `diff`/`comm` (diffutils) for the lockstep verdict, but neither the app's `runtimeInputs` nor the check's `nativeBuildInputs` declared them — the flake sandbox got awk implicitly from stdenv and the dev shell lent the rest from the host PATH, so only the stripped-PATH emulation saw the failure, and a missing `diff` (its stderr silenced by `2>&1`) read as "files differ" against byte-identical inputs. `gawk` and `diffutils` are now declared in both.
+- The same audit swept every gate app for undeclared external commands and found four more borrows: `security` ran `mktemp`/`rm` (privateGocache) with only gosec and a Go toolchain on PATH, `coverage-gate`'s script uses `grep`/`sed` and its wrapper probes the root with `git`, `recorder-audit`'s script needs `sed`, and `openapi-lockstep`'s `mktemp`/`rm` had no coreutils either. Each app now declares everything its text or script runs, so a stripped-PATH emulation fails with "tool missing" only when a dependency is genuinely forgotten.
 
 ## [v0.9.0] - 2026-11-04
 

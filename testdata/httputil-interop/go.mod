@@ -17,14 +17,14 @@ module github.com/larsartmann/go-health/testdata/httputil-interop
 go 1.27
 
 require (
-	github.com/larsartmann/go-health v0.8.1
+	github.com/larsartmann/go-health v0.9.0
 	github.com/larsartmann/httputil v1.8.0
 	github.com/larsartmann/httputil/server_timing v1.0.3
 )
 
 require (
 	github.com/justinas/nosurf v1.2.0 // indirect
-	github.com/larsartmann/go-branded-id v0.7.0 // indirect
+	github.com/larsartmann/go-branded-id v0.7.1 // indirect
 	github.com/larsartmann/go-error-family v0.12.0 // indirect
 	github.com/larsartmann/go-etag/entitytag v0.6.1 // indirect
 	github.com/larsartmann/go-etag/server v0.6.1 // indirect

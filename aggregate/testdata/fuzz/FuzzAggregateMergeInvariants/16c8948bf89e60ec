@@ -1,0 +1,10 @@
+go test fuzz v1
+string("api")
+string("d\xe4\xe4\xe4\xe4b")
+string("worker")
+string("db")
+bool(true)
+bool(true)
+bool(false)
+bool(true)
+string("")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("pacs")
+string("db")
+string("")
+string("")
+int64(60)
+int64(-72)

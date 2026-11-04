@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+string("2")
+string("&&&&&&&&&&&&&&")
+string("0")
+int64(-42000000016)
+int64(-61)

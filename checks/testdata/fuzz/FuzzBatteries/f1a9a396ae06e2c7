@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x02")
+uint64(369)
+uint64(24)
+string("/           ")
+int(101)
+string("8")

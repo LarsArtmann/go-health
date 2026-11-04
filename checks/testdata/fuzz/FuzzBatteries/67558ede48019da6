@@ -1,0 +1,7 @@
+go test fuzz v1
+string("/")
+uint64(18446744073709551508)
+uint64(18446744073709551572)
+string("/decccccccccccccccccccccccccccccccep/path")
+int(101)
+string("0")

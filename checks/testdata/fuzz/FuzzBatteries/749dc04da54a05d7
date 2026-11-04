@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(18446744073709551615)
+uint64(18446744073709551615)
+string("00000\xa7\xa7\xa7\xa7\xa7\xa7\xa7\xa7")
+int(168)
+string("0")

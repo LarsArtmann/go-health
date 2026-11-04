@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\"000\x95\xf2\U0009c735\x9c\x9c")
+string("0")
+string("0R")
+string("0")
+int64(1784000000000000045)
+int64(1500205)

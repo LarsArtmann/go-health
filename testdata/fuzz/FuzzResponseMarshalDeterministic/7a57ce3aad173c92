@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\U000dacee\"")
+string("0")
+string("0")
+string("0")
+int64(1783999999999999904)
+int64(1499961)

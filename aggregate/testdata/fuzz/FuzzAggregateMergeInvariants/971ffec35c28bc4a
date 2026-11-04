@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\x7f")
+string("")
+string("\x98}\xc1\xcb=\xce")
+string("")
+bool(false)
+bool(true)
+bool(true)
+bool(false)
+string("replica-7")

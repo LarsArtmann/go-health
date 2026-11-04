@@ -1,0 +1,7 @@
+go test fuzz v1
+string("/does-not-exist")
+uint64(1)
+uint64(1)
+string("o/k")
+int(200)
+string("ok")

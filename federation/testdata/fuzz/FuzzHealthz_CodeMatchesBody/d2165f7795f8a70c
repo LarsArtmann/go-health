@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"Ϧ\"\xf2\xa6\xa60")

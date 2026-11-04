@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xf2ƀځݷ駁ǹպƈڝì\xf3\xaf\u0590\xe7\xa00\xec\xb30ޖƚ\ue7d6۔խĎ\xe7\xb90嵩ɔ\xe7\x900ňȻޡՁ𬒊랡\xf1\x95\ue585\xe1\x950薾ż\xf3\x89ˎꜛݼޝԪ")
+string("0")
+string("0")
+string("0")
+int64(-42000000093)
+int64(1)

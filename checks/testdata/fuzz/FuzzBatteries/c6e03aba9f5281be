@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(0)
+uint64(1)
+string("\v\v\v\v\v\v\v\v\v\v\v\v\v\v\v\v")
+int(321)
+string("0")

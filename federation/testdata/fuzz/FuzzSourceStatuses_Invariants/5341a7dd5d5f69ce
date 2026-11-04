@@ -1,0 +1,2 @@
+go test fuzz v1
+string("\"\\b\\/\xa6k,\xfe\x9eg=^\t/^\\\xaeL\x1d\xfeb)\xff/\xa6k,\xfe0")

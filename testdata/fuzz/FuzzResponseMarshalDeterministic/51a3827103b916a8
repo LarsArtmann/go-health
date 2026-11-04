@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+string("\x87\x19\xb2\x9c\x810")
+string("")
+string("0")
+int64(-81)
+int64(0)

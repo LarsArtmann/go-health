@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(18446744073709551601)
+uint64(18446744073709551434)
+string("@\xfb\xfb\xfb\xfb\xfb\xfb\xfb\xfb")
+int(434)
+string("0")

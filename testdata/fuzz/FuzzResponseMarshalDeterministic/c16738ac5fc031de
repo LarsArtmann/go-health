@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xfc\"000000\"\"\"\"\"\"\"0\"00\"0\"0\"\"0\"\"\"")
+string("0")
+string("\xcf00000000")
+string("")
+int64(0)
+int64(23)

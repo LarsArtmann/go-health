@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"atutss\":\"pass\",\"checks\":{\"a\":null}}")

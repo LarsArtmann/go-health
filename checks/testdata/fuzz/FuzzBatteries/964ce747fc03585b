@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xfe")
+uint64(1125899906842470)
+uint64(18446744073709551610)
+string("#      0  0    0    000")
+int(409)
+string("\x10")

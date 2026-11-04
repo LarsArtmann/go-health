@@ -1,0 +1,7 @@
+go test fuzz v1
+string("Cj\xd5\xf6T\xa7VX")
+string("\xd1\x14\xbeSR\xd6\a\x10")
+string("")
+string("\x1a")
+int64(0)
+int64(0)

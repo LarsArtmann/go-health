@@ -296,6 +296,41 @@
                   drift "docs/ARCHITECTURE.md does not name the source file $arch_file"
               done
 
+              # FEATURES inventory lockstep: every exported func, type, const
+              # and var across the four public packages must be named
+              # somewhere in FEATURES.md (GNU word-boundary match). FEATURES
+              # is the honest inventory, so a symbol that exists but is never
+              # named is drift the api_lockstep fences cannot see (they check
+              # design-doc blocks, not the inventory itself). Receiver-agnostic
+              # like api_lockstep; const/var block members are collected so
+              # the sentinel errors and Status constants count as symbols.
+              features_code="$(mktemp)"
+              for pkg_dir in . aggregate checks federation; do
+                for file in "$pkg_dir"/*.go; do
+                  case "$file" in
+                  *_test.go) continue ;;
+                  esac
+                  {
+                    grep -hoE '^func (\([^)]*\) )?[A-Z][A-Za-z0-9]*' "$file" || true
+                    grep -hoE '^type [A-Z][A-Za-z0-9]*' "$file" || true
+                    grep -hoE '^(const|var) [A-Z][A-Za-z0-9]*' "$file" || true
+                    awk '/^[[:space:]]*(const|var)[[:space:]]*\(/ {inblock = 1; next} /^[[:space:]]*\)/ {inblock = 0; next} inblock && $1 ~ /^[A-Z][A-Za-z0-9_]*$/ {print $1}' "$file" || true
+                  }
+                done
+              done |
+                sed -E 's/^func \([^)]*\) //; s/^func //; s/^type //; s/^const //; s/^var //' |
+                sort -u >"$features_code"
+              if [ ! -s "$features_code" ]; then
+                drift "no exported symbols extracted from the four public packages, so the FEATURES lockstep has nothing to compare"
+              else
+                while IFS= read -r name; do
+                  [ -n "$name" ] || continue
+                  grep -qE "\b''${name}\b" FEATURES.md ||
+                    drift "FEATURES.md does not name the exported symbol $name (add it to the inventory row that owns it)"
+                done <"$features_code"
+              fi
+              rm -f "$features_code"
+
               if [ "$fail" -eq 0 ]; then
                 echo "docs-drift-check: OK - README/AGENTS/CHANGELOG/FEATURES in sync with ''${latest}"
               fi

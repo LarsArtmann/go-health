@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\f\f\f\x10\f\f\f\f\f\f\f\f\f\f\f\f")
+string("0")
+string("0")
+string("0")
+int64(0)
+int64(47)

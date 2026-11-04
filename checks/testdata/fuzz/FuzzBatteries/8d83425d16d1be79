@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(18446744073709551612)
+uint64(18446744073709551593)
+string("\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a")
+int(58)
+string("0")

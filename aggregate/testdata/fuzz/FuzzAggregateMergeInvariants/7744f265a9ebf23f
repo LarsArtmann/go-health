@@ -1,0 +1,10 @@
+go test fuzz v1
+string("0\xc9G\x9b\xff\x85'\xa9,")
+string("g\x8ap\"{\xa7\xb0\xe3\xf2o\xd9x5cF50")
+string("\t\t\t\t\t\t\t\t")
+string(" ")
+bool(true)
+bool(true)
+bool(false)
+bool(true)
+string("")

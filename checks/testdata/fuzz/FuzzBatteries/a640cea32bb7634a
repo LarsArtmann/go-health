@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x16*\x02FF1F\x84@#/")
+uint64(18446744073709551611)
+uint64(18446744073709551615)
+string("/deep/p\xba\xba\xba")
+int(101)
+string("P")

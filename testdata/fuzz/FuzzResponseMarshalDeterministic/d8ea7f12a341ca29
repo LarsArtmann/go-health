@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+string("")
+string("1\x03y\xf1\r\xf94\xe19\xf7\x16\xc6\xc8\xd7\xe7\x01")
+string("0")
+int64(0)
+int64(0)

@@ -1,0 +1,10 @@
+go test fuzz v1
+string("0")
+string("\x12\x88c\f*B\xe7\x0f0")
+string("1")
+string("\x7f")
+bool(false)
+bool(true)
+bool(false)
+bool(true)
+string("z")

@@ -1,0 +1,3 @@
+go test fuzz v1
+string("ҿԄӳۜӲܞʢ㸷ʖƝ벃ׂ엡婪րԯ뚯\xf1\x89\xbcډߑ̀\xf1\xb3\x86鋘ѓˆІΤƅѳ")
+string("0")

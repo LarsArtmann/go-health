@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(1125899906842600)
+uint64(18446744073709551518)
+string("@0.0.0.\xb5")
+int(183)
+string("0")

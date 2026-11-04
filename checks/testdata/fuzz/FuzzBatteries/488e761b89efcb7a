@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(29)
+uint64(0)
+string("Աɯճ͂Ԑ\xe1\xa9߷\xf2\x940\u05c8ʍҷسؐ\xe2\xacȏг")
+int(402)
+string("0")

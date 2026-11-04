@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"fail\",\"checks\":{\"db\x04:{\"status\":\"fail\",\"error\":\"down\"}}}")

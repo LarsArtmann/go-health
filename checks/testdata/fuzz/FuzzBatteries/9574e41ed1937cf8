@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x16*\x02\x84y#/")
+uint64(18446744073709551611)
+uint64(18446744073709551615)
+string("/deep/path")
+int(101)
+string("2")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x03\xb2jCq0")
+uint64(18446744073709551518)
+uint64(18446744073709551612)
+string("@ח")
+int(157)
+string("0")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("$10")
+uint64(18446744073709551611)
+uint64(18446744073709551615)
+string("")
+int(101)
+string("2")

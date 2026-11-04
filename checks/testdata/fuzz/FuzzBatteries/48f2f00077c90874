@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xe1s0")
+uint64(0)
+uint64(1)
+string("a@\xab\xec\xec\xec\xec\xec\xec\xec\xec\xec\xec\xec\xec\xec윟0")
+int(255)
+string("0")

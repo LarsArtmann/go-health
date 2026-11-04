@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n ,\n1\n\n\n$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+string("\xff\xff")
+string("00\x94\x80\xeeޤ")
+string("o\xa7\x8a\xe4S\xfc\x8a")
+int64(0)
+int64(0)

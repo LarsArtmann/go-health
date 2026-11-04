@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xf1")
+uint64(150)
+uint64(24)
+string("/\x95\x95\x95\x95\x95\x95\x95\x95")
+int(128)
+string("2")

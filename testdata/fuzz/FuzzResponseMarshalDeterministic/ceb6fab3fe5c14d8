@@ -1,0 +1,7 @@
+go test fuzz v1
+string("00")
+string("01")
+string("00\x94\x80\xeeޤ")
+string("")
+int64(0)
+int64(0)

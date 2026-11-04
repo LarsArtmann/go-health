@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xf2\xa7\x810嵩\xf0\x92\x8a랡\ue585薾遑\xf4\x85\x97ᒕἤ筊\xf1\xb2\x98\xf1\xa1\x96㊴ꜛ")
+string("0")
+string("0")
+string("0")
+int64(-42000000161)
+int64(7)

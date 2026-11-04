@@ -1,0 +1,10 @@
+go test fuzz v1
+string("0")
+string("")
+string("\x1d\xef\xd1\xe60\x1a\x110\xe4\x9100\x1f")
+string("\x80\xa5\x89\x8d\xdd\xd70")
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+string("0")

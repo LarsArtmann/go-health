@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\"\x1a\"\x90ʞ\x97")
+string("\xb9")
+string("\x8a0\xa3\"\xc6")
+string("0")
+int64(45)
+int64(0)

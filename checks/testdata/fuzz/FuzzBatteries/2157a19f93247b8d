@@ -1,0 +1,7 @@
+go test fuzz v1
+string(".")
+uint64(1125899906842624)
+uint64(18446744073709551615)
+string("\xf6")
+int(299)
+string("")

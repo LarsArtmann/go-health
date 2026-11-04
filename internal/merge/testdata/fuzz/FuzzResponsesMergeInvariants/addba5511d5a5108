@@ -1,0 +1,13 @@
+go test fuzz v1
+string("0")
+string("")
+string("0")
+string("")
+string("0")
+string("")
+bool(true)
+bool(true)
+bool(true)
+bool(false)
+int64(2)
+int64(2)

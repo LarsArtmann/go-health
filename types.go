@@ -181,6 +181,13 @@ type Response struct {
 // map. Values are copied as-is (Check carries only strings and times), so
 // the clone shares no mutable state with the original.
 //
+// A nil Checks map stays nil: Clone never allocates on the source's behalf,
+// so a response whose snapshot carries no checks (a probe that never
+// evaluated, or a hand-built Response) clones into one that still cannot
+// take a row. A consumer that clones in order to ADD a check must allocate
+// first (clone.Checks = make(map[string]Check)) — assigning into the nil
+// map panics.
+//
 // Use it before adding or rewriting checks on a response obtained from
 // [Probe.CachedResponse]: that accessor is a lock-free read of the probe's
 // published snapshot and intentionally aliases the cached Checks map, so

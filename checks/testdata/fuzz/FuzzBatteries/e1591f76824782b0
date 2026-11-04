@@ -1,0 +1,7 @@
+go test fuzz v1
+string("4")
+uint64(18446744073709551595)
+uint64(18446744073709551615)
+string("@\xe2\xe2\xe2\xe2\xe2\xe2\x97\xed0\xd5")
+int(168)
+string("F")

@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\xf1\xb5\xbe0葤椹⽦岭ᕇ\xf1\xba\x990")
+string("0")
+string("0")
+string("0")
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+string("0")

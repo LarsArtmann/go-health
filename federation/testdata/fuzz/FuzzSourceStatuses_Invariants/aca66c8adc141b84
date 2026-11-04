@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"il\",\"checks\":{\"db\":{\"status\":\"0l\",\"error\":\"wn\"")

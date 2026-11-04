@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x1a¸/г ")
+uint64(212)
+uint64(31)
+string("?00 000 ")
+int(486)
+string("8")

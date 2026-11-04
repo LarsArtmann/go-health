@@ -1,0 +1,7 @@
+go test fuzz v1
+string("warn")
+string("0")
+string("connection refused")
+string("p\xf7d-1")
+int64(0)
+int64(0)

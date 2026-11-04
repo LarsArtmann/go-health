@@ -1,0 +1,2 @@
+go test fuzz v1
+string("\"\\u\v\v\x7f\x7f\x7f\x7f\x7f\x7f\x7f\v\v")

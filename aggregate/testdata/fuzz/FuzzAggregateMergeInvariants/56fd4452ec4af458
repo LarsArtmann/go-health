@@ -1,0 +1,10 @@
+go test fuzz v1
+string("edge-a")
+string("svc")
+string("e9ge-b")
+string("svc")
+bool(false)
+bool(false)
+bool(true)
+bool(false)
+string("pod-1")

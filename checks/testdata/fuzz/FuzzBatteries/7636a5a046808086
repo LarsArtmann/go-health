@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(18446744073709551575)
+uint64(18446744073709551545)
+string("@..\xfa")
+int(207)
+string("0")

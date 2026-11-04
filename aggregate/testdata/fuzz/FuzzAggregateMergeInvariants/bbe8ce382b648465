@@ -1,0 +1,10 @@
+go test fuzz v1
+string("8")
+string("0")
+string("\r")
+string("J")
+bool(false)
+bool(true)
+bool(false)
+bool(false)
+string("")

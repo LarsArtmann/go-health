@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x1c\x1c\x1c\x1c\x1c\x1c\x1c\x1c")
+string("0")
+string("0")
+string("0")
+int64(-42000000093)
+int64(10)

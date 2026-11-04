@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\xc1۩˶݁%\x9eٛĽƳ")
+string("ڔӊĜ΄͝姭܊ބӚ´ڃܘţ׳ő凘ͩҜ͆ż鰜έ\u07fcވɟ̳̐ۿܐ\U000ba906îז۱Ǎगԫ")
+string("0")
+string("<\x11\xacVd$\x940")
+bool(false)
+bool(true)
+bool(true)
+bool(true)
+string("1")

@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"pass\",\"shutti\x00d_down\":true,\"checks\":{}}")

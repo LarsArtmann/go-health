@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x1ay\xd7q\"\x81")
+uint64(208)
+uint64(374)
+string("@˟ß0")
+int(405)
+string("!")

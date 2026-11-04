@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+string("\xcb")
+string("T\x8a1ǣ\b\xc6")
+string("aod-1")
+int64(0)
+int64(0)

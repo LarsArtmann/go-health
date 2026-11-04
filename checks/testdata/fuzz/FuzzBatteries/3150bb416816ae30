@@ -1,0 +1,7 @@
+go test fuzz v1
+string("R")
+uint64(279)
+uint64(124)
+string("/           ")
+int(101)
+string("a")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("00")
+string("0")
+string("cd")
+string("po1")
+int64(14)
+int64(0)

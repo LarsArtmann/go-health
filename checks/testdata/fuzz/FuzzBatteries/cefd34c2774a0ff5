@@ -1,0 +1,7 @@
+go test fuzz v1
+string(" ")
+uint64(1)
+uint64(1)
+string("?5=")
+int(217)
+string("\xff")

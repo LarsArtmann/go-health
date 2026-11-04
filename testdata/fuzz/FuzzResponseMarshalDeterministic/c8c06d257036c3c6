@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+string("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+string("0")
+string("0")
+int64(1784000000000000000)
+int64(1500075)

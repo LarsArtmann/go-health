@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b")
+string("")
+string("0")
+string("")
+bool(true)
+bool(false)
+bool(false)
+bool(false)
+string("0")

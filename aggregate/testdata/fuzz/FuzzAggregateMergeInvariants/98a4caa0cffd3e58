@@ -1,0 +1,10 @@
+go test fuzz v1
+string("a")
+string("")
+string("*")
+string("ץ\x89\x8d݀_")
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+string("replic$A7")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+string("\xcb")
+string("\xf0\xeaD=")
+string("pod-1")
+int64(-89)
+int64(0)

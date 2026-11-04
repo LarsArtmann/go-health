@@ -9,6 +9,8 @@
 # Read-only. Exit 0 = registry and tree agree, 1 = drift, 2 = cannot run.
 set -euo pipefail
 
+echo "=== fuzz-registry: diffing flake.nix fuzz apps against the tree ==="
+
 if [ $# -gt 1 ]; then
 	echo "usage: fuzz-registry-check.sh [REPO_DIR]" >&2
 	exit 2
@@ -104,4 +106,5 @@ if [ "$fail" -eq 0 ]; then
 	echo "fuzz-registry: OK - $targets targets registered in both fuzz apps"
 fi
 
+echo "fuzz-registry: EXIT=$fail"
 exit "$fail"

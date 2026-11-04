@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+uint64(85)
+uint64(0)
+string("\xac\xac\xac\xac\xac\xac\xac\xac\xac\xac\xac\xac\xac\xac\xac\xac")
+int(568)
+string("0")

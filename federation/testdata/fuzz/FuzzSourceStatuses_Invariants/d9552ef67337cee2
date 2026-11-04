@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"warn\",\"checks\":{\"q\"ϝ\xbd\xb2\x86\xd1:{\"status\":\"warn\"}}}")

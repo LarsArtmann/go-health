@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(1125899906842707)
+uint64(18446744073709551615)
+string("\b\b\b\b\b\b\b\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f\x7f")
+int(323)
+string("0")

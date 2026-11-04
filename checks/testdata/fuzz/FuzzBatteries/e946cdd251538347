@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x16")
+uint64(86)
+uint64(24)
+string("/   \x8a")
+int(101)
+string("&")

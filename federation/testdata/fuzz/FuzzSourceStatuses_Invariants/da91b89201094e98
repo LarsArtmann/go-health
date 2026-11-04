@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"yail\",\"checks\":{\"00\":{\"status\":\"0000\",\"error\":\"down\"100")

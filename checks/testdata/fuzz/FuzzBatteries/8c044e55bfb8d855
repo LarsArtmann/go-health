@@ -1,0 +1,7 @@
+go test fuzz v1
+string("B")
+uint64(20)
+uint64(76)
+string("//    0  /   ")
+int(101)
+string("8")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x16\x10\x02\x84@#/")
+uint64(18446744073709551610)
+uint64(18446744073709551615)
+string("/\xe4eep/path")
+int(101)
+string("0")

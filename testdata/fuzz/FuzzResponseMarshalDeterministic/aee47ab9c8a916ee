@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0000\xcb000")
+string("0")
+string("conxceed")
+string("i-0abc123def")
+int64(1784000000000000000)
+int64(1500000)

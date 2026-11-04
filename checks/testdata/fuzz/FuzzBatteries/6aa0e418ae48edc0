@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(1125899906842675)
+uint64(18446744073709551423)
+string("@̇졑")
+int(457)
+string("0")

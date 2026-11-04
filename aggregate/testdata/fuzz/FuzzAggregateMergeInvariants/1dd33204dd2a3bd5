@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\x97㨖")
+string("0")
+string("\xa2䭺")
+string("")
+bool(false)
+bool(true)
+bool(false)
+bool(true)
+string("0")

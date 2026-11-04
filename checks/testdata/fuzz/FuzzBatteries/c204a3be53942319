@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x84\xb39\x00\xff ")
+uint64(150)
+uint64(37)
+string("/       /   ")
+int(101)
+string("\xbd\xf8p\xfbw\xac\x1fd1")

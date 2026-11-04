@@ -1,0 +1,3 @@
+go test fuzz v1
+string("\xf1\x9e\ue2f9")
+string("0")

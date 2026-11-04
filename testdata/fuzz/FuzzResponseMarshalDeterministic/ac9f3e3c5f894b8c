@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+string("")
+string("\xf5\xbd\xe60\xd70&00\xf1\x8a0\xfb0\x03\xe20")
+string("0")
+int64(0)
+int64(0)

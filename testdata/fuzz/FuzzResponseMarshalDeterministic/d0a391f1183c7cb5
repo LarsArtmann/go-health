@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xf3\xcf\xf2\x8500")
+string("\xff:")
+string("0")
+string("0")
+int64(1783999999999999988)
+int64(1500005)

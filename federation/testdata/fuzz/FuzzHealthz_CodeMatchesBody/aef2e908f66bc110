@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"atatC\":\"\r\r\r\r&\r\r")

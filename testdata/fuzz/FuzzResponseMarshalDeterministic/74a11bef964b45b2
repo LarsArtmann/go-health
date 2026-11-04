@@ -1,0 +1,7 @@
+go test fuzz v1
+string("00")
+string("c\\che")
+string("0")
+string("po1")
+int64(-11)
+int64(0)

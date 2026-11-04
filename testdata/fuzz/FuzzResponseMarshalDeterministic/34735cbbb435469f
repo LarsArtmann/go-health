@@ -1,0 +1,7 @@
+go test fuzz v1
+string("00\xeb")
+string("0")
+string("\xd4\xe7\x81\"\xfa\"0\x8d0\xbe\"\"\x9b\xe8\x87\xc60\xf10000\xf9\xe6\xb5")
+string("")
+int64(0)
+int64(0)

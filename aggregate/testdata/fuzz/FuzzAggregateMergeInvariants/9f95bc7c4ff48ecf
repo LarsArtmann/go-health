@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\xa6")
+string("")
+string("\xb90\xb7\"\x8c0\x95")
+string("\xd10")
+bool(false)
+bool(false)
+bool(true)
+bool(true)
+string("!")

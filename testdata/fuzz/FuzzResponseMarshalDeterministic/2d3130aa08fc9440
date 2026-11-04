@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+string("")
+string("?\x03")
+string("0")
+int64(38)
+int64(28)

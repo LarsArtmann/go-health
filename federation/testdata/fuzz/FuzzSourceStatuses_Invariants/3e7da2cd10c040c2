@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"sta{\"statuarn\",\"checks\":{\"q\":tus\":\"ws\":\"warn\"}}}")

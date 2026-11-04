@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\x00\x00\x00\x01n\",\"checks\":{\"q\":{\"status\":\"warn\",\"since\":\"2026-09-18T08:00:00Z\",\"duration_ns\":42}}}")

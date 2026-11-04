@@ -1,0 +1,7 @@
+go test fuzz v1
+string("C\xbd\x1b\x1b\xb1,")
+uint64(0)
+uint64(0)
+string("/?8\xdd")
+int(417)
+string("8")

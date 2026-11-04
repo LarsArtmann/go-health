@@ -42,6 +42,14 @@ func DoServiceName[T any]() string {
 // The option appends to the critical set, so it composes with
 // [WithCriticalServices] for explicitly named services. It only matches
 // services registered under do's type-inferred name.
+//
+// It cannot work when a [HealthRecorder] renames check keys (mapping every
+// do key to an operator display name is a common recorder shape): the
+// type-inferred name never appears in the reported batch, so the typed
+// helper marks a check that does not exist and Start fails with
+// [ErrUnknownCriticalService] naming the raw do key. That recorder-renamed
+// shape is the one place the typed spelling silently cannot work — pass the
+// names the recorder actually reports to [WithCriticalServices] instead.
 func WithCriticalService[T any]() Option {
 	return WithCriticalServices(DoServiceName[T]())
 }

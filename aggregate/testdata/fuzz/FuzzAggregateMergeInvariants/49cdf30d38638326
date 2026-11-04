@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\f\f")
+string("")
+string("0")
+string("0")
+bool(false)
+bool(true)
+bool(false)
+bool(false)
+string("0")

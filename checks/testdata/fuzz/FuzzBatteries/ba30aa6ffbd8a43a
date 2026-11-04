@@ -1,0 +1,7 @@
+go test fuzz v1
+string("1")
+uint64(150)
+uint64(24)
+string("/Bo")
+int(101)
+string("\x04\x12C\x8e2")

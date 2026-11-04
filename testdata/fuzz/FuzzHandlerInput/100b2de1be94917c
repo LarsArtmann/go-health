@@ -1,0 +1,3 @@
+go test fuzz v1
+string("\u05fb\u05fb")
+string("0")

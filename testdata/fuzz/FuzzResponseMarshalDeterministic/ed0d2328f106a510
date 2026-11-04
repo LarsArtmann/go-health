@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xec")
+string("\xc2")
+string("\xd7")
+string("0")
+int64(98)
+int64(75)

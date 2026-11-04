@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\xf1")
+uint64(150)
+uint64(24)
+string("/\xdfb")
+int(101)
+string("2")

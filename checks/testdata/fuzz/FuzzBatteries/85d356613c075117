@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(1)
+uint64(1)
+string("\U000cee79\U000cee79")
+int(295)
+string("0")

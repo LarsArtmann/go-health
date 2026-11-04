@@ -1,0 +1,7 @@
+go test fuzz v1
+string("5")
+uint64(123)
+uint64(34)
+string("\t\t")
+int(576)
+string("1")

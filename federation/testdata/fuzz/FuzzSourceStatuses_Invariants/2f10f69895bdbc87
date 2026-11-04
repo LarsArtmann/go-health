@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"warn\",\"checks\":{\"q\":{\"status\"\x00\x02warn\"}}}")

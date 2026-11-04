@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(18446744073709551607)
+uint64(18446744073709551562)
+string("@\xad\xad\xad\xad")
+int(233)
+string("0")

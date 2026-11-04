@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"fa+l\",\"checks\":{\"02\":{\"status\":\"fail\",\"000000000000\"000")

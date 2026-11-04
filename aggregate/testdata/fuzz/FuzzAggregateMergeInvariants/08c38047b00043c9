@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r")
+string("\xbc71\x84~t_\xb9\x1d")
+string("\xcb")
+string("\xaa0")
+bool(false)
+bool(true)
+bool(true)
+bool(false)
+string("R")

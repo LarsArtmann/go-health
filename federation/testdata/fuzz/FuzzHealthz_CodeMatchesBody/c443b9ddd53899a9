@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"warn\",\"checks\":{\"q\":{\"}tatus\":\"warn\"s}}")

@@ -1,0 +1,10 @@
+go test fuzz v1
+string("\xa200")
+string("0")
+string("\x8b00")
+string("00000")
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+string("0")

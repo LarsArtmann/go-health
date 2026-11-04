@@ -1,0 +1,7 @@
+go test fuzz v1
+string("9")
+uint64(18446744073709551558)
+uint64(18446744073709551559)
+string("/'cBp27|h")
+int(21)
+string("%8Zl")

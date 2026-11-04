@@ -1,0 +1,10 @@
+go test fuzz v1
+string("0")
+string("")
+string("1")
+string("\t`\x14\xeb")
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+string("replica-7")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("pY\xfcc\xefass")
+string("db")
+string("")
+string("")
+int64(0)
+int64(0)

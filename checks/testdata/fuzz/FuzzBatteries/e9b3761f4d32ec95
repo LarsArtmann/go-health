@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(38)
+uint64(53)
+string("/         W\x91\x89\x94?K-                                                                `                                                      ")
+int(211)
+string("1")

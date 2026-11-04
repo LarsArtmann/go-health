@@ -1,0 +1,7 @@
+go test fuzz v1
+string("/does-npt-exist")
+uint64(1)
+uint64(1)
+string("/ok")
+int(200)
+string("ok")

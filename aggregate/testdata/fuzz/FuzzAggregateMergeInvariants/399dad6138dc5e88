@@ -1,0 +1,10 @@
+go test fuzz v1
+string("s\xb1a\x9e\xcd")
+string("x/y")
+string("s2")
+string("x/y")
+bool(false)
+bool(false)
+bool(true)
+bool(false)
+string("i-0abc")

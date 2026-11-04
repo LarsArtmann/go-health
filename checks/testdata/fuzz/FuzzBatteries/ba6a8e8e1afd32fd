@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(0)
+uint64(155)
+string("@\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf200")
+int(490)
+string("0")

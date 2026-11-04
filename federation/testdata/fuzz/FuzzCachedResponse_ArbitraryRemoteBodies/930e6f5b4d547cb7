@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"pa,\",\"0000\xcb\xcb\x01")

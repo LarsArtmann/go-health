@@ -1,0 +1,10 @@
+go test fuzz v1
+string("0")
+string("")
+string("\xf9")
+string("\u05cd݀")
+bool(false)
+bool(false)
+bool(false)
+bool(false)
+string("0")

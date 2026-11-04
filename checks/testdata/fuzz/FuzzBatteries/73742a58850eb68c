@@ -1,0 +1,7 @@
+go test fuzz v1
+string("#")
+uint64(96)
+uint64(3)
+string("/!!")
+int(503)
+string("\x1d")

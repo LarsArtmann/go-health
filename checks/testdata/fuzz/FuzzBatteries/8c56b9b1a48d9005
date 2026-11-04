@@ -1,0 +1,7 @@
+go test fuzz v1
+string("F^`\xe3")
+uint64(0)
+uint64(0)
+string("@\x8e*\xc5OW\xf59z")
+int(490)
+string("\x10")

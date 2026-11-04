@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x01")
+string("0\x9b")
+string("\x1a\x1a")
+string("")
+int64(0)
+int64(0)

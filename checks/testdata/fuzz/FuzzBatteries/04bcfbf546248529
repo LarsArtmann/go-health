@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(88)
+uint64(0)
+string("\u05c8\u05c8\u05c8\u05c8\u05c8\u05c8\u05c8\u05c8")
+int(414)
+string("0")

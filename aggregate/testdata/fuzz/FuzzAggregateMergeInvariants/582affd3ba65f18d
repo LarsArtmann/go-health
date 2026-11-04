@@ -1,0 +1,10 @@
+go test fuzz v1
+string("0")
+string("0")
+string("1")
+string("\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r")
+bool(false)
+bool(false)
+bool(true)
+bool(false)
+string("0")

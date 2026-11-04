@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"c\x7fx(ks\"\x00\x009{ x")

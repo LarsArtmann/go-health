@@ -1,0 +1,7 @@
+go test fuzz v1
+string("psseEK")
+string("b")
+string("")
+string("m\fn")
+int64(0)
+int64(0)

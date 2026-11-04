@@ -1,0 +1,2 @@
+go test fuzz v1
+string("{\"status\":\"fail\",\"checks\"\x7f\xff\xff\xffb\":{\"status\":\"fail\",\"error\":\"down\"}}}")

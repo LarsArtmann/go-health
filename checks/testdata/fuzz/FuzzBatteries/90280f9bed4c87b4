@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x02*\x16\x84@#/")
+uint64(18446744073709551572)
+uint64(18446744073709551587)
+string("/deep/\xa4ath")
+int(101)
+string("322")

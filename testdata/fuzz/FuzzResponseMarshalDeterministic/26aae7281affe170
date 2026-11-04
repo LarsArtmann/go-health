@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\f\f")
+string("\x10")
+string("0")
+string("\x0e")
+int64(-42000000068)
+int64(-17)

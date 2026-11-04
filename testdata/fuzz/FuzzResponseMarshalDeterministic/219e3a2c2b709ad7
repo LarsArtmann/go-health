@@ -1,0 +1,7 @@
+go test fuzz v1
+string("")
+string("")
+string("\xe7\xe2s\xea\x95S")
+string("2")
+int64(-7)
+int64(0)

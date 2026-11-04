@@ -1,0 +1,7 @@
+go test fuzz v1
+string("pass")
+string("db")
+string("z\xc2nM*1")
+string("")
+int64(-7)
+int64(42)

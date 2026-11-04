@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x01")
+string("0\x9b")
+string("K\xff")
+string("")
+int64(-88)
+int64(76)

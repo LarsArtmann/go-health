@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0")
+uint64(18446744073709551604)
+uint64(18446744073709551532)
+string("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t")
+int(268)
+string("0")

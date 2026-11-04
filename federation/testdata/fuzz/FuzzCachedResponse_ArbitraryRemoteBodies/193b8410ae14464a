@@ -1,0 +1,2 @@
+go test fuzz v1
+string("\"\\u\x8a\xd0\xe4\x91")

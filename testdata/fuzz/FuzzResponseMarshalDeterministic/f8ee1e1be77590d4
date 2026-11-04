@@ -1,0 +1,7 @@
+go test fuzz v1
+string("pass")
+string("db")
+string("\xd4\xe7\x7f\x81\t\xfaɭ\x8d$\xbe\x11\x1f\x9b\xe8\x87\xc60\xf1nX:-\xf9\xe6\xb5")
+string("")
+int64(0)
+int64(0)

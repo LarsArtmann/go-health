@@ -1,0 +1,7 @@
+go test fuzz v1
+string("\x97\\\x9b\xe1")
+uint64(150)
+uint64(17)
+string("/\xdfb")
+int(101)
+string("x")

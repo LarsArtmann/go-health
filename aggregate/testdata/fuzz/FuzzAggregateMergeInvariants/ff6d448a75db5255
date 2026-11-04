@@ -1,0 +1,10 @@
+go test fuzz v1
+string("s1")
+string("xy")
+string("s2")
+string("x/y")
+bool(false)
+bool(true)
+bool(true)
+bool(false)
+string("i-0abc")

@@ -1,0 +1,7 @@
+go test fuzz v1
+string("0\x1f\xea\xfd\x7f0y\xfdܡ\xe9\xf8\x84\x05\xaa\x9c\x84\xff\xb6\xe9nj\x80\x1c\x87\xec\xb3")
+uint64(18446744073709551594)
+uint64(18446744073709551568)
+string("@0B00")
+int(170)
+string("0")

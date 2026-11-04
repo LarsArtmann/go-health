@@ -64,3 +64,6 @@ result-*
 ## Local tool builds
 /tools/doanalyzerv2/doanalyzerv2-runner
 /tools/doanalyzerv2/doanalyzerv2
+
+# Compiled draft repro binaries (go build artifacts; rebuild via go run ./docs/drafts/finding1_repro)
+docs/drafts/finding1_repro/finding1_repro

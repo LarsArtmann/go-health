@@ -569,7 +569,7 @@
                       echo "pre-tag: tag $version already exists; published tags are never moved — pick a new patch" >&2
                       exit 1
                     fi
-                    if ! grep -qE "^## \[?''${version#v}\]?" CHANGELOG.md; then
+                    if ! grep -qE "^## \[?v?''${version#v}\]?" CHANGELOG.md; then
                       echo "pre-tag: CHANGELOG.md has no '## [$version]' section — cut the release section first" >&2
                       exit 1
                     fi

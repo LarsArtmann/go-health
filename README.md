@@ -8,7 +8,7 @@ Kubernetes health-probe SDK for [samber/do](https://github.com/samber/do) v2 con
 
 Turns the three-probe Kubernetes pattern (liveness, readiness, startup) into a single `Probe` type with sensible defaults, critical/non-critical service classification, background caching, and shutdown awareness.
 
-> **Stability:** v0.8.1 alpha. The three-probe API surface is stable; internal details may change before v1.0. Two runtime dependencies: `samber/do` v2 (service health checks) and `go-branded-id` (the strong `InstanceID` type), plus the naming helper `samber/go-type-to-string` that do itself already requires.
+> **Stability:** v0.9.0 alpha. The three-probe API surface is stable; internal details may change before v1.0. Two runtime dependencies: `samber/do` v2 (service health checks) and `go-branded-id` (the strong `InstanceID` type), plus the naming helper `samber/go-type-to-string` that do itself already requires.
 
 ---
 

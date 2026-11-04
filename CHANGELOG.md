@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Removed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [v0.9.0] - 2026-11-04
+
+_Identity-and-evidence release, carrying two wire-compatible breaking Go-API
+changes (0.x minor): instance identifiers become the branded
+`health.InstanceID`, and `Check.Since` is renamed `StatusSince` — dashboards
+and federation remotes reading the JSON wire need no change.
+`SanitizeResponse` is deprecated for `CoerceValidUTF8` and stays working for
+the rest of v0.x. Around the renames: the httputil integration is documented
+and machine-proved against the published release, 3,660 coverage-guided fuzz
+inputs are promoted into the repo, and the drift gates grew until the
+exported surface, the file map, FEATURES and the API fences can no longer
+quietly disagree._
+
+### Added
+
 - `health.InstanceID`, a branded strong type for replica identifiers (`github.com/larsartmann/go-branded-id` v0.7.0, now a direct dependency), with the `health.NewInstanceID(string)` constructor: `WithInstanceID("pod-abc")` no longer compiles — a replica identifier cannot be confused with any other string at compile time.
 - `nix run .#fuzz-registry` (also `checks.fuzz-registry`, part of `.#gates`) diffs both fuzz apps in `flake.nix` against the `Fuzz*` targets in the tree and against each other, so a new target can no longer be written and silently never fuzzed. Backed by `tools/fuzz-registry-check.sh`.
 - `docs-check` grew two drift rules: `[Unreleased]` must document something while HEAD is past the latest tag, and `docs/federation-design.md`'s fenced go API block must match federation's exported surface in both directions (it was missing `SourceStatuses` and `Healthz` while both shipped).
@@ -553,7 +582,8 @@ First public release. Three-probe Kubernetes health-probe SDK for samber/do v2.
 - Comprehensive test suite with race detector coverage.
 - `example_test.go` with runnable examples.
 
-[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/larsartmann/go-health/compare/v0.9.0...HEAD
+[v0.9.0]: https://github.com/larsartmann/go-health/compare/v0.8.1...v0.9.0
 [v0.8.1]: https://github.com/larsartmann/go-health/compare/v0.8.0...v0.8.1
 [v0.8.0]: https://github.com/larsartmann/go-health/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/larsartmann/go-health/compare/v0.6.1...v0.7.0

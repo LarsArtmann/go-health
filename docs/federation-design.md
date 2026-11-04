@@ -70,11 +70,11 @@ upgrade. The pull cost is bounded by the hub's read cadence.
 
 ### Merge rules (per `CachedResponse`)
 
-| Input                                                               | Contribution                                                                                                                                     |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Input                                                               | Contribution                                                                                                                                           |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Remote answers with a valid response                                | Its overall `Status` feeds worst-of; its checks land as `name/check`; `StatusSince`/`DurationNanos` are preserved verbatim; `ShuttingDown` is OR-ed in |
-| Remote fails (network, timeout, non-200, undecodable, empty status) | One synthetic check `name/reachable` with status `fail` and the cause as `Error`; contributes overall `fail`; its cached/last state is NOT used  |
-| Any remote `ShuttingDown`                                           | Overall status forced to `fail`, mirroring `aggregate` (and `Probe`) semantics                                                                   |
+| Remote fails (network, timeout, non-200, undecodable, empty status) | One synthetic check `name/reachable` with status `fail` and the cause as `Error`; contributes overall `fail`; its cached/last state is NOT used        |
+| Any remote `ShuttingDown`                                           | Overall status forced to `fail`, mirroring `aggregate` (and `Probe`) semantics                                                                         |
 
 Worst-of uses `Status.Rank()` (fail < warn < pass, unknown ranks as
 pass), shared with `aggregate` — one severity ordering for the module.

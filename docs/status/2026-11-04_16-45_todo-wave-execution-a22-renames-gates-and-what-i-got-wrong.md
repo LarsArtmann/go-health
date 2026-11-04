@@ -66,6 +66,7 @@
 ## f) Up to 50 things to do next (ordered by leverage, not severity)
 
 **Release window (unblocks the most):**
+
 1. Owner: push the 6 go-health commits + 6 dashboard commits (or authorize push).
 2. Cut v0.9.0 through the manual flow: CHANGELOG cut → `nix run .#pre-tag -- v0.9.0` → annotated tag → `gh release create` → proxy/pkg.go.dev verify.
 3. Run the FULL `nix run .#gates` on the release tree (coverage-gate, vulncheck, security, interop included) + `nix run .#ci-emulation`.

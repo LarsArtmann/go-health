@@ -213,7 +213,7 @@ Match the consumer to the probe. Each answers a different question, so pointing 
 | kubelet `startupProbe`              | `/startupz`            | 503 until every critical service passed once, then latches to 200 forever                                                              |
 | external load balancer / single URL | `Probe.Healthz()`      | 503 while booting, failing, or draining; 200 otherwise                                                                                 |
 | dashboard or a human debugging      | `/readyz`              | Full per-check body, including `since` and `duration_ns`                                                                               |
-| scripts / deploy tooling            | `/version`             | Build stamp as `{"version":"..."}` (`VersionHandler`, wired manually or via `Routes.Version` in `RegisterRoutes`); GET-only, never 503 |
+| scripts / deploy tooling            | `/version`             | Build stamp as `{"version":"..."}` — mounted by `DefaultRoutes()` (stamp via `WithVersion`, registration panics otherwise) or wired manually; GET-only, never 503 |
 | in-process code, middleware, tests  | `Status()` / `Ready()` | Cached roll-up read; never triggers a dependency check                                                                                 |
 
 ### Which constructor should I use?
@@ -262,8 +262,8 @@ for the unauthenticated-probe threat model and consumer hardening checklist.
 - **Optional recorder** — wire any `HealthRecorder` (e.g. `samber-do-auditlog.Plugin`) to observe every check batch. `ChainRecorders(...)` observes one batch through several sinks and keeps durations from detailed members; `HealthRecorderFunc` adapts a closure; `NewWithRecorder(...)` builds a probe without a samber/do injector.
 - **Typed critical identity** — `WithCriticalService[T]()` marks do's type-inferred service as critical and `DoServiceName[T]()` names the same key, so a critical list cannot drift from the registration or fall out of sync with a display-name table.
 - **Cache freshness is explicit** — `CacheAge()` distinguishes "never evaluated" from "fresh pass", `CachedResponseFresh(maxAge)` implements serve-cache-or-fall-through, and `EvaluateAndCache(ctx)` refreshes the served snapshot instead of answering once and leaving the cache stale. `Response.Clone()` is the sanctioned copy before projecting synthetic rows onto a cached view.
-- **Partial route mounting** — `RegisterRoutes` skips an empty `Routes` field, so a service can expose only `/readyz` (or any subset) without mounting handlers it does not serve. `Routes.Version` mounts the build-version endpoint the same one-liner way (the probe serves its `WithVersion` stamp; `DefaultRoutes()` leaves it unmounted).
-- **Method-qualified default routes** — `DefaultRoutes()` returns `GET /healthz`, `GET /readyz`, `GET /startupz`, so registration cannot conflict with common `ServeMux` shapes such as a `GET /{slug}` page route (a bare `/healthz` panics at registration against that pattern). Custom `Routes` values still accept any pattern.
+- **Partial route mounting** — `RegisterRoutes` skips an empty `Routes` field, so a service can expose only `/readyz` (or any subset) without mounting handlers it does not serve. `Routes.Version` is default-mounted via `DefaultRoutes()` and hard-fails at registration on an unstamped probe — the version endpoint must answer truthfully or not at all (aggregate/federation have no build identity and never mount it).
+- **Method-qualified default routes** — `DefaultRoutes()` returns `GET /healthz`, `GET /readyz`, `GET /startupz`, `GET /version`, so registration cannot conflict with common `ServeMux` shapes such as a `GET /{slug}` page route (a bare `/healthz` panics at registration against that pattern). Custom `Routes` values still accept any pattern.
 
 ## Configuration Reference
 
@@ -373,7 +373,8 @@ probe := health.New(injector,
     health.WithVersion(version), // stamped into every response body
 )
 mux.Handle("/version", health.VersionHandler(version)) // standalone: {"version":"..."}, GET-only, never 503
-// or let RegisterRoutes mount it: health.Routes{..., Version: "GET /version"}
+// DefaultRoutes() already mounts GET /version for stamped probes — remove
+// the line above (or drop Routes.Version) to avoid double registration.
 ```
 
 ```sh

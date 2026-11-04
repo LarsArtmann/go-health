@@ -54,7 +54,10 @@ func TestRegisterRoutes_IgnoresVersionField(t *testing.T) {
 	mux.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/version", nil))
 
 	if rec.Code != http.StatusNotFound {
-		t.Errorf("GET /version with Routes.Version set: want 404 (hub has no build identity, field ignored), got %d", rec.Code)
+		t.Errorf(
+			"GET /version with Routes.Version set: want 404 (hub has no build identity, field ignored), got %d",
+			rec.Code,
+		)
 	}
 
 	defaults := http.NewServeMux()

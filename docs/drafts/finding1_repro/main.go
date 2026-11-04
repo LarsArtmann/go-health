@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	const reproReadHeaderTimeout = 5 * time.Second
+
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /{slug}",
@@ -21,5 +23,5 @@ func main() {
 		func(context.Context) map[string]error { return map[string]error{} },
 	)
 	probe.RegisterRoutes(mux, health.DefaultRoutes())
-	_ = http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	_ = http.Server{Handler: mux, ReadHeaderTimeout: reproReadHeaderTimeout}
 }

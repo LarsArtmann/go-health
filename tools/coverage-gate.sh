@@ -73,7 +73,7 @@ fi
 # CI (2026-11-04, three jobs red). The suite still compiles and runs ./... —
 # only the floor arithmetic skips docs/ rows, so a broken draft still fails
 # the gate via the test run itself.
-grep -v '/docs/' "$profile" > "${profile}.filtered" || true
+grep -v '/docs/' "$profile" >"${profile}.filtered" || true
 mv "${profile}.filtered" "$profile"
 
 if [ ! -s "$profile" ]; then

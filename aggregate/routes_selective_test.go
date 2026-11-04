@@ -41,11 +41,12 @@ func TestRegisterRoutes_SkipsEmptyPatterns(t *testing.T) {
 	}
 }
 
-// TestRegisterRoutes_MountsVersionEndpoint pins the Routes.Version slot on
-// the aggregate surface: the mount serves {"version":""} because the
-// aggregate carries no build identity, and DefaultRoutes() leaves /version
-// unmounted.
-func TestRegisterRoutes_MountsVersionEndpoint(t *testing.T) {
+// TestRegisterRoutes_IgnoresVersionField pins the identity-honest contract
+// on the aggregate surface: the aggregate carries no build identity, so it
+// never mounts the version endpoint — not even when Routes.Version is set —
+// because an unstamped /version would answer {"version":""} and lie about
+// the build. Wire health.VersionHandler yourself if you stamp the process.
+func TestRegisterRoutes_IgnoresVersionField(t *testing.T) {
 	t.Parallel()
 
 	agg, err := aggregate.New(aggregate.Source{
@@ -62,12 +63,8 @@ func TestRegisterRoutes_MountsVersionEndpoint(t *testing.T) {
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/version", nil))
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("GET /version: want 200, got %d", rec.Code)
-	}
-
-	if body := rec.Body.String(); body != `{"version":""}` {
-		t.Errorf("GET /version body: want %q, got %q", `{"version":""}`, body)
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("GET /version with Routes.Version set: want 404 (aggregate has no build identity, field ignored), got %d", rec.Code)
 	}
 
 	defaults := http.NewServeMux()

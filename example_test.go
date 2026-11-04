@@ -119,15 +119,20 @@ func ExampleProbe_ReadinessHandler() {
 }
 
 // ExampleProbe_RegisterRoutes shows the one-liner for mounting all three
-// Kubernetes probe endpoints on a standard http.ServeMux.
+// Kubernetes probe endpoints plus the build-version endpoint on a standard
+// http.ServeMux. The version mount requires a WithVersion stamp; without one
+// RegisterRoutes panics at registration instead of serving an empty version.
 func ExampleProbe_RegisterRoutes() {
 	injector := do.New()
-	probe := health.New(injector, health.WithRefreshInterval(0))
+	probe := health.New(injector,
+		health.WithRefreshInterval(0),
+		health.WithVersion("1.2.3"),
+	)
 
 	mux := http.NewServeMux()
 	probe.RegisterRoutes(mux, health.DefaultRoutes())
 
-	for _, path := range []string{"/healthz", "/readyz", "/startupz"} {
+	for _, path := range []string{"/healthz", "/readyz", "/startupz", "/version"} {
 		w := httptest.NewRecorder()
 
 		r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, path, nil)
@@ -143,4 +148,5 @@ func ExampleProbe_RegisterRoutes() {
 	// /healthz: 200
 	// /readyz: 200
 	// /startupz: 200
+	// /version: 200
 }

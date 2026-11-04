@@ -46,10 +46,10 @@ func ExampleProbe_Start() {
 	mux := http.NewServeMux()
 	probe.RegisterRoutes(mux, health.DefaultRoutes())
 
-	fmt.Println("routes registered: 3")
+	fmt.Println("routes registered: 4")
 
 	// Output:
-	// routes registered: 3
+	// routes registered: 4
 }
 
 // ExampleProbe_Healthz shows the single-endpoint combined health handler:

@@ -148,10 +148,11 @@ any per-remote startup latch is unset, the merged roll-up is `fail` (which
 already covers unreachable remotes, shutting-down remotes, and this hub
 once marked for drain), or the hub itself is draining; 200 otherwise with
 the merged body. `warn` stays 200, matching `Probe.Healthz` and the
-aggregate. It is standalone: `RegisterRoutes` still wires only the three
-kubelet probes by default (`health.Routes.Version` can additionally mount a
-build-version endpoint, which answers `{"version":""}` here — the hub has no
-build identity), and `health.DefaultRoutes` already claims `/healthz` for
+aggregate. It is standalone: `RegisterRoutes` wires only the three
+kubelet probes (`health.Routes.Version` is ignored here — the hub has no
+build identity and must not serve a made-up or empty /version; wire
+`health.VersionHandler` yourself if you stamp the hub binary), and
+`health.DefaultRoutes` already claims `/healthz` for
 liveness. Cost is one fetch wave per request — the same as readiness, so
 the polling guidance above applies unchanged. Full rationale:
 docs/federation-healthz-design.md.

@@ -147,13 +147,12 @@
 //
 // [VersionHandler] serves the binary's build stamp — the ldflags/VCS
 // pattern — as {"version":"..."} on its own endpoint. It is identity, not
-// health: no checks, always 200, unaffected by shutdown. Wire it next to
-// the probe routes:
+// health: no checks, always 200, unaffected by shutdown. Stamp the probe
+// and [DefaultRoutes] mounts it at GET /version automatically; the mount
+// panics at registration when the probe is unstamped, because an empty
+// version would lie about the build:
 //
-//	mux.HandleFunc("/version", health.VersionHandler(buildVersion))
-//
-// or set Routes.Version when calling [Probe.RegisterRoutes]; the probe
-// serves its own [WithVersion] stamp.
+//	health.New(injector, health.WithVersion(buildVersion))
 //
 // # Why Three Probes?
 //

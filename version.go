@@ -39,7 +39,10 @@ var marshalVersionResponse = func(body versionResponse) ([]byte, error) {
 //
 //	mux.HandleFunc("/version", health.VersionHandler(buildVersion))
 //
-// or let [Probe.RegisterRoutes] mount it by setting Routes.Version.
+// or just stamp the probe ([WithVersion]) and use [DefaultRoutes] —
+// [Probe.RegisterRoutes] mounts this handler at GET /version by default, and
+// panics at registration when Routes.Version is set on an unstamped probe:
+// an endpoint answering {"version":""} would lie about the build.
 //
 // The handler accepts GET only; any other method gets 405 with an Allow
 // header — the same posture [WithAllowedMethods] offers for the probe

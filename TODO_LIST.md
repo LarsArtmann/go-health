@@ -23,6 +23,19 @@
 | IN_PROGRESS | Actively being worked on.                               |
 | BLOCKED     | Cannot proceed, external dependency or decision needed. |
 
+## The v0.9.0 adoption wave (release cut 2026-11-04; fleet measured the same day)
+
+`nix run .#skew` immediately after the tag: **most of the fleet is a minor
+behind v0.9.0** — the normal state the week after a release. The wire is
+unchanged, so only Go consumers reading `Check.Since` (now `StatusSince`) or
+calling `SanitizeResponse` need code edits; pin-only bumps are mechanical.
+go-health-dashboard is already on v0.9.0 with the rename applied (b443480).
+
+| Task                                                                                                | Status | Impact | Effort | Evidence / next action                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------- | ------ | ------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fleet bump to v0.9.0** — `go get github.com/larsartmann/go-health@v0.9.0` + build + test per repo | TODO   | High   | ~3h    | Pin-only for most; rename sites are inventoried in the CHANGELOG Breaking entries. Weekly skew (Mondays 06:17) stays red until this closes — that alarm is the design, not an incident. |
+| **go-taskqueue direction** (owner question, carried from the 2026-11-04 status report §q3)          | TODO   | Med    | —      | `WithInformational` design note is PROPOSED demand-gated: pass-detail field vs informational tier vs dropping the green notes. Blocks the go-taskqueue → `NewChecks` port below.        |
+
 ## The consumption gap (the wave is released and now being adopted)
 
 Re-measured 2026-10-28 with `nix run .#skew`: **11 of 16 fleet repos are on

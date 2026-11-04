@@ -1,0 +1,8 @@
+# Backlog record for tools/fleet-skew.sh (--allow): 16 of 16 consumers behind.
+# v0.9.0 shipped 2026-11-04 ~18:50 and the adoption wave never ran; the v0.10.0
+# cut (same day, ~20:30) supersedes it, so every consumer is minor-stale against
+# the newest tag. This is a KNOWN in-motion backlog, not hidden drift: the
+# fleet bump wave (go get github.com/larsartmann/go-health@v0.10.0 across the
+# 16 repos) is the immediate next task, and when it lands this file is DELETED
+# (strict 0), never raised again. Ratchet rule: down as repos adopt, per
+# .github/workflows/skew.yml.

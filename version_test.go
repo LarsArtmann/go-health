@@ -83,7 +83,7 @@ func TestVersionHandler_CoercedUTF8SurvivesJSONv2(t *testing.T) {
 
 	// encoding/json/v2 refuses to marshal invalid UTF-8; the handler must
 	// never turn that into a 500 the way an unsanitized health response
-	// would (the fuzz-found class SanitizeResponse guards for).
+	// would (the fuzz-found class CoerceValidUTF8 guards for).
 	rec := httptest.NewRecorder()
 	health.VersionHandler("\x80bad").
 		ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/version", nil))

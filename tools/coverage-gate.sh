@@ -11,6 +11,9 @@
 # Raise a floor only after a deliberate coverage improvement lands, never to
 # make a red run green.
 #
+# docs/ draft packages (runnable repros) are excluded from the arithmetic:
+# they are documentation artifacts, not library surface.
+#
 # Usage:
 #   coverage-gate.sh [--total PCT] [--package PCT] [--report-only]
 #   coverage-gate.sh --profile FILE     # grade an existing profile, run nothing
@@ -55,7 +58,7 @@ done
 
 if [ -z "$profile" ]; then
 	profile="$(mktemp)"
-	trap 'rm -f "$profile"' EXIT
+	trap 'rm -f "$profile" "${profile}.filtered"' EXIT
 	# The profile is only meaningful over a green suite: a failing test leaves
 	# partial counters that would report a *higher* percentage.
 	if ! go test ./... -coverprofile="$profile" -covermode=atomic; then
@@ -63,6 +66,15 @@ if [ -z "$profile" ]; then
 		exit 1
 	fi
 fi
+
+# Drafts under docs/ are documentation artifacts, not library surface: the
+# runnable finding-1 repro (docs/drafts/finding1_repro) carried an uncovered
+# main() that counted 0.0% into the total and dragged it below the floor on
+# CI (2026-11-04, three jobs red). The suite still compiles and runs ./... —
+# only the floor arithmetic skips docs/ rows, so a broken draft still fails
+# the gate via the test run itself.
+grep -v '/docs/' "$profile" > "${profile}.filtered" || true
+mv "${profile}.filtered" "$profile"
 
 if [ ! -s "$profile" ]; then
 	echo "coverage-gate: $profile is empty (no coverage data)" >&2

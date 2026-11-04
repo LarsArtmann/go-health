@@ -380,6 +380,19 @@ go build -ldflags "-X main.version=$(git describe --tags --always)" ./cmd/myapp
 
 Prefer VCS stamping over hand-rolled `-X` when you can: with `go build` on Go 1.24+, `runtime/debug.ReadBuildInfo()` carries `vcs.revision`/`vcs.tag`; pass the short form to `WithVersion`/`VersionHandler` and keep one source of truth. (A `WithVersionFromBuildInfo` convenience was considered and rejected for now — the two-line recipe above covers it without new API surface.)
 
+### Response sanitization (`CoerceValidUTF8`)
+
+Every served response body is coerced to valid UTF-8 before it reaches the wire — invalid bytes become U+FFFD — so a dependency whose error text carries broken encoding can never produce a malformed body. `CoerceValidUTF8` is also exported for hosts that post-process a `Response` themselves.
+
+Its former name `SanitizeResponse` is **deprecated** (v0.9) and points here: the name never described the operation (nothing is removed; bytes are coerced). It keeps working unchanged for the rest of v0.x — migrate mechanically:
+
+```go
+// before
+resp = health.SanitizeResponse(resp)
+// after
+resp = health.CoerceValidUTF8(resp)
+```
+
 ## Shutdown Awareness
 
 Call `Shutdown()` during your server's graceful-drain path. Readiness immediately returns 503 so load balancers stop sending traffic before connections close. Liveness stays 200 because the process is still alive.

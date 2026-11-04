@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The `nix fmt` row in `AGENTS.md` claimed goimports while treefmt runs gofmt, golines and nixfmt; corrected, and markdown formatting is now documented as BuildFlow's responsibility because treefmt runs sandboxed and dprint downloads its plugins.
 - `.#security` no longer reads the host's shared Go build cache: with `GOCACHE=/mnt/buildcache/go-build`, concurrent sessions and language servers evicted entries mid-run, so gosec fell back to a source-only pass, skipped SSA for every package and exited 1 with `Issues: 0`. The app now runs gosec against a private temporary `GOCACHE` (verified: same tree, exit 0, all five packages analysed). `.#lint`'s deadline moved from 5m to 10m for the same loaded-host reason.
+- `coverage-gate` no longer lets documentation drafts drag the library below the floor: packages under `docs/` (the runnable finding-1 repro) are excluded from the floor arithmetic after one such draft's uncovered `main` counted 0.0% into the total and red three CI jobs on 2026-11-04 (coverage floor, gosec, lint — the lint/gosec half was already fixed in the draft itself). The suite still compiles and runs `./...`; only the percentage arithmetic skips `docs/` rows.
 
 ## [v0.8.1] - 2026-10-27
 

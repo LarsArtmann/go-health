@@ -19,7 +19,7 @@ types.go         — Status enum (check level: pass/fail/warn/off; the roll-up s
 probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate() (incl. ErrRecorderNotApplicable), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate (no publish), EvaluateAndCache, CachedResponse (lock-free read-only view + shutdown overlay), CacheAge/CachedResponseFresh, accessors, runHealthChecks (with panic recovery), buildChecks (Since stamping + duration carry), errorsOf/detailOf adapters
 tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.Since inside buildChecks (probe-observed, prunes absent checks)
 classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
-handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes (empty patterns skipped), Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + SanitizeResponse (UTF-8 coercion), marshalResponse (test seam)
+handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes (empty patterns skipped), Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + CoerceValidUTF8 (UTF-8 coercion; SanitizeResponse deprecated alias), marshalResponse (test seam)
 accessors.go     — ErrProbeUnhealthy, HealthCheckFunc, NewWithHealthCheck, DetailedHealthCheckFunc, NewWithDetailedCheck, NewWithRecorder (injector-free recorder constructor, new_with_recorder.go), Status/Alive/Ready, AwaitReady, HealthCheck (do conformance), ProbeShutdowner/AsShutdowner, Healthz + applyStartupFailureOverlay (shared overlay shape with aggregate/federation)
 checks.go        — CheckFunc + NewChecks (injector-free named-check constructor: concurrent execution, per-check duration, panic recovery, nil fail-closed, batch-deadline abandonment), runNamedChecks/runBoundedCheck executors — design: docs/named-checks-design.md
 recorder.go      — ChainRecorders (ordered, nil-skipping, detailed-duration-preserving) + HealthRecorderFunc/DetailedHealthRecorderFunc adapters; service_name.go — DoServiceName[T]/WithCriticalService[T] (do's inferred key via do's own naming helper)
@@ -169,7 +169,7 @@ func (p *Probe) StartupHandler() http.HandlerFunc
 func (p *Probe) Healthz() http.HandlerFunc
 func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes)
 func VersionHandler(version string) http.HandlerFunc
-func SanitizeResponse(resp Response) Response
+func CoerceValidUTF8(resp Response) Response // SanitizeResponse stays as a deprecated working alias
 func NewInstanceID(raw string) InstanceID // wraps a raw replica identifier; empty string = unset
 
 // Options.

@@ -214,13 +214,13 @@ var marshalResponse = func(resp Response) ([]byte, error) {
 	return json.Marshal(resp, json.Deterministic(true))
 }
 
-// SanitizeResponse coerces every string field to valid UTF-8, replacing
+// CoerceValidUTF8 coerces every string field to valid UTF-8, replacing
 // invalid bytes with U+FFFD. encoding/json/v2 refuses to marshal invalid
 // UTF-8 (v1 replaced it silently), so without this a dependency emitting a
 // malformed error string could turn a health endpoint into a 500. Applying
 // it at the write seam keeps the served bytes valid under both v1 and v2
 // semantics for any input.
-func SanitizeResponse(resp Response) Response {
+func CoerceValidUTF8(resp Response) Response {
 	resp.Status = Status(strings.ToValidUTF8(string(resp.Status), "\uFFFD"))
 	resp.Version = strings.ToValidUTF8(resp.Version, "\uFFFD")
 	resp.InstanceID = NewInstanceID(strings.ToValidUTF8(resp.InstanceID.Get(), "\uFFFD"))
@@ -242,14 +242,24 @@ func SanitizeResponse(resp Response) Response {
 	return resp
 }
 
+// SanitizeResponse is the former name of [CoerceValidUTF8], kept as a
+// working alias: the old name never described what the function does (it
+// coerces UTF-8, it removes nothing). Behavior is identical.
+//
+// Deprecated: call [CoerceValidUTF8] instead. The alias is pinned by test
+// for the rest of v0.x under the deprecation policy (docs/deprecation-policy.md).
+func SanitizeResponse(resp Response) Response {
+	return CoerceValidUTF8(resp)
+}
+
 // writeResponse serialises the health response as JSON with the given status code.
 func writeResponse(w http.ResponseWriter, code int, resp Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
-	payload, err := marshalResponse(SanitizeResponse(resp))
+	payload, err := marshalResponse(CoerceValidUTF8(resp))
 	if err != nil {
-		// Defensive: SanitizeResponse removes the one known marshal failure
+		// Defensive: CoerceValidUTF8 removes the one known marshal failure
 		// mode (invalid UTF-8). This branch guards against future fields
 		// that might introduce marshal errors, and includes the underlying
 		// cause so a regression is debuggable.

@@ -605,7 +605,7 @@ func registerRoute(mux *http.ServeMux, pattern string, handler http.HandlerFunc)
 //
 //nolint:gochecknoglobals // deliberate test seam; mirrors the aggregate's seam
 var marshalResponse = func(resp health.Response) ([]byte, error) {
-	return json.Marshal(health.SanitizeResponse(resp), json.Deterministic(true))
+	return json.Marshal(health.CoerceValidUTF8(resp), json.Deterministic(true))
 }
 
 // writeResponse serialises the health response as JSON with the given

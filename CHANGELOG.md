@@ -39,6 +39,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `docs-check` grew a FEATURES inventory lockstep: every exported func, type, const and var across the four public packages (root, `aggregate`, `checks`, `federation` — 101 symbols) must be named somewhere in FEATURES.md, word-boundary matched. This closes the inventory itself as the third drift surface (after the api_lockstep fences and the ARCHITECTURE file map): 28 previously unnamed symbols (the `LivenessHandler`/`ReadinessHandler`/`StartupHandler` methods, the `StatusPass`/`StatusWarn`/`StatusFail`/`StatusOff` constants, the checks `ErrDiskLow`/`ErrMemoryHigh` sentinels, the aggregate/federation constructors' `ErrNoSources`/`ErrInvalidSource`/`ErrNoRemotes`/`ErrInvalidRemote`, `WithClient`, `InstanceID`/`InstanceIDBrand`/`NewInstanceID`, the recorder interface methods, and others) were folded into their owning rows.
 - Design note [docs/check-severity-override-design.md](docs/check-severity-override-design.md) proposes the PMA/go-taskqueue ask: `WithInformational(names...)` as a third contribution tier — configured-but-soft checks stay evaluated and visible with their true verdict plus an additive `"severity":"informational"` row field, but are excluded from the roll-up fold and the startup latch. The note rejects absorbing the need into `Off` (whose "intentionally unconfigured" contract the federation rollout depends on), keeps the recovered-panic fail-closed rule non-overridable, and gates implementation on a named first adopter. Registered in docs/INDEX.md; nothing shipped.
 
+### Deprecated
+
+- `SanitizeResponse` is renamed to `CoerceValidUTF8` (A22 staged-rename step 3): the old name never described what the function does — it coerces invalid UTF-8 to U+FFFD, it removes nothing. `CoerceValidUTF8` is the canonical spelling; `SanitizeResponse` keeps working unchanged as a deprecated alias (`// Deprecated:` godoc, pinned by test for the rest of v0.x per docs/deprecation-policy.md — the v0.x line does not remove). All in-repo write seams (`handlers.go`, `aggregate`, `federation`) already call `CoerceValidUTF8`. Migrate:
+  ```go
+  // before
+  resp = health.SanitizeResponse(resp)
+  // after
+  resp = health.CoerceValidUTF8(resp)
+  ```
+
 ### Removed
 
 - Nothing yet.

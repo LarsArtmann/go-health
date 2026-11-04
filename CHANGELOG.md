@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Nothing yet.
+- ci-emulation caught the fuzz-registry check running on borrowed awk: the registry script needs `gawk`, but neither the app's `runtimeInputs` nor the check's `nativeBuildInputs` declared it — the flake sandbox got awk implicitly from stdenv and the dev shell from the host PATH, so only the stripped-PATH emulation saw the failure. `gawk` is now declared in both.
 
 ## [v0.9.0] - 2026-11-04
 

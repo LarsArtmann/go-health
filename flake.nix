@@ -383,6 +383,7 @@
                     pkgs.bash
                     pkgs.coreutils
                     pkgs.findutils
+                    pkgs.gawk
                     pkgs.gnugrep
                     pkgs.gnused
                   ];
@@ -442,6 +443,7 @@
                   pkgs.bash
                   pkgs.coreutils
                   pkgs.findutils
+                  pkgs.gawk
                   pkgs.git
                   pkgs.gnugrep
                   pkgs.gnused

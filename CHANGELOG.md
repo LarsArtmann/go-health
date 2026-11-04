@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet.
+- `health.Routes` gained a `Version` field: `RegisterRoutes` mounts the build-version endpoint ([`VersionHandler`](docs/ARCHITECTURE.md)) when it is set, so the conventional `GET /version` endpoint stops being a hand-registered handler on every fleet consumer (issue #9). The root probe serves its own `WithVersion` stamp; `aggregate` and `federation` carry no build identity, so their mounts answer `{"version":""}` — leave the field empty and wire `VersionHandler` yourself if the hosting process has a stamp. `DefaultRoutes()` leaves the field empty: the version endpoint stays opt-in.
 
 ### Changed
 
+- **Behavior:** `DefaultRoutes()` now returns method-qualified patterns (`GET /healthz`, `GET /readyz`, `GET /startupz`). Kubelet probes are always GET, and the method prefix keeps `RegisterRoutes` from panicking at registration against common `ServeMux` shapes such as a `GET /{slug}` page route (a bare `/healthz` matches more methods but a less specific path, which Go reports as a registration-time panic) (issue #8). Mounting and serving GET probes is unchanged; code that reads `DefaultRoutes()` fields as request paths must switch to the literal paths (or strip the method prefix).
 - Internal file layout: the twelve files that had outgrown the 350-line file-size budget were split along their existing concern seams (probe.go → probe.go/options.go/lifecycle.go/evaluation.go/cache.go/errors.go; federation.go → federation.go/fetch.go/handlers.go; aggregate.go → aggregate.go/handlers.go; the oversized test files split per topic, e.g. probe_test.go → themed probe_*/handlers_* files). Zero exported-API or wire-format changes; every moved symbol kept its doc comment verbatim, and the docs/ARCHITECTURE.md map rows were updated in the same change.
 
 ### Removed

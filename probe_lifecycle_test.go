@@ -166,14 +166,14 @@ func TestStart_AfterShutdown_RestartsLoopButStaysDown(t *testing.T) {
 	}
 
 	liveness := probe.LivenessHandler()
-	rec := doRequest(t, liveness, health.DefaultRoutes().Liveness)
+	rec := doRequest(t, liveness, "/healthz")
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("liveness after restart: want 200, got %d", rec.Code)
 	}
 
 	readiness := probe.ReadinessHandler()
-	rec = doRequest(t, readiness, health.DefaultRoutes().Readiness)
+	rec = doRequest(t, readiness, "/readyz")
 
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("readiness after restart: want 503, got %d", rec.Code)
@@ -217,7 +217,7 @@ func TestStartupLatch_ResetForTest_ReEvaluatesAndRelatches(t *testing.T) {
 	)
 
 	startup := probe.StartupHandler()
-	path := health.DefaultRoutes().Startup
+	path := "/startupz"
 
 	w := doRequest(t, startup, path)
 	if w.Code != http.StatusOK {

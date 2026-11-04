@@ -79,11 +79,15 @@ func (p *Prober) StartupHandler() http.HandlerFunc {
 // RegisterRoutes registers the federation probe handlers on the given mux
 // using the provided routes. Pass [health.DefaultRoutes] for the conventional
 // Kubernetes paths. A route whose pattern is empty is skipped, so a hub that
-// only exposes readiness mounts only that handler.
+// only exposes readiness mounts only that handler. A non-empty Routes.Version
+// mounts [health.VersionHandler]; the hub carries no build identity, so the
+// mount answers {"version":""} — leave the field empty and wire the handler
+// yourself if the hosting process has a stamp.
 func (p *Prober) RegisterRoutes(mux *http.ServeMux, routes health.Routes) {
 	registerRoute(mux, routes.Liveness, p.LivenessHandler())
 	registerRoute(mux, routes.Readiness, p.ReadinessHandler())
 	registerRoute(mux, routes.Startup, p.StartupHandler())
+	registerRoute(mux, routes.Version, health.VersionHandler(""))
 }
 
 // registerRoute mounts handler at pattern unless the pattern is empty.

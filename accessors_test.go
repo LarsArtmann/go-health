@@ -119,10 +119,9 @@ func TestHealthz_CombinesStartupAndReadiness(t *testing.T) {
 	)
 
 	handler := probe.Healthz()
-	routes := health.DefaultRoutes()
 
 	// Booting: latch unset → 503 with a startup check entry.
-	rec := doRequest(t, handler, routes.Readiness)
+	rec := doRequest(t, handler, "/readyz")
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("booting: want 503, got %d", rec.Code)
 	}
@@ -133,12 +132,12 @@ func TestHealthz_CombinesStartupAndReadiness(t *testing.T) {
 
 	// After one successful startup-handler batch the latch is set to 200.
 	// (Evaluate alone does not latch; only the startup path does.)
-	rec = doRequest(t, probe.StartupHandler(), routes.Startup)
+	rec = doRequest(t, probe.StartupHandler(), "/startupz")
 	if rec.Code != http.StatusOK {
 		t.Errorf("startup after first batch: want 200, got %d", rec.Code)
 	}
 
-	rec = doRequest(t, handler, routes.Readiness)
+	rec = doRequest(t, handler, "/readyz")
 	if rec.Code != http.StatusOK {
 		t.Errorf("after latch: want 200, got %d", rec.Code)
 	}
@@ -146,7 +145,7 @@ func TestHealthz_CombinesStartupAndReadiness(t *testing.T) {
 	// Shutdown → 503 again.
 	probe.Shutdown()
 
-	rec = doRequest(t, handler, routes.Readiness)
+	rec = doRequest(t, handler, "/readyz")
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("after shutdown: want 503, got %d", rec.Code)
 	}

@@ -29,13 +29,12 @@ func TestWithLiveThrottle_CoalescesLiveEvaluations(t *testing.T) {
 	)
 
 	handler := probe.ReadinessHandler()
-	routes := health.DefaultRoutes()
 
 	var wg sync.WaitGroup
 
 	for range 20 {
 		wg.Go(func() {
-			rec := doRequest(t, handler, routes.Readiness)
+			rec := doRequest(t, handler, "/readyz")
 			if rec.Code != http.StatusOK {
 				t.Errorf("status: want 200, got %d", rec.Code)
 			}
@@ -55,7 +54,7 @@ func TestWithLiveThrottle_CoalescesLiveEvaluations(t *testing.T) {
 	time.Sleep(60 * time.Millisecond)
 
 	before := batches.Load()
-	rec := doRequest(t, handler, routes.Readiness)
+	rec := doRequest(t, handler, "/readyz")
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("post-window status: want 200, got %d", rec.Code)
@@ -120,9 +119,8 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 	)
 
 	handler := probe.ReadinessHandler()
-	routes := health.DefaultRoutes()
 
-	first := requestReadiness(t, handler, routes.Readiness)
+	first := requestReadiness(t, handler, "/readyz")
 
 	if got := batches.Load(); got != 1 {
 		t.Fatalf("first request batches: want 1, got %d", got)
@@ -132,7 +130,7 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 
 	// With the clock frozen, any number of requests must serve the stored
 	// result byte-identically: one batch total, one response.
-	assertFrozenWindow(t, handler, routes.Readiness, first, 25)
+	assertFrozenWindow(t, handler, "/readyz", first, 25)
 
 	if got := batches.Load(); got != 1 {
 		t.Errorf("25 frozen-clock requests ran %d batches; want exactly 1", got)
@@ -142,7 +140,7 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 	// exactly one new batch; the new result is then frozen the same way.
 	clock.Advance(window + time.Millisecond)
 
-	second := requestReadiness(t, handler, routes.Readiness)
+	second := requestReadiness(t, handler, "/readyz")
 
 	if got := batches.Load(); got != 2 {
 		t.Fatalf("post-window batches: want 2, got %d", got)
@@ -152,7 +150,7 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 		t.Error("post-window body equals pre-window body; freshness marker did not advance")
 	}
 
-	assertFrozenWindow(t, handler, routes.Readiness, second, 10)
+	assertFrozenWindow(t, handler, "/readyz", second, 10)
 
 	if got := batches.Load(); got != 2 {
 		t.Errorf("post-window re-frozen requests ran %d batches; want still 2", got)

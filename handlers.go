@@ -7,19 +7,35 @@ import (
 	"strings"
 )
 
-// Routes configures the URL paths for [Probe.RegisterRoutes].
+// Routes configures the URL paths for [Probe.RegisterRoutes]. Every field is
+// optional: an empty pattern is skipped (an empty string would otherwise
+// panic in ServeMux), and a "METHOD /path" pattern scopes the mount to that
+// method on Go 1.22+ muxes.
 type Routes struct {
 	Liveness  string
 	Readiness string
 	Startup   string
+
+	// Version mounts the build-version endpoint ([VersionHandler]) when
+	// non-empty. [DefaultRoutes] leaves it empty, so the conventional
+	// GET /version endpoint stays opt-in; pass Routes{..., Version:
+	// "GET /version"} to mount it. The root probe serves its own [WithVersion]
+	// stamp. Aggregate and federation surfaces carry no build identity, so
+	// their mounts answer {"version":""} — leave the field empty and wire
+	// [VersionHandler] yourself if the hosting process has a stamp.
+	Version string
 }
 
-// DefaultRoutes returns the conventional Kubernetes health-probe paths.
+// DefaultRoutes returns the conventional Kubernetes health-probe paths,
+// method-qualified. Kubelet probes are always GET, and the method prefix
+// keeps the mounts compatible with common ServeMux shapes: a bare
+// "/healthz" conflicts with patterns like "GET /{slug}" and panics at
+// registration, before the server ever serves a request.
 func DefaultRoutes() Routes {
 	return Routes{
-		Liveness:  "/healthz",
-		Readiness: "/readyz",
-		Startup:   "/startupz",
+		Liveness:  "GET /healthz",
+		Readiness: "GET /readyz",
+		Startup:   "GET /startupz",
 	}
 }
 
@@ -127,11 +143,14 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 // A route whose pattern is empty is skipped, so a service that only exposes
 // readiness can pass Routes{Readiness: "/readyz"} without mounting handlers it
 // does not serve (an empty pattern would otherwise panic in ServeMux). Pass
-// [DefaultRoutes] when all three are wanted.
+// [DefaultRoutes] when all three are wanted; set Routes.Version to mount the
+// build-version endpoint ([VersionHandler], serving the probe's [WithVersion]
+// stamp).
 func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes) {
 	registerRoute(mux, routes.Liveness, p.LivenessHandler())
 	registerRoute(mux, routes.Readiness, p.ReadinessHandler())
 	registerRoute(mux, routes.Startup, p.StartupHandler())
+	registerRoute(mux, routes.Version, VersionHandler(p.version))
 }
 
 // registerRoute mounts handler at pattern unless the pattern is empty.

@@ -120,7 +120,9 @@ func TestEvaluate_SinceRestartsOnStatusChange(t *testing.T) {
 
 	recoveredAt := failingAt.Add(35 * time.Minute)
 
-	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(recoveredAt) {
+	if got := probe.Evaluate(context.Background()).Checks["db"].StatusSince; !got.Equal(
+		recoveredAt,
+	) {
 		t.Fatalf("StatusSince after fail→pass: want %v, got %v", recoveredAt, got)
 	}
 }
@@ -163,7 +165,11 @@ func TestEvaluate_SinceRestartsWhenCheckReappears(t *testing.T) {
 
 	want := epoch.Add(2 * time.Hour)
 	if got := resp.Checks["cache"].StatusSince; !got.Equal(want) {
-		t.Errorf("reappearing check StatusSince: want %v (restart, gap unobserved), got %v", want, got)
+		t.Errorf(
+			"reappearing check StatusSince: want %v (restart, gap unobserved), got %v",
+			want,
+			got,
+		)
 	}
 }
 
@@ -529,7 +535,7 @@ func TestCheck_JSONOmitZero(t *testing.T) {
 	payload, err = json.Marshal(health.Check{
 		Status:        health.StatusFail,
 		Error:         "down",
-		StatusSince:         stamped,
+		StatusSince:   stamped,
 		DurationNanos: (1500 * time.Microsecond).Nanoseconds(),
 	}, json.Deterministic(true))
 	if err != nil {

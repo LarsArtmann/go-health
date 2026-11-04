@@ -294,7 +294,7 @@ func TestResponses_MetadataSurvivesVerbatim(t *testing.T) {
 	want := health.Check{
 		Status:        health.StatusWarn,
 		Error:         "degraded",
-		StatusSince:         since,
+		StatusSince:   since,
 		DurationNanos: 42,
 	}
 

@@ -261,7 +261,8 @@ func TestCachedResponse_EndToEndWireContract(t *testing.T) {
 		t.Errorf("core/queue: want warn with cause, got %+v", queue)
 	}
 
-	if !postgres.StatusSince.Equal(before.Checks["postgres"].StatusSince) || postgres.StatusSince.IsZero() {
+	if !postgres.StatusSince.Equal(before.Checks["postgres"].StatusSince) ||
+		postgres.StatusSince.IsZero() {
 		t.Errorf(
 			"StatusSince must survive federation verbatim: remote %v, federated %v",
 			before.Checks["postgres"].StatusSince,

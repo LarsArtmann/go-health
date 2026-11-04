@@ -47,7 +47,7 @@ func FuzzResponseMarshalDeterministic(f *testing.F) {
 					checkName: {
 						Status:        health.Status(status),
 						Error:         checkErr,
-						StatusSince:         time.Unix(0, sinceNanos).UTC(),
+						StatusSince:   time.Unix(0, sinceNanos).UTC(),
 						DurationNanos: durationNanos,
 					},
 				},
@@ -115,7 +115,11 @@ func assertResponseRoundTrip(t *testing.T, sent, decoded health.Response) {
 		}
 
 		if !check.StatusSince.Equal(wantCheck.StatusSince) {
-			t.Fatalf("check since round-trip: want %v, got %v", wantCheck.StatusSince, check.StatusSince)
+			t.Fatalf(
+				"check since round-trip: want %v, got %v",
+				wantCheck.StatusSince,
+				check.StatusSince,
+			)
 		}
 
 		if check.DurationNanos != wantCheck.DurationNanos {

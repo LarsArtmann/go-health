@@ -169,7 +169,8 @@ func (p *Probe) StartupHandler() http.HandlerFunc
 func (p *Probe) Healthz() http.HandlerFunc
 func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes)
 func VersionHandler(version string) http.HandlerFunc
-func CoerceValidUTF8(resp Response) Response // SanitizeResponse stays as a deprecated working alias
+func CoerceValidUTF8(resp Response) Response
+func SanitizeResponse(resp Response) Response // deprecated working alias of CoerceValidUTF8
 func NewInstanceID(raw string) InstanceID // wraps a raw replica identifier; empty string = unset
 
 // Options.

@@ -382,6 +382,7 @@
                   nativeBuildInputs = [
                     pkgs.bash
                     pkgs.coreutils
+                    pkgs.diffutils
                     pkgs.findutils
                     pkgs.gawk
                     pkgs.gnugrep
@@ -442,6 +443,7 @@
                 [
                   pkgs.bash
                   pkgs.coreutils
+                  pkgs.diffutils
                   pkgs.findutils
                   pkgs.gawk
                   pkgs.git

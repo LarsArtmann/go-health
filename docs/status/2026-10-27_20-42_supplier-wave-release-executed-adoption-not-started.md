@@ -13,8 +13,8 @@ the module proxy, and consumed from a throwaway module. Master CI is fully green
 since 2026-10-15, and `nix run .#gates` exits 0.
 
 **That is the 1% that was worth 51%, and it is done.** Almost nothing else is. Five consumer
-adoptions, both bridge *releases* (only pins moved), the issue reconciliation, and all three
-decision records are untouched. The distribution layer is unblocked; the *consumption* layer has
+adoptions, both bridge _releases_ (only pins moved), the issue reconciliation, and all three
+decision records are untouched. The distribution layer is unblocked; the _consumption_ layer has
 not moved at all.
 
 One release-level process failure is worth naming first: **I tagged v0.8.0 without ever running the
@@ -28,52 +28,52 @@ green. See §d.
 
 Every item below has a command output or a commit behind it.
 
-| # | Item | Evidence |
-| --- | --- | --- |
-| a1 | **v0.8.0 tagged and pushed** | `git ls-remote` shows `refs/tags/v0.8.0` → `4af20ba` |
-| a2 | **v0.8.1 tagged and pushed** (CI-green re-cut) | `refs/tags/v0.8.1` → `b7258b0` |
-| a3 | **v0.8.0 and v0.8.1 on the module proxy** | `go list -m -versions` ends `… v0.7.0 v0.8.0 v0.8.1` |
-| a4 | **Released API consumed from a foreign module** | `/tmp/gh-smoke`: `CacheAge`, `CachedResponseFresh`, `EvaluateAndCache`, `Clone`, `ChainRecorders` all exercised; ran green against both v0.8.0 and v0.8.1 |
-| a5 | **Master CI green, all 5 jobs** | run 40568168007 / 40570904188: OpenAPI, Test(race), Vet+Lint, Flake+Formatting, Security all `success` |
-| a6 | **v0.8.1 tag CI green, all 5 jobs** | run 40570901800 `success` |
-| a7 | **`nix run .#gates` exit 0** | "all gates green", including treefmt, docs-drift, OpenAPI lockstep |
-| a8 | **Security gate repaired** | gosec now `-exclude-dir=tools`; was scanning a machine-local tool whose dep resolves only via an absolute `/home/lars/projects` replace → exit 1 with zero findings on CI. Commit `6aa7841` |
-| a9 | **Federation roll-up status validated** | `decodeDocument` now refuses a top-level status outside pass/warn/fail/off, matching the per-check rule. Found by the new fuzz target. `8abb8b` |
-| a10 | **`FuzzSourceStatuses_Invariants` added** | 9 seeds; asserts one entry per remote, known-status-only, determinism, refuse→fail, drain-isolation. Federation fuzz suite green |
-| a11 | **Fuzz registry completed** | flake `fuzz`/`fuzz-long` listed 4 of 8 targets; now all 8, plus CI corpus paths. `flake.nix`, `fuzz-long.yml` |
-| a12 | **Lint fully clean** | `golangci-lint run ./...` → **0 issues** (was 1 pre-existing gocognit 26/25). Extracted `assertResponseRoundTrip` |
-| a13 | **Formatters clean, including `-extra`** | `gofmt`, `gofumpt -l -extra`, `goimports`, `golines` all silent. Fixed 3 pre-existing `-extra` param-grouping nits |
-| a14 | **`ChainRecorders` godoc true again** | no longer claims "only usable with `New`"; names both recorder constructors and the three rejecting ones |
-| a15 | **Shutdown is documented as one-way** | One-way paragraph on `Probe.Start` and `Probe.Shutdown`, cross-referenced, citing `TestStart_AfterShutdown_RestartsLoopButStaysDown` |
-| a16 | **`AwaitReady` trap documented** | "It is NOT a startup gate" — zero-value pass returns nil immediately; points at `StartupComplete`/`CacheAge` |
-| a17 | **`Validate` precedence pinned** | `TestValidate_RecorderRejectionOutranksConfigErrors`, 3 cases (bad timeout, bad interval, both) |
-| a18 | **`CachedResponse` aliasing pinned both ways** | `TestCachedResponse_ChecksAliasThePublishedSnapshot` — assertion fails if someone "fixes" the alias into a deep copy |
-| a19 | **Chain-through-`NewWithRecorder` pinned** | `TestNewWithRecorder_ChainReachesServedResponse`: durations from the detailed member reach the served response |
-| a20 | **ADR-008 written** | `docs/adr/ADR-008-recovered-panic-fails-closed.md`; the observer surface's `warn` exception documented as deliberate |
-| a21 | **CHANGELOG migration snippets** | Both behavior changes carry a `Migration:` paragraph (recorder rejection, panic grading), plus the new federation refusal |
-| a22 | **Docs drift gates agree** | `docs-check` green against v0.8.1; FEATURES ADR range now covers 008 (the gate caught this) |
-| a23 | **go-appkit/health bumped to go-health v0.8.0** | `go.mod` pin, suite green, pushed as `9560b20` |
-| a24 | **go-appkit warn→fail pin flipped** | `TestNewProbe_PanicIsolatedPerCheck` and `ExampleNewProbe_panickingCheck` (the example had been calling `AwaitReady` and would now hang 5s then panic) |
-| a25 | **go-appkit recorder trap made loud** | `NewProbe` godoc + package doc rewritten from "silently ignored" to the boot-refusal contract; `TestNewProbe_RecorderOptionFailsAtBoot` added |
-| a26 | **cqrs-htmx/health bumped to go-health v0.8.0** | landed on origin/master via the owner's landing lineage |
-| a27 | **cqrs-htmx `RecorderChain` delegates upstream** | Deprecated alias → `gohealth.ChainRecorders`; "durations do not survive the merge" was false and is gone |
-| a28 | **cqrs-htmx duration-survival test** | `TestRecorderChain_PreservesDetailedDurations` (on origin/master) |
-| a29 | **cqrs-htmx release train re-aligned** | `check-release-train --strict-lag 0` → 0 train lag across 882 internal requires |
-| a30 | **cqrs-htmx README PR opened** | [PR #37](https://github.com/LarsArtmann/cqrs-htmx/pull/37) — the README still claimed the recorder option "has no effect"; upstream's lineage missed it |
+| #   | Item                                             | Evidence                                                                                                                                                                                    |
+| --- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a1  | **v0.8.0 tagged and pushed**                     | `git ls-remote` shows `refs/tags/v0.8.0` → `4af20ba`                                                                                                                                        |
+| a2  | **v0.8.1 tagged and pushed** (CI-green re-cut)   | `refs/tags/v0.8.1` → `b7258b0`                                                                                                                                                              |
+| a3  | **v0.8.0 and v0.8.1 on the module proxy**        | `go list -m -versions` ends `… v0.7.0 v0.8.0 v0.8.1`                                                                                                                                        |
+| a4  | **Released API consumed from a foreign module**  | `/tmp/gh-smoke`: `CacheAge`, `CachedResponseFresh`, `EvaluateAndCache`, `Clone`, `ChainRecorders` all exercised; ran green against both v0.8.0 and v0.8.1                                   |
+| a5  | **Master CI green, all 5 jobs**                  | run 40568168007 / 40570904188: OpenAPI, Test(race), Vet+Lint, Flake+Formatting, Security all `success`                                                                                      |
+| a6  | **v0.8.1 tag CI green, all 5 jobs**              | run 40570901800 `success`                                                                                                                                                                   |
+| a7  | **`nix run .#gates` exit 0**                     | "all gates green", including treefmt, docs-drift, OpenAPI lockstep                                                                                                                          |
+| a8  | **Security gate repaired**                       | gosec now `-exclude-dir=tools`; was scanning a machine-local tool whose dep resolves only via an absolute `/home/lars/projects` replace → exit 1 with zero findings on CI. Commit `6aa7841` |
+| a9  | **Federation roll-up status validated**          | `decodeDocument` now refuses a top-level status outside pass/warn/fail/off, matching the per-check rule. Found by the new fuzz target. `8abb8b`                                             |
+| a10 | **`FuzzSourceStatuses_Invariants` added**        | 9 seeds; asserts one entry per remote, known-status-only, determinism, refuse→fail, drain-isolation. Federation fuzz suite green                                                            |
+| a11 | **Fuzz registry completed**                      | flake `fuzz`/`fuzz-long` listed 4 of 8 targets; now all 8, plus CI corpus paths. `flake.nix`, `fuzz-long.yml`                                                                               |
+| a12 | **Lint fully clean**                             | `golangci-lint run ./...` → **0 issues** (was 1 pre-existing gocognit 26/25). Extracted `assertResponseRoundTrip`                                                                           |
+| a13 | **Formatters clean, including `-extra`**         | `gofmt`, `gofumpt -l -extra`, `goimports`, `golines` all silent. Fixed 3 pre-existing `-extra` param-grouping nits                                                                          |
+| a14 | **`ChainRecorders` godoc true again**            | no longer claims "only usable with `New`"; names both recorder constructors and the three rejecting ones                                                                                    |
+| a15 | **Shutdown is documented as one-way**            | One-way paragraph on `Probe.Start` and `Probe.Shutdown`, cross-referenced, citing `TestStart_AfterShutdown_RestartsLoopButStaysDown`                                                        |
+| a16 | **`AwaitReady` trap documented**                 | "It is NOT a startup gate" — zero-value pass returns nil immediately; points at `StartupComplete`/`CacheAge`                                                                                |
+| a17 | **`Validate` precedence pinned**                 | `TestValidate_RecorderRejectionOutranksConfigErrors`, 3 cases (bad timeout, bad interval, both)                                                                                             |
+| a18 | **`CachedResponse` aliasing pinned both ways**   | `TestCachedResponse_ChecksAliasThePublishedSnapshot` — assertion fails if someone "fixes" the alias into a deep copy                                                                        |
+| a19 | **Chain-through-`NewWithRecorder` pinned**       | `TestNewWithRecorder_ChainReachesServedResponse`: durations from the detailed member reach the served response                                                                              |
+| a20 | **ADR-008 written**                              | `docs/adr/ADR-008-recovered-panic-fails-closed.md`; the observer surface's `warn` exception documented as deliberate                                                                        |
+| a21 | **CHANGELOG migration snippets**                 | Both behavior changes carry a `Migration:` paragraph (recorder rejection, panic grading), plus the new federation refusal                                                                   |
+| a22 | **Docs drift gates agree**                       | `docs-check` green against v0.8.1; FEATURES ADR range now covers 008 (the gate caught this)                                                                                                 |
+| a23 | **go-appkit/health bumped to go-health v0.8.0**  | `go.mod` pin, suite green, pushed as `9560b20`                                                                                                                                              |
+| a24 | **go-appkit warn→fail pin flipped**              | `TestNewProbe_PanicIsolatedPerCheck` and `ExampleNewProbe_panickingCheck` (the example had been calling `AwaitReady` and would now hang 5s then panic)                                      |
+| a25 | **go-appkit recorder trap made loud**            | `NewProbe` godoc + package doc rewritten from "silently ignored" to the boot-refusal contract; `TestNewProbe_RecorderOptionFailsAtBoot` added                                               |
+| a26 | **cqrs-htmx/health bumped to go-health v0.8.0**  | landed on origin/master via the owner's landing lineage                                                                                                                                     |
+| a27 | **cqrs-htmx `RecorderChain` delegates upstream** | Deprecated alias → `gohealth.ChainRecorders`; "durations do not survive the merge" was false and is gone                                                                                    |
+| a28 | **cqrs-htmx duration-survival test**             | `TestRecorderChain_PreservesDetailedDurations` (on origin/master)                                                                                                                           |
+| a29 | **cqrs-htmx release train re-aligned**           | `check-release-train --strict-lag 0` → 0 train lag across 882 internal requires                                                                                                             |
+| a30 | **cqrs-htmx README PR opened**                   | [PR #37](https://github.com/LarsArtmann/cqrs-htmx/pull/37) — the README still claimed the recorder option "has no effect"; upstream's lineage missed it                                     |
 
 ---
 
 ## b) PARTIALLY DONE
 
-| # | Item | What exists | What is missing |
-| --- | --- | --- | --- |
-| b1 | **Bridge releases (T10/T11 delivery)** | Both pins moved to go-health v0.8.0; both suites green | **Neither bridge is released.** `go-appkit/health` still publishes v0.2.0, `cqrs-htmx/health` still publishes v0.7.0 — nothing downstream can consume the bump yet. Neither is re-pinned to v0.8.1 |
-| b2 | **Release pages (T06.5, T08)** | Tags exist, proxy serves them | **No GitHub release page for v0.8.0 or v0.8.1.** `gh release list` still shows v0.7.0 as "Latest". No consumer-impact verdict, no announcement draft (T08 entirely undone) |
-| b3 | **Issue reconciliation (T14)** | Both issues are already fixed on release | **Neither issue is annotated or closed.** #7 (panic grading) and #6 (`SourceStatuses`) are still `OPEN`, inviting a third duplicate fix |
-| b4 | **Benchmarks (T21)** | Peer session added `BenchmarkSourceStatuses`, `BenchmarkAggregateSourceStatuses`, `BenchmarkReadinessHandler_DrainingScaling` | No `BenchmarkCachedResponseFresh` (the 0-alloc claim is asserted in the CHANGELOG but never measured); no `BenchmarkEvaluateAndCache` |
-| b5 | **Concurrency proof (T04 extension)** | Peer added `TestSourceStatuses_ConcurrentWithMarkShuttingDown` | I never ran it under `-race` in isolation as a named claim; it passes inside the suite |
-| b6 | **Version-skew script (T09)** | `tools/fleet-repos.txt` updated by the peer | No script, no CI wiring, no drift detection |
-| b7 | **Plan/status bookkeeping** | Peer wrote three status docs plus planning updates | The plan's own checkboxes are not ticked; the T-IDs I executed are not marked |
+| #  | Item                                   | What exists                                                                                                                   | What is missing                                                                                                                                                                                    |
+| -- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| b1 | **Bridge releases (T10/T11 delivery)** | Both pins moved to go-health v0.8.0; both suites green                                                                        | **Neither bridge is released.** `go-appkit/health` still publishes v0.2.0, `cqrs-htmx/health` still publishes v0.7.0 — nothing downstream can consume the bump yet. Neither is re-pinned to v0.8.1 |
+| b2 | **Release pages (T06.5, T08)**         | Tags exist, proxy serves them                                                                                                 | **No GitHub release page for v0.8.0 or v0.8.1.** `gh release list` still shows v0.7.0 as "Latest". No consumer-impact verdict, no announcement draft (T08 entirely undone)                         |
+| b3 | **Issue reconciliation (T14)**         | Both issues are already fixed on release                                                                                      | **Neither issue is annotated or closed.** #7 (panic grading) and #6 (`SourceStatuses`) are still `OPEN`, inviting a third duplicate fix                                                            |
+| b4 | **Benchmarks (T21)**                   | Peer session added `BenchmarkSourceStatuses`, `BenchmarkAggregateSourceStatuses`, `BenchmarkReadinessHandler_DrainingScaling` | No `BenchmarkCachedResponseFresh` (the 0-alloc claim is asserted in the CHANGELOG but never measured); no `BenchmarkEvaluateAndCache`                                                              |
+| b5 | **Concurrency proof (T04 extension)**  | Peer added `TestSourceStatuses_ConcurrentWithMarkShuttingDown`                                                                | I never ran it under `-race` in isolation as a named claim; it passes inside the suite                                                                                                             |
+| b6 | **Version-skew script (T09)**          | `tools/fleet-repos.txt` updated by the peer                                                                                   | No script, no CI wiring, no drift detection                                                                                                                                                        |
+| b7 | **Plan/status bookkeeping**            | Peer wrote three status docs plus planning updates                                                                            | The plan's own checkboxes are not ticked; the T-IDs I executed are not marked                                                                                                                      |
 
 ---
 
@@ -81,24 +81,24 @@ Every item below has a command output or a commit behind it.
 
 These are the plan's remaining 23-ish tasks. Nothing below has a line of code.
 
-| # | Item | Why it matters |
-| --- | --- | --- |
-| c1 | **T15 DiscordSync** — replace `readyzSnapshotCache` with `CachedResponseFresh` + `EvaluateAndCache` | The concrete payoff of the freshness primitives; ~2 hand-rolled adapters deleted |
-| c2 | **T16 dnsblockd** — `CacheAge` for the timestamp check, `Response.Clone` for the manual clone | This repo hit the concurrent-map-write crash; the sanctioned copy is unreleased to it |
-| c3 | **T17 cv** — fresh read + `EvaluateAndCache` + `Clone` | Same class; must keep its synthetic-row domain rule |
-| c4 | **T18 go-taskqueue** — migrate `queueProber` to `health.NewChecks` | ~120 lines of duplicated prober to delete |
-| c5 | **T19 company-master-data** — wire `checks.Disk` | A scored "unused capability" row in its own research |
-| c6 | **T20 fleet recorder mis-wire audit script** | Detects the trap class mechanically instead of by grep |
-| c7 | **T22 shutdown semantics decision** | I documented one-way behaviour; nobody has *decided* it, so the next agent may "fix" it |
-| c8 | **T23 `SourceStatuses` fetch-cost decision** | Calling both accessors costs two full fetch passes. Documented, unmeasured, undecided |
-| c9 | **T24 `WithStaleAfter` decision record** | `docs/synthetic-check-overlay.md` implies a policy option; we deliberately shipped primitives instead. Unrecorded |
-| c10 | **T25 adoption matrix + ROADMAP** | The 7 new capabilities are absent from the per-feature fleet matrix |
-| c11 | **T26 markdown format pass** | `dprint`/`nix fmt` never run over the docs I wrote |
-| c12 | **T27 concurrent-writer protocol** | **This session is the case study.** Two agents edited the same repo simultaneously with no protocol |
-| c13 | **T28 cross-links** | The two 18:57 reports are not cross-linked from the research doc |
-| c14 | **T29 dashboard-family handoff** | `HTMLDataAttrs` (fir DD9), dashboard#14/#17 — none drafted or filed |
-| c15 | **T30 final fleet verification** | Zero consumers have been compiled against the *released* API |
-| c16 | **T07 pkg.go.dev render check** | Proxy is verified; the docs site was not |
+| #   | Item                                                                                                | Why it matters                                                                                                    |
+| --- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| c1  | **T15 DiscordSync** — replace `readyzSnapshotCache` with `CachedResponseFresh` + `EvaluateAndCache` | The concrete payoff of the freshness primitives; ~2 hand-rolled adapters deleted                                  |
+| c2  | **T16 dnsblockd** — `CacheAge` for the timestamp check, `Response.Clone` for the manual clone       | This repo hit the concurrent-map-write crash; the sanctioned copy is unreleased to it                             |
+| c3  | **T17 cv** — fresh read + `EvaluateAndCache` + `Clone`                                              | Same class; must keep its synthetic-row domain rule                                                               |
+| c4  | **T18 go-taskqueue** — migrate `queueProber` to `health.NewChecks`                                  | ~120 lines of duplicated prober to delete                                                                         |
+| c5  | **T19 company-master-data** — wire `checks.Disk`                                                    | A scored "unused capability" row in its own research                                                              |
+| c6  | **T20 fleet recorder mis-wire audit script**                                                        | Detects the trap class mechanically instead of by grep                                                            |
+| c7  | **T22 shutdown semantics decision**                                                                 | I documented one-way behaviour; nobody has _decided_ it, so the next agent may "fix" it                           |
+| c8  | **T23 `SourceStatuses` fetch-cost decision**                                                        | Calling both accessors costs two full fetch passes. Documented, unmeasured, undecided                             |
+| c9  | **T24 `WithStaleAfter` decision record**                                                            | `docs/synthetic-check-overlay.md` implies a policy option; we deliberately shipped primitives instead. Unrecorded |
+| c10 | **T25 adoption matrix + ROADMAP**                                                                   | The 7 new capabilities are absent from the per-feature fleet matrix                                               |
+| c11 | **T26 markdown format pass**                                                                        | `dprint`/`nix fmt` never run over the docs I wrote                                                                |
+| c12 | **T27 concurrent-writer protocol**                                                                  | **This session is the case study.** Two agents edited the same repo simultaneously with no protocol               |
+| c13 | **T28 cross-links**                                                                                 | The two 18:57 reports are not cross-linked from the research doc                                                  |
+| c14 | **T29 dashboard-family handoff**                                                                    | `HTMLDataAttrs` (fir DD9), dashboard#14/#17 — none drafted or filed                                               |
+| c15 | **T30 final fleet verification**                                                                    | Zero consumers have been compiled against the _released_ API                                                      |
+| c16 | **T07 pkg.go.dev render check**                                                                     | Proxy is verified; the docs site was not                                                                          |
 
 ---
 
@@ -109,7 +109,7 @@ Honest, in descending order of damage. No excuses.
 1. **I tagged v0.8.0 without running the security gate — and it was red.**
    I ran `nix flake check`, `docs-check`, `openapi-lockstep`, build/test/race/vet/lint/fmt. I did
    **not** run `nix run .#security` or `nix run .#gates`. The tag's CI came back red on gosec. This
-   is the *documented* repeat offense: AGENTS.md carries the v0.10.1 and v0.12.0 war stories, and
+   is the _documented_ repeat offense: AGENTS.md carries the v0.10.1 and v0.12.0 war stories, and
    release-discipline item (0) says "confirm remote CI state before pushing". I had read that text.
    Cost: a second release (v0.8.1) and a public tag with a permanently red CI run.
 
@@ -120,7 +120,7 @@ Honest, in descending order of damage. No excuses.
    I only noticed because `git status` kept changing under me.
 
 3. **I trusted a piped exit code twice and reported false greens.**
-   `nix run .#gates 2>&1 | tail -40; echo "EXIT=$?"` prints the *pipeline tail's* status, so a failing
+   `nix run .#gates 2>&1 | tail -40; echo "EXIT=$?"` prints the _pipeline tail's_ status, so a failing
    nix run reported `EXIT=0`. I reported "gates" as fine when it had failed. I only switched to
    `set -o pipefail` after being burned — twice.
 
@@ -136,7 +136,7 @@ Honest, in descending order of damage. No excuses.
    the go-health equivalent were not invoked before pushing. Gate 0 was performed by hand, partially.
 
 7. **I let the "1%" framing outrun verification.** I prioritized tagging fast, which is right, but
-   the entire justification for the tag-first plan is that it is *cheap*. It was cheap and I still
+   the entire justification for the tag-first plan is that it is _cheap_. It was cheap and I still
    shipped it unverified. Speed was not the constraint; my checklist was.
 
 8. **Memory/service-quality failure:** the two-plan collision was reported in the handover summary, I
@@ -159,7 +159,7 @@ Honest, in descending order of damage. No excuses.
    field load-bearing that the merge had made irrelevant. Adding a read surface can create a
    validation obligation the original design never had.
 5. **A bridge is not updated when its pin moves.** `go.mod` said v0.8.0; downstream still resolves
-   v0.2.0 / v0.7.0. The delivering layer is the *published module*, not the commit (guardrail 6 was
+   v0.2.0 / v0.7.0. The delivering layer is the _published module_, not the commit (guardrail 6 was
    right and I under-executed it).
 6. **Concurrent agents on one repo are a real, unsolved hazard here.** Files changed mid-read at
    least six times; one peer edit was left unimported-breaking and I repaired it blind. There is no
@@ -203,68 +203,68 @@ Priorities: **P0** = the wave fails without it · **P1** = the wave is half-deli
 
 ### P0 — 15
 
-| # | Item | Status | Effort | Notes |
-| --- | --- | --- | --- | --- |
-| 1 | Release go-health (tag + push + proxy) | DONE | 1h | v0.8.0 then v0.8.1 |
-| 2 | Green CI on the tag | DONE | 30m | v0.8.1 run 40570901800 |
-| 3 | Green CI on master | DONE | — | run 40570904188, 5/5 jobs |
-| 4 | Composite `nix run .#gates` exit 0 | DONE | 10m | "all gates green" |
-| 5 | Security gate actually works on CI | DONE | 30m | `6aa7841`, gosec excludes a local-only tool |
-| 6 | Foreign-module consumption of the release | DONE | 15m | `/tmp/gh-smoke` against v0.8.0 and v0.8.1 |
-| 7 | **Release `go-appkit/health` at the new SDK** | TODO | 1h | pin moved, module NOT released — the wave reaches nobody here |
-| 8 | **Release `cqrs-htmx/health` at the new SDK** | TODO | 1h | same; PR #37 pending |
-| 9 | **GitHub release pages for v0.8.0/v0.8.1** | TODO | 45m | `gh release list` still shows v0.7.0 Latest |
-| 10 | **Issue #6 annotated/closed** | TODO | 20m | `SourceStatuses` shipped |
-| 11 | **Issue #7 annotated/closed** | TODO | 20m | panic grading shipped; F1/F2 fixed, F3/F4 to state |
-| 12 | **Consumer-impact verdict written** | TODO | 30m | which of additive/changed/fixed affects whom |
-| 13 | **Bridge-bump checklist published** | TODO | 20m | both bridges, exact commands |
-| 14 | **v0.8.0's red CI acknowledged on its release page** | TODO | 15m | never silently leave a red tag |
-| 15 | **Pre-push composite gate for go-health** | TODO | 45m | the missing mechanism behind §d#1 |
+| #  | Item                                                 | Status | Effort | Notes                                                         |
+| -- | ---------------------------------------------------- | ------ | ------ | ------------------------------------------------------------- |
+| 1  | Release go-health (tag + push + proxy)               | DONE   | 1h     | v0.8.0 then v0.8.1                                            |
+| 2  | Green CI on the tag                                  | DONE   | 30m    | v0.8.1 run 40570901800                                        |
+| 3  | Green CI on master                                   | DONE   | —      | run 40570904188, 5/5 jobs                                     |
+| 4  | Composite `nix run .#gates` exit 0                   | DONE   | 10m    | "all gates green"                                             |
+| 5  | Security gate actually works on CI                   | DONE   | 30m    | `6aa7841`, gosec excludes a local-only tool                   |
+| 6  | Foreign-module consumption of the release            | DONE   | 15m    | `/tmp/gh-smoke` against v0.8.0 and v0.8.1                     |
+| 7  | **Release `go-appkit/health` at the new SDK**        | TODO   | 1h     | pin moved, module NOT released — the wave reaches nobody here |
+| 8  | **Release `cqrs-htmx/health` at the new SDK**        | TODO   | 1h     | same; PR #37 pending                                          |
+| 9  | **GitHub release pages for v0.8.0/v0.8.1**           | TODO   | 45m    | `gh release list` still shows v0.7.0 Latest                   |
+| 10 | **Issue #6 annotated/closed**                        | TODO   | 20m    | `SourceStatuses` shipped                                      |
+| 11 | **Issue #7 annotated/closed**                        | TODO   | 20m    | panic grading shipped; F1/F2 fixed, F3/F4 to state            |
+| 12 | **Consumer-impact verdict written**                  | TODO   | 30m    | which of additive/changed/fixed affects whom                  |
+| 13 | **Bridge-bump checklist published**                  | TODO   | 20m    | both bridges, exact commands                                  |
+| 14 | **v0.8.0's red CI acknowledged on its release page** | TODO   | 15m    | never silently leave a red tag                                |
+| 15 | **Pre-push composite gate for go-health**            | TODO   | 45m    | the missing mechanism behind §d#1                             |
 
 ### P1 — 15
 
-| # | Item | Status | Effort | Notes |
-| --- | --- | --- | --- | --- |
-| 16 | go-appkit warn→fail pin flipped | DONE | 15m | test + example |
-| 17 | go-appkit recorder-trap docs rewritten | DONE | 20m | godoc + package doc |
-| 18 | go-appkit boot-refusal test | DONE | 15m | `TestNewProbe_RecorderOptionFailsAtBoot` |
-| 19 | cqrs-htmx `RecorderChain` → upstream | DONE | 20m | deprecated alias, durations survive |
-| 20 | cqrs-htmx duration-survival test | DONE | 15m | on origin/master |
-| 21 | cqrs-htmx release train aligned | DONE | 30m | 0 train lag / 882 requires |
-| 22 | cqrs-htmx README correction | PARTIAL | 15m | PR #37 open |
-| 23 | **T18 go-taskqueue → `NewChecks`** | TODO | 90m | biggest deletion |
-| 24 | **T16 dnsblockd → `CacheAge` + `Clone`** | TODO | 90m | the actual crash victim |
-| 25 | **T17 cv → fresh read + `EvaluateAndCache`** | TODO | 60m | keep the off→warn rule |
-| 26 | **T15 DiscordSync → `CachedResponseFresh`** | TODO | 60m | keep 2× interval policy |
-| 27 | **T19 company-master-data → `checks.Disk`** | TODO | 45m | scored unused capability |
-| 28 | **T30 fleet verification table** | TODO | 100m | nobody has compiled a consumer against v0.8.1 |
-| 29 | **Both bridges re-pinned to v0.8.1** | TODO | 20m | currently v0.8.0 |
-| 30 | **T09 version-skew script + CI** | TODO | 90m | drift is currently undetectable |
+| #  | Item                                         | Status  | Effort | Notes                                         |
+| -- | -------------------------------------------- | ------- | ------ | --------------------------------------------- |
+| 16 | go-appkit warn→fail pin flipped              | DONE    | 15m    | test + example                                |
+| 17 | go-appkit recorder-trap docs rewritten       | DONE    | 20m    | godoc + package doc                           |
+| 18 | go-appkit boot-refusal test                  | DONE    | 15m    | `TestNewProbe_RecorderOptionFailsAtBoot`      |
+| 19 | cqrs-htmx `RecorderChain` → upstream         | DONE    | 20m    | deprecated alias, durations survive           |
+| 20 | cqrs-htmx duration-survival test             | DONE    | 15m    | on origin/master                              |
+| 21 | cqrs-htmx release train aligned              | DONE    | 30m    | 0 train lag / 882 requires                    |
+| 22 | cqrs-htmx README correction                  | PARTIAL | 15m    | PR #37 open                                   |
+| 23 | **T18 go-taskqueue → `NewChecks`**           | TODO    | 90m    | biggest deletion                              |
+| 24 | **T16 dnsblockd → `CacheAge` + `Clone`**     | TODO    | 90m    | the actual crash victim                       |
+| 25 | **T17 cv → fresh read + `EvaluateAndCache`** | TODO    | 60m    | keep the off→warn rule                        |
+| 26 | **T15 DiscordSync → `CachedResponseFresh`**  | TODO    | 60m    | keep 2× interval policy                       |
+| 27 | **T19 company-master-data → `checks.Disk`**  | TODO    | 45m    | scored unused capability                      |
+| 28 | **T30 fleet verification table**             | TODO    | 100m   | nobody has compiled a consumer against v0.8.1 |
+| 29 | **Both bridges re-pinned to v0.8.1**         | TODO    | 20m    | currently v0.8.0                              |
+| 30 | **T09 version-skew script + CI**             | TODO    | 90m    | drift is currently undetectable               |
 
 ### P2 — 20
 
-| # | Item | Status | Effort | Notes |
-| --- | --- | --- | --- | --- |
-| 31 | `ChainRecorders` godoc truth | DONE | 10m | two constructors, three rejectors |
-| 32 | One-way shutdown documented | DONE | 15m | `Start` + `Shutdown` |
-| 33 | `AwaitReady` is-not-a-startup-gate | DONE | 10m | points at `StartupComplete`/`CacheAge` |
-| 34 | `Validate` precedence test | DONE | 10m | 3 cases |
-| 35 | `CachedResponse` aliasing contract test | DONE | 10m | trips a silent deep-copy refactor |
-| 36 | Federation roll-up status validation | DONE | 20m | found by fuzz |
-| 37 | `FuzzSourceStatuses_Invariants` | DONE | 20m | 9 seeds |
-| 38 | Fuzz registry completed (4 → 8) | DONE | 15m | flake + CI corpus paths |
-| 39 | Lint 0 issues | DONE | 15m | gocognit 26→25 via helper extraction |
-| 40 | Formatters clean incl. `-extra` | DONE | 10m | 3 pre-existing nits |
-| 41 | ADR-008 panic fails closed | DONE | 20m | linked from the panic design note |
-| 42 | CHANGELOG migration snippets | DONE | 15m | both behavior changes |
-| 43 | **T22 shutdown decision record** | TODO | 90m | documented ≠ decided |
-| 44 | **T23 `SourceStatuses` fetch-cost decision** | TODO | 60m | two passes per pair of reads |
-| 45 | **T24 `WithStaleAfter` decision record** | TODO | 30m | cross-link from the overlay note |
-| 46 | **`BenchmarkCachedResponseFresh`** | TODO | 20m | the 0-alloc claim is unmeasured |
-| 47 | **`BenchmarkEvaluateAndCache`** | TODO | 20m | no number published |
-| 48 | **T25 adoption matrix + ROADMAP** | TODO | 60m | 7 new capabilities missing |
-| 49 | **T27 concurrent-writer preflight** | TODO | 45m | this session is the evidence |
-| 50 | **T26/T28 markdown pass + cross-links** | TODO | 60m | docs I wrote never went through dprint |
+| #  | Item                                         | Status | Effort | Notes                                  |
+| -- | -------------------------------------------- | ------ | ------ | -------------------------------------- |
+| 31 | `ChainRecorders` godoc truth                 | DONE   | 10m    | two constructors, three rejectors      |
+| 32 | One-way shutdown documented                  | DONE   | 15m    | `Start` + `Shutdown`                   |
+| 33 | `AwaitReady` is-not-a-startup-gate           | DONE   | 10m    | points at `StartupComplete`/`CacheAge` |
+| 34 | `Validate` precedence test                   | DONE   | 10m    | 3 cases                                |
+| 35 | `CachedResponse` aliasing contract test      | DONE   | 10m    | trips a silent deep-copy refactor      |
+| 36 | Federation roll-up status validation         | DONE   | 20m    | found by fuzz                          |
+| 37 | `FuzzSourceStatuses_Invariants`              | DONE   | 20m    | 9 seeds                                |
+| 38 | Fuzz registry completed (4 → 8)              | DONE   | 15m    | flake + CI corpus paths                |
+| 39 | Lint 0 issues                                | DONE   | 15m    | gocognit 26→25 via helper extraction   |
+| 40 | Formatters clean incl. `-extra`              | DONE   | 10m    | 3 pre-existing nits                    |
+| 41 | ADR-008 panic fails closed                   | DONE   | 20m    | linked from the panic design note      |
+| 42 | CHANGELOG migration snippets                 | DONE   | 15m    | both behavior changes                  |
+| 43 | **T22 shutdown decision record**             | TODO   | 90m    | documented ≠ decided                   |
+| 44 | **T23 `SourceStatuses` fetch-cost decision** | TODO   | 60m    | two passes per pair of reads           |
+| 45 | **T24 `WithStaleAfter` decision record**     | TODO   | 30m    | cross-link from the overlay note       |
+| 46 | **`BenchmarkCachedResponseFresh`**           | TODO   | 20m    | the 0-alloc claim is unmeasured        |
+| 47 | **`BenchmarkEvaluateAndCache`**              | TODO   | 20m    | no number published                    |
+| 48 | **T25 adoption matrix + ROADMAP**            | TODO   | 60m    | 7 new capabilities missing             |
+| 49 | **T27 concurrent-writer preflight**          | TODO   | 45m    | this session is the evidence           |
+| 50 | **T26/T28 markdown pass + cross-links**      | TODO   | 60m    | docs I wrote never went through dprint |
 
 ---
 

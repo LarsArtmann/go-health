@@ -6,7 +6,7 @@
 
 ## a) FULLY DONE
 
-1. **Prior-analysis honored, then superseded deliberately.** Found the 2026-10-11 report's recorded STRONG_ID deferral ("owner go/no-go missing") and the `.buildflow.yml` budget rationale. The owner's directive (run brandid-lint, name the library, "execute until done") *is* the go/no-go; the supersession is recorded in `docs/servicename-design.md`'s new addendum so the next session does not re-litigate instance identity.
+1. **Prior-analysis honored, then superseded deliberately.** Found the 2026-10-11 report's recorded STRONG_ID deferral ("owner go/no-go missing") and the `.buildflow.yml` budget rationale. The owner's directive (run brandid-lint, name the library, "execute until done") _is_ the go/no-go; the supersession is recorded in `docs/servicename-design.md`'s new addendum so the next session does not re-litigate instance identity.
 2. **Library research from source, not docs.** Read go-branded-id v0.7.0 in the module cache: `ID[B any, V comparable]` struct, `NewID`/`Get`/`IsZero`/`Equal`/`Reset`, `BrandNamer`, `String()` = `"Brand:value"` (debug only — wire marshal uses the raw value), JSON via v1 `MarshalJSON`/`UnmarshalJSON` under build tags (no v2-specific file compiles without `goexperiment.jsonv2`; interop covers both marshalers).
 3. **The golden-wire risk was empirically killed before implementation.** A throwaway module run under the flake's go1.27.3 proved: `omitzero` + the type's `IsZero()` omits the unset field under **both** `encoding/json` (v1 has supported `omitzero` since Go 1.24) and `encoding/json/v2`; a set ID marshals as the same plain JSON string; unmarshal of string / `null` / absent all yield the correct value or zero under both marshalers. The 2026-10-11 objection ("zero value marshals as `null` — golden-wire risk") was true only for a tagless field; `omitzero` is the resolution, now pinned in the CHANGELOG text and the field comment (`types.go`: `json:"instance_id,omitzero"`).
 4. **The type landed cleanly.** `types.go`: `InstanceIDBrand` (+`Name()`), `type InstanceID = id.ID[InstanceIDBrand, string]` (alias, per the canonical pattern), `NewInstanceID(string)`; `Response.InstanceID` retyped with an honest doc comment. Value type is `string`, not nanoid — replica identifiers are host-supplied text echoed verbatim, not library-generated.
@@ -35,7 +35,7 @@
 
 ## c) NOT STARTED (all pre-existing unless noted; carried because they are still real)
 
-1. **`ServiceName` typed identity at the v0.6 window** — now the *only* open typed-identity question (instance identity settled by this session). The design doc's addendum asks whether it should follow the `go-branded-id` shape for consistency or stay Option-A defined-string.
+1. **`ServiceName` typed identity at the v0.6 window** — now the _only_ open typed-identity question (instance identity settled by this session). The design doc's addendum asks whether it should follow the `go-branded-id` shape for consistency or stay Option-A defined-string.
 2. **golangci LSP integration fix/disable** (standing TODO): the panel displayed a stale `merge_fuzz_test.go:129` typecheck error for the entire session while vet/lint/tests were green; `lsp_restart` was issued early, warning persisted anyway. Every diagnostic had to be arbitrated against the CLI — the tax this bug charges per session.
 3. **gosec toolchain pin removal** once nixpkgs ships gosec reading export-data v5 (securego/gosec #1772).
 4. **`tools/doanalyzerv2` go-directive floor** — clears only when a post-v0.4.0 samber-linter release propagates through branching-flow; do NOT hand-lower (tidy re-bumps, 2026-10-08 empirical).
@@ -53,14 +53,14 @@
 **Nearest misses worth recording (all caught inside the session):**
 
 1. **I repeated a documented gotcha I knew.** The first `docs-check` verification piped output through `tail` and echoed `$?` — which reported **tail's** exit code (0) while docs-check had actually failed with `DRIFT`. AGENTS.md's "gate output tails lie; exit codes don't" and "piping through `tail` also eats the exit status" exist precisely for this. I caught it only because the DRIFT line was visible in the same output. The rule is now burned in: capture with `> file 2>&1; echo EXIT=$?`, always.
-2. **A "no-op" edit fused two lines of a structured block.** Removing a trailing newline in an `edit` old_string joined `type InstanceIDBrand struct` with `type HealthRecorder interface` inside the `go api:root` fence, producing `structtype` — which surfaced as a *misleading* drift error ("exports HealthRecorder but block does not list it") pointing away from the real cause. One extra diagnosis round-trip. Lesson: after touching anything inside a fence/table, `grep` the block immediately; "the edit applied cleanly" and "the edit did what I intended" are different claims.
+2. **A "no-op" edit fused two lines of a structured block.** Removing a trailing newline in an `edit` old_string joined `type InstanceIDBrand struct` with `type HealthRecorder interface` inside the `go api:root` fence, producing `structtype` — which surfaced as a _misleading_ drift error ("exports HealthRecorder but block does not list it") pointing away from the real cause. One extra diagnosis round-trip. Lesson: after touching anything inside a fence/table, `grep` the block immediately; "the edit applied cleanly" and "the edit did what I intended" are different claims.
 3. **Grep-first enumeration was incomplete.** My first pass over instanceID call sites missed six test files; `go vet` found them all in seconds. The compiler-adjacent tool was the right enumerator from the start; grep was the wasted motion.
 4. **Stale-read guard churn.** The auto-commit daemon committed mid-session (expected per AGENTS.md), invalidating a read snapshot and failing one multiedit; several more round-trips came from bash-reading files the edit guard doesn't count. `View` before edit, batched, is the zero-friction path — I knew this too.
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Verify claims by measurement, not arithmetic** — the budget ceiling is the standing example. Arithmetic produces a plausible number; a run produces *the* number. Where a gate exists, run it before enshrining its output.
-2. **Pin load-bearing empirical results as in-repo tests.** The /tmp verification was the right *research* move (assert-after-verify beats the 2026-10-11 sin of assert-before-verify) — but its conclusion lives in prose until a test reproduces it. Research that ends in a docs claim should end in a `*_test.go` too.
+1. **Verify claims by measurement, not arithmetic** — the budget ceiling is the standing example. Arithmetic produces a plausible number; a run produces _the_ number. Where a gate exists, run it before enshrining its output.
+2. **Pin load-bearing empirical results as in-repo tests.** The /tmp verification was the right _research_ move (assert-after-verify beats the 2026-10-11 sin of assert-before-verify) — but its conclusion lives in prose until a test reproduces it. Research that ends in a docs claim should end in a `*_test.go` too.
 3. **Enumerator hierarchy: vet > grep.** For type-change migrations, `go vet ./...` IS the worklist. Grep is for prose, not for compile sites.
 4. **Treat structured blocks (fenced API lists, tables, golden files) as load-bearing code.** They have their own failure modes (fusion, column drift) and their own gates (docs-check, dprint). Diff the block after every touch.
 5. **Exit-code discipline is a reflex, not a rule.** Even in "quick verification" one-liners — especially there, because quickness is exactly when the pipe lie slips through.
@@ -71,78 +71,78 @@
 
 **Tier 1 — direct follow-ups (high impact, low effort)**
 
-| #   | Task                                                                                                                                                        | Origin        |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| 1   | Owner answers the 3 questions in section (g) — they gate items 2, 4, 6, 8                                                                                   | this report   |
-| 2   | Cut v0.9.0: promote `[Unreleased]`, tag, verify module proxy + pkg.go.dev (go-release flow)                                                                  | b8/c8         |
-| 3   | HARVEST this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` (docs-health)                                                                           | skill loop    |
-| 4   | Migrate go-health-dashboard: wrap `NewInstanceID(...)`, `.Get()` reader, run its suite incl. browser/screenshot                                             | b3            |
-| 5   | Update `docs/consumer-verification.md` fleet timeline with the InstanceID breaking change + migration note                                                   | b3            |
-| 6   | Measured branching-flow run to confirm the 3-finding steady state; re-baseline the ceiling 4 from output, not arithmetic                                     | b1            |
-| 7   | Pin the v1-marshaler omission claim as a named root-package test (decode+re-marshal with `encoding/json`, assert `instance_id` absent when unset)             | b2            |
-| 8   | Re-run BuildFlow full mode on the changed tree (`GOTOOLCHAIN=auto` in the launching shell); arbitrate reds against `.#gates`                                  | b6            |
-| 9   | Audit the four design docs that mention InstanceID for now-stale `WithInstanceID(id string)`-style snippets; fix any found                                   | b4            |
-| 10  | FEATURES.md: add a Data Model row for the `InstanceID` strong type (+ `NewInstanceID`), status FULLY_FUNCTIONAL                                               | b5            |
-| 11  | `trash /tmp/brandid-check` after #7 pins the claim (or keep it as the repro until then)                                                                       | b9            |
-| 12  | Run `erraudit ./... --type-aware` once on the new code (documented standalone invocation; golangci's unknown-linter noise is not erraudit's verdict)          | hygiene       |
-| 13  | Re-run `ci-emulation` (go-free PATH) on the tree with the new dependency                                                                                      | c7            |
-| 14  | Verify the 2026-10-11 carry-over: does CHANGELOG `[Unreleased]` (or a released section) carry the federation-pairing "Internal" line? Add if missing          | b8            |
+| #  | Task                                                                                                                                                 | Origin      |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 1  | Owner answers the 3 questions in section (g) — they gate items 2, 4, 6, 8                                                                            | this report |
+| 2  | Cut v0.9.0: promote `[Unreleased]`, tag, verify module proxy + pkg.go.dev (go-release flow)                                                          | b8/c8       |
+| 3  | HARVEST this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` (docs-health)                                                                   | skill loop  |
+| 4  | Migrate go-health-dashboard: wrap `NewInstanceID(...)`, `.Get()` reader, run its suite incl. browser/screenshot                                      | b3          |
+| 5  | Update `docs/consumer-verification.md` fleet timeline with the InstanceID breaking change + migration note                                           | b3          |
+| 6  | Measured branching-flow run to confirm the 3-finding steady state; re-baseline the ceiling 4 from output, not arithmetic                             | b1          |
+| 7  | Pin the v1-marshaler omission claim as a named root-package test (decode+re-marshal with `encoding/json`, assert `instance_id` absent when unset)    | b2          |
+| 8  | Re-run BuildFlow full mode on the changed tree (`GOTOOLCHAIN=auto` in the launching shell); arbitrate reds against `.#gates`                         | b6          |
+| 9  | Audit the four design docs that mention InstanceID for now-stale `WithInstanceID(id string)`-style snippets; fix any found                           | b4          |
+| 10 | FEATURES.md: add a Data Model row for the `InstanceID` strong type (+ `NewInstanceID`), status FULLY_FUNCTIONAL                                      | b5          |
+| 11 | `trash /tmp/brandid-check` after #7 pins the claim (or keep it as the repro until then)                                                              | b9          |
+| 12 | Run `erraudit ./... --type-aware` once on the new code (documented standalone invocation; golangci's unknown-linter noise is not erraudit's verdict) | hygiene     |
+| 13 | Re-run `ci-emulation` (go-free PATH) on the tree with the new dependency                                                                             | c7          |
+| 14 | Verify the 2026-10-11 carry-over: does CHANGELOG `[Unreleased]` (or a released section) carry the federation-pairing "Internal" line? Add if missing | b8          |
 
 **Tier 2 — v0.6 window / typed-identity thread**
 
-| #   | Task                                                                                                                                                        | Origin        |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| 15  | Decide ServiceName shape: `id.ID[ServiceNameBrand, string]` (consistency with InstanceID) vs Option-A defined string; record in the design doc              | c1, addendum  |
-| 16  | If typed: execute the servicename migration plan (signature changes, ~14 fleet call sites, per-repo verification table) at the v0.6 window                    | c1            |
-| 17  | ROADMAP: update the typed-identity theme to point at the addendum (instance settled, ServiceName open)                                                        | c1            |
-| 18  | OpenAPI: add the `instance_id` semantic description (strong identifier; zero omitted) — was 2026-10-11 f37, shape-locked then, semantics allowed now          | carried       |
-| 19  | Fleet skew sweep (`nix run .#skew`) to see which consumer pins are now compile-broken by the type change (informs the dashboard migration order)              | new, cheap    |
+| #  | Task                                                                                                                                                 | Origin       |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 15 | Decide ServiceName shape: `id.ID[ServiceNameBrand, string]` (consistency with InstanceID) vs Option-A defined string; record in the design doc       | c1, addendum |
+| 16 | If typed: execute the servicename migration plan (signature changes, ~14 fleet call sites, per-repo verification table) at the v0.6 window           | c1           |
+| 17 | ROADMAP: update the typed-identity theme to point at the addendum (instance settled, ServiceName open)                                               | c1           |
+| 18 | OpenAPI: add the `instance_id` semantic description (strong identifier; zero omitted) — was 2026-10-11 f37, shape-locked then, semantics allowed now | carried      |
+| 19 | Fleet skew sweep (`nix run .#skew`) to see which consumer pins are now compile-broken by the type change (informs the dashboard migration order)     | new, cheap   |
 
 **Tier 3 — standing toolchain debt**
 
-| #   | Task                                                                                                                                                        | Origin        |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| 20  | Fix or disable the golangci LSP integration (standing; it misled for a full session again)                                                                    | c2            |
-| 21  | Drop the `gosecGo` pin when nixpkgs ships gosec reading export-data v5 (watch securego/gosec #1772)                                                           | c3            |
-| 22  | `tools/doanalyzerv2` directive floor: bump when post-v0.4.0 samber-linter propagates; then re-try the go-directive row                                        | c4            |
-| 23  | go-version-auto-configure warning cleanup once #22 lands                                                                                                      | c5            |
-| 24  | Evaluate/file upstream: go-branded-id `MarshalJSONV2` (verify-before-filing + github-voice; confirm the interop hop costs anything measurable first)          | c9            |
+| #  | Task                                                                                                                                                 | Origin |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 20 | Fix or disable the golangci LSP integration (standing; it misled for a full session again)                                                           | c2     |
+| 21 | Drop the `gosecGo` pin when nixpkgs ships gosec reading export-data v5 (watch securego/gosec #1772)                                                  | c3     |
+| 22 | `tools/doanalyzerv2` directive floor: bump when post-v0.4.0 samber-linter propagates; then re-try the go-directive row                               | c4     |
+| 23 | go-version-auto-configure warning cleanup once #22 lands                                                                                             | c5     |
+| 24 | Evaluate/file upstream: go-branded-id `MarshalJSONV2` (verify-before-filing + github-voice; confirm the interop hop costs anything measurable first) | c9     |
 
 **Tier 4 — hardening / nice-to-have (ROADMAP fuel)**
 
-| #   | Task                                                                                                                                                         | Origin      |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| 25  | Weekly `fuzz-long` cadence on the new type (5 min/target)                                                                                                      | c6          |
-| 26  | Consider a `Response.Clone` round-trip test asserting `InstanceID` survives clone by value (probably already covered by fuzz; verify, don't assume)            | new         |
-| 27  | Benchmark sanity: `InstanceID.Get()`/wrap in the hot path (expect 0 allocs; prove once, then never think about it again)                                        | new         |
-| 28  | README quickstart: show `WithInstanceID(health.NewInstanceID(...))` in the primary example, not only the options reference                                      | new         |
-| 29  | Consider documenting `String()` ≠ wire value ("InstanceID:pod-abc" is debug-only) in DOMAIN_LANGUAGE to pre-empt dashboard template surprises                   | new         |
-| 30  | adoption-matrix: consider a "consumers blocked by breaking change" checklist column for the v0.9.0 window                                                       | new         |
-| 31  | Check whether `docs/openapi.yaml`'s `instance_id` description should name the type (`health.InstanceID`) for SDK generators                                     | new         |
-| 32  | Sweep for other stringly-typed identifiers the linter would flag next (`Version`? check names?) — decide adopt-or-document before the next brandid run          | new         |
-| 33  | AGENTS.md gotcha candidate: "v1 `encoding/json` honors `omitzero` since Go 1.24" (cost us research; one line saves it)                                          | new         |
-| 34  | Re-verify `docs/merge-unification-design.md`'s scalar list mentions the type change is wire-invisible (one-line check)                                          | new         |
-| 35  | Fleet call-site scan: does any consumer compare `resp.InstanceID == ""` (now `IsZero()`)? Compile catches it — but the skew sweep (#19) makes it visible early  | new         |
+| #  | Task                                                                                                                                                           | Origin |
+| -- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 25 | Weekly `fuzz-long` cadence on the new type (5 min/target)                                                                                                      | c6     |
+| 26 | Consider a `Response.Clone` round-trip test asserting `InstanceID` survives clone by value (probably already covered by fuzz; verify, don't assume)            | new    |
+| 27 | Benchmark sanity: `InstanceID.Get()`/wrap in the hot path (expect 0 allocs; prove once, then never think about it again)                                       | new    |
+| 28 | README quickstart: show `WithInstanceID(health.NewInstanceID(...))` in the primary example, not only the options reference                                     | new    |
+| 29 | Consider documenting `String()` ≠ wire value ("InstanceID:pod-abc" is debug-only) in DOMAIN_LANGUAGE to pre-empt dashboard template surprises                  | new    |
+| 30 | adoption-matrix: consider a "consumers blocked by breaking change" checklist column for the v0.9.0 window                                                      | new    |
+| 31 | Check whether `docs/openapi.yaml`'s `instance_id` description should name the type (`health.InstanceID`) for SDK generators                                    | new    |
+| 32 | Sweep for other stringly-typed identifiers the linter would flag next (`Version`? check names?) — decide adopt-or-document before the next brandid run         | new    |
+| 33 | AGENTS.md gotcha candidate: "v1 `encoding/json` honors `omitzero` since Go 1.24" (cost us research; one line saves it)                                         | new    |
+| 34 | Re-verify `docs/merge-unification-design.md`'s scalar list mentions the type change is wire-invisible (one-line check)                                         | new    |
+| 35 | Fleet call-site scan: does any consumer compare `resp.InstanceID == ""` (now `IsZero()`)? Compile catches it — but the skew sweep (#19) makes it visible early | new    |
 
 **Tier 5 — pre-existing backlog carried from prior reports (still valid, unowned)**
 
-| #   | Task                                                                                                                                                         | Origin      |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| 36  | Dashboard bridge detailed-variant gap (`docs/bridge-golden-path.md`)                                                                                           | prior       |
-| 37  | Adoption-matrix over-count corrections for go-daemon rows (2026-10-11 E5 residue)                                                                              | prior       |
-| 38  | Zlota44/dnsblockd const-decl checks, KeyHolderAI literal-vs-typed check, PMA scan on next contact (servicename window sweeps)                                   | prior       |
-| 39  | Confirm the weekly CI matrix still covers: gates, fuzz-long, skew — on the post-v0.9.0 tree                                                                     | prior       |
-| 40  | Revisit `max-same-issues` golangci trap (documented) — consider raising so identical findings are not hidden                                                    | prior       |
-| 41  | upstack: whether `.config/metadata.yaml` (modified outside this session) belongs in the repo or is daemon churn to ignore                                       | noticed     |
-| 42  | Consider a CHANGELOG "Dependencies" section convention (two direct deps now; keep-a-changelog has the category)                                                 | new         |
-| 43  | Consider go-branded-id version pin policy (flake/renovate/dependabot handling for the second dependency)                                                        | new         |
-| 44  | docs/INDEX.md: confirm every new docs-table row gained this session is indexed (docs-check covers ARCHITECTURE naming; INDEX is manual)                         | new         |
-| 45  | Post-release: re-run the recorder-audit fleet scan to confirm 0 findings still (cheap, periodic)                                                                | prior       |
-| 46  | Sanitize doc: `SanitizeResponse` now documents a conversion step — confirm the godoc example list still matches the implementation lines                        | new         |
-| 47  | Consider `TestWithInstanceID_ZeroValueOmitted` naming alignment (existing test name is fine; only if touched anyway)                                            | nit         |
-| 48  | Sweep ROADMAP for now-done items ("typed identity" partially resolved; InstanceID row shipped) — mark done                                                      | hygiene     |
-| 49  | Check dependabot/config for the new module (private-repo? no — public; confirm no GOPRIVATE entry needed)                                                        | new         |
-| 50  | Decide whether the strong-type pattern should spread to `aggregate`/`federation` remote *names* (currently validated strings with a `/` ban) — document-or-adopt | new, design |
+| #  | Task                                                                                                                                                             | Origin      |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 36 | Dashboard bridge detailed-variant gap (`docs/bridge-golden-path.md`)                                                                                             | prior       |
+| 37 | Adoption-matrix over-count corrections for go-daemon rows (2026-10-11 E5 residue)                                                                                | prior       |
+| 38 | Zlota44/dnsblockd const-decl checks, KeyHolderAI literal-vs-typed check, PMA scan on next contact (servicename window sweeps)                                    | prior       |
+| 39 | Confirm the weekly CI matrix still covers: gates, fuzz-long, skew — on the post-v0.9.0 tree                                                                      | prior       |
+| 40 | Revisit `max-same-issues` golangci trap (documented) — consider raising so identical findings are not hidden                                                     | prior       |
+| 41 | upstack: whether `.config/metadata.yaml` (modified outside this session) belongs in the repo or is daemon churn to ignore                                        | noticed     |
+| 42 | Consider a CHANGELOG "Dependencies" section convention (two direct deps now; keep-a-changelog has the category)                                                  | new         |
+| 43 | Consider go-branded-id version pin policy (flake/renovate/dependabot handling for the second dependency)                                                         | new         |
+| 44 | docs/INDEX.md: confirm every new docs-table row gained this session is indexed (docs-check covers ARCHITECTURE naming; INDEX is manual)                          | new         |
+| 45 | Post-release: re-run the recorder-audit fleet scan to confirm 0 findings still (cheap, periodic)                                                                 | prior       |
+| 46 | Sanitize doc: `SanitizeResponse` now documents a conversion step — confirm the godoc example list still matches the implementation lines                         | new         |
+| 47 | Consider `TestWithInstanceID_ZeroValueOmitted` naming alignment (existing test name is fine; only if touched anyway)                                             | nit         |
+| 48 | Sweep ROADMAP for now-done items ("typed identity" partially resolved; InstanceID row shipped) — mark done                                                       | hygiene     |
+| 49 | Check dependabot/config for the new module (private-repo? no — public; confirm no GOPRIVATE entry needed)                                                        | new         |
+| 50 | Decide whether the strong-type pattern should spread to `aggregate`/`federation` remote _names_ (currently validated strings with a `/` ban) — document-or-adopt | new, design |
 
 ## g) QUESTIONS I CANNOT FIGURE OUT MYSELF
 

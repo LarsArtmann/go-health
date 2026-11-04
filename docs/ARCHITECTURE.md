@@ -59,17 +59,29 @@ merge-on-read packages (docs/merge-unification-design.md): `Source{Name, Respons
 via `Rank` with tie stability (`off`/unknown roll-ups can't leak in; order-independent), `"source/check"` namespacing, shutdown
 overlay, `"name/reachable"` fail for fetch-errored sources, max-latency, scalars dropped. Pure; the collapsed merge fuzz suite lives here.
 
+Fixture module `testdata/httputil-interop` (source: `testdata/httputil-interop/doc.go`,
+`testdata/httputil-interop/interop_test.go`) is a separate Go module, outside the root module on purpose (the
+library's dependency policy): it proves the httputil composition recipes (docs/httputil-integration.md) against the
+PUBLISHED httputil release — proxy-resolved httputil + server_timing, go-health replaced with the working tree.
+Run via `nix run .#interop` (in the `.#gates` sweep and as a CI step in the test job); network-dependent, so it is
+deliberately not a sandboxed flake check. `tools/httputil-interop-check.sh` backs the app. The fuzz-registry check
+already ignores nested modules; this row exists so the docs-check file map stays complete.
+
+`docs/drafts/finding1_repro/main.go` is a standalone `go run ./docs/drafts/finding1_repro` repro backing
+[drafts/issue-methodless-patterns-panic.md](drafts/issue-methodless-patterns-panic.md) (method-less probe
+patterns panic a consumer's page-router mux); a draft artifact, not part of the library surface.
+
 ---
 
 ## Test layout
 
-| Layer                       | Files                                                                                                                       |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Layer                          | Files                                                                                                                                                                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Root black-box (`health_test`) | `probe_test.go`, `handlers_*_test.go`, `accessors_test.go`, `recorder_test.go`, `checks_test.go`, `configured_off_test.go`, `version_test.go`, `new_with_recorder_test.go`, `service_name_test.go`, `probe_*_test.go` |
-| Root white-box (`health`)      | `export_test.go`, `handlers_internal_test.go`, `accessors_internal_test.go`, `version_internal_test.go`, `tracker_internal_test.go` |
-| Sub-packages                | one `*_test.go` family per package plus an `*_internal_test.go` where an unexported seam needs pinning                        |
-| Fuzz                        | `handlers_fuzz_test.go` (root), `aggregate/`, `checks/`, `federation/` (×3 targets), `internal/merge/` — all registered in both `fuzz` apps, parity enforced by `nix run .#fuzz-registry` |
-| Benchmarks                  | `probe_benchmark_test.go`, `probe_test.go`, `aggregate/aggregate_benchmark_test.go`, `federation/federation_benchmark_test.go` |
+| Root white-box (`health`)      | `export_test.go`, `handlers_internal_test.go`, `accessors_internal_test.go`, `version_internal_test.go`, `tracker_internal_test.go`                                                                                   |
+| Sub-packages                   | one `*_test.go` family per package plus an `*_internal_test.go` where an unexported seam needs pinning                                                                                                                |
+| Fuzz                           | `handlers_fuzz_test.go` (root), `aggregate/`, `checks/`, `federation/` (×3 targets), `internal/merge/` — all registered in both `fuzz` apps, parity enforced by `nix run .#fuzz-registry`                             |
+| Benchmarks                     | `probe_benchmark_test.go`, `probe_test.go`, `aggregate/aggregate_benchmark_test.go`, `federation/federation_benchmark_test.go`                                                                                        |
 
 ---
 

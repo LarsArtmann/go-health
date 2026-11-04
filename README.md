@@ -461,6 +461,8 @@ mux.Handle("/readyz", authMiddleware(probe.ReadinessHandler()))
 
 Wrap readiness (and startup) when they need auth or rate limiting; leave liveness unwrapped — the kubelet cannot send credentials, and liveness must never fail on auth. See [docs/middleware-design.md](docs/middleware-design.md) and the verified example in [`middleware_example_test.go`](middleware_example_test.go).
 
+Pairing with the fleet's HTTP middleware library, [github.com/larsartmann/httputil](https://github.com/larsartmann/httputil)? [docs/httputil-integration.md](docs/httputil-integration.md) owns the recipes — endpoint split, code semantics through a full chain, method-guard ordering, drain ordering with `httputil.Server`, and a Server-Timing bridge for per-check durations — each proved by the [`testdata/httputil-interop`](testdata/httputil-interop/) fixture module (`nix run .#interop`).
+
 ## Aggregating Multiple Probes
 
 One process can embed several independently configured probes — one per logical service or tenant — and expose their combined state as a single go-health surface via the [`aggregate`](aggregate/) sub-package:

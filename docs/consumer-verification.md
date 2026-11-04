@@ -17,30 +17,30 @@ for a build:
 
 - **L1 pin-read** — each repo's `go.mod` (or `health/go.mod` for sub-modules) read
   from its live default branch through the authenticated GitHub contents API by
-  `tools/fleet-skew.sh`. Proves what the repository *declares*, proves nothing
+  `tools/fleet-skew.sh`. Proves what the repository _declares_, proves nothing
   about whether it compiles.
 - **L2 build** — a local `go build ./...` / `go vet ./...` against the pinned
   version.
 - **L3 suite** — a local `go test` run against the pinned version.
 
-| Repository | Module file | Pinned go-health | Evidence | Result |
-| --- | --- | --- | --- | --- |
-| go-health-dashboard | go.mod @master | v0.8.1 | L1 + L2 + L3 | `go build`/`go vet` clean; unit suite green except 7 goldens drifting on the unaudited templ-components v1.24.0 climb (UI, not go-health) |
-| CV | go.mod @master | v0.8.1 | L1 | pin aligned |
-| cv | go.mod @master | v0.8.1 | L1 | pin aligned (local lineage still unpushed, unrelated) |
-| Zlota44 | go.mod @master | v0.8.1 | L1 | pin aligned |
-| dnsblockd | go.mod @master | v0.8.1 | L1 | pin aligned |
-| library-policy | go.mod @master | v0.8.1 | L1 | pin aligned |
-| file-and-image-renamer | go.mod @master | v0.8.1 | L1 | pin aligned |
-| DiscordSync | go.mod @master | v0.8.1 | L1 + L2 + L3 | `internal/mediapipeline` and `internal/web/golden` green; `internal/web` snapshot suite red from templ-components v1.24.0 markup, not go-health |
-| KeyHolderAI | go.mod @master | v0.8.1 | L1 | pin aligned |
-| nsfw-classifier | go.mod @master | v0.8.1 | L1 | pin aligned |
-| webphone | go.mod @main | v0.8.1 | L1 | pin aligned (default branch is `main`) |
-| projects-management-automation | go.mod @master | v0.8.1 | L1 | pin aligned |
-| timesheets | go.mod @master | v0.8.1 | L1 | pin aligned |
-| cqrs-htmx | health/go.mod @master | v0.8.1 | L1 | pin aligned (bridge module) |
-| go-appkit | health/go.mod @master | v0.8.1 | L1 | pin aligned (bridge module) |
-| go-taskqueue | go.mod @master | v0.8.1 | L1 | pin aligned |
+| Repository                     | Module file           | Pinned go-health | Evidence     | Result                                                                                                                                          |
+| ------------------------------ | --------------------- | ---------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| go-health-dashboard            | go.mod @master        | v0.8.1           | L1 + L2 + L3 | `go build`/`go vet` clean; unit suite green except 7 goldens drifting on the unaudited templ-components v1.24.0 climb (UI, not go-health)       |
+| CV                             | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| cv                             | go.mod @master        | v0.8.1           | L1           | pin aligned (local lineage still unpushed, unrelated)                                                                                           |
+| Zlota44                        | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| dnsblockd                      | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| library-policy                 | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| file-and-image-renamer         | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| DiscordSync                    | go.mod @master        | v0.8.1           | L1 + L2 + L3 | `internal/mediapipeline` and `internal/web/golden` green; `internal/web` snapshot suite red from templ-components v1.24.0 markup, not go-health |
+| KeyHolderAI                    | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| nsfw-classifier                | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| webphone                       | go.mod @main          | v0.8.1           | L1           | pin aligned (default branch is `main`)                                                                                                          |
+| projects-management-automation | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| timesheets                     | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
+| cqrs-htmx                      | health/go.mod @master | v0.8.1           | L1           | pin aligned (bridge module)                                                                                                                     |
+| go-appkit                      | health/go.mod @master | v0.8.1           | L1           | pin aligned (bridge module)                                                                                                                     |
+| go-taskqueue                   | go.mod @master        | v0.8.1           | L1           | pin aligned                                                                                                                                     |
 
 Skew verdict at that moment: `minor-stale: 0 (allowed 0), warnings: 0,
 unreadable: 0` — the allowance file was deleted in `15fad10` once the backlog

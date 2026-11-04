@@ -26,14 +26,14 @@
 
 ## 1. TL;DR
 
-| Question at 04:30 | Answer at 10:11 |
-| --- | --- |
-| Is the bridge really consumed by strangers? | Yes — `health/v4.14.0` resolves from the proxy, and a scratch module that never saw this repo's workspace reports `go-health v0.8.1` |
-| Is the fleet on it? | **14 of 16.** The two left (CV, cv) are the *same repository cloned twice* with no shared tip — not a bump |
-| Is the drift alarm trustworthy? | It fails closed on unreadable repos, measures local checkouts without a token, and its allowed backlog lives in **one file** every caller reads |
-| Did anything break that I caused? | No library regression found. Two self-inflicted *gate* defects caught and fixed (a boss that never ran, an alarm that lied); one near-miss still open (`pre-tag`) |
-| What is red, and whose is it? | go-health: green (CI + gates). cqrs-htmx: green. go-health-dashboard: **red**, two causes, both pre-existing. KeyHolderAI: does not compile, pre-existing. Private fleet: **no CI** |
-| Was the session honestly reported? | This report exists because the 04:30 one was already stale in four places by the time it was committed |
+| Question at 04:30                           | Answer at 10:11                                                                                                                                                                     |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Is the bridge really consumed by strangers? | Yes — `health/v4.14.0` resolves from the proxy, and a scratch module that never saw this repo's workspace reports `go-health v0.8.1`                                                |
+| Is the fleet on it?                         | **14 of 16.** The two left (CV, cv) are the _same repository cloned twice_ with no shared tip — not a bump                                                                          |
+| Is the drift alarm trustworthy?             | It fails closed on unreadable repos, measures local checkouts without a token, and its allowed backlog lives in **one file** every caller reads                                     |
+| Did anything break that I caused?           | No library regression found. Two self-inflicted _gate_ defects caught and fixed (a boss that never ran, an alarm that lied); one near-miss still open (`pre-tag`)                   |
+| What is red, and whose is it?               | go-health: green (CI + gates). cqrs-htmx: green. go-health-dashboard: **red**, two causes, both pre-existing. KeyHolderAI: does not compile, pre-existing. Private fleet: **no CI** |
+| Was the session honestly reported?          | This report exists because the 04:30 one was already stale in four places by the time it was committed                                                                              |
 
 ---
 
@@ -41,7 +41,7 @@
 
 ### a1. `cqrs-htmx/health/v4.14.0` — published, verified by a stranger, consumed
 
-The tag existed as a *pin* on master for a day while every consumer resolving the module still got v4.13.0 (go-health v0.7.0). Three things had to happen first, in this order:
+The tag existed as a _pin_ on master for a day while every consumer resolving the module still got v4.13.0 (go-health v0.7.0). Three things had to happen first, in this order:
 
 1. **Align the release train.** 14 modules lagged `go-retry v0.8.0 → v0.9.0` — an unrelated library that blocks this one. `bump-dep.sh 'larsartmann/go-retry$' v0.9.0` swept all 14 with per-module tidy + verify + build + vet. Ran it twice (branch tree, then master tree). Train lag **14 → 0**.
 2. **Write the receipt.** `health` ships no module CHANGELOG, so the root file now says what the tag publishes and that the pin bump is the entire migration.
@@ -66,7 +66,7 @@ With the train aligned the PR went `UNSTABLE → CLEAN` and was squashed as `7fa
 
 Two failure modes, both closed in `tools/fleet-skew.sh`:
 
-- **Silence read as green.** 13 of 16 repos once came back "unreachable" (no token) and the gate *passed*. Unreadable is now its own bucket, **fails by default**, and `--allow-unchecked N` forces a deliberate backlog to be written down.
+- **Silence read as green.** 13 of 16 repos once came back "unreachable" (no token) and the gate _passed_. Unreadable is now its own bucket, **fails by default**, and `--allow-unchecked N` forces a deliberate backlog to be written down.
 - **No token, no check.** `--source api|local|auto`: `auto` probes `gh api user`, picks, and **prints which source it used**. A gate that silently measures something else is worse than one that fails.
 
 Mutation-tested, not eyeballed: strict run → exit 1 with 14 stale; empty checkout root → exit 1 with 16 unreadable; `--source api` without a token → exit 2 naming the fix.
@@ -75,24 +75,24 @@ Then a **third** defect surfaced at the very end (§d1): the workflow carried th
 
 ### a4. Three consumer adapters deleted, not wrapped (plan M07/M08/M09)
 
-| Repo | Deleted | Replaced by | Defect retired | Evidence |
-| --- | --- | --- | --- | --- |
-| dnsblockd | zero-timestamp guard, wall-clock staleness, hand-rolled `maps.Copy` clone | `CacheAge()` (was there ever an evaluation), `CachedResponseFresh(15s)`, `Response.Clone()` | the freshness verdict and the timestamp could disagree (two different clocks) | 28 pkgs green, `-race` green, lint 0 |
-| cv | `len(Checks)==0` → `Evaluate` (which does not publish), 9-field manual rebuild, `maps.Copy` | `CacheAge()`, `EvaluateAndCache`, `Clone()` | **the fallback re-ran on every scrape**; the builder dropped any field go-health adds later | `internal/health` + `internal/di` green |
-| DiscordSync | `Timestamp.IsZero() \|\| nowFn().Sub(...) > maxAge`, a local duplicate of samber/do's naming | `CachedResponseFresh(maxAge)`, `DoServiceName[T]()` | freshness measured on a different clock than the snapshot; a second source of truth for service keys | `cmd/discordsync` + `internal/health` green |
+| Repo        | Deleted                                                                                      | Replaced by                                                                                 | Defect retired                                                                                       | Evidence                                    |
+| ----------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| dnsblockd   | zero-timestamp guard, wall-clock staleness, hand-rolled `maps.Copy` clone                    | `CacheAge()` (was there ever an evaluation), `CachedResponseFresh(15s)`, `Response.Clone()` | the freshness verdict and the timestamp could disagree (two different clocks)                        | 28 pkgs green, `-race` green, lint 0        |
+| cv          | `len(Checks)==0` → `Evaluate` (which does not publish), 9-field manual rebuild, `maps.Copy`  | `CacheAge()`, `EvaluateAndCache`, `Clone()`                                                 | **the fallback re-ran on every scrape**; the builder dropped any field go-health adds later          | `internal/health` + `internal/di` green     |
+| DiscordSync | `Timestamp.IsZero() \|\| nowFn().Sub(...) > maxAge`, a local duplicate of samber/do's naming | `CachedResponseFresh(maxAge)`, `DoServiceName[T]()`                                         | freshness measured on a different clock than the snapshot; a second source of truth for service keys | `cmd/discordsync` + `internal/health` green |
 
 One test had to change with the semantics: dnsblockd's stale-cache test skewed the probe clock **backwards**, which made the snapshot look old only to a wall clock; it now advances the clock after the initial refresh and pins `WithRefreshInterval(time.Hour)` so the next tick cannot undo the assertion.
 
 ### a5. Fleet: 2 → 14 of 16 on v0.8.1
 
-| Repo | Verification | Pushed |
-| --- | --- | --- |
-| Zlota44, library-policy, webphone, projects-management-automation, timesheets, file-and-image-renamer | `go get` → build + vet green | yes |
-| go-taskqueue | vendored repo → `go mod vendor`, build + vet + `internal/webui` suite (10.7 s) | yes |
-| go-health-dashboard | build green (vet blocked, §b1) | yes |
-| KeyHolderAI | vendored → `go mod vendor`; build **unverified** (§b1) | yes |
-| dnsblockd, DiscordSync | §a4 | yes |
-| cv, nsfw-classifier | pin in the tree, builds | **no** (§b3) |
+| Repo                                                                                                  | Verification                                                                   | Pushed       |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------ |
+| Zlota44, library-policy, webphone, projects-management-automation, timesheets, file-and-image-renamer | `go get` → build + vet green                                                   | yes          |
+| go-taskqueue                                                                                          | vendored repo → `go mod vendor`, build + vet + `internal/webui` suite (10.7 s) | yes          |
+| go-health-dashboard                                                                                   | build green (vet blocked, §b1)                                                 | yes          |
+| KeyHolderAI                                                                                           | vendored → `go mod vendor`; build **unverified** (§b1)                         | yes          |
+| dnsblockd, DiscordSync                                                                                | §a4                                                                            | yes          |
+| cv, nsfw-classifier                                                                                   | pin in the tree, builds                                                        | **no** (§b3) |
 
 `nix run .#skew` (default backlog): **14 OK / 2 stale**, down from 14 stale.
 
@@ -151,16 +151,16 @@ Every push-triggered job in the **private** repos fails with `steps=0` — refus
 
 ## c) NOT STARTED
 
-| Item | Why it is still open |
-| --- | --- |
-| **M04** — the published evidence table | The compiles happened (§a1, a5); the one-page table that turns them into evidence does not exist. Third session it has been skipped. |
-| **`.#pre-tag` end-to-end proof** | I changed the contract of the check it shells out to and never ran `pre-tag` once. A throwaway tag on a scratch clone would settle it. |
-| **M19** company-master-data → `checks.Disk` | Forgejo-only, no CI, and its probe is mounted through go-appkit — "add a check" is an architecture question there, not an import |
-| **M22 cross-links + archive pass** in go-health | Only the consumption-gap section and the plan's status block were rewritten |
-| **M25/M26** | `doanalyzerv2` step env and the golangci LSP panel (the panel's ~108 phantom diagnostics were visible all session and never chased) |
-| **Claim-file protocol** | Peer flagged it twice; four sessions collided again this session (§d3). Still unwritten. |
-| M18 announcements, M24 BuildFlow filings, M27 renames | Unchanged |
-| Fuzz corpus promotion, Dependabot triage, pkg.go.dev render check, `.#ci-emulation` | Forgotten, not deferred (§0) |
+| Item                                                                                | Why it is still open                                                                                                                   |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **M04** — the published evidence table                                              | The compiles happened (§a1, a5); the one-page table that turns them into evidence does not exist. Third session it has been skipped.   |
+| **`.#pre-tag` end-to-end proof**                                                    | I changed the contract of the check it shells out to and never ran `pre-tag` once. A throwaway tag on a scratch clone would settle it. |
+| **M19** company-master-data → `checks.Disk`                                         | Forgejo-only, no CI, and its probe is mounted through go-appkit — "add a check" is an architecture question there, not an import       |
+| **M22 cross-links + archive pass** in go-health                                     | Only the consumption-gap section and the plan's status block were rewritten                                                            |
+| **M25/M26**                                                                         | `doanalyzerv2` step env and the golangci LSP panel (the panel's ~108 phantom diagnostics were visible all session and never chased)    |
+| **Claim-file protocol**                                                             | Peer flagged it twice; four sessions collided again this session (§d3). Still unwritten.                                               |
+| M18 announcements, M24 BuildFlow filings, M27 renames                               | Unchanged                                                                                                                              |
+| Fuzz corpus promotion, Dependabot triage, pkg.go.dev render check, `.#ci-emulation` | Forgotten, not deferred (§0)                                                                                                           |
 
 ---
 
@@ -196,58 +196,58 @@ Every push-triggered job in the **private** repos fails with `steps=0` — refus
 
 ## f) UP TO 50 THINGS TO DO NEXT
 
-| # | Task | Impact | Effort |
-| --- | --- | --- | --- |
-| 1 | Prove `.#pre-tag` end-to-end on a scratch clone (throwaway tag) | **High** | 30m |
-| 2 | Write the M04 evidence table from this session's compiles | **High** | 45m |
-| 3 | Decide the CV clone pair (which lineage is canonical) and reunite it | **High** | 1h |
-| 4 | Push `cv` (this session's health work) once that is decided | **High** | 15m |
-| 5 | Add the `crm.checkpoint_path` defaults entry so CV's own gate goes green | **High** | 15m |
-| 6 | Migrate `go-health-dashboard`'s browser tests to chromedp v0.21 (19 tests dead) | **High** | 2h |
-| 7 | Then re-audit and update `scripts/check-ui-pins.sh` (it is red by design until the suite runs) | **High** | 30m |
-| 8 | Fix KeyHolderAI's PersonaID / branded-ID call sites (master has not compiled since the templ bump) | **High** | 2h |
-| 9 | Land the claim-file protocol (4 sessions collided, again) | **High** | 45m |
-| 10 | Triage the "3 high" Dependabot findings on cqrs-htmx that every push printed | **High** | 30m |
-| 11 | Promote accumulated fuzz inputs into `testdata/fuzz/` in one deliberate commit | Med | 15m |
-| 12 | Add a `Check` pass-detail channel, or record the decision to drop the notes (unblocks M06) | Med | 2h |
-| 13 | Re-cut DiscordSync's snapshot goldens after templ-components v1.24 (6 failing) | Med | 1h |
-| 14 | Fix DiscordSync's mediapipeline QuickTime content-type test | Med | 30m |
-| 15 | Add TODO rows in DiscordSync for both reds (diagnosed here, not filed there) | Med | 15m |
-| 16 | Fix CV's `internal/render` goldens (4 files, ~570 bytes drift) | Med | 1h |
-| 17 | Fix CV's `internal/agent` sqlite restart-durability failure | Med | 1h |
-| 18 | Repair the pre-commit chain on this host (private lint caches, longer `cqrs-lint` budget) | Med | 45m |
-| 19 | Document `Response.Clone`'s nil-`Checks` behaviour (dnsblockd panicked on it) | Med | 15m |
-| 20 | Document that `WithCriticalService[T]` cannot work when a recorder renames keys | Med | 20m |
-| 21 | Run go-health's `.#ci-emulation` (never run this session) | Med | 30m |
-| 22 | Verify the pkg.go.dev render for v0.8.1 and v4.14.0 | Low | 5m |
-| 23 | Check whether `health/v*` tags are covered by cqrs-htmx's tag protection (the `v*` wildcard does not match them) | Med | 20m |
-| 24 | Verify the private-repo CI refusal is billing and get it fixed (or accept no remote gate) | **High** | 15m + owner |
-| 25 | Confirm whether `LarsArtmann/cv` is a redirect of `CV`, then fix the second remote | Med | 15m |
-| 26 | M19: `checks.Disk` in company-master-data (design the appkit-mount path first) | Med | 1h |
-| 27 | M22: cross-link the four 2026-10-27/28 reports and archive the closed ones | Med | 45m |
-| 28 | M25: `doanalyzerv2` step env in the flake | Low | 30m |
-| 29 | M26: decide the golangci LSP panel (repair or disable in crush-config) | Low | 30m |
-| 30 | Make `bump-dep.sh` detect a vendored repo and run `go mod vendor` (3 repos needed it) | Med | 30m |
-| 31 | Make `bump-dep.sh` warn when the target repo does not build at `origin/master` before the bump | Med | 45m |
-| 32 | Add a `skew` source line to `pre-push-checks.sh`'s report | Low | 10m |
-| 33 | Nightly `golangci-lint cache clean` or a size cap (9.3 GB corrupted silently) | Low | 20m |
-| 34 | Investigate the `cqrs-lint:repair` timeout (budget or machine?) | Low | 30m |
-| 35 | Add `--allow-unchecked` guidance to `CONTRIBUTING`'s skew line | Low | 10m |
-| 36 | Add a `health.Probe` live-mode + dashboard note to the README (M06's trap) | Med | 20m |
-| 37 | Verify the weekly skew workflow's first real run (never run with a sane baseline) | Med | 15m |
-| 38 | Add a session-start probe: `gh auth status`, tree-quiet check, newest status file | **High** | 20m |
-| 39 | Record the four cross-repo defects in one place instead of four commit messages | Low | 30m |
-| 40 | Re-derive "how many consumers" from the manifest, never from prose | Low | 20m |
-| 41 | Add a fuzz target for `Clone` + overlay mutation | Low | 20m |
-| 42 | Benchmark `CachedResponseFresh` against the hand-rolled comparison it replaced | Low | 30m |
-| 43 | Remove the deprecated `RecorderChain` in the next cqrs-htmx major | Low | 15m |
-| 44 | Check the dangling dependabot branches across the fleet | Low | 30m |
-| 45 | Re-verify the `.forgejo/workflows/architecture-gate.yml` that rode PR #37 | Low | 20m |
-| 46 | Decide `WithLiveThrottle`/`WithShutdownGracePeriod` (both now have a documented near-adopter) | Low | 30m |
-| 47 | Triage the disk that filled `/mnt/buildcache` (journals, SMART) | Med | 30m |
-| 48 | Add a step banner + final `EXIT=` to the one silent gate (`tools/fuzz-registry-check.sh`) | Low | 10m |
-| 49 | Archive the standing status reports this session closed | Low | 30m |
-| 50 | Re-run the skew with `--source api` after every push lands and record the number in the same commit | Low | 10m |
+| #  | Task                                                                                                             | Impact   | Effort      |
+| -- | ---------------------------------------------------------------------------------------------------------------- | -------- | ----------- |
+| 1  | Prove `.#pre-tag` end-to-end on a scratch clone (throwaway tag)                                                  | **High** | 30m         |
+| 2  | Write the M04 evidence table from this session's compiles                                                        | **High** | 45m         |
+| 3  | Decide the CV clone pair (which lineage is canonical) and reunite it                                             | **High** | 1h          |
+| 4  | Push `cv` (this session's health work) once that is decided                                                      | **High** | 15m         |
+| 5  | Add the `crm.checkpoint_path` defaults entry so CV's own gate goes green                                         | **High** | 15m         |
+| 6  | Migrate `go-health-dashboard`'s browser tests to chromedp v0.21 (19 tests dead)                                  | **High** | 2h          |
+| 7  | Then re-audit and update `scripts/check-ui-pins.sh` (it is red by design until the suite runs)                   | **High** | 30m         |
+| 8  | Fix KeyHolderAI's PersonaID / branded-ID call sites (master has not compiled since the templ bump)               | **High** | 2h          |
+| 9  | Land the claim-file protocol (4 sessions collided, again)                                                        | **High** | 45m         |
+| 10 | Triage the "3 high" Dependabot findings on cqrs-htmx that every push printed                                     | **High** | 30m         |
+| 11 | Promote accumulated fuzz inputs into `testdata/fuzz/` in one deliberate commit                                   | Med      | 15m         |
+| 12 | Add a `Check` pass-detail channel, or record the decision to drop the notes (unblocks M06)                       | Med      | 2h          |
+| 13 | Re-cut DiscordSync's snapshot goldens after templ-components v1.24 (6 failing)                                   | Med      | 1h          |
+| 14 | Fix DiscordSync's mediapipeline QuickTime content-type test                                                      | Med      | 30m         |
+| 15 | Add TODO rows in DiscordSync for both reds (diagnosed here, not filed there)                                     | Med      | 15m         |
+| 16 | Fix CV's `internal/render` goldens (4 files, ~570 bytes drift)                                                   | Med      | 1h          |
+| 17 | Fix CV's `internal/agent` sqlite restart-durability failure                                                      | Med      | 1h          |
+| 18 | Repair the pre-commit chain on this host (private lint caches, longer `cqrs-lint` budget)                        | Med      | 45m         |
+| 19 | Document `Response.Clone`'s nil-`Checks` behaviour (dnsblockd panicked on it)                                    | Med      | 15m         |
+| 20 | Document that `WithCriticalService[T]` cannot work when a recorder renames keys                                  | Med      | 20m         |
+| 21 | Run go-health's `.#ci-emulation` (never run this session)                                                        | Med      | 30m         |
+| 22 | Verify the pkg.go.dev render for v0.8.1 and v4.14.0                                                              | Low      | 5m          |
+| 23 | Check whether `health/v*` tags are covered by cqrs-htmx's tag protection (the `v*` wildcard does not match them) | Med      | 20m         |
+| 24 | Verify the private-repo CI refusal is billing and get it fixed (or accept no remote gate)                        | **High** | 15m + owner |
+| 25 | Confirm whether `LarsArtmann/cv` is a redirect of `CV`, then fix the second remote                               | Med      | 15m         |
+| 26 | M19: `checks.Disk` in company-master-data (design the appkit-mount path first)                                   | Med      | 1h          |
+| 27 | M22: cross-link the four 2026-10-27/28 reports and archive the closed ones                                       | Med      | 45m         |
+| 28 | M25: `doanalyzerv2` step env in the flake                                                                        | Low      | 30m         |
+| 29 | M26: decide the golangci LSP panel (repair or disable in crush-config)                                           | Low      | 30m         |
+| 30 | Make `bump-dep.sh` detect a vendored repo and run `go mod vendor` (3 repos needed it)                            | Med      | 30m         |
+| 31 | Make `bump-dep.sh` warn when the target repo does not build at `origin/master` before the bump                   | Med      | 45m         |
+| 32 | Add a `skew` source line to `pre-push-checks.sh`'s report                                                        | Low      | 10m         |
+| 33 | Nightly `golangci-lint cache clean` or a size cap (9.3 GB corrupted silently)                                    | Low      | 20m         |
+| 34 | Investigate the `cqrs-lint:repair` timeout (budget or machine?)                                                  | Low      | 30m         |
+| 35 | Add `--allow-unchecked` guidance to `CONTRIBUTING`'s skew line                                                   | Low      | 10m         |
+| 36 | Add a `health.Probe` live-mode + dashboard note to the README (M06's trap)                                       | Med      | 20m         |
+| 37 | Verify the weekly skew workflow's first real run (never run with a sane baseline)                                | Med      | 15m         |
+| 38 | Add a session-start probe: `gh auth status`, tree-quiet check, newest status file                                | **High** | 20m         |
+| 39 | Record the four cross-repo defects in one place instead of four commit messages                                  | Low      | 30m         |
+| 40 | Re-derive "how many consumers" from the manifest, never from prose                                               | Low      | 20m         |
+| 41 | Add a fuzz target for `Clone` + overlay mutation                                                                 | Low      | 20m         |
+| 42 | Benchmark `CachedResponseFresh` against the hand-rolled comparison it replaced                                   | Low      | 30m         |
+| 43 | Remove the deprecated `RecorderChain` in the next cqrs-htmx major                                                | Low      | 15m         |
+| 44 | Check the dangling dependabot branches across the fleet                                                          | Low      | 30m         |
+| 45 | Re-verify the `.forgejo/workflows/architecture-gate.yml` that rode PR #37                                        | Low      | 20m         |
+| 46 | Decide `WithLiveThrottle`/`WithShutdownGracePeriod` (both now have a documented near-adopter)                    | Low      | 30m         |
+| 47 | Triage the disk that filled `/mnt/buildcache` (journals, SMART)                                                  | Med      | 30m         |
+| 48 | Add a step banner + final `EXIT=` to the one silent gate (`tools/fuzz-registry-check.sh`)                        | Low      | 10m         |
+| 49 | Archive the standing status reports this session closed                                                          | Low      | 30m         |
+| 50 | Re-run the skew with `--source api` after every push lands and record the number in the same commit              | Low      | 10m         |
 
 ---
 

@@ -4,15 +4,15 @@
 [cuelang.org](https://cuelang.org/), then this report). **Zero code mutations** —
 the tree was clean on `master`, in sync with `origin`, before this file. Nothing
 was built, tested, committed, or broken by me; the deliverable was an
-exploration-mode recommendation. This report therefore audits the *quality of
-that advice*, not work-item state of the project (last full inventory:
+exploration-mode recommendation. This report therefore audits the _quality of
+that advice_, not work-item state of the project (last full inventory:
 2026-10-28_10-11).
 
 ---
 
 ## What this session did
 
-User asked: *How could this project benefit from CUE?* I grounded the answer in
+User asked: _How could this project benefit from CUE?_ I grounded the answer in
 three real reads — `docs/openapi.yaml` (head), the `openapiLockstep` gate
 (`flake.nix:95-135`), and `testdata/` (readiness golden + fuzz corpus) — then
 answered with:
@@ -53,7 +53,7 @@ answered with:
 
 ## b) PARTIALLY DONE
 
-1. **The CUE evaluation** — recommendation complete, *verification absent*.
+1. **The CUE evaluation** — recommendation complete, _verification absent_.
    Three external claims stated as fact without spikes (details in d):
    nixpkgs `cue` packaging, `cue import` generics failure, CUE-registry
    publishing path. Blocker: none — 2-minute checks simply not run. Effort: S
@@ -73,7 +73,7 @@ answered with:
    `cue vet` against the existing golden).
 3. **Pre-recommendation cross-checks** — not consulted before answering:
    `docs/adoption-matrix.md`,
-   `docs/research/2026-10-27_fleet-consumer-needs.md` (does *any* consumer want
+   `docs/research/2026-10-27_fleet-consumer-needs.md` (does _any_ consumer want
    schema validation?), `TODO_LIST.md` / `ROADMAP.md` / `docs/adr/` (prior CUE
    mention or rejection — I never checked whether this decision already
    exists).
@@ -88,16 +88,16 @@ deliverable's truth quality:
 1. **Unverified external claims presented as fact** — the environment has a
    `verify-external-claims` skill for exactly this ("check the tool exists",
    "validate the API signature"); I did not load it and asserted from memory:
-   - *"cue is in nixpkgs as a plain binary"* — **still unverified** (no `cue`
+   - _"cue is in nixpkgs as a plain binary"_ — **still unverified** (no `cue`
      in local store or PATH; network eval not run). The entire
      hermeticity-vs-dprint argument hinges on it.
-   - *"cue import chokes on the branded generic"* — plausible, never tested.
+   - _"cue import chokes on the branded generic"_ — plausible, never tested.
      This repo is the pathological case (`id.ID[InstanceIDBrand, string]`) and I
      had every means to spike it.
-   - *"publish to the CUE registry (OCI)"* — CUE module-system claims from
+   - _"publish to the CUE registry (OCI)"_ — CUE module-system claims from
      memory, unverified against current docs despite having web tools.
-   Severity: medium — an adoption decision made on this answer would rest on
-   unfalsified claims. Mitigation: f-items 1-4.
+     Severity: medium — an adoption decision made on this answer would rest on
+     unfalsified claims. Mitigation: f-items 1-4.
 2. **An incoherent sub-recommendation** — "vet every fixture: the fuzz corpus
    seeds." Corpus entries are positional fuzz **inputs** (strings), not JSON
    documents; only **marshaled outputs** can be schema-vetted, and nothing
@@ -127,7 +127,7 @@ deliverable's truth quality:
    Lane 1).
 5. **The jq-first alternative I failed to lead with (observed).** Half of
    Lane 1's value — type checking, reverse direction, enum-at-depth — is
-   achievable by upgrading the *existing* jq/yq script with **no new tool**.
+   achievable by upgrading the _existing_ jq/yq script with **no new tool**.
    The honest ordering is: fix the gate in jq first; adopt CUE only when
    constraints outgrow jq (regex namespacing, cross-field invariants, closed
    structs).
@@ -143,51 +143,51 @@ and unrelated backlog would violate this report's scope.
 
 **CUE decision lane (do these before any adoption decision):**
 
-| # | Task | Impact | Effort | Cat |
-|---|------|--------|--------|-----|
-| 1 | Spike: verify `cue` packaging in nixpkgs (`nix eval nixpkgs#cue.version`); pins the hermeticity claim | Medium | S | Quality |
-| 2 | Spike: `cue import` against a scratch package containing `id.ID[Brand, string]`; confirm/refute the generics dead-end | High | S | Research |
-| 3 | Spike: hand-write minimal `#HealthResponse` in CUE, `cue vet` `testdata/readiness_response.golden` end to end | High | S | Research |
-| 4 | Verify current CUE module/registry publishing story from official docs, not memory | Low | S | Research |
-| 5 | Read `docs/openapi-design.md`; determine spec's intended role (exhaustive truth vs permissive doc) — decides task 10 | High | S | Documentation |
-| 6 | Grep `docs/adoption-matrix.md` + fleet-needs research for schema-validation demand; record verdict | Medium | S | Research |
-| 7 | Check `TODO_LIST.md` / `ROADMAP.md` / `docs/adr/` for prior CUE mention or rejection | Medium | S | Documentation |
-| 8 | If green-lit: persist analysis as `docs/drafts/2026-11-02_cue-adoption-analysis.md` (chat content + spike verdicts) | Medium | S | Documentation |
+| # | Task                                                                                                                  | Impact | Effort | Cat           |
+| - | --------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
+| 1 | Spike: verify `cue` packaging in nixpkgs (`nix eval nixpkgs#cue.version`); pins the hermeticity claim                 | Medium | S      | Quality       |
+| 2 | Spike: `cue import` against a scratch package containing `id.ID[Brand, string]`; confirm/refute the generics dead-end | High   | S      | Research      |
+| 3 | Spike: hand-write minimal `#HealthResponse` in CUE, `cue vet` `testdata/readiness_response.golden` end to end         | High   | S      | Research      |
+| 4 | Verify current CUE module/registry publishing story from official docs, not memory                                    | Low    | S      | Research      |
+| 5 | Read `docs/openapi-design.md`; determine spec's intended role (exhaustive truth vs permissive doc) — decides task 10  | High   | S      | Documentation |
+| 6 | Grep `docs/adoption-matrix.md` + fleet-needs research for schema-validation demand; record verdict                    | Medium | S      | Research      |
+| 7 | Check `TODO_LIST.md` / `ROADMAP.md` / `docs/adr/` for prior CUE mention or rejection                                  | Medium | S      | Documentation |
+| 8 | If green-lit: persist analysis as `docs/drafts/2026-11-02_cue-adoption-analysis.md` (chat content + spike verdicts)   | Medium | S      | Documentation |
 
 **Gate-hardening lane (CUE-optional — valid even if CUE is rejected):**
 
-| # | Task | Impact | Effort | Cat |
-|---|------|--------|--------|-----|
-| 9 | Upgrade `openapiLockstep` jq to check value **types**/enum membership, not just key presence | High | S | Quality |
-| 10 | Add reverse direction (spec keys never emitted by golden → fail) — only after task 5 rules intent | Medium | S | Quality |
-| 11 | Extend lockstep beyond the readiness golden: aggregate/federation fixtures + `docs/bridge-golden-path.md` goldens | High | M | Quality |
-| 12 | If fuzz-output vetting is wanted: test that marshals each corpus seed through `Response` and vets the JSON (repairs d.2) | Low | M | Quality |
-| 13 | Wire outcomes as `checks.*` in flake.nix, add to `.#gates`, plus a registry-style self-check that every golden is covered | Medium | M | Quality |
+| #  | Task                                                                                                                      | Impact | Effort | Cat     |
+| -- | ------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------- |
+| 9  | Upgrade `openapiLockstep` jq to check value **types**/enum membership, not just key presence                              | High   | S      | Quality |
+| 10 | Add reverse direction (spec keys never emitted by golden → fail) — only after task 5 rules intent                         | Medium | S      | Quality |
+| 11 | Extend lockstep beyond the readiness golden: aggregate/federation fixtures + `docs/bridge-golden-path.md` goldens         | High   | M      | Quality |
+| 12 | If fuzz-output vetting is wanted: test that marshals each corpus seed through `Response` and vets the JSON (repairs d.2)  | Low    | M      | Quality |
+| 13 | Wire outcomes as `checks.*` in flake.nix, add to `.#gates`, plus a registry-style self-check that every golden is covered | Medium | M      | Quality |
 
 **If CUE is adopted (after 1-8 pass):**
 
-| # | Task | Impact | Effort | Cat |
-|---|------|--------|--------|-----|
-| 14 | `schemas/` with closed structs + cross-field assertions (`off` only at check level; `^[^/]+/[^/]+$` namespacing; `duration_nanos: int & >=0`) | High | M | Feature |
-| 15 | Generate `openapi.yaml` `components.schemas` from CUE; stop hand-maintaining | Medium | M | Quality |
-| 16 | Flake app discipline: correct `runtimeInputs`, no network in sandbox (the dprint wasm lesson) | Medium | S | Quality |
-| 17 | Consumer policy module (`periodSeconds` vs refresh interval) — only if task 6 finds demand | Medium | M | Feature |
-| 18 | Measure `cue vet` wall-time impact on the fail-fast `.#gates` sweep | Low | S | Quality |
+| #  | Task                                                                                                                                          | Impact | Effort | Cat     |
+| -- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------- |
+| 14 | `schemas/` with closed structs + cross-field assertions (`off` only at check level; `^[^/]+/[^/]+$` namespacing; `duration_nanos: int & >=0`) | High   | M      | Feature |
+| 15 | Generate `openapi.yaml` `components.schemas` from CUE; stop hand-maintaining                                                                  | Medium | M      | Quality |
+| 16 | Flake app discipline: correct `runtimeInputs`, no network in sandbox (the dprint wasm lesson)                                                 | Medium | S      | Quality |
+| 17 | Consumer policy module (`periodSeconds` vs refresh interval) — only if task 6 finds demand                                                    | Medium | M      | Feature |
+| 18 | Measure `cue vet` wall-time impact on the fail-fast `.#gates` sweep                                                                           | Low    | S      | Quality |
 
 **Discipline / observed:**
 
-| # | Task | Impact | Effort | Cat |
-|---|------|--------|--------|-----|
-| 19 | Habit: load `verify-external-claims` whenever an answer cites external tool behavior | High | S | Process |
-| 20 | Habit: exploration answers that could become decisions get persisted to `docs/drafts/` same-session | Medium | S | Process |
-| 21 | Shrink `openapi.yaml` prose duplication of merge semantics (pointer to `merge-unification-design.md`) | Medium | S | Documentation |
-| 22 | If task 10 lands: decide policy for spec fields the golden doesn't exercise (per-fixture expectation sets) | Medium | S | Quality |
-| 23 | Verify where redocly lint actually runs (the flake comment claims "redocly-linted"; I repeated it unverified) | Medium | S | Quality |
-| 24 | If the CUE lane is rejected: record the rejection as a decision note so future sessions don't re-derive | Low | S | Documentation |
-| 25 | Naming smell noticed: `total_latency_ms` is documented as the *slowest source's* batch — "total" vs max semantics | Low | S | Quality |
+| #  | Task                                                                                                              | Impact | Effort | Cat           |
+| -- | ----------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
+| 19 | Habit: load `verify-external-claims` whenever an answer cites external tool behavior                              | High   | S      | Process       |
+| 20 | Habit: exploration answers that could become decisions get persisted to `docs/drafts/` same-session               | Medium | S      | Process       |
+| 21 | Shrink `openapi.yaml` prose duplication of merge semantics (pointer to `merge-unification-design.md`)             | Medium | S      | Documentation |
+| 22 | If task 10 lands: decide policy for spec fields the golden doesn't exercise (per-fixture expectation sets)        | Medium | S      | Quality       |
+| 23 | Verify where redocly lint actually runs (the flake comment claims "redocly-linted"; I repeated it unverified)     | Medium | S      | Quality       |
+| 24 | If the CUE lane is rejected: record the rejection as a decision note so future sessions don't re-derive           | Low    | S      | Documentation |
+| 25 | Naming smell noticed: `total_latency_ms` is documented as the _slowest source's_ batch — "total" vs max semantics | Low    | S      | Quality       |
 
-*(HARVEST-ready: tasks 9-11, 21-23, 25 are tool-independent and belong in
-TODO_LIST regardless of the CUE verdict.)*
+_(HARVEST-ready: tasks 9-11, 21-23, 25 are tool-independent and belong in
+TODO_LIST regardless of the CUE verdict.)_
 
 ## g) Questions I cannot answer myself
 
@@ -207,7 +207,7 @@ TODO_LIST regardless of the CUE verdict.)*
 
 ---
 
-*Point-in-time snapshot; goes stale. This file is the input for docs-health
+_Point-in-time snapshot; goes stale. This file is the input for docs-health
 HARVEST/ANNOTATE, never rewritten. Auto-commit daemon will pick it up (no
 manual commit per harness contract). Session tree state at write: `master`,
-clean except this file.*
+clean except this file._

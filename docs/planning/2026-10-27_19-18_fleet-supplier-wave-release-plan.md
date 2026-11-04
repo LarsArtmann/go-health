@@ -1,15 +1,16 @@
 # Supplier Wave Plan — from an unreleased SDK change to fleet adoption
 
 **Created:** 2026-10-27 19:18 CET · **Status:** PARTIALLY EXECUTED, SUPERSEDED by [2026-10-27_21-12_consumption-wave-from-bridges-to-buyers.md](2026-10-27_21-12_consumption-wave-from-bridges-to-buyers.md) · **Repo:** `github.com/larsartmann/go-health`
+
 > **Executed from this plan (2026-10-27):** T01, T02, T03, T04, T05, T06, T07 (proxy + consume),
 > T10 (code, not released), T11 (code, not released), T14, and addendum A01–A09. Its central
 > premise — "the release is the bottleneck" — has been satisfied: v0.8.1 is published, green, and
 > on the proxy. The bottleneck moved to the bridges and the consumers; the successor plan starts
 > there. Do NOT re-execute the tasks listed above.
-**Predecessors:**
-[docs/research/2026-10-27_fleet-consumer-needs.md](../research/2026-10-27_fleet-consumer-needs.md) (needs matrix, 14 needs, 36-consumer reach) ·
-[docs/status/2026-10-27_18-57_fleet-consumer-needs-supplier-apis.md](../status/2026-10-27_18-57_fleet-consumer-needs-supplier-apis.md) (session report) ·
-[docs/status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md](../status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md) (second agent's report)
+> **Predecessors:**
+> [docs/research/2026-10-27_fleet-consumer-needs.md](../research/2026-10-27_fleet-consumer-needs.md) (needs matrix, 14 needs, 36-consumer reach) ·
+> [docs/status/2026-10-27_18-57_fleet-consumer-needs-supplier-apis.md](../status/2026-10-27_18-57_fleet-consumer-needs-supplier-apis.md) (session report) ·
+> [docs/status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md](../status/2026-10-27_18-57_fleet-needs-supplier-wave-concurrent-session.md) (second agent's report)
 
 **Input universe:** the 50-item next-list from the session report, the 14 ranked consumer needs, the two open upstream issues (#6, #7), and the peer session's additions (typed identity, `NewWithRecorder`, recorder funcs, federation `Healthz`, selective route mounting).
 

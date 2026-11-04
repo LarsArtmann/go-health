@@ -8,15 +8,15 @@
 
 ## 0. TL;DR — what actually changed
 
-| Before this session | After |
-| --- | --- |
-| Coverage percentage lived in prose since v0.5.1 | `tools/coverage-gate.sh` enforces 99.5% total / 98% package; in `.#gates` and CI |
-| Fleet skew script existed, nothing ran it | `nix run .#skew` + weekly workflow + recorded baseline (14 minor-stale, 2 warn) |
-| Tagging was a remembered sequence | `nix run .#pre-tag -- vX.Y.Z` refuses dirty tree / reused tag / missing CHANGELOG section, then runs every gate + skew |
-| API drift between design docs and code was invisible | Three fenced API blocks checked both directions; every source file must appear in the architecture page; both proven by mutation |
-| `go-appkit/health` tag existed locally only; its duplicate-code gate could not execute | Tag pushed and resolvable from a foreign module; exec bit fixed; pre-tag script runs end to end |
-| Both bridges pinned v0.8.0 | Both re-pinned to v0.8.1 (the version whose CI is green) |
-| 0 consumers adopted | still 0 — see §c |
+| Before this session                                                                    | After                                                                                                                            |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Coverage percentage lived in prose since v0.5.1                                        | `tools/coverage-gate.sh` enforces 99.5% total / 98% package; in `.#gates` and CI                                                 |
+| Fleet skew script existed, nothing ran it                                              | `nix run .#skew` + weekly workflow + recorded baseline (14 minor-stale, 2 warn)                                                  |
+| Tagging was a remembered sequence                                                      | `nix run .#pre-tag -- vX.Y.Z` refuses dirty tree / reused tag / missing CHANGELOG section, then runs every gate + skew           |
+| API drift between design docs and code was invisible                                   | Three fenced API blocks checked both directions; every source file must appear in the architecture page; both proven by mutation |
+| `go-appkit/health` tag existed locally only; its duplicate-code gate could not execute | Tag pushed and resolvable from a foreign module; exec bit fixed; pre-tag script runs end to end                                  |
+| Both bridges pinned v0.8.0                                                             | Both re-pinned to v0.8.1 (the version whose CI is green)                                                                         |
+| 0 consumers adopted                                                                    | still 0 — see §c                                                                                                                 |
 
 Three commits of mine in `go-health` (`1d3fa8e`, `3c7c8c0`, `8d2b093`), one in `go-appkit` (`a28523d`), one content commit in `cqrs-htmx` (`d855b0ba` + `f0b9d15f`). `go-appkit` master and its `health/v0.3.0` tag are **pushed and verified**.
 
@@ -31,13 +31,13 @@ package from the block counters, so its arithmetic agrees with `go tool cover`
 by construction. Floors: **99.5% total, 98% per package**, against a measured
 **99.9% total** (root/aggregate/checks/merge 100%, federation 99.5%).
 
-*Proof it can fail:* graded with `--total 99.95` → exit 1. Graded with
+_Proof it can fail:_ graded with `--total 99.95` → exit 1. Graded with
 `--report-only` → exit 0 and says why. Both runs captured.
-*Why the floors are loose on purpose:* a gate pinned to the current number reds
+_Why the floors are loose on purpose:_ a gate pinned to the current number reds
 on someone else's unrelated refactor, and the next person lowers the floor
 instead of reading it. Headroom buys credibility; the number still cannot fall
 silently.
-*Why it is a step not a job:* branch protection names exactly five checks, so a
+_Why it is a step not a job:_ branch protection names exactly five checks, so a
 sixth job would sit outside the required set and protect nothing.
 
 ### a2. Fleet version skew, actually observed (M05)
@@ -51,7 +51,7 @@ weekly (Mondays 06:17 UTC, off the hour to dodge the top-of-hour cron crush) and
 on demand, printing the whole table before it gates.
 
 **Baseline recorded 2026-10-27 21:40:** `minor-stale: 14, warnings: 2` against
-`v0.8.1`. Both bridges were the only *patch*-behind repos; everything else was a
+`v0.8.1`. Both bridges were the only _patch_-behind repos; everything else was a
 minor behind.
 
 ### a3. One pre-tag command (M23)
@@ -66,7 +66,7 @@ minor behind.
 5. runs `.#skew`.
 
 The v0.8.0 tag went red because the tagger ran the tests and not the gates: a
-missing *invocation*, not a missing gate. This is the mechanism that removes the
+missing _invocation_, not a missing gate. This is the mechanism that removes the
 invocation from memory. CONTRIBUTING now says nothing else is a pre-tag command.
 
 ### a4. API surface and file map are self-checking (M15 + M16)
@@ -78,7 +78,7 @@ source file must be named in the architecture page.
 
 Design decisions worth keeping:
 
-- The fence carries a surface tag (` ```go api:root `) so one page can hold
+- The fence carries a surface tag (`` ```go api:root ``) so one page can hold
   several blocks without them merging into one list. My first version merged
   them and reported 40 bogus drifts.
 - The code side is **receiver-agnostic**. Pinning `(p *Probe)` is what let
@@ -103,14 +103,14 @@ drift; planted file → drift; clean tree → `OK`.
   green.
 - Re-pinned `go-health v0.8.0 → v0.8.1`, suite green (`health`,
   `health/doadapter`), CHANGELOG entry rewritten to name the version it ships and
-  say *why* it is .1 and not .0.
+  say _why_ it is .1 and not .0.
 - The tag was **local only**. Nothing could resolve it, so it was re-pointed
   rather than superseded (a published tag would have required a new patch
   version). Pushed master + tag.
 - **Verified from a foreign module:** `go get
   github.com/larsartmann/go-appkit/health@v0.3.0` in an empty module resolves to
   `go-health v0.8.1`. This is the check that separates "tagged" from
-  "installable", and it is the first time this session produced a *consumable*
+  "installable", and it is the first time this session produced a _consumable_
   artifact.
 
 ### a6. `go-health` re-verified green after a concurrent session's changes
@@ -155,8 +155,8 @@ session I would most like to take back** — see §d1.
 
 My three intent commits plus five daemon-swept commits (the concurrent session's
 work). Everything is local. Nothing in this report's `go-health` column is a
-distributed fact yet, and the plan's whole thesis was that *undistributed work is
-worth zero*.
+distributed fact yet, and the plan's whole thesis was that _undistributed work is
+worth zero_.
 
 ---
 
@@ -164,20 +164,20 @@ worth zero*.
 
 Nothing in the fleet-adoption half of the plan has started:
 
-| Milestone | Repo | State at 01:18 |
-| --- | --- | --- |
-| M06 | go-taskqueue | `go-health v0.7.0`, hand-rolled `queueProber` intact |
-| M07 | dnsblockd | `v0.5.1`, the zero-timestamp guard + `maps.Copy` overlay both still there |
-| M08 | cv | `v0.5.1`, `internal/health/handlers.go` untouched |
-| M09 | DiscordSync | `v0.7.0`, `health_readyz_cache.go` + `health_labels.go` untouched |
-| M19 | company-master-data | `v0.7.0`, no `checks.Disk` |
-| M04 | — | no compile harness, no evidence table |
-| M18 | — | no announcement |
-| M24 | BuildFlow | no upstream issues filed |
-| M25 | BuildFlow | `doanalyzerv2` step env untouched |
-| M26 | tooling | golangci LSP still lying |
-| M27 | breaking window | not started (owner go/no-go never given) |
-| — | 11 other fleet repos | CV/Zlota44/library-policy/file-and-image-renamer/KeyHolderAI/nsfw-classifier/webphone/PMA/timesheets/go-health-dashboard all a minor behind |
+| Milestone | Repo                 | State at 01:18                                                                                                                              |
+| --------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| M06       | go-taskqueue         | `go-health v0.7.0`, hand-rolled `queueProber` intact                                                                                        |
+| M07       | dnsblockd            | `v0.5.1`, the zero-timestamp guard + `maps.Copy` overlay both still there                                                                   |
+| M08       | cv                   | `v0.5.1`, `internal/health/handlers.go` untouched                                                                                           |
+| M09       | DiscordSync          | `v0.7.0`, `health_readyz_cache.go` + `health_labels.go` untouched                                                                           |
+| M19       | company-master-data  | `v0.7.0`, no `checks.Disk`                                                                                                                  |
+| M04       | —                    | no compile harness, no evidence table                                                                                                       |
+| M18       | —                    | no announcement                                                                                                                             |
+| M24       | BuildFlow            | no upstream issues filed                                                                                                                    |
+| M25       | BuildFlow            | `doanalyzerv2` step env untouched                                                                                                           |
+| M26       | tooling              | golangci LSP still lying                                                                                                                    |
+| M27       | breaking window      | not started (owner go/no-go never given)                                                                                                    |
+| —         | 11 other fleet repos | CV/Zlota44/library-policy/file-and-image-renamer/KeyHolderAI/nsfw-classifier/webphone/PMA/timesheets/go-health-dashboard all a minor behind |
 
 ---
 
@@ -186,7 +186,7 @@ Nothing in the fleet-adoption half of the plan has started:
 ### d1. I built the alarm before the fix, and the alarm is red
 
 `skew.yml` gates at `--allow 0` against a fleet that is **14 minor-stale**. I knew
-the baseline (I measured it *after* writing the workflow) and shipped it anyway.
+the baseline (I measured it _after_ writing the workflow) and shipped it anyway.
 The honest choices were `--allow 14` with a dated comment, or bump the fleet
 first. Instead the repo now carries a permanent red weekly job — a
 Verschlimmbesserung of exactly the kind the plan's guard #1 was written to
@@ -195,7 +195,7 @@ prevent, committed by the person who wrote the guard.
 ### d2. I wrote a gate `git ls-files` could not see, and only caught it by luck
 
 The architecture-completeness check passed a planted file. Not a hypothetical: the
-*entire* failure mode it exists to catch (a file written but not yet staged) was
+_entire_ failure mode it exists to catch (a file written but not yet staged) was
 invisible to it. Fixed, but I shipped a green-looking gate to a mutating proof
 only because I bothered to run the proof. The plan said "prove both directions on
 a scratch copy **before** trusting it"; I proved after.
@@ -207,7 +207,7 @@ a scratch copy **before** trusting it"; I proved after.
 `git reset --soft` + selective `git add`, but a stray one-line `package health`
 file was momentarily HEAD's content. Nothing broke; the near-miss is the point.
 
-Then, in `go-appkit`, my `health/go.mod` bump was swept by the daemon *before* my
+Then, in `go-appkit`, my `health/go.mod` bump was swept by the daemon _before_ my
 commit, so my commit message claims the pin change while the commit itself only
 contains the mode change and the changelog line. The content is right; the
 provenance is a lie.
@@ -235,7 +235,7 @@ told me. Two agents ran the same plan in the same repo for the whole session.
 `/home/lars/projects/go-health/.git/index.lock` appeared three times and blocked
 commits; twice I had to confirm no process held it (by scanning `/proc/*/cwd` and
 `/proc/*/fd`) before deleting it. One of those blocks cost ~2 minutes of pure
-waiting. There is no rule in AGENTS.md for *proving* a lock is stale before
+waiting. There is no rule in AGENTS.md for _proving_ a lock is stale before
 removal, and I invented one on the spot.
 
 ---
@@ -243,10 +243,10 @@ removal, and I invented one on the spot.
 ## e) WHAT WE SHOULD IMPROVE
 
 1. **Order: fix, then alarm.** Never commit a gate whose expected value is red.
-   If the backlog is real, the gate takes `--allow <measured>` *with the measured
-   number in the commit message*, or it does not land.
+   If the backlog is real, the gate takes `--allow <measured>` _with the measured
+   number in the commit message_, or it does not land.
 2. **Proof before commit, not after.** Every new gate gets its mutation test in
-   the same commit, and the mutation must target the *actual* blind spot (here:
+   the same commit, and the mutation must target the _actual_ blind spot (here:
    an untracked file, not a tracked one).
 3. **`find`, not `git ls-files`, for anything that inspects the current tree.**
    A gate that reads the index measures the past.
@@ -255,7 +255,7 @@ removal, and I invented one on the spot.
    re-reading files that had changed under me. The plan asked this as Q1 and got
    no answer; the answer arrived as damage instead.
 5. **Only one module version story.** `go-appkit` ahead 2 but pinned to a
-   *tagged* `v0.3.0` is fine; `cqrs-htmx` publishing `health/v4.13.0` while
+   _tagged_ `v0.3.0` is fine; `cqrs-htmx` publishing `health/v4.13.0` while
    carrying a v0.8.1 pin on master is the classic "pinned ≠ released" trap, and
    it recurred tonight for the second session running.
 6. **Disk is a build dependency.** 66G of Go build cache silently filling a 220G
@@ -284,7 +284,7 @@ Ordered by value ÷ effort. ★ = the ones that unlock the most.
 5. Decide the skew workflow's `--allow`: either bump the fleet (§6–§17) or set
    `--allow 14` with the dated baseline in the workflow comment.
 6. Bump `DiscordSync` → v0.8.1 + adopt `CachedResponseFresh`/`EvaluateAndCache`
-   + `WithCriticalService[T]` (M09); verify the label table is byte-identical.
+   - `WithCriticalService[T]` (M09); verify the label table is byte-identical.
 7. Bump `dnsblockd` → v0.8.1 + `CacheAge`/`CachedResponseFresh` + `Response.Clone`
    (M07); exercise the drain path that motivated it.
 8. Bump `cv` → v0.8.1 + freshness primitives + `Clone` (M08); keep the synthetic
@@ -326,8 +326,8 @@ Ordered by value ÷ effort. ★ = the ones that unlock the most.
 28. Update `docs/adoption-matrix.md` with the two bridges' real tag state (peer
     added rows; the `cqrs-htmx` row must say "no tag").
 29. Update `ROADMAP.md`'s "next" section to the consumption wave.
-30. Write the v0.8.x announcement with the migration path: *bump the bridge, then
-    delete your adapter* (M18).
+30. Write the v0.8.x announcement with the migration path: _bump the bridge, then
+    delete your adapter_ (M18).
 31. Post the samber/do#318 duration comment (draft has been ready since
     2026-09-22).
 32. Post the v0.1.1/v0.1.2 announcement and the issue-#5 close comment.

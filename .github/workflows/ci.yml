@@ -57,6 +57,16 @@ jobs:
       - name: Short fuzz run
         run: nix run .#fuzz
 
+      # Fixture-module proof: the httputil interop recipes in
+      # docs/httputil-integration.md are compiled and run against the
+      # PUBLISHED httputil release (module proxy) on every CI run, so a
+      # go-health change that breaks a documented composition goes red here.
+      # Mirrors httputil's otel-interop job. A step, not a sixth job: branch
+      # protection names five checks, and a new job would silently sit
+      # outside the required set.
+      - name: httputil interop fixture
+        run: nix run .#interop
+
   static-analysis:
     name: Vet + Lint
     runs-on: ubuntu-latest

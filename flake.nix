@@ -681,6 +681,31 @@
               go test ./internal/merge -run '^$' -fuzz=FuzzResponsesMergeInvariants -fuzztime=5m "$@"
             '';
 
+            # httputil interop proof: the fixture module
+            # testdata/httputil-interop compiles the recipes from
+            # docs/httputil-integration.md against the PUBLISHED
+            # github.com/larsartmann/httputil release (module proxy), so a
+            # go-health change that breaks a documented composition fails the
+            # sweep instead of silently rotting the docs. An app, not a flake
+            # check: the fetch needs network and the sandbox has none (same
+            # reason httputil's otel-interop is a CI job, not a check).
+            interop =
+              mkApp "interop"
+                "Compile+test the httputil interop fixture module against the published httputil release"
+                [
+                  goPkg
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.git
+                ]
+                ''
+                  root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+                  if [ -n "$root" ]; then
+                    cd "$root"
+                  fi
+                  bash tools/httputil-interop-check.sh
+                '';
+
             clean =
               mkApp "clean" "Remove coverage artifacts and clear the test cache"
                 [
@@ -699,7 +724,7 @@
             gates =
               mkApp "gates" "Run the full pre-push gate sweep, fail-fast (same gates as CI)" [ pkgs.nix ]
                 ''
-                  gates="''${*:-test-race vet lint coverage-gate vulncheck security fuzz fuzz-registry docs-check}"
+                  gates="''${*:-test-race vet lint coverage-gate vulncheck security fuzz fuzz-registry interop docs-check}"
                   # shellcheck disable=SC2086 # word splitting over gate names is intended
                   for gate in $gates; do
                     echo "=== gate: $gate ==="

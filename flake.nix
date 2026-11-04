@@ -155,15 +155,23 @@
               }
 
               latest="$(git tag -l --sort=-v:refname 2>/dev/null | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)"
-              if [ -z "$latest" ]; then
-                # No git (the flake check runs this script against the store
-                # source snapshot, which has no .git): fall back to the newest
-                # release heading in the CHANGELOG so the doc-sync checks stay
-                # meaningful there.
-                heading="$(grep -m1 -E '^## \[?v?[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md || true)"
-                rel="$(printf '%s' "$heading" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1 || true)"
-                if [ -n "$rel" ]; then
+              # The newest CHANGELOG heading competes with the newest git tag,
+              # and the greater version wins: a heading newer than the tag is
+              # a release in flight (section cut, tag not created yet), and
+              # the doc-sync rules must validate the pending release instead
+              # of demanding the previous one in the git view and the pending
+              # one in the store view — that contradiction made `pre-tag`'s
+              # own gate sweep unsatisfiable in every state of the dance. In
+              # a store snapshot (the flake check runs this script against
+              # one, with no .git) the heading is the only source anyway.
+              heading="$(grep -m1 -E '^## \[?v?[0-9]+\.[0-9]+\.[0-9]+\]' CHANGELOG.md || true)"
+              rel="$(printf '%s' "$heading" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1 || true)"
+              if [ -n "$rel" ]; then
+                if [ -z "$latest" ]; then
                   latest="v$rel"
+                else
+                  newest="$(printf 'v%s\nv%s\n' "''${latest#v}" "$rel" | sort -V | tail -n1)"
+                  latest="$newest"
                 fi
               fi
               if [ -z "$latest" ]; then

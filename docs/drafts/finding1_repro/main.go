@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/larsartmann/go-health"
 )
@@ -13,12 +14,12 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc(
 		"GET /{slug}",
-		func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) },
+		func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) },
 	)
 
 	probe := health.NewWithHealthCheck(
 		func(context.Context) map[string]error { return map[string]error{} },
 	)
 	probe.RegisterRoutes(mux, health.DefaultRoutes())
-	_ = http.Server{Handler: mux}
+	_ = http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 }

@@ -19,12 +19,12 @@ analytics sink, a background sync partner. Today their choices are:
 - **hide the check** (return `nil` on soft failure) → the row disappears;
   the failure loses its only witness;
 - mark it `Off(detail)` → renders pass-tier and visible, but lies about the
-  domain: `Off` is specified as *intentionally unconfigured*, and the whole
+  domain: `Off` is specified as _intentionally unconfigured_, and the whole
   configured-off rollout (federation consumers refuse off documents from
   producers that predate it) rests on that contract.
 
 `ROADMAP.md`'s `WithTransitionHook` idea is a different item: it fires on
-status *changes* for alerting; it does not change what the roll-up computes.
+status _changes_ for alerting; it does not change what the roll-up computes.
 
 ## The distinction this note turns on
 
@@ -89,9 +89,9 @@ does not exist; the tier model stays binary-plus-exclusions.
    roll-up remains worst-of-contributing-tiers.
 2. **Consumer-side composition** — wrap the check fn and return
    `health.Off("…: " + err.Error())` on failure. Works today with zero API,
-   and is the right *stopgap*, but it (a) lies with the `Off` contract, (b)
+   and is the right _stopgap_, but it (a) lies with the `Off` contract, (b)
    muddies the configured-off rollout order, and (c) cannot demote a check
-   the *option surface* declares critical. The design exists so consumers
+   the _option surface_ declares critical. The design exists so consumers
    can stop doing this.
 3. **Post-classify hook rewriting** — `WithEvaluationHook` receives a
    defensive copy and cannot change the served response (by design,
@@ -112,11 +112,11 @@ does not exist; the tier model stays binary-plus-exclusions.
   contributors). `FuzzResponsesMergeInvariants` and the aggregate/federation
   mapping harnesses get the corresponding invariant; the aggregate merge is
   the trickier half because aggregate sources are separate probes whose
-  *own* roll-ups already absorbed the exclusion — the merged body must not
+  _own_ roll-ups already absorbed the exclusion — the merged body must not
   re-fail because a namespaced informational row looks worse than the
   source's verdict.
 - **Rollout order (federation lesson applied):** ship the field in a minor;
-  *consumers that render checks* (dashboard, hub) learn to expect it before
+  _consumers that render checks_ (dashboard, hub) learn to expect it before
   any producer turns a check informational. Old consumers ignore the field
   and are merely surprised by the row/roll-up pairing — acceptable because
   the roll-up they compute is unchanged on their side.
@@ -126,7 +126,7 @@ does not exist; the tier model stays binary-plus-exclusions.
 `Start()` extends `validateCriticalNames`'s batch-based check: a name in
 both the critical set and the informational set is a boot-time error (the
 tiers are mutually exclusive by definition), and — same batch-based logic as
-critical names — an informational name that never ran is *not* an error
+critical names — an informational name that never ran is _not_ an error
 (informational never influences the latch, so a phantom name is inert by
 construction; documenting that difference is part of the API).
 

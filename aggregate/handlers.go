@@ -106,16 +106,14 @@ func (a *Aggregate) Healthz() http.HandlerFunc {
 // RegisterRoutes registers the aggregate probe handlers on the given mux
 // using the provided routes. Pass [health.DefaultRoutes] for the conventional
 // Kubernetes paths. A route whose pattern is empty is skipped, so an
-// aggregate that only exposes readiness mounts only that handler. A
-// non-empty Routes.Version mounts [health.VersionHandler]; the aggregate
-// carries no build identity, so the mount answers {"version":""} — leave the
-// field empty and wire the handler yourself if the hosting process has a
-// stamp.
+// aggregate that only exposes readiness mounts only that handler. The
+// Routes.Version field is ignored here: the aggregate carries no build
+// identity, so it cannot serve a truthful /version — wire
+// [health.VersionHandler] yourself if you stamp the hosting process.
 func (a *Aggregate) RegisterRoutes(mux *http.ServeMux, routes health.Routes) {
 	registerRoute(mux, routes.Liveness, a.LivenessHandler())
 	registerRoute(mux, routes.Readiness, a.ReadinessHandler())
 	registerRoute(mux, routes.Startup, a.StartupHandler())
-	registerRoute(mux, routes.Version, health.VersionHandler(""))
 }
 
 // registerRoute mounts handler at pattern unless the pattern is empty.

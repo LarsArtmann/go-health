@@ -3,6 +3,7 @@ package health_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/larsartmann/go-health"
@@ -15,7 +16,10 @@ func TestRegisterRoutes_AllThreeHandlersRegistered(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	probe := health.New(injector, health.WithRefreshInterval(0))
+	probe := health.New(injector,
+		health.WithRefreshInterval(0),
+		health.WithVersion("test"),
+	)
 
 	mux := http.NewServeMux()
 	probe.RegisterRoutes(mux, health.DefaultRoutes())
@@ -66,7 +70,9 @@ func TestRegisterRoutes_CustomPaths(t *testing.T) {
 // TestDefaultRoutes_AreMethodQualified pins the default patterns: kubelet
 // probes are always GET, and the method prefix is what keeps registration
 // from panicking against common page-router shapes (a bare "/healthz"
-// conflicts with "GET /{slug}").
+// conflicts with "GET /{slug}"). The version endpoint is mounted by default —
+// a binary serving health routes answers "which build am I talking to?"
+// without extra wiring.
 func TestDefaultRoutes_AreMethodQualified(t *testing.T) {
 	t.Parallel()
 
@@ -74,6 +80,7 @@ func TestDefaultRoutes_AreMethodQualified(t *testing.T) {
 		Liveness:  "GET /healthz",
 		Readiness: "GET /readyz",
 		Startup:   "GET /startupz",
+		Version:   "GET /version",
 	}
 
 	if got := health.DefaultRoutes(); got != want {
@@ -91,7 +98,10 @@ func TestRegisterRoutes_DefaultsCoexistWithCatchAllPage(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	probe := health.New(injector, health.WithRefreshInterval(0))
+	probe := health.New(injector,
+		health.WithRefreshInterval(0),
+		health.WithVersion("test"),
+	)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{slug}", func(w http.ResponseWriter, _ *http.Request) {
@@ -118,8 +128,7 @@ func TestRegisterRoutes_DefaultsCoexistWithCatchAllPage(t *testing.T) {
 
 // TestRegisterRoutes_MountsVersionEndpoint pins the Routes.Version slot: a
 // non-empty pattern mounts VersionHandler serving the probe's WithVersion
-// stamp; the empty DefaultRoutes value keeps /version unmounted (opt-in, so
-// consumers that wire their own version handler never double-register).
+// stamp, non-GET requests get 405, and DefaultRoutes includes the mount.
 func TestRegisterRoutes_MountsVersionEndpoint(t *testing.T) {
 	t.Parallel()
 
@@ -174,7 +183,68 @@ func TestRegisterRoutes_MountsVersionEndpoint(t *testing.T) {
 
 	defaults.ServeHTTP(w, r)
 
+	if w.Code != http.StatusOK {
+		t.Errorf("GET /version with DefaultRoutes: want 200 (mounted by default), got %d", w.Code)
+	}
+}
+
+// TestRegisterRoutes_PanicsOnUnstampedVersionMount pins the hard-fail
+// contract: an unstamped probe must not mount the version endpoint, because
+// the endpoint would answer {"version":""} and lie about the build. The
+// panic fires at registration (boot time, before the first request) and
+// names both remedies.
+func TestRegisterRoutes_PanicsOnUnstampedVersionMount(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector, health.WithRefreshInterval(0))
+
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("RegisterRoutes with Version set on an unstamped probe: want panic, got none")
+		}
+
+		msg, ok := r.(string)
+		if !ok {
+			t.Fatalf("panic value: want string, got %T", r)
+		}
+
+		for _, want := range []string{"WithVersion", "Routes.Version"} {
+			if !strings.Contains(msg, want) {
+				t.Errorf("panic message missing %q: %s", want, msg)
+			}
+		}
+	}()
+
+	probe.RegisterRoutes(http.NewServeMux(), health.DefaultRoutes())
+}
+
+// TestRegisterRoutes_EmptyVersionStaysUnmounted pins the escape hatch: an
+// explicit empty Routes.Version keeps /version unmounted, so a consumer that
+// wires its own version handler (or serves none) never double-registers.
+func TestRegisterRoutes_EmptyVersionStaysUnmounted(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector,
+		health.WithRefreshInterval(0),
+		health.WithVersion("v1.2.3"),
+	)
+
+	mux := http.NewServeMux()
+	probe.RegisterRoutes(mux, health.Routes{})
+
+	w := httptest.NewRecorder()
+
+	r, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/version", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mux.ServeHTTP(w, r)
+
 	if w.Code != http.StatusNotFound {
-		t.Errorf("GET /version with DefaultRoutes: want 404 (not mounted), got %d", w.Code)
+		t.Errorf("GET /version with empty Routes.Version: want 404 (not mounted), got %d", w.Code)
 	}
 }

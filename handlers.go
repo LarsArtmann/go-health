@@ -17,25 +17,29 @@ type Routes struct {
 	Startup   string
 
 	// Version mounts the build-version endpoint ([VersionHandler]) when
-	// non-empty. [DefaultRoutes] leaves it empty, so the conventional
-	// GET /version endpoint stays opt-in; pass Routes{..., Version:
-	// "GET /version"} to mount it. The root probe serves its own [WithVersion]
-	// stamp. Aggregate and federation surfaces carry no build identity, so
-	// their mounts answer {"version":""} — leave the field empty and wire
-	// [VersionHandler] yourself if the hosting process has a stamp.
+	// non-empty. [DefaultRoutes] mounts it at "GET /version": a binary that
+	// serves health routes should answer "which build am I talking to?" by
+	// default. The endpoint is honest or it is nothing: mounting it on a probe
+	// without a build stamp panics at registration — stamp with [WithVersion]
+	// or set Version to "" to stay unmounted. Aggregate and federation surfaces
+	// carry no build identity and ignore the field entirely; wire
+	// [VersionHandler] yourself if you stamp the hosting process.
 	Version string
 }
 
 // DefaultRoutes returns the conventional Kubernetes health-probe paths,
-// method-qualified. Kubelet probes are always GET, and the method prefix
-// keeps the mounts compatible with common ServeMux shapes: a bare
-// "/healthz" conflicts with patterns like "GET /{slug}" and panics at
-// registration, before the server ever serves a request.
+// method-qualified, plus the build-version endpoint at "GET /version".
+// Kubelet probes are always GET, and the method prefix keeps the mounts
+// compatible with common ServeMux shapes: a bare "/healthz" conflicts with
+// patterns like "GET /{slug}" and panics at registration, before the server
+// ever serves a request. The version mount requires a [WithVersion] stamp —
+// see [Routes.Version].
 func DefaultRoutes() Routes {
 	return Routes{
 		Liveness:  "GET /healthz",
 		Readiness: "GET /readyz",
 		Startup:   "GET /startupz",
+		Version:   "GET /version",
 	}
 }
 
@@ -138,15 +142,26 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 }
 
 // RegisterRoutes registers the probe handlers on the given mux using the
-// provided routes. Pass [DefaultRoutes] for conventional Kubernetes paths.
+// provided routes. Pass [DefaultRoutes] for the conventional Kubernetes paths
+// plus the build-version endpoint.
 //
 // A route whose pattern is empty is skipped, so a service that only exposes
 // readiness can pass Routes{Readiness: "/readyz"} without mounting handlers it
-// does not serve (an empty pattern would otherwise panic in ServeMux). Pass
-// [DefaultRoutes] when all three are wanted; set Routes.Version to mount the
-// build-version endpoint ([VersionHandler], serving the probe's [WithVersion]
-// stamp).
+// does not serve (an empty pattern would otherwise panic in ServeMux).
+//
+// RegisterRoutes panics when Routes.Version is set but the probe carries no
+// [WithVersion] stamp: the version endpoint would answer {"version":""} and
+// lie about the build. That failure is deliberately at registration — boot
+// time, before the first request — where a missing build identity is cheapest
+// to fix. Stamp the build (ldflags/VCS recipe in the README) or leave
+// Routes.Version empty to stay unmounted.
 func (p *Probe) RegisterRoutes(mux *http.ServeMux, routes Routes) {
+	if routes.Version != "" && p.version == "" {
+		panic("health: Routes.Version mounts the build-version endpoint, but the probe has no build stamp — " +
+			"call WithVersion(...) at construction (ldflags/VCS recipe in the README), " +
+			"or leave Routes.Version empty to keep /version unmounted")
+	}
+
 	registerRoute(mux, routes.Liveness, p.LivenessHandler())
 	registerRoute(mux, routes.Readiness, p.ReadinessHandler())
 	registerRoute(mux, routes.Startup, p.StartupHandler())

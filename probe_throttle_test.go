@@ -83,12 +83,12 @@ func (c *mutableClock) Now() time.Time { return time.Unix(0, c.nowNs.Load()) }
 
 func (c *mutableClock) Advance(d time.Duration) { c.nowNs.Add(int64(d)) }
 
-// requestReadiness performs one GET against the readiness handler and
-// returns the response body, failing the test on a non-200 status.
-func requestReadiness(t *testing.T, handler http.HandlerFunc, path string) string {
+// requestReadiness performs one GET /readyz against the readiness handler
+// and returns the response body, failing the test on a non-200 status.
+func requestReadiness(t *testing.T, handler http.HandlerFunc) string {
 	t.Helper()
 
-	rec := doRequest(t, handler, path)
+	rec := doRequest(t, handler, "/readyz")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("readiness request: want 200, got %d", rec.Code)
 	}
@@ -120,7 +120,7 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 
 	handler := probe.ReadinessHandler()
 
-	first := requestReadiness(t, handler, "/readyz")
+	first := requestReadiness(t, handler)
 
 	if got := batches.Load(); got != 1 {
 		t.Fatalf("first request batches: want 1, got %d", got)
@@ -130,7 +130,7 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 
 	// With the clock frozen, any number of requests must serve the stored
 	// result byte-identically: one batch total, one response.
-	assertFrozenWindow(t, handler, "/readyz", first, 25)
+	assertFrozenWindow(t, handler, first, 25)
 
 	if got := batches.Load(); got != 1 {
 		t.Errorf("25 frozen-clock requests ran %d batches; want exactly 1", got)
@@ -140,7 +140,7 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 	// exactly one new batch; the new result is then frozen the same way.
 	clock.Advance(window + time.Millisecond)
 
-	second := requestReadiness(t, handler, "/readyz")
+	second := requestReadiness(t, handler)
 
 	if got := batches.Load(); got != 2 {
 		t.Fatalf("post-window batches: want 2, got %d", got)
@@ -150,7 +150,7 @@ func TestWithLiveThrottle_FakeClockFreshnessDeterministic(t *testing.T) {
 		t.Error("post-window body equals pre-window body; freshness marker did not advance")
 	}
 
-	assertFrozenWindow(t, handler, "/readyz", second, 10)
+	assertFrozenWindow(t, handler, second, 10)
 
 	if got := batches.Load(); got != 2 {
 		t.Errorf("post-window re-frozen requests ran %d batches; want still 2", got)
@@ -184,7 +184,7 @@ func assertTimestampOf(t *testing.T, body string, want time.Time) {
 func assertFrozenWindow(
 	t *testing.T,
 	handler http.HandlerFunc,
-	path, wantBody string,
+	wantBody string,
 	requests int,
 ) {
 	t.Helper()
@@ -193,7 +193,7 @@ func assertFrozenWindow(
 
 	for range requests {
 		wg.Go(func() {
-			if body := requestReadiness(t, handler, path); body != wantBody {
+			if body := requestReadiness(t, handler); body != wantBody {
 				t.Errorf(
 					"frozen-clock body drift within window:\n want %s\n got  %s",
 					wantBody,

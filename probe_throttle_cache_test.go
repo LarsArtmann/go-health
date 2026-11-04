@@ -81,8 +81,7 @@ func TestWithLiveThrottle_StartCacheServesWithoutBatches(t *testing.T) {
 	assertFrozenWindow(
 		t,
 		handler,
-		"/readyz",
-		requestReadiness(t, handler, "/readyz"),
+		requestReadiness(t, handler),
 		25,
 	)
 
@@ -139,7 +138,7 @@ func TestWithLiveThrottle_StaleCacheTriggersExactlyOneEvaluation(t *testing.T) {
 
 	handler := probe.ReadinessHandler()
 
-	requestReadiness(t, handler, "/readyz")
+	requestReadiness(t, handler)
 
 	if got := batches.Load(); got != 2 {
 		t.Fatalf("stale-cache request batches: want exactly 2 (1 loop + 1 live), got %d", got)
@@ -149,8 +148,7 @@ func TestWithLiveThrottle_StaleCacheTriggersExactlyOneEvaluation(t *testing.T) {
 	assertFrozenWindow(
 		t,
 		handler,
-		"/readyz",
-		requestReadiness(t, handler, "/readyz"),
+		requestReadiness(t, handler),
 		10,
 	)
 

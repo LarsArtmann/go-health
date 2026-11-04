@@ -149,7 +149,9 @@ already covers unreachable remotes, shutting-down remotes, and this hub
 once marked for drain), or the hub itself is draining; 200 otherwise with
 the merged body. `warn` stays 200, matching `Probe.Healthz` and the
 aggregate. It is standalone: `RegisterRoutes` still wires only the three
-kubelet probes, and `health.DefaultRoutes` already claims `/healthz` for
+kubelet probes by default (`health.Routes.Version` can additionally mount a
+build-version endpoint, which answers `{"version":""}` here — the hub has no
+build identity), and `health.DefaultRoutes` already claims `/healthz` for
 liveness. Cost is one fetch wave per request — the same as readiness, so
 the polling guidance above applies unchanged. Full rationale:
 docs/federation-healthz-design.md.

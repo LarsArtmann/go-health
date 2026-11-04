@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Nothing yet.
+- Internal file layout: the twelve files that had outgrown the 350-line file-size budget were split along their existing concern seams (probe.go → probe.go/options.go/lifecycle.go/evaluation.go/cache.go/errors.go; federation.go → federation.go/fetch.go/handlers.go; aggregate.go → aggregate.go/handlers.go; the oversized test files split per topic, e.g. probe_test.go → themed probe_*/handlers_* files). Zero exported-API or wire-format changes; every moved symbol kept its doc comment verbatim, and the docs/ARCHITECTURE.md map rows were updated in the same change.
 
 ### Removed
 

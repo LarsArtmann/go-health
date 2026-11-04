@@ -198,7 +198,6 @@ func TestNew_Validation(t *testing.T) {
 	}
 }
 
-
 // TestRefreshInterval_IsZero pins the live-fetch contract: federation has
 // no cadence of its own, so consumers set their own read cadence.
 func TestRefreshInterval_IsZero(t *testing.T) {

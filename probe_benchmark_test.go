@@ -136,6 +136,7 @@ func BenchmarkCachedResponse_ParallelReads(b *testing.B) {
 		}
 	})
 }
+
 // BenchmarkEvaluate_Scaling measures the full in-process evaluation: the
 // health-check batch (a fresh map per call), Check construction, the
 // transition tracker's per-batch StatusSince stamp, and classification. It

@@ -309,6 +309,7 @@ func TestAggregateMerge_ShutdownIsAbsorbing(t *testing.T) {
 		})
 	}
 }
+
 // joinKeys renders a source key list as a stable subtest name.
 func joinKeys(keys []string) string {
 	return strings.Join(keys, "+")

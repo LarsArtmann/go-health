@@ -16,7 +16,12 @@ Single-package library (`health`) with these source files:
 ```
 doc.go           — Package doc comment (quick start, three-probe rationale, caching, shutdown)
 types.go         — Status enum (check level: pass/fail/warn/off; the roll-up stays pass/fail/warn), Off/OffError configured-off sentinel, Check (incl. StatusSince, DurationNanos), CheckDetail, InstanceID strong type (id.ID[InstanceIDBrand, string] via go-branded-id) + InstanceIDBrand + NewInstanceID, Response data model (incl. instance_id, timestamp omitzero) + Response.Clone (deep-copies Checks)
-probe.go         — Probe struct, config struct, Option functional options (write to config), HealthRecorder + DetailedHealthRecorder interfaces, New(), resolveHealthCheck (free function), Validate() (incl. ErrRecorderNotApplicable), lifecycle (Start/Shutdown/MarkShuttingDown), guard (method-set enforcement), now/uptime clock seam, Evaluate (no publish), EvaluateAndCache, CachedResponse (lock-free read-only view + shutdown overlay), CacheAge/CachedResponseFresh, accessors, runHealthChecks (with panic recovery), buildChecks (StatusSince stamping + duration carry), errorsOf/detailOf adapters
+probe.go         — Probe struct, HealthRecorder + DetailedHealthRecorder interfaces, batch defaults + healthCheckFunc, guard (method-set enforcement), now/uptime clock seam, New() + buildConfig/buildStandaloneConfig/assemble + resolveHealthCheck (free function) + adaptPlainChecks + detailOf/errorsOf adapters, Validate() (incl. ErrRecorderNotApplicable), StartupComplete
+options.go       — config struct + Option + every With* functional option (write to config, consumed at construction)
+lifecycle.go     — Start (validate-on-Start, loop arming, one-way shutdown interplay), validateCriticalNames, refreshLoop/refreshCache, Shutdown (grace window), MarkShuttingDown
+evaluation.go    — Evaluate (no publish), EvaluateAndCache, invokeEvaluationHook (defensive copy + panic recovery), runHealthChecks + recoverHealthChecks (batch panic recovery, fail closed), classify, evaluateStartup, buildChecks (StatusSince stamping + duration carry)
+cache.go         — CachedResponse (lock-free read-only view + shutdown overlay), CacheAge, CachedResponseFresh (freshness primitives), RefreshInterval
+errors.go        — the package's sentinel errors: ErrInvalidTimeout, ErrInvalidRefreshInterval, ErrUnknownCriticalService, ErrPanicDuringHealthCheck, ErrPanicDuringEvaluationHook, ErrRecorderNotApplicable
 tracker.go       — transitionTracker: per-check status-transition tracking behind a mutex; stamps Check.StatusSince inside buildChecks (probe-observed, prunes absent checks)
 classifier.go    — Read-only classifier: classify (three-state), evaluateStartup, per-check grading; constructed once, evaluated lock-free
 handlers.go      — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes (empty patterns skipped), Routes, DefaultRoutes, readinessResponse/throttledLiveResponse, writeResponse + CoerceValidUTF8 (UTF-8 coercion; SanitizeResponse deprecated alias), marshalResponse (test seam)
@@ -27,18 +32,24 @@ version.go       — VersionHandler: build-version endpoint (ldflags/VCS stamp a
 export_test.go   — ResetStartupLatchForTest / SetTrackerDisabledForTest (test builds only; public latch stays one-way)
 ```
 
-Sub-package `aggregate` (source: `aggregate/aggregate.go`) merges N in-process probes into one
+Sub-package `aggregate` (source: `aggregate/aggregate.go`, `aggregate/handlers.go`) merges N in-process probes into one
 `health.Response`: `Source{Name, Probe}`, `New(sources...)` (rejects empty, duplicate, slash-containing, or nil-probe
 sources — docs/aggregate-source-name-design.md), merge-on-read `CachedResponse` (N lock-free loads onto the shared
-`internal/merge` primitive), `StartupComplete` (AND of latches), the three kubelet handlers, and a standalone
-`Healthz()` handler (docs/aggregate-healthz-design.md).
+`internal/merge` primitive), `StartupComplete` (AND of latches), and per-source `SourceStatuses` live in aggregate.go;
+the three kubelet handlers, the standalone `Healthz()` handler (docs/aggregate-healthz-design.md), route registration,
+and the marshal seam live in handlers.go.
 
-Sub-package `federation` (source: `federation/federation.go`, `federation/healthz.go`) is the network sibling: it pulls
-N remote go-health instances over HTTP into one `health.Response` — same source-name contract as aggregate, merge-on-read
-with one parallel fetch per remote mapped onto the shared `internal/merge` primitive (fetch error → `FetchErr`), per-remote
-startup latches (advanced federation-side on successful fetch, never inside the merge), and one synthetic
-`name/reachable` FAIL check per unreachable/undecodable remote (never a silent freeze, never a status override). Wire input
-is untrusted (invalid documents refused whole); `Check.StatusSince`/`DurationNanos` survive verbatim, scalars do not.
+Sub-package `federation` (source: `federation/federation.go`, `federation/fetch.go`, `federation/handlers.go`,
+`federation/healthz.go`) is the network sibling: it pulls N remote go-health instances over HTTP into one
+`health.Response` — same source-name contract as aggregate, merge-on-read with one parallel fetch per remote mapped onto
+the shared `internal/merge` primitive (fetch error → `FetchErr`), per-remote startup latches (advanced federation-side on
+successful fetch, never inside the merge), and one synthetic `name/reachable` FAIL check per unreachable/undecodable
+remote (never a silent freeze, never a status override). federation.go owns the types and construction (`Remote`,
+`Option`/`config`, `Prober`, `New`, `validateRemotes`) plus the read entry points (`CachedResponse` with its drain
+overlay, `RefreshInterval`, `MarkShuttingDown`, `StartupComplete`); fetch.go owns the fetch machinery (`fetchAll`,
+`merge`, `fetch`, `decodeDocument`, `SourceStatuses`); handlers.go owns the three kubelet handlers, route registration,
+and the marshal seam. Wire input is untrusted (invalid documents refused whole); `Check.StatusSince`/`DurationNanos`
+survive verbatim, scalars do not.
 `WithClient(*http.Client)` is the transport escape hatch (pooling, TLS, proxy); `MarkShuttingDown()` adds a one-way hub-side
 drain (readiness 503 with `shutting_down: true`, fetches continue so bodies stay fresh; liveness/startup unaffected).
 `SourceStatuses()` mirrors aggregate's per-remote roll-up (unreachable/draining remotes report fail; no latch movement).
@@ -77,11 +88,11 @@ patterns panic a consumer's page-router mux); a draft artifact, not part of the 
 
 | Layer                          | Files                                                                                                                                                                                                                 |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Root black-box (`health_test`) | `probe_test.go`, `handlers_*_test.go`, `accessors_test.go`, `recorder_test.go`, `checks_test.go`, `configured_off_test.go`, `version_test.go`, `new_with_recorder_test.go`, `service_name_test.go`, `probe_*_test.go` |
-| Root white-box (`health`)      | `export_test.go`, `handlers_internal_test.go`, `accessors_internal_test.go`, `version_internal_test.go`, `tracker_internal_test.go`                                                                                   |
-| Sub-packages                   | one `*_test.go` family per package plus an `*_internal_test.go` where an unexported seam needs pinning                                                                                                                |
-| Fuzz                           | `handlers_fuzz_test.go` (root), `aggregate/`, `checks/`, `federation/` (×3 targets), `internal/merge/` — all registered in both `fuzz` apps, parity enforced by `nix run .#fuzz-registry`                             |
-| Benchmarks                     | `probe_benchmark_test.go`, `probe_test.go`, `aggregate/aggregate_benchmark_test.go`, `federation/federation_benchmark_test.go`                                                                                        |
+| Root black-box (`health_test`) | `probe_test.go` (benchmarks + cached-read contract), `probe_fixtures_test.go` (shared service fakes, mockRecorder, request helpers), `handlers_*_test.go` (liveness/readiness/startup/routes/wire/benchmark/fuzz), `probe_*_test.go` (evaluate, validate, start, concurrency, recorder, throttle, grace, statussince, duration, wire), `accessors_test.go`, `recorder_test.go`, `checks_test.go`, `configured_off_test.go`, `version_test.go`, `new_with_recorder_test.go`, `service_name_test.go`, `evaluation_hook_test.go`, `example_test.go`, `example_lifecycle_test.go`, `example_constructors_test.go`, `middleware_example_test.go`, `prometheus_example_test.go` |
+| Root white-box (`health`)      | `export_test.go`, `handlers_internal_test.go`, `handlers_json_test.go`, `accessors_internal_test.go`, `version_internal_test.go`, `tracker_internal_test.go` |
+| Sub-packages                   | one `*_test.go` family per package plus an `*_internal_test.go` where an unexported seam needs pinning (`aggregate`: test/source-status/cached-response/handlers/property/handlers-property/json/validation/benchmark/fuzz/example; `federation`: test/merge/fetch/handlers/shutdown/source-status/validation/transport/healthz/routes/benchmark/fuzz/internal/example; `checks`, `internal/merge` + `merge_invariants_test.go`) |
+| Fuzz                           | `handlers_fuzz_test.go` (root), `aggregate/`, `checks/`, `federation/` (×3 targets), `internal/merge/` — all registered in both `fuzz` apps, parity enforced by `nix run .#fuzz-registry` |
+| Benchmarks                     | `probe_benchmark_test.go` + `handlers_benchmark_test.go` (guard cost), `probe_test.go`, `aggregate/aggregate_benchmark_test.go`, `federation/federation_benchmark_test.go` |
 
 ---
 

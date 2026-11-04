@@ -202,7 +202,6 @@ func TestNew_JoinsAllInvalidSources(t *testing.T) {
 	}
 }
 
-
 // TestNew_SlashNameContract pins both halves of the source-name contract:
 // source names with "/" are rejected because the name becomes the check-key
 // prefix ("name/check") and a slash would blur the grouping axis and could
@@ -271,4 +270,3 @@ func TestNew_RefreshIntervalIsSlowestSource(t *testing.T) {
 		t.Fatalf("RefreshInterval = %s, want 5s (slowest source)", got)
 	}
 }
-

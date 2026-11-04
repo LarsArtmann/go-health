@@ -15,7 +15,6 @@ import (
 	"github.com/samber/do/v2"
 )
 
-
 type healthyService struct{}
 
 var _ do.HealthcheckerWithContext = (*healthyService)(nil)
